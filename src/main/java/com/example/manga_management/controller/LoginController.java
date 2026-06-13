@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/manga")
 public class LoginController {
 
-    @GetMapping("/login")
+    @GetMapping({"/", "/login"})
     public String loginPage() {
         return "login";
     }

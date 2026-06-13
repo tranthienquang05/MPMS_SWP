@@ -1,30 +1,34 @@
 package com.example.manga_management.controller;
 
-import com.example.manga_management.model.MangaSeries;
-import com.example.manga_management.model.Chapter;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.example.manga_management.model.Chapter;
+import com.example.manga_management.model.MangaSeries;
 
 @Controller
 @RequestMapping("/manga")
 public class MangaWorkflowController {
 
     // Tạo danh sách tĩnh để lưu dữ liệu tạm thời trong bộ nhớ
-    private static List<MangaSeries> seriesList = new ArrayList<>();
-    private static List<Chapter> chapterList = new ArrayList<>();
-    private static long seriesIdCounter = 1;
-    private static long chapterIdCounter = 1;
+    private static final List<MangaSeries> seriesList = new ArrayList<>();
+    private static final List<Chapter> chapterList = new ArrayList<>();
+    private static long seriesIdCounter = 3;
 
     // Khởi tạo dữ liệu mẫu ban đầu
     static {
-        seriesList.add(new MangaSeries(seriesIdCounter++, "Đảo Hải Tặc", "Hành trình tìm kho báu", 101L, "DRAFT"));
-        seriesList.add(new MangaSeries(seriesIdCounter++, "Đại Chiến Titan", "Cuộc chiến sinh tồn", 102L, "APPROVED"));
+        seriesList.add(new MangaSeries(1L, "Đảo Hải Tặc", "Hành trình tìm kho báu", 101L, "DRAFT"));
+        seriesList.add(new MangaSeries(2L, "Đại Chiến Titan", "Cuộc chiến sinh tồn", 102L, "APPROVED"));
 
-        chapterList.add(new Chapter(chapterIdCounter++, 2L, "Chapter 1: To You, 2000 Years From Now", 1, "PUBLISHED"));
+        chapterList.add(new Chapter(1L, 2L, "Chapter 1: To You, 2000 Years From Now", 1, "PUBLISHED"));
     }
 
     // 1. MÀN HÌNH CHÍNH: Hiển thị danh sách dựa theo sơ đồ quy trình

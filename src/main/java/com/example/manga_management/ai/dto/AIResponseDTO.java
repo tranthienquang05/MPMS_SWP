@@ -1,10 +1,5 @@
 package com.example.manga_management.ai.dto;
 
-import lombok.Builder;
-import lombok.Data;
-
-@Data
-@Builder
 public class AIResponseDTO {
 
     /** "success" or "error" */
@@ -21,4 +16,73 @@ public class AIResponseDTO {
 
     /** x-request-id from the API response, useful for debugging */
     private String requestId;
+
+    private AIResponseDTO(Builder builder) {
+        this.status = builder.status;
+        this.type = builder.type;
+        this.result = builder.result;
+        this.message = builder.message;
+        this.requestId = builder.requestId;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getResult() {
+        return result;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public static class Builder {
+        private String status;
+        private String type;
+        private String result;
+        private String message;
+        private String requestId;
+
+        public Builder status(String status) {
+            this.status = status;
+            return this;
+        }
+
+        public Builder type(String type) {
+            this.type = type;
+            return this;
+        }
+
+        public Builder result(String result) {
+            this.result = result;
+            return this;
+        }
+
+        public Builder message(String message) {
+            this.message = message;
+            return this;
+        }
+
+        public Builder requestId(String requestId) {
+            this.requestId = requestId;
+            return this;
+        }
+
+        public AIResponseDTO build() {
+            return new AIResponseDTO(this);
+        }
+    }
 }

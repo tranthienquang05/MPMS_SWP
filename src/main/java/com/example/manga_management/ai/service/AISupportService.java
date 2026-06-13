@@ -16,12 +16,15 @@ public class AISupportService {
 
     private final OpenAIService openAIService;
     private final String openaiApiKey;
+    private final String geminiApiKey;
 
     public AISupportService(
             OpenAIService openAIService,
-            @Qualifier("openaiApiKey") String openaiApiKey) {
+            @Qualifier("openaiApiKey") String openaiApiKey,
+            @Qualifier("geminiApiKey") String geminiApiKey) {
         this.openAIService = openAIService;
         this.openaiApiKey = openaiApiKey;
+        this.geminiApiKey = geminiApiKey;
     }
 
     /**
@@ -44,6 +47,21 @@ public class AISupportService {
             }
 
             if ("vision".equals(feature.getType())) {
+                // Check if key is configured
+                if (!isKeyConfigured(geminiApiKey, "your-gemini-key")) {
+                    log.warn("Gemini API key not configured");
+                    return AIResponseDTO.builder()
+                            .status("error")
+                            .message("Dịch vụ phân tích ảnh chưa được cấu hình API key.")
+                            .build();
+                }
+
+                if (request.getImageBase64() == null || request.getImageBase64().isBlank()) {
+                    return AIResponseDTO.builder()
+                            .status("error")
+                            .message("Tính năng này yêu cầu hình ảnh đầu vào (base64)")
+                            .build();
+                }
                 OpenAIService.AIResult result = openAIService.analyzeCanvas(
                         request.getImageBase64(), finalPrompt);
                 return AIResponseDTO.builder()

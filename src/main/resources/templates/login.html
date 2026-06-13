@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng nhập hệ thống Manga</title>
+</head>
+<body>
+    <h1>Đăng nhập</h1>
+    
+    <form action="/auth/login" method="POST">
+        <div>
+            <label for="username">Tài khoản:</label>
+            <input type="text" id="username" name="txtUsername" required>
+        </div>
+        <br>
+        <div>
+            <label for="password">Mật khẩu:</label>
+            <input type="password" id="password" name="txtPassword" required>
+        </div>
+        <br>
+        <button type="submit">Xác nhận</button>
+    </form>
+</body>
+</html>

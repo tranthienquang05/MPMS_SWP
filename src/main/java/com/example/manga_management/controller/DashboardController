@@ -1,0 +1,19 @@
+package com.example.manga_management.controller;
+
+import com.example.manga_management.model.MangaData;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/manga")
+public class DashboardController {
+
+    // Trả về trang tổng hợp theo dõi toàn bộ quy trình MPMS
+    @GetMapping("/dashboard")
+    public String globalDashboard(Model model) {
+        model.addAttribute("allSeries", MangaData.seriesList);
+        return "dashboard"; // trỏ đến file dashboard.html tổng hợp
+    }
+}

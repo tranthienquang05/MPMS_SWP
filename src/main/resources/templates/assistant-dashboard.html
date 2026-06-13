@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Assistant Workspace</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+</head>
+<body>
+    <h1>🎨 Không gian làm việc: Trợ lý (Assistant)</h1>
+    <p>Xin chào, <strong th:text="${session.user.fullName}"></strong> | <a href="/manga/logout">Đăng xuất</a></p>
+    <hr>
+    <h3>Danh sách công việc được giao</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Tên Chapter</th>
+                <th>Trạng thái việc</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="ch : ${allChapters}" th:if="${ch.status == 'ASSISTANT_WORKING'}">
+                <td th:text="${ch.title}"></td>
+                <td><mark>Mangaka đang giao việc (Get the task)</mark></td>
+                <td>
+                    <form th:action="@{/assistant/complete-task/{id}(id=${ch.id})}" method="POST">
+                        <button type="submit">Báo cáo Hoàn Thành (Complete)</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

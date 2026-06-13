@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor Board Workspace</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+</head>
+<body>
+    <h1>🏛 Không gian hội đồng: Editor Board</h1>
+    <p>Xin chào, <strong th:text="${session.user.fullName}"></strong> | <a href="/manga/logout">Đăng xuất</a></p>
+    <hr>
+    <h3>Bỏ phiếu phê duyệt dự án truyện tranh (Vote)</h3>
+    <table>
+        <tr th:each="s : ${allSeries}" th:if="${s.status == 'VOTING'}">
+            <td th:text="${s.title}"></td>
+            <td>
+                <form th:action="@{/board/vote-series/{id}(id=${s.id})}" method="POST">
+                    <button type="submit" name="isFinalApproved" value="true">Vote Đạt (Start Series)</button>
+                    <button type="submit" name="isFinalApproved" value="false" style="background:#e74c3c;">Vote Loại</button>
+                </form>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

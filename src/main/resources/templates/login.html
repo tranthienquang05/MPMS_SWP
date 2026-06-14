@@ -16,7 +16,7 @@
         <h1 class="main-title">Manga Paint System</h1>
         <p class="sub-title">One day happy, all life happy</p>
         
-        <form class="login-form" action="/auth/login" method="POST">
+        <form class="login-form" th:action="@{/manga/login}" method="POST">
             <div class="form-group">
                 <label for="username">Tài khoản:</label>
                 <input type="text" id="username" name="txtUsername" required>

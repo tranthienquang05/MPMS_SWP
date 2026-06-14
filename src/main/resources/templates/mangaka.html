@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <title>Không gian sáng tác - Mangaka</title>
 </head>
+
 <body>
     <h1>Chào mừng Tác giả</h1>
     <p>Đây là khu vực dành riêng cho Mangaka.</p>
-    
+
     <h2>Nộp bản thảo (Name)</h2>
     <form action="/mangaka/upload" method="POST" enctype="multipart/form-data">
         <input type="file" name="manuscript" required>
         <button type="submit">Tải lên</button>
     </form>
-    
+
     <br>
-    <a href="/logout">Đăng xuất</a>
+    <a th:href="@{/manga/logout}">Logout</a>
 </body>
+
 </html>

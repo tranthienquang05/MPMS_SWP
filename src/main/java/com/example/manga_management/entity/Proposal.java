@@ -16,6 +16,7 @@ public class Proposal {
     @Column(name = "ProposalID", length = 6)
     private String id;
 
+
     @ManyToOne
     @JoinColumn(name = "MangakaID", nullable = false)
     private Mangaka mangaka;
@@ -26,22 +27,6 @@ public class Proposal {
     @Column(name = "SeriesName", nullable = false, length = 30)
     private String seriesName;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-
     @Column(name = "FilePath", length = 30)
     private String filePath;
-
-    @Column(length = 30)
-    private String content;
-
-
-=======
-    @Column(name = "FilePath", length = 30)
-    private String filePath;
->>>>>>> 0dd50fd54d712783f848ed78ff53e281e03709e0
-=======
-    @Column(name = "FilePath", length = 30)
-    private String filePath;
->>>>>>> 0dd50fd54d712783f848ed78ff53e281e03709e0
 }

@@ -76,8 +76,7 @@ public class MangakaController {
             Proposal proposal = Proposal.builder()
                     .id(nextId)
                     .mangaka(currentMangaka)
-                    .seriesName(txtSeriesName)
-                    .content(txtContent)
+                    .seriesName(txtSeriesName)                    
                     .filePath("/uploads/" + uniqueFileName)
                     .status("pending")
                     .build();

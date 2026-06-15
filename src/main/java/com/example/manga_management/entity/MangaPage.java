@@ -19,7 +19,7 @@ public class MangaPage {
     @JoinColumn(name = "ChapterID", nullable = false)
     private Chapter chapter;
 
-    @Column(name = "FilePath", length = 30)
+    @Column(name = "FilePath", length = 60)
     private String filePath;
 
     @Column(nullable = false, length = 20)

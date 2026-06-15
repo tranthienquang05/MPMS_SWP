@@ -27,6 +27,6 @@ public class Proposal {
     @Column(name = "SeriesName", nullable = false, length = 30)
     private String seriesName;
 
-    @Column(name = "FilePath", length = 30)
+    @Column(name = "FilePath", length = 60)
     private String filePath;
 }

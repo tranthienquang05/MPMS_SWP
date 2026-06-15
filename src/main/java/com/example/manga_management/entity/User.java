@@ -30,7 +30,7 @@ public class User {
     @Column(name = "Password", nullable = false, length = 30)
     private String password;
 
-    @Column(name = "Avatar", length = 30)
+    @Column(name = "Avatar", length = 60)
     private String avatar;
 
     @Column(name = "Profile", length = 255)

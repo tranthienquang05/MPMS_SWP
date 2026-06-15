@@ -13,6 +13,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Controller
 @RequestMapping("/manga/mangaka")
@@ -20,7 +23,6 @@ public class MangakaController {
 
     private final ProposalRepository proposalRepository;
     private final MangakaRepository mangakaRepository;
-    private final String UPLOAD_DIR = "D:/LEARNING/SWP391/uploads/";
 
     public MangakaController(ProposalRepository proposalRepository, MangakaRepository mangakaRepository) {
         this.proposalRepository = proposalRepository;
@@ -57,10 +59,21 @@ public class MangakaController {
             return "mangaka";
         }
 
+        if (txtSeriesName == null || txtSeriesName.trim().isEmpty()) {
+            model.addAttribute("error", "Vui lòng nhập tên series!");
+            return "mangaka";
+        }
+
         try {
-            File folder = new File(UPLOAD_DIR);
-            if (!folder.exists()) {
-                folder.mkdirs();
+            // Get the correct upload directory path based on working directory
+            String workingDir = System.getProperty("user.dir");
+            String uploadDir = workingDir + File.separator + "src" + File.separator + "main" + File.separator 
+                    + "resources" + File.separator + "static" + File.separator + "proposal" + File.separator;
+            
+            Path uploadPath = Paths.get(uploadDir);
+            
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
             }
 
             // Tính toán ID trước để lấy tên đặt cho file
@@ -76,16 +89,15 @@ public class MangakaController {
 
             // Đặt tên file theo ID để tối ưu độ dài chuỗi
             String shortFileName = nextId + extension;
-            File destinationFile = new File(UPLOAD_DIR + shortFileName);
-            fileManuscript.transferTo(destinationFile);
+            Path destinationPath = uploadPath.resolve(shortFileName);
+            fileManuscript.transferTo(destinationPath.toFile());
 
-            Proposal proposal = Proposal.builder()
-                    .id(nextId)
-                    .mangaka(currentMangaka)
-                    .seriesName(txtSeriesName)                                       
-                    .filePath("/uploads/" + shortFileName) 
-                    .status("pending")
-                    .build();
+            Proposal proposal = new Proposal();
+            proposal.setId(nextId);
+            proposal.setMangaka(currentMangaka);
+            proposal.setSeriesName(txtSeriesName.trim());
+            proposal.setFilePath("/proposal/" + shortFileName);
+            proposal.setStatus("unfinish");
 
             proposalRepository.save(proposal);
             

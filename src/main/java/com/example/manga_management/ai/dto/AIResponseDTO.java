@@ -3,19 +3,19 @@ package com.example.manga_management.ai.dto;
 public class AIResponseDTO {
 
     /** "success" or "error" */
-    private String status;
+    private final String status;
 
     /** "image" or "text" */
-    private String type;
+    private final String type;
 
     /** The AI result – base64 image for image type, analysis text for text type */
-    private String result;
+    private final String result;
 
     /** Error message (populated only when status is "error") */
-    private String message;
+    private final String message;
 
     /** x-request-id from the API response, useful for debugging */
-    private String requestId;
+    private final String requestId;
 
     private AIResponseDTO(Builder builder) {
         this.status = builder.status;

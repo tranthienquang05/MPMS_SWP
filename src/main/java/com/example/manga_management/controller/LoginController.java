@@ -18,7 +18,8 @@ public class LoginController {
         this.userService = userService;
     }
 
-    @GetMapping({ "/", "/login" })
+    // ĐÃ SỬA: Bỏ dấu "/" ra khỏi đây để không bị trùng lặp với RootController
+    @GetMapping("/login")
     public String loginPage() {
         return "login";
     }
@@ -38,17 +39,18 @@ public class LoginController {
 
         session.setAttribute("user", user);
 
-        switch (user.getRole()) {
-            case "Board":
+        // ĐÃ SỬA: Chuyển vai trò về dạng chữ thường hoàn toàn trước khi so sánh
+        switch (user.getRole().toLowerCase()) {
+            case "board":
                 return "redirect:/manga/editor";
 
-            case "Editor":
+            case "editor":
                 return "redirect:/manga/tantou";
 
-            case "Mangaka":
+            case "mangaka":
                 return "redirect:/manga/mangaka";
 
-            case "Assistant":
+            case "assistant":
                 return "redirect:/manga/assistant";
 
             default:

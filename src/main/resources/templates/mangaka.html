@@ -1,39 +1,58 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>Tác giả</title>
+        <link rel="stylesheet" th:href="@{/css/all.css}">
+    </head>
+    <head>
+        <meta charset="UTF-8">
+        <title>Không gian làm việc (Mangaka)</title>
+    </head>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Không gian làm việc (Mangaka)</title>
-</head>
+    <body>
+        <div class="header">
+            <div class="logo">SANKYUU</div>
+            <a th:href="@{/manga/logout}" class="login-link">Đăng xuất</a>
+        </div>
+        <div class="sub-background">
+            <h1>Mangaka</h1>
+            <p>Đây là khu vực làm việc của Mangaka</p>
 
-<body>
-    <h1>Chào mừng Tác giả</h1>
-    <p>Đây là khu vực làm việc của Mangaka</p>
+            <h2>Trang chủ</h2>
+            <a th:href="@{/manga/mangaka}"><button type="submit">Trang
+                    chủ</button></a>
 
-    <h2>Trang chủ</h2>
-    <button type="submit">Trang chủ</button>
-    <button type="submit">Xem ranking</button>
-    <button type="submit">Trang chủ</button>
-    <button type="submit">Trang chủ</button>
-    <button type="submit">Trang chủ</button>
+            <button type="submit">Xem ranking</button>
+            <button type="submit">Trang chủ</button>
+            <button type="submit">Trang chủ</button>
+            <button type="submit">Trang chủ</button>
 
-    <h2>Tác phẩm</h2>
-    <button type="submit">Thư viện tác phẩm</button> 
-    <button type="submit">Tạo tác phẩm mới</button>
-    <button type="submit">Chỉnh sửa tác phẩm</button>
-    <button type="submit">Chỉnh sửa tác phẩm</button>
-    <button type="submit">Xóa tác phẩm</button>
-    <button type="submit">Nộp tác phẩm</button>
+            <h2>Tác phẩm</h2>
+            <button type="submit">Thư viện tác phẩm</button>
+            <button type="submit">Tạo tác phẩm mới</button>
+            <button type="submit">Chỉnh sửa tác phẩm</button>
+            <button type="submit">Chỉnh sửa tác phẩm</button>
+            <button type="submit">Xóa tác phẩm</button>
+            <button type="submit">Nộp tác phẩm</button>
 
-    <h2>Bản thảo</h2>
-    <button type="submit">Tạo bản thảo</button>
-    <button type="submit">Nộp bản thảo</button>
+            <h2>Bản thảo</h2>
+            <button type="submit">Tạo bản thảo</button>
+            <form action="/mangaka/upload" method="POST"
+                enctype="multipart/form-data">
+                <input type="file" name="manuscript" required>
+                <button type="submit">Nộp bản thảo</button>
 
-    <button type="submit">Thông tin người dùng</button>
-    <button type="submit">Đăng xuất</button>
+            </form>
 
-    <br>
-    <a th:href="@{/manga/logout}">Logout</a>
-</body>
+            <h2>Cài đặt</h2>
+            <button type="submit">Thông tin người dùng</button>
+
+            <br>
+            <a th:href="@{/manga/logout}">
+                <button type="submit">Đăng xuất</button>
+            </a>
+        </div>
+    </body>
 
 </html>

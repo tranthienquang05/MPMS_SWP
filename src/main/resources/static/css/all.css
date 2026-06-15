@@ -15,7 +15,7 @@ html {
     justify-content: space-between;
     align-items: center;
     padding: 15px 30px;
-    background-color: white;
+    background-color: #262626;
     border-bottom: 1px solid #ddd;
     height: 60px;
 }
@@ -23,12 +23,12 @@ html {
 .header .logo {
     font-size: 24px;
     font-weight: bold;
-    color: black;
+    color: white;
 }
 
 .header .login-link {
     text-decoration: none;
-    color: black;
+    color: white;
     font-size: 16px;
 }
 
@@ -37,6 +37,7 @@ html {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    background-color: #262626;
     height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
@@ -45,22 +46,37 @@ html {
 }
 
 .main-title {
-    color: red;
+    color: rgb(255, 255, 255);
     font-size: 60px;
     font-weight: bold;
     margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+    text-shadow: 2px 2px 4px rgba(50, 50, 50, 0.8);
     display: inline-block;
     background-color: rgba(0, 0, 0, 0.5);
     padding: 8px 16px;
     border-radius: 4px;
 }
+.sub-background {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #262626;
+    height: calc(100vh - 60px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
 
 .sub-title {
-    color: red;
+    color: rgb(255, 255, 255);
     font-size: 20px;
     margin-bottom: 30px;
-    text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.8);
+    text-shadow: 1px 1px 3px rgba(50, 50, 50, 0.8);
+    display: inline-block;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 8px 16px;
+    border-radius: 4px;
 }
 
 .login-form {
@@ -90,7 +106,7 @@ html {
 }
 
 button[type="submit"] {
-    background-color: #ff3333;
+    background-color: #262626;
     color: white;
     border: none;
     padding: 10px 40px;
@@ -101,5 +117,5 @@ button[type="submit"] {
 }
 
 button[type="submit"]:hover {
-    background-color: #cc0000;
+    background-color: #686060;
 }

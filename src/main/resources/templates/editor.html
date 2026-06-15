@@ -1,34 +1,41 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>Tổng biên tập</title>
+        <link rel="stylesheet" th:href="@{/css/all.css}">
+    </head>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Duyệt xuất bản - Editor</title>
-</head>
+    <body>
+        <div class="header">
+            <div class="logo">SANKYUU</div>
+            <a th:href="@{/manga/logout}" class="login-link">Đăng xuất</a>
+        </div>
 
-<body>
-    <h1>Chào mừng Tổng Biên Tập</h1>
-    <p>Khu vực quyết định phê duyệt xuất bản.</p>
+        <h1>Tổng Biên Tập</h1>
+        <p>Khu vực quyết định phê duyệt xuất bản.</p>
 
-    <h2>Danh sách chờ duyệt cuối</h2>
-    <table border="1">
-        <tr>
-            <th>Tên tác phẩm</th>
-            <th>Chương</th>
-            <th>Hành động</th>
-        </tr>
-        <tr>
-            <td>Hành trình anh hùng</td>
-            <td>12</td>
-            <td>
-                <button>Duyệt xuất bản</button>
-                <button>Yêu cầu sửa lại</button>
-            </td>
-        </tr>
-    </table>
+        <h2>Danh sách chờ duyệt cuối</h2>
+        <table border="1">
+            <tr>
+                <th>Tên tác phẩm</th>
+                <th>Chương</th>
+                <th>Hành động</th>
+            </tr>
+            <tr>
+                <td>Hành trình anh hùng</td>
+                <td>12</td>
+                <td>
+                    <button>Duyệt xuất bản</button>
+                    <button>Yêu cầu sửa lại</button>
+                </td>
+            </tr>
+        </table>
 
-    <br>
-    <a th:href="@{/manga/logout}">Logout</a>
-</body>
+        <br>
+        <a th:href="@{/manga/logout}">
+            <button type="submit">Đăng xuất</button>
+        </a>
+    </body>
 
 </html>

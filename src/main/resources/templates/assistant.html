@@ -1,22 +1,29 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>Trợ lí</title>
+        <link rel="stylesheet" th:href="@{/css/all.css}">
+    </head>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Khu vực làm việc - Assistant</title>
-</head>
+    <body>
+        <div class="header">
+            <div class="logo">SANKYUU</div>
+            <a th:href="@{/manga/logout}" class="login-link">Đăng xuất</a>
+        </div>
 
-<body>
-    <h1>Chào mừng Trợ lý</h1>
-    <p>Danh sách các công việc được giao.</p>
+        <h1>Trợ lý</h1>
+        <p>Danh sách các công việc được giao.</p>
 
-    <ul>
-        <li>Chương 12: Vẽ background trang 5-10</li>
-        <li>Chương 12: Đi nét nhân vật quần chúng</li>
-    </ul>
+        <ul>
+            <li>Chương 12: Vẽ background trang 5-10</li>
+            <li>Chương 12: Đi nét nhân vật quần chúng</li>
+        </ul>
 
-    <br>
-    <a th:href="@{/manga/logout}">Logout</a>
-</body>
+        <br>
+        <a th:href="@{/manga/logout}">
+            <button type="submit">Đăng xuất</button>
+        </a>
+    </body>
 
 </html>

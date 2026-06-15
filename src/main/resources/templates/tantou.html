@@ -1,24 +1,32 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>Biên tập viên</title>
+        <link rel="stylesheet" th:href="@{/css/all.css}">
+    </head>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Quản lý bản thảo - Tantou</title>
-</head>
+    <body>
+        <div class="header">
+            <div class="logo">SANKYUU</div>
+            <a th:href="@{/manga/logout}" class="login-link">Đăng xuất</a>
+        </div>
 
-<body>
-    <h1>Chào mừng Biên tập viên phụ trách (Tantou)</h1>
-    <p>Khu vực kiểm tra và phản hồi bản thảo cho Tác giả.</p>
+        <h1>Biên tập viên phụ trách</h1>
+        <p>Khu vực kiểm tra và phản hồi bản thảo cho Tác giả.</p>
 
-    <h2>Phản hồi Name Chương 12</h2>
-    <form action="/tantou/feedback" method="POST">
-        <textarea name="feedback" rows="5" cols="40" placeholder="Nhập nhận xét chi tiết..."></textarea>
+        <h2>Phản hồi Name Chương 12</h2>
+        <form action="/tantou/feedback" method="POST">
+            <textarea name="feedback" rows="5" cols="40"
+                placeholder="Nhập nhận xét chi tiết..."></textarea>
+            <br>
+            <button type="submit">Gửi Tác giả</button>
+        </form>
+
         <br>
-        <button type="submit">Gửi Tác giả</button>
-    </form>
-
-    <br>
-    <a th:href="@{/manga/logout}">Logout</a>
-</body>
+        <a th:href="@{/manga/logout}">
+            <button type="submit">Đăng xuất</button>
+        </a>
+    </body>
 
 </html>

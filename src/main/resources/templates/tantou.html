@@ -7,49 +7,33 @@
 </head>
 <body class="container p-4 bg-light">
     <h1 class="text-success">Chào mừng Biên tập viên phụ trách (Tantou)</h1>
-    <p>Khu vực kiểm tra và phản hồi bản thảo cho Tác giả.</p>
     <hr>
-
-    <h3 class="mt-4">Danh sách dự án mới cần duyệt sơ loại</h3>
+    <h3>📌 Danh sách dự án mới cần duyệt sơ loại</h3>
     <table class="table table-bordered table-striped bg-white shadow-sm mt-2">
         <thead class="table-dark">
             <tr>
                 <th>Mã Đề Xuất</th>
-                <th>Tên Bộ Truyện (Series Name)</th>
-                <th>Nội Dung Tóm Tắt (Content)</th>
-                <th>Bản Thảo Đính Kèm</th>
-                <th>Hành Động Phê Duyệt</th>
+                <th>Tên Bộ Truyện</th>
+                <th>Bản Thảo</th>
+                <th>Hành Động</th>
             </tr>
         </thead>
         <tbody>
             <tr th:each="p : ${pendingProposals}">
                 <td th:text="${p.id}"></td>
                 <td th:text="${p.seriesName}"></td>
-                <td th:text="${p.content}"></td>
                 <td>
-                    <a th:href="@{/manga/view-file(path=${p.filePath})}" target="_blank" class="btn btn-sm btn-info text-white">
-                        👁️ Mở file ở Tab mới
-                    </a>
+                    <a th:href="@{/manga/view-file(path=${p.filePath})}" target="_blank" class="btn btn-sm btn-info text-white">👁️ Mở file</a>
                 </td>
                 <td>
-                    <a th:href="@{/manga/tantou/approve(id=${p.id})}" class="btn btn-sm btn-success fw-bold">
-                        Duyệt & Đẩy Lên Cho Editor Vote
-                    </a>
+                    <a th:href="@{/manga/tantou/approve(id=${p.id})}" class="btn btn-sm btn-success fw-bold">Duyệt sơ loại</a>
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(pendingProposals)}">
-                <td colspan="5" class="text-center text-muted py-3">Hiện tại không có đề xuất dự án mới nào cần xử lý.</td>
+                <td colspan="4" class="text-center text-muted py-3">Không có đề xuất mới.</td>
             </tr>
         </tbody>
     </table>
-
-    <h2 class="mt-5">Phản hồi Name Chương 12</h2>
-    <form th:action="@{/manga/tantou/feedback}" method="POST" class="bg-white p-3 border rounded shadow-sm">
-        <textarea name="feedback" rows="5" class="form-control" placeholder="Nhập nhận xét chi tiết..."></textarea>
-        <br>
-        <button type="submit" class="btn btn-primary">Gửi Tác giả</button>
-    </form>
-
     <br>
     <a th:href="@{/manga/logout}" class="btn btn-danger">Logout</a>
 </body>

@@ -5,9 +5,7 @@
     <title>Không gian làm việc (Mangaka)</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        button {
-            margin: 4px;
-        }
+        button { margin: 4px; }
     </style>
 </head>
 <body class="container p-4">
@@ -20,57 +18,34 @@
     <h2>Trang chủ</h2>
     <button type="button" class="btn btn-outline-secondary">Trang chủ</button>
     <button type="button" class="btn btn-outline-secondary">Xem ranking</button>
-    <button type="button" class="btn btn-outline-secondary">Trang chủ</button>
-    <button type="button" class="btn btn-outline-secondary">Trang chủ</button>
-    <button type="button" class="btn btn-outline-secondary">Trang chủ</button>
 
     <h2>Tác phẩm</h2>
     <button type="button" class="btn btn-outline-secondary">Thư viện tác phẩm</button> 
-    
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#proposalModal">
         ➕ Tạo tác phẩm mới (Nộp dự án)
     </button>
-    
-    <button type="button" class="btn btn-outline-secondary">Chỉnh sửa tác phẩm</button>
-    <button type="button" class="btn btn-outline-secondary">Chỉnh sửa tác phẩm</button>
-    <button type="button" class="btn btn-outline-secondary">Xóa tác phẩm</button>
-    <button type="button" class="btn btn-outline-secondary">Nộp tác phẩm</button>
-
-    <h2>Bản thảo</h2>
-    <button type="button" class="btn btn-outline-secondary">Tạo bản thảo</button>
-    <button type="button" class="btn btn-outline-secondary">Nộp bản thảo</button>
 
     <br><br>
-    <button type="button" class="btn btn-info text-white">Thông tin người dùng</button>
     <a th:href="@{/manga/logout}" class="btn btn-secondary">Đăng xuất</a>
-
 
     <div class="modal fade" id="proposalModal" tabindex="-1" aria-labelledby="proposalModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="proposalModalLabel">Đăng Ký Đề Xuất Dự Án Mới</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-shadow="modal" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                
                 <form th:action="@{/manga/mangaka/submit-proposal}" method="POST" enctype="multipart/form-data">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Tên dự án (Series Name):</label>
-                            <input type="text" name="txtSeriesName" class="form-control" maxlength="30" required placeholder="Nhập tên bộ truyện (tối đa 30 ký tự)...">
+                            <input type="text" name="txtSeriesName" class="form-control" maxlength="30" required placeholder="Nhập tên bộ truyện...">
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Mô tả cốt truyện (Content):</label>
-                            <textarea name="txtContent" class="form-control" rows="4" maxlength="255" required placeholder="Tóm tắt ngắn gọn nội dung truyện..."></textarea>
-                        </div>
-                        
                         <div class="mb-3">
                             <label class="form-label fw-bold">Tệp bản thảo đính kèm (PDF/ZIP):</label>
                             <input type="file" name="fileManuscript" class="form-control" accept=".pdf,.zip,.rar" required>
                         </div>
                     </div>
-                    
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                         <button type="submit" class="btn btn-success">Submit (Gửi nộp)</button>
@@ -79,7 +54,6 @@
             </div>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

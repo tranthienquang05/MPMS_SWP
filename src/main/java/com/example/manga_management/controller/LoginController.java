@@ -1,5 +1,6 @@
 package com.example.manga_management.controller;
 
+import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.ProposalRepository;
 import com.example.manga_management.repository.TantoEditorRepository;
@@ -18,7 +19,6 @@ public class LoginController {
     private final ProposalRepository proposalRepository;
     private final TantoEditorRepository tantoEditorRepository;
 
-    // Khai báo Constructor đồng bộ đầy đủ các Repository phụ trợ dữ liệu duyệt bài
     public LoginController(UserService userService, 
                            ProposalRepository proposalRepository, 
                            TantoEditorRepository tantoEditorRepository) {
@@ -64,25 +64,47 @@ public class LoginController {
 
     @GetMapping("/tantou")
     public String tantouPage(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/manga/login";
-        
-        // Đổ dữ liệu các bản thảo đang chờ duyệt lên bảng của trang tantou.html
+        if (session.getAttribute("user") == null) return "redirect:/manga/login";
         model.addAttribute("pendingProposals", proposalRepository.findByStatus("pending"));
         return "tantou";
     }
 
+    @GetMapping("/tantou/approve")
+    public String handleTantouApprove(@RequestParam String id) {
+        Proposal proposal = proposalRepository.findById(id).orElse(null);
+        if (proposal != null) {
+            proposal.setStatus("approved_by_tantou");
+            proposalRepository.save(proposal);
+        }
+        return "redirect:/manga/tantou";
+    }
+
     @GetMapping("/editor")
     public String editorPage(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/manga/login";
-        
-        // Đổ dữ liệu các bản thảo đã qua sơ duyệt lên bảng bình chọn của trang editor.html
+        if (session.getAttribute("user") == null) return "redirect:/manga/login";
         model.addAttribute("votingProposals", proposalRepository.findByStatus("approved_by_tantou"));
         return "editor";
     }
 
-    // ĐÃ XÓA hàm /mangaka tại đây để loại bỏ hoàn toàn lỗi xung đột Route (404/500)
+    @GetMapping("/editor/approve")
+    public String handleEditorApprove(@RequestParam String id) {
+        Proposal proposal = proposalRepository.findById(id).orElse(null);
+        if (proposal != null) {
+            proposal.setStatus("publishing_approved");
+            proposalRepository.save(proposal);
+        }
+        return "redirect:/manga/editor";
+    }
+
+    @GetMapping("/editor/reject")
+    public String handleEditorReject(@RequestParam String id) {
+        Proposal proposal = proposalRepository.findById(id).orElse(null);
+        if (proposal != null) {
+            proposal.setStatus("rejected");
+            proposalRepository.save(proposal);
+        }
+        return "redirect:/manga/editor";
+    }
 
     @GetMapping("/assistant")
     public String assistantPage(HttpSession session) {
@@ -90,7 +112,6 @@ public class LoginController {
         return "assistant";
     }
 
-    // API hỗ trợ mở tab mới để đọc file PDF trực tiếp từ thư mục cứng
     @GetMapping("/view-file")
     @ResponseBody
     public org.springframework.core.io.Resource serveFile(@RequestParam("path") String path) throws java.net.MalformedURLException {

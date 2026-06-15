@@ -13,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
 
 @Controller
 @RequestMapping("/manga/mangaka")
@@ -28,7 +27,6 @@ public class MangakaController {
         this.mangakaRepository = mangakaRepository;
     }
 
-    // THÊM MỚI: Đứng ra chịu trách nhiệm hiển thị trang làm việc của Mangaka, vá lỗi tranh chấp route
     @GetMapping
     public String mangakaPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
@@ -41,7 +39,6 @@ public class MangakaController {
     @PostMapping("/submit-proposal")
     public String handleSubmitting(
             @RequestParam String txtSeriesName,
-            @RequestParam String txtContent,
             @RequestParam MultipartFile fileManuscript,
             HttpSession session, 
             Model model) {
@@ -66,18 +63,27 @@ public class MangakaController {
                 folder.mkdirs();
             }
 
-            String uniqueFileName = UUID.randomUUID().toString() + "_" + fileManuscript.getOriginalFilename();
-            File destinationFile = new File(UPLOAD_DIR + uniqueFileName);
-            fileManuscript.transferTo(destinationFile);
-
+            // Tính toán ID trước để lấy tên đặt cho file
             long currentCount = proposalRepository.count();
             String nextId = String.format("PPS%03d", currentCount + 1);
+
+            // Đục đuôi file gốc (.pdf, .zip...)
+            String originalName = fileManuscript.getOriginalFilename();
+            String extension = ".pdf";
+            if (originalName != null && originalName.contains(".")) {
+                extension = originalName.substring(originalName.lastIndexOf("."));
+            }
+
+            // Đặt tên file theo ID để tối ưu độ dài chuỗi
+            String shortFileName = nextId + extension;
+            File destinationFile = new File(UPLOAD_DIR + shortFileName);
+            fileManuscript.transferTo(destinationFile);
 
             Proposal proposal = Proposal.builder()
                     .id(nextId)
                     .mangaka(currentMangaka)
-                    .seriesName(txtSeriesName)                    
-                    .filePath("/uploads/" + uniqueFileName)
+                    .seriesName(txtSeriesName)                                       
+                    .filePath("/uploads/" + shortFileName) 
                     .status("pending")
                     .build();
 

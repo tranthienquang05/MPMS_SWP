@@ -1,4 +1,3 @@
-/* Reset lề cơ bản cho toàn bộ trang */
 * {
     margin: 0;
     padding: 0;
@@ -6,11 +5,11 @@
     font-family: Arial, sans-serif;
 }
 
-body, html {
+body,
+html {
     height: 100%;
 }
 
-/* Định dạng thanh điều hướng (Header) */
 .header {
     display: flex;
     justify-content: space-between;
@@ -33,27 +32,24 @@ body, html {
     font-size: 16px;
 }
 
-/* Định dạng vùng ảnh nền bao phủ toàn màn hình (trừ đi header) */
 .main-background {
-    background-image: url('https://images.wallpapersden.com/image/download/monkey-d-luffy-manga_bGlsZ26UmZqaraWkpJRmbmdlrWZlbWU.jpg'); 
+    background-image: url("https://images.wallpapersden.com/image/download/monkey-d-luffy-manga_bGlsZ26UmZqaraWkpJRmbmdlrWZlbWU.jpg");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    height: calc(100vh - 60px); 
+    height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    position: relative;
 }
 
-/* Định dạng chữ tiêu đề với hiệu ứng bóng đổ (text-shadow) để nổi bật trên nền ảnh */
 .main-title {
     color: red;
     font-size: 60px;
     font-weight: bold;
     margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8); 
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
 }
 
 .sub-title {
@@ -63,7 +59,6 @@ body, html {
     text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.8);
 }
 
-/* Định dạng Form đăng nhập với nền trắng mờ (opacity 0.9) */
 .login-form {
     background-color: rgba(255, 255, 255, 0.9);
     padding: 30px;
@@ -90,9 +85,8 @@ body, html {
     border-radius: 4px;
 }
 
-/* Định dạng nút submit */
 button[type="submit"] {
-    background-color: #ff3333; 
+    background-color: #ff3333;
     color: white;
     border: none;
     padding: 10px 40px;

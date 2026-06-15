@@ -40,10 +40,10 @@ public class LoginController {
 
         switch (user.getRole()) {
             case "Board":
-                return "redirect:/manga/tantou";
+                return "redirect:/manga/editor";
 
             case "Editor":
-                return "redirect:/manga/editor";
+                return "redirect:/manga/tantou";
 
             case "Mangaka":
                 return "redirect:/manga/mangaka";

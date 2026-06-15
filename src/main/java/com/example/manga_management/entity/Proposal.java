@@ -9,6 +9,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Proposal {
 
     @Id
@@ -27,4 +28,5 @@ public class Proposal {
 
     @Column(length = 30)
     private String content;
+
 }

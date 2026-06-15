@@ -33,5 +33,8 @@ public class Proposal {
     @Column(length = 30)
     private String content;
 
+<<<<<<< HEAD
+>>>>>>> 9f8b42adf0b12fdb920dcb3763566b75d35bf96c
+=======
 >>>>>>> 9f8b42adf0b12fdb920dcb3763566b75d35bf96c
 }

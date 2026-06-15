@@ -12,27 +12,27 @@ import lombok.*;
 public class User {
 
     @Id
-    @Column(length = 6)
+    @Column(name = "ID", length = 6)
     private String id;
 
-    @Column(nullable = false, length = 20)
+    @Column(name = "Role", nullable = false, length = 20)
     private String role;
 
-    @Column(nullable = false, length = 30)
+    @Column(name = "Fullname", nullable = false, length = 30)
     private String fullname;
 
-    @Column(nullable = false, unique = true, length = 30)
+    @Column(name = "Username", nullable = false, unique = true, length = 30)
     private String username;
 
-    @Column(nullable = false, unique = true, length = 30)
+    @Column(name = "Email", nullable = false, unique = true, length = 30)
     private String email;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "Password", nullable = false, length = 30)
     private String password;
 
-    @Column(length = 30)
+    @Column(name = "Avatar", length = 30)
     private String avatar;
 
-    @Column(length = 255)
+    @Column(name = "Profile", length = 255)
     private String profile;
 }

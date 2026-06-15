@@ -14,19 +14,25 @@ import java.time.LocalDate;
 public class Series {
 
     @Id
-    @Column(length = 6)
+    @Column(name = "SeriesID", length = 6)
     private String id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "ProposalID", nullable = false)
+    private Proposal proposal;
 
-    @Column(nullable = false, length = 100)
-    private String thumbnail;
+    @Column(name = "BookJacket", length = 30)
+    private String bookJacket;
 
-    @Column(name = "release_date", nullable = false)
-    private LocalDate releaseDate;
+    @Column(name = "SeriesName", nullable = false, length = 30)
+    private String seriesName;
 
-    @Column(nullable = false, length = 20)
+    @Column(name = "Description", length = 255)
+    private String description;
+
+    @Column(name = "StartDate")
+    private LocalDate startDate;
+
+    @Column(name = "Status", nullable = false, length = 20)
     private String status;
 }

@@ -20,21 +20,23 @@ public class Proposal {
     @JoinColumn(name = "MangakaID", nullable = false)
     private Mangaka mangaka;
 
-    @Column(nullable = false, length = 20)
+    @Column(name = "Status", nullable = false, length = 20)
     private String status;
 
     @Column(name = "SeriesName", nullable = false, length = 30)
     private String seriesName;
 
 <<<<<<< HEAD
+
     @Column(name = "FilePath", length = 30)
     private String filePath;
-=======
+
     @Column(length = 30)
     private String content;
 
-<<<<<<< HEAD
->>>>>>> 9f8b42adf0b12fdb920dcb3763566b75d35bf96c
+
 =======
->>>>>>> 9f8b42adf0b12fdb920dcb3763566b75d35bf96c
+    @Column(name = "FilePath", length = 30)
+    private String filePath;
+>>>>>>> 0dd50fd54d712783f848ed78ff53e281e03709e0
 }

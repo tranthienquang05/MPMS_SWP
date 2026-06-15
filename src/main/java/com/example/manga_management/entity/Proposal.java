@@ -27,6 +27,7 @@ public class Proposal {
     private String seriesName;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     @Column(name = "FilePath", length = 30)
     private String filePath;
@@ -35,6 +36,10 @@ public class Proposal {
     private String content;
 
 
+=======
+    @Column(name = "FilePath", length = 30)
+    private String filePath;
+>>>>>>> 0dd50fd54d712783f848ed78ff53e281e03709e0
 =======
     @Column(name = "FilePath", length = 30)
     private String filePath;

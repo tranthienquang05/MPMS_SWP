@@ -9,6 +9,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Proposal {
 
     @Id
@@ -25,6 +26,12 @@ public class Proposal {
     @Column(name = "SeriesName", nullable = false, length = 30)
     private String seriesName;
 
+<<<<<<< HEAD
+    @Column(name = "FilePath", length = 30)
+    private String filePath;
+=======
     @Column(length = 30)
     private String content;
+
+>>>>>>> 9f8b42adf0b12fdb920dcb3763566b75d35bf96c
 }

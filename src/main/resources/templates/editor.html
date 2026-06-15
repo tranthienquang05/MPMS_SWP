@@ -1,34 +1,69 @@
 <!DOCTYPE html>
-<html lang="vi">
-
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Duyệt xuất bản - Editor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
+<body class="container p-4">
+    <h1 class="text-primary">Chào mừng Tổng Biên Tập / Hội đồng Editor</h1>
+    <p>Khu vực quyết định phê duyệt xuất bản và bỏ phiếu biểu quyết dự án mới.</p>
+    <hr>
 
-<body>
-    <h1>Chào mừng Tổng Biên Tập</h1>
-    <p>Khu vực quyết định phê duyệt xuất bản.</p>
+    <h3 class="text-warning mt-4">🗳️ Danh sách dự án đang mở cổng Bình chọn (Vote)</h3>
+    <table class="table table-bordered table-striped mt-2 shadow-sm">
+        <thead class="table-warning">
+            <tr>
+                <th>Mã Dự Án</th>
+                <th>Tên Tác Phẩm</th>
+                <th>Tóm Tắt Nội Dung</th>
+                <th>Đọc Bản Thảo</th>
+                <th>Biểu Quyết Hệ Thống</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="p : ${votingProposals}">
+                <td th:text="${p.id}"></td>
+                <td th:text="${p.seriesName}"></td>
+                <td th:text="${p.content}"></td>
+                <td>
+                    <a th:href="@{/manga/view-file(path=${p.filePath})}" target="_blank" class="btn btn-sm btn-info text-white">
+                        Xem nội dung file
+                    </a>
+                </td>
+                <td>
+                    <a th:href="@{/manga/editor/approve(id=${p.id})}" class="btn btn-sm btn-success me-1">Chấp Thuận</a>
+                    <a th:href="@{/manga/editor/reject(id=${p.id})}" class="btn btn-sm btn-danger">Bác Bỏ</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(votingProposals)}">
+                <td colspan="5" class="text-center text-muted py-3">Chưa có dự án mới nào được chuyển lên vòng bỏ phiếu chung.</td>
+            </tr>
+        </tbody>
+    </table>
 
-    <h2>Danh sách chờ duyệt cuối</h2>
-    <table border="1">
-        <tr>
-            <th>Tên tác phẩm</th>
-            <th>Chương</th>
-            <th>Hành động</th>
-        </tr>
-        <tr>
-            <td>Hành trình anh hùng</td>
-            <td>12</td>
-            <td>
-                <button>Duyệt xuất bản</button>
-                <button>Yêu cầu sửa lại</button>
-            </td>
-        </tr>
+    <h2 class="mt-5">Danh sách chờ duyệt cuối (Xuất bản)</h2>
+    <table class="table table-bordered bg-white shadow-sm">
+        <thead class="table-secondary">
+            <tr>
+                <th>Tên tác phẩm</th>
+                <th>Chương</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Hành trình anh hùng</td>
+                <td>12</td>
+                <td>
+                    <button class="btn btn-sm btn-success">Duyệt xuất bản</button>
+                    <button class="btn btn-sm btn-warning">Yêu cầu sửa lại</button>
+                </td>
+            </tr>
+        </tbody>
     </table>
 
     <br>
-    <a th:href="@{/manga/logout}">Logout</a>
+    <a th:href="@{/manga/logout}" class="btn btn-danger">Logout</a>
 </body>
-
 </html>

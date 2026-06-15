@@ -19,8 +19,8 @@ public class MangaPage {
     @JoinColumn(name = "ChapterID", nullable = false)
     private Chapter chapter;
 
-    @Column(length = 30)
-    private String content;
+    @Column(name = "FilePath", length = 30)
+    private String filePath;
 
     @Column(nullable = false, length = 20)
     private String status;

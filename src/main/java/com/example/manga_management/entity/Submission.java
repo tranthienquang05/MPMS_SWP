@@ -23,6 +23,6 @@ public class Submission {
     @JoinColumn(name = "AssistantID", nullable = false)
     private Assistant assistant;
 
-    @Column(length = 30)
-    private String content;
+    @Column(name = "FilePath", length = 30)
+    private String filePath;
 }

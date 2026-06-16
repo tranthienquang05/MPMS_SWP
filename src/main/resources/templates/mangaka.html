@@ -4,7 +4,8 @@
         <meta charset="UTF-8">
         <title>Mangaka</title>
         <link rel="stylesheet" th:href="@{/css/all.css}">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
 
     <body>
@@ -13,11 +14,14 @@
                 <p class="name">Tác giả truyện tranh</p>
             </div>
 
-            <a th:href="@{/manga/logout}">
-                <button type="button" class="btn-icon" aria-label="Logout">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                </button>
-            </a>
+            <div class="header-actions">
+
+                <a th:href="@{/manga/logout}">
+                    <button type="button" class="btn-icon" aria-label="Logout">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </button>
+                </a>
+            </div>
         </div>
 
         <ul class="topnav">
@@ -49,16 +53,19 @@
 
         <div class="flex-container">
 
-            <div id="tab-home" class="tab-pane active">
+            <div id="tab-home" class="tab-pane"
+                th:classappend="${message == null && error == null} ? 'active' : ''">
                 <h2>Trang chủ</h2>
                 <button type="button">Xem ranking</button>
             </div>
 
-            <div id="tab-project" class="tab-pane">
+            <div id="tab-project" class="tab-pane"
+                th:classappend="${message != null || error != null} ? 'active' : ''">
                 <h2>Tác phẩm</h2>
                 <button type="button">Thư viện tác phẩm</button>
 
                 <button id="btnOpenModal">Mở form nộp bản thảo</button>
+
                 <div id="proposalModalOverlay" class="modal-overlay">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -95,9 +102,32 @@
                     </div>
                 </div>
 
-                <div class="modal fade" id="proposalModal" tabindex="-1"
-                    aria-hidden="true">
+                <div id="notificationModalOverlay" class="modal-overlay"
+                    th:if="${message != null || error != null}"
+                    style="display: flex;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Thông báo hệ thống</h5>
+                            <button type="button" class="btn-close"
+                                id="btnCloseNotification">X</button>
+                        </div>
+                        <div class="modal-body">
+                            <p
+                                style="text-align: center; font-weight: bold; font-size: 16px;"
+                                th:text="${message ?: error}"
+                                th:styleappend="${message != null} ? 'color: #28a745;' : 'color: #dc3545;'">
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="btnOkNotification"
+                                class="btn-action approve"
+                                style="padding: 8px 20px;">OK</button>
+                        </div>
+                    </div>
                 </div>
+
+                <div class="modal fade" id="proposalModal" tabindex="-1"
+                    aria-hidden="true"></div>
             </div>
 
             <div id="tab-assistant" class="tab-pane">
@@ -165,6 +195,34 @@
                     }
                 });
             });
+            // Thêm đoạn mã này vào cuối hàm xử lý sự kiện DOMContentLoaded hiện có của anh
+const notificationModal = document.getElementById("notificationModalOverlay");
+const btnCloseNotification = document.getElementById("btnCloseNotification");
+const btnOkNotification = document.getElementById("btnOkNotification");
+
+// Hàm thực hiện ẩn cửa sổ thông báo hệ thống
+function closeNotificationModal() {
+    if (notificationModal) {
+        notificationModal.style.display = "none";
+    }
+}
+
+// Đăng ký sự kiện click chuột để tắt cửa sổ nổi thông báo
+if (btnCloseNotification) {
+    btnCloseNotification.addEventListener("click", closeNotificationModal);
+}
+if (btnOkNotification) {
+    btnOkNotification.addEventListener("click", closeNotificationModal);
+}
+
+// Đóng cửa sổ thông báo nếu người dùng click ra vùng mờ bao quanh
+if (notificationModal) {
+    notificationModal.addEventListener("click", function(event) {
+        if (event.target === notificationModal) {
+            closeNotificationModal();
+        }
+    });
+}
         </script>
 
     </body>

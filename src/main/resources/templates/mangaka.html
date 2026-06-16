@@ -1,229 +1,214 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8">
-        <title>Mangaka</title>
-        <link rel="stylesheet" th:href="@{/css/all.css}">
-        <link rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    </head>
 
-    <body>
-        <div class="header">
-            <div class="logo">SANKYUU
-                <p class="name">Tác giả truyện tranh</p>
-            </div>
+<head>
+    <meta charset="UTF-8">
+    <title>Mangaka</title>
+    <link rel="stylesheet" th:href="@{/css/all.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
 
-            <div class="header-actions">
-
-                <a th:href="@{/manga/logout}">
-                    <button type="button" class="btn-icon" aria-label="Logout">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                    </button>
-                </a>
-            </div>
+<body>
+    <div class="header">
+        <div class="logo">SANKYUU
+            <p class="name">Tác giả truyện tranh</p>
         </div>
 
-        <ul class="topnav">
-            <li>
-                <button type="button" class="btn-icon"
-                    onclick="openTab('tab-home')">
-                    <i class="fa-solid fa-house"></i>
+        <div class="header-actions">
+
+            <a th:href="@{/manga/logout}">
+                <button type="button" class="btn-icon" aria-label="Logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
                 </button>
-            </li>
-            <li>
-                <button type="button" class="btn-icon"
-                    onclick="openTab('tab-project')">
-                    <i class="fa-solid fa-folder-open"></i>
-                </button>
-            </li>
-            <li>
-                <button type="button" class="btn-icon"
-                    onclick="openTab('tab-assistant')">
-                    <i class="fa-solid fa-user"></i>
-                </button>
-            </li>
-            <li>
-                <button type="button" class="btn-icon"
-                    onclick="openTab('tab-other')">
-                    <i class="fa-solid fa-hashtag"></i>
-                </button>
-            </li>
-        </ul>
+            </a>
+        </div>
+    </div>
 
-        <div class="flex-container">
+    <ul class="topnav">
+        <li>
+            <button type="button" class="btn-icon" onclick="openTab('tab-home')">
+                <i class="fa-solid fa-house"></i>
+            </button>
+        </li>
+        <li>
+            <button type="button" class="btn-icon" onclick="openTab('tab-project')">
+                <i class="fa-solid fa-folder-open"></i>
+            </button>
+        </li>
+        <li>
+            <button type="button" class="btn-icon" onclick="openTab('tab-assistant')">
+                <i class="fa-solid fa-user"></i>
+            </button>
+        </li>
+        <li>
+            <button type="button" class="btn-icon" onclick="openTab('tab-other')">
+                <i class="fa-solid fa-hashtag"></i>
+            </button>
+        </li>
+    </ul>
 
-            <div id="tab-home" class="tab-pane"
-                th:classappend="${message == null } ? 'active' : ''">
-                <h2>Trang chủ</h2>
-                <button type="button">Xem ranking</button>
-            </div>
+    <div class="flex-container">
 
-            <div id="tab-project" class="tab-pane"
-                th:classappend="${message != null} ? 'active' : ''">
-                <h2>Tác phẩm</h2>
-                <button type="button">Thư viện tác phẩm</button>
+        <div id="tab-home" class="tab-pane" th:classappend="${message == null } ? 'active' : ''">
+            <h2>Trang chủ</h2>
+            <button type="button">Xem ranking</button>
+        </div>
 
-                <button id="btnOpenModal">Mở form nộp bản thảo</button>
+        <div id="tab-project" class="tab-pane" th:classappend="${message != null} ? 'active' : ''">
+            <h2>Tác phẩm</h2>
+            <button type="button">Thư viện tác phẩm</button>
 
-                <div id="proposalModalOverlay" class="modal-overlay">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="proposalModalLabel">Đăng
-                                Ký Đề Xuất Dự Án Mới</h5>
-                            <button type="button" class="btn-close"
-                                id="btnCloseTop">X</button>
-                        </div>
-                        <form th:action="@{/manga/mangaka/submit-proposal}"
-                            method="POST" enctype="multipart/form-data">
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Tên dự án
-                                        (Series Name):</label>
-                                    <input type="text" name="txtSeriesName"
-                                        class="form-control" maxlength="30"
-                                        required
-                                        placeholder="Nhập tên bộ truyện...">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Tệp bản
-                                        thảo đính kèm (PDF/ZIP):</label>
-                                    <input type="file" name="fileManuscript"
-                                        class="form-control"
-                                        accept=".pdf,.zip,.rar" required>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button"
-                                    id="btnCancel">Hủy</button>
-                                <button type="submit">Submit</button>
-                            </div>
-                        </form>
+            <button id="btnOpenModal">Mở form nộp bản thảo</button>
+
+            <div id="proposalModalOverlay" class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="proposalModalLabel">Đăng
+                            Ký Đề Xuất Dự Án Mới</h5>
+                        <button type="button" class="btn-close" id="btnCloseTop">X</button>
                     </div>
-                </div>
-
-                <div id="notificationModalOverlay" class="modal-overlay"
-                    th:if="${message != null}"
-                    style="display: flex;">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Thông báo hệ thống</h5>
-                            <button type="button" class="btn-close"
-                                id="btnCloseNotification">X</button>
-                        </div>
+                    <form th:action="@{/manga/mangaka/submit-proposal}" method="POST" enctype="multipart/form-data">
                         <div class="modal-body">
-                            <p
-                                style="text-align: center; font-weight: bold; font-size: 16px;"
-                                th:text="${message ?: error}"
-                                th:styleappend="${message != null} ? 'color: #28a745;' : 'color: #dc3545;'">
-                            </p>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tên dự án
+                                    (Series Name):</label>
+                                <input type="text" name="txtSeriesName" class="form-control" maxlength="30" required
+                                    placeholder="Nhập tên bộ truyện...">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tệp bản
+                                    thảo đính kèm (PDF/ZIP):</label>
+                                <input type="file" name="fileManuscript" class="form-control" accept=".pdf,.zip,.rar"
+                                    required>
+                            </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" id="btnOkNotification"
-                                class="btn-action approve"
-                                style="padding: 8px 20px;">OK</button>
+                            <button type="button" id="btnCancel">Hủy</button>
+                            <button type="submit">Submit</button>
                         </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="notificationModalOverlay" class="modal-overlay" th:if="${message != null}" style="display: flex;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Thông báo hệ thống</h5>
+                        <button type="button" class="btn-close" id="btnCloseNotification">X</button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="text-align: center; font-weight: bold; font-size: 16px;" th:text="${message ?: error}"
+                            th:styleappend="${message != null} ? 'color: #28a745;' : 'color: #dc3545;'">
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="btnOkNotification" class="btn-action approve"
+                            style="padding: 8px 20px;">OK</button>
                     </div>
                 </div>
-
-                <div class="modal fade" id="proposalModal" tabindex="-1"
-                    aria-hidden="true"></div>
             </div>
 
-            <div id="tab-assistant" class="tab-pane">
-                <h2>Quản lý Trợ lý</h2>
-                <p>Tính năng đang phát triển...</p>
-            </div>
-
-            <div id="tab-other" class="tab-pane">
-                <h2>Cài đặt khác</h2>
-                <p>Tính năng đang phát triển...</p>
-            </div>
-
+            <div class="modal fade" id="proposalModal" tabindex="-1" aria-hidden="true"></div>
         </div>
-        <script>
-            /**
-             * Hàm điều phối việc chuyển đổi giữa các Tab.
-             * @param {string} tabId - Chuỗi ID của thẻ div chứa nội dung cần hiển thị.
-             */
-            function openTab(tabId) {
-                var tabPanes = document.getElementsByClassName("tab-pane");
-                
-                for (var i = 0; i < tabPanes.length; i++) {
-                    tabPanes[i].classList.remove("active");
-                }
-                
-                document.getElementById(tabId).classList.add("active");
+        <a th:href="@{/api/ai/features}">
+            <button type="button" class="btn-icon" aria-label="AI">
+                <i class="fa-solid fa-brain"></i>
+            </button>
+        </a>
+        <div id="tab-assistant" class="tab-pane">
+            <h2>Quản lý Trợ lý</h2>
+            <p>Tính năng đang phát triển...</p>
+        </div>
+        <div id="tab-other" class="tab-pane">
+            <h2>Cài đặt khác</h2>
+            <p>Tính năng đang phát triển...</p>
+        </div>
+
+    </div>
+    <script>
+        /**
+         * Hàm điều phối việc chuyển đổi giữa các Tab.
+         * @param {string} tabId - Chuỗi ID của thẻ div chứa nội dung cần hiển thị.
+         */
+        function openTab(tabId) {
+            var tabPanes = document.getElementsByClassName("tab-pane");
+
+            for (var i = 0; i < tabPanes.length; i++) {
+                tabPanes[i].classList.remove("active");
             }
 
-            // Xử lý logic cho Modal (cửa sổ nổi) nộp bản thảo
-            document.addEventListener("DOMContentLoaded", function() {
-                // Lấy các tham chiếu đến các phần tử DOM
-                const modalOverlay = document.getElementById("proposalModalOverlay");
-                const btnOpen = document.getElementById("btnOpenModal");
-                const btnCloseTop = document.getElementById("btnCloseTop");
-                const btnCancel = document.getElementById("btnCancel");
-
-                // Hàm thực thi việc mở cửa sổ nổi
-                function openModal() {
-                    modalOverlay.style.display = "flex";
-                }
-
-                // Hàm thực thi việc đóng cửa sổ nổi
-                function closeModal() {
-                    modalOverlay.style.display = "none";
-                }
-
-                // Lắng nghe sự kiện mở modal
-                if (btnOpen) {
-                    btnOpen.addEventListener("click", openModal);
-                }
-
-                // Lắng nghe sự kiện đóng modal từ nút X và nút Hủy
-                if (btnCloseTop) {
-                    btnCloseTop.addEventListener("click", closeModal);
-                }
-                if (btnCancel) {
-                    btnCancel.addEventListener("click", closeModal);
-                }
-
-                // Xử lý logic đóng cửa sổ khi click ra ngoài vùng nội dung
-                modalOverlay.addEventListener("click", function(event) {
-                    // Chỉ đóng khi phần tử bị click chính xác là vùng mờ (không phải các thẻ con bên trong)
-                    if (event.target === modalOverlay) {
-                        closeModal();
-                    }
-                });
-            });
-            // Thêm đoạn mã này vào cuối hàm xử lý sự kiện DOMContentLoaded hiện có của anh
-const notificationModal = document.getElementById("notificationModalOverlay");
-const btnCloseNotification = document.getElementById("btnCloseNotification");
-const btnOkNotification = document.getElementById("btnOkNotification");
-
-// Hàm thực hiện ẩn cửa sổ thông báo hệ thống
-function closeNotificationModal() {
-    if (notificationModal) {
-        notificationModal.style.display = "none";
-    }
-}
-
-// Đăng ký sự kiện click chuột để tắt cửa sổ nổi thông báo
-if (btnCloseNotification) {
-    btnCloseNotification.addEventListener("click", closeNotificationModal);
-}
-if (btnOkNotification) {
-    btnOkNotification.addEventListener("click", closeNotificationModal);
-}
-
-// Đóng cửa sổ thông báo nếu người dùng click ra vùng mờ bao quanh
-if (notificationModal) {
-    notificationModal.addEventListener("click", function(event) {
-        if (event.target === notificationModal) {
-            closeNotificationModal();
+            document.getElementById(tabId).classList.add("active");
         }
-    });
-}
-        </script>
 
-    </body>
+        // Xử lý logic cho Modal (cửa sổ nổi) nộp bản thảo
+        document.addEventListener("DOMContentLoaded", function () {
+            // Lấy các tham chiếu đến các phần tử DOM
+            const modalOverlay = document.getElementById("proposalModalOverlay");
+            const btnOpen = document.getElementById("btnOpenModal");
+            const btnCloseTop = document.getElementById("btnCloseTop");
+            const btnCancel = document.getElementById("btnCancel");
+
+            // Hàm thực thi việc mở cửa sổ nổi
+            function openModal() {
+                modalOverlay.style.display = "flex";
+            }
+
+            // Hàm thực thi việc đóng cửa sổ nổi
+            function closeModal() {
+                modalOverlay.style.display = "none";
+            }
+
+            // Lắng nghe sự kiện mở modal
+            if (btnOpen) {
+                btnOpen.addEventListener("click", openModal);
+            }
+
+            // Lắng nghe sự kiện đóng modal từ nút X và nút Hủy
+            if (btnCloseTop) {
+                btnCloseTop.addEventListener("click", closeModal);
+            }
+            if (btnCancel) {
+                btnCancel.addEventListener("click", closeModal);
+            }
+
+            // Xử lý logic đóng cửa sổ khi click ra ngoài vùng nội dung
+            modalOverlay.addEventListener("click", function (event) {
+                // Chỉ đóng khi phần tử bị click chính xác là vùng mờ (không phải các thẻ con bên trong)
+                if (event.target === modalOverlay) {
+                    closeModal();
+                }
+            });
+        });
+        // Thêm đoạn mã này vào cuối hàm xử lý sự kiện DOMContentLoaded hiện có của anh
+        const notificationModal = document.getElementById("notificationModalOverlay");
+        const btnCloseNotification = document.getElementById("btnCloseNotification");
+        const btnOkNotification = document.getElementById("btnOkNotification");
+
+        // Hàm thực hiện ẩn cửa sổ thông báo hệ thống
+        function closeNotificationModal() {
+            if (notificationModal) {
+                notificationModal.style.display = "none";
+            }
+        }
+
+        // Đăng ký sự kiện click chuột để tắt cửa sổ nổi thông báo
+        if (btnCloseNotification) {
+            btnCloseNotification.addEventListener("click", closeNotificationModal);
+        }
+        if (btnOkNotification) {
+            btnOkNotification.addEventListener("click", closeNotificationModal);
+        }
+
+        // Đóng cửa sổ thông báo nếu người dùng click ra vùng mờ bao quanh
+        if (notificationModal) {
+            notificationModal.addEventListener("click", function (event) {
+                if (event.target === notificationModal) {
+                    closeNotificationModal();
+                }
+            });
+        }
+    </script>
+
+</body>
+
 </html>

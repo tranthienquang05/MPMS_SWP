@@ -23,22 +23,26 @@
 
         <ul class="topnav">
             <li>
-                <button type="button" class="btn-icon" onclick="openTab('tab-home')">
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-home')">
                     <i class="fa-solid fa-house"></i>
                 </button>
             </li>
             <li>
-                <button type="button" class="btn-icon" onclick="openTab('tab-project')">
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-project')">
                     <i class="fa-solid fa-folder-open"></i>
                 </button>
             </li>
             <li>
-                <button type="button" class="btn-icon" onclick="openTab('tab-assistant')">
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-assistant')">
                     <i class="fa-solid fa-user"></i>
                 </button>
             </li>
             <li>
-                <button type="button" class="btn-icon" onclick="openTab('tab-other')">
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-other')">
                     <i class="fa-solid fa-hashtag"></i>
                 </button>
             </li>
@@ -54,34 +58,46 @@
             <div id="tab-project" class="tab-pane">
                 <h2>Tác phẩm</h2>
                 <button type="button">Thư viện tác phẩm</button>
-                <div class="modal fade" id="proposalModal" tabindex="-1" aria-labelledby="proposalModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
+
+                <button id="btnOpenModal">Mở form nộp bản thảo</button>
+                <div id="proposalModalOverlay" class="modal-overlay">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="proposalModalLabel">Đăng Ký Đề Xuất Dự Án Mới</h5>
-                            <button type="button" class="btn-close" data-bs-shadow="modal" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <h5 class="modal-title" id="proposalModalLabel">Đăng
+                                Ký Đề Xuất Dự Án Mới</h5>
+                            <button type="button" class="btn-close"
+                                id="btnCloseTop">X</button>
                         </div>
-                        <form th:action="@{/manga/mangaka/submit-proposal}" method="POST" enctype="multipart/form-data">
+                        <form th:action="@{/manga/mangaka/submit-proposal}"
+                            method="POST" enctype="multipart/form-data">
                             <div class="modal-body">
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Tên dự án (Series Name):</label>
-                                    <input type="text" name="txtSeriesName" class="form-control" maxlength="30" required placeholder="Nhập tên bộ truyện...">
+                                    <label class="form-label fw-bold">Tên dự án
+                                        (Series Name):</label>
+                                    <input type="text" name="txtSeriesName"
+                                        class="form-control" maxlength="30"
+                                        required
+                                        placeholder="Nhập tên bộ truyện...">
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Tệp bản thảo đính kèm (PDF/ZIP):</label>
-                                    <input type="file" name="fileManuscript" class="form-control"accept=".pdf,.zip,.rar" required>
+                                    <label class="form-label fw-bold">Tệp bản
+                                        thảo đính kèm (PDF/ZIP):</label>
+                                    <input type="file" name="fileManuscript"
+                                        class="form-control"
+                                        accept=".pdf,.zip,.rar" required>
                                 </div>
                             </div>
                             <div class="modal-footer">
-                                <button type="submit">Đóng</button>
+                                <button type="button"
+                                    id="btnCancel">Hủy</button>
                                 <button type="submit">Submit</button>
                             </div>
                         </form>
                     </div>
                 </div>
-            </div>
 
-                <div class="modal fade" id="proposalModal" tabindex="-1" aria-hidden="true">
+                <div class="modal fade" id="proposalModal" tabindex="-1"
+                    aria-hidden="true">
                 </div>
             </div>
 
@@ -97,19 +113,60 @@
 
         </div>
         <script>
-        /**
-         * Hàm điều phối việc chuyển đổi giữa các Tab.
-         * @param {string} tabId - Chuỗi ID của thẻ div chứa nội dung cần hiển thị.
-         */
-        function openTab(tabId) {
-            var tabPanes = document.getElementsByClassName("tab-pane");
-            
-            for (var i = 0; i < tabPanes.length; i++) {
-                tabPanes[i].classList.remove("active");
+            /**
+             * Hàm điều phối việc chuyển đổi giữa các Tab.
+             * @param {string} tabId - Chuỗi ID của thẻ div chứa nội dung cần hiển thị.
+             */
+            function openTab(tabId) {
+                var tabPanes = document.getElementsByClassName("tab-pane");
+                
+                for (var i = 0; i < tabPanes.length; i++) {
+                    tabPanes[i].classList.remove("active");
+                }
+                
+                document.getElementById(tabId).classList.add("active");
             }
-            
-            document.getElementById(tabId).classList.add("active");
-        }
-    </script>
+
+            // Xử lý logic cho Modal (cửa sổ nổi) nộp bản thảo
+            document.addEventListener("DOMContentLoaded", function() {
+                // Lấy các tham chiếu đến các phần tử DOM
+                const modalOverlay = document.getElementById("proposalModalOverlay");
+                const btnOpen = document.getElementById("btnOpenModal");
+                const btnCloseTop = document.getElementById("btnCloseTop");
+                const btnCancel = document.getElementById("btnCancel");
+
+                // Hàm thực thi việc mở cửa sổ nổi
+                function openModal() {
+                    modalOverlay.style.display = "flex";
+                }
+
+                // Hàm thực thi việc đóng cửa sổ nổi
+                function closeModal() {
+                    modalOverlay.style.display = "none";
+                }
+
+                // Lắng nghe sự kiện mở modal
+                if (btnOpen) {
+                    btnOpen.addEventListener("click", openModal);
+                }
+
+                // Lắng nghe sự kiện đóng modal từ nút X và nút Hủy
+                if (btnCloseTop) {
+                    btnCloseTop.addEventListener("click", closeModal);
+                }
+                if (btnCancel) {
+                    btnCancel.addEventListener("click", closeModal);
+                }
+
+                // Xử lý logic đóng cửa sổ khi click ra ngoài vùng nội dung
+                modalOverlay.addEventListener("click", function(event) {
+                    // Chỉ đóng khi phần tử bị click chính xác là vùng mờ (không phải các thẻ con bên trong)
+                    if (event.target === modalOverlay) {
+                        closeModal();
+                    }
+                });
+            });
+        </script>
+
     </body>
 </html>

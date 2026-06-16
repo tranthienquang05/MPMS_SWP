@@ -24,14 +24,14 @@ public class TantouController {
 
     @GetMapping("/tantou")
     public String tantouPage(HttpSession session, Model model) {
-
         if (session.getAttribute("user") == null) {
             return "redirect:/manga/login";
         }
-        List<Proposal> list = proposalRepository.findByStatus("finish");
+
+        List<Proposal> list = proposalRepository.findByStatusCustom("finish");
+        System.err.println(">>> DEBUG: SỐ LƯỢNG BẢN GHI TÌM THẤY LÀ: " + list.size());
 
         model.addAttribute("listProposals", list);
-
         return "tantou";
     }
 

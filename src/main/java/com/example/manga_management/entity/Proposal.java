@@ -1,21 +1,10 @@
 package com.example.manga_management.entity;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
-@Table(name = "proposal")
+@Table(name = "proposal") // Tên bảng trong DB
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,11 +13,11 @@ import lombok.Setter;
 public class Proposal {
 
     @Id
-    @Column(name = "ProposalID", length = 6)
+    @Column(name = "ProposalID", length = 6, nullable = false)
     private String id;
 
-
-    @ManyToOne
+    // Quan hệ ManyToOne với Mangaka
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MangakaID", nullable = false)
     private Mangaka mangaka;
 
@@ -40,7 +29,9 @@ public class Proposal {
 
     @Column(name = "FilePath", length = 60)
     private String filePath;
-    
-    @OneToOne(mappedBy = "proposal", cascade = CascadeType.ALL)
+
+    // Quan hệ OneToOne với Series
+    // mappedBy trỏ tới tên biến 'proposal' trong entity Series
+    @OneToOne(mappedBy = "proposal", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Series series;
 }

@@ -104,7 +104,7 @@ public class MangakaController {
             model.addAttribute("message", "Đã nộp dự án mới và lưu bản thảo thành công!");
         } catch (IOException e) {
             e.printStackTrace();
-            model.addAttribute("error", "Lỗi hệ thống khi lưu file: " + e.getMessage());
+            model.addAttribute("message", "Lỗi hệ thống khi lưu file: " + e.getMessage());
         }
 
         model.addAttribute("user", user);

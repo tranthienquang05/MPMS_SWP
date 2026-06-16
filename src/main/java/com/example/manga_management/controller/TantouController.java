@@ -1,6 +1,7 @@
 package com.example.manga_management.controller;
 
 import java.util.List;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.repository.ProposalRepository;
+
 import jakarta.servlet.http.HttpSession;
 
 @Controller
@@ -23,9 +25,9 @@ public class TantouController {
     @GetMapping("/tantou")
     public String tantouPage(HttpSession session, Model model) {
 
-        if (session.getAttribute("user") == null)
+        if (session.getAttribute("user") == null) {
             return "redirect:/manga/login";
-
+        }
         List<Proposal> list = proposalRepository.findByStatus("finish");
 
         model.addAttribute("listProposals", list);

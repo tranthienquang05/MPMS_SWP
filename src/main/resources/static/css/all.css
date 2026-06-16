@@ -292,3 +292,63 @@ ul.topnav li a:hover {
     border-top: 1px solid #ddd;
     padding-top: 15px;
 }
+
+/* CSS cho sub-tab */
+.sub-tab-container {
+    margin-bottom: 20px;
+}
+
+.btn-sub-tab {
+    background-color: #f1f1f1;
+    color: black;
+    border: 1px solid #ccc;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-sub-tab.active {
+    background-color: #4c4c4c;
+    color: white;
+}
+
+/* CSS cho bảng dữ liệu */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.data-table th, .data-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.data-table th {
+    background-color: #333333;
+    color: white;
+}
+
+/* CSS cho các nút hành động */
+.btn-action {
+    padding: 5px 10px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.btn-action.approve {
+    background-color: #28a745;
+}
+
+.btn-action.reject {
+    background-color: #dc3545;
+}
+
+.btn-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+}

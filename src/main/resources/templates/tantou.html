@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
+    <head>
         <meta charset="UTF-8">
-        <title>Đăng nhập hệ thống Manga</title>
+        <title>Tantou</title>
         <link rel="stylesheet" th:href="@{/css/all.css}">
-        <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
-<body>
-    <div class="header">
+    <body>
+        <div class="header">
             <div class="logo">SANKYUU</div>
             <a th:href="@{/manga/logout}"><button type="submit">Logout</button></a>
         </div>
 
-        <h1>Chào mừng Tác giả</h1>
-        <p>Đây là khu vực làm việc của Mangaka</p>
+        <h1>Chào mừng Tantou</h1>
+        <p>Đây là khu vực làm việc của Tantou</p>
 
         <ul class="topnav">
             <li>
@@ -47,14 +47,72 @@
 
             <div id="tab-project" class="tab-pane">
                 <h2>Tác phẩm</h2>
-                <button type="button">Thư viện tác phẩm</button>
-                <button type="button" data-bs-toggle="modal"
-                    data-bs-target="#proposalModal">
-                    ➕ Tạo tác phẩm mới (Nộp dự án)
-                </button>
 
-                <div class="modal fade" id="proposalModal" tabindex="-1"
-                    aria-hidden="true">
+                <div class="sub-tab-container">
+                    <button type="button" class="btn-sub-tab" onclick="openSubTab('sub-tab-sent')">Thư viện dự án được gửi</button>
+                    <button type="button" class="btn-sub-tab active" onclick="openSubTab('sub-tab-new')">Thư viện bản thảo mới được gửi</button>
+                </div>
+
+                <div id="sub-tab-sent" class="sub-tab-pane" style="display: none;">
+                    <p>Chưa có dữ liệu dự án.</p>
+                </div>
+
+                <div id="sub-tab-new" class="sub-tab-pane" style="display: block;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Series</th>
+                                <th>Mã Đề Xuất</th>
+                                <th>Ảnh Bìa</th>
+                                <th>Tên Series</th>
+                                <th>Mô Tả</th>
+                                <th>Ngày Bắt Đầu</th>
+                                <th>Trạng Thái</th>
+                                <th>Xem File</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="proposal : ${listProposals}">
+
+                                <td th:text="${proposal.series != null ? proposal.series.id : 'Chưa có'}"></td>
+                                
+                                <td th:text="${proposal.id}"></td>
+
+                                <td>
+                                    <img th:if="${proposal.series != null and proposal.series.bookJacket != null}"
+                                        th:src="@{'/images/' + ${proposal.series.bookJacket}}"
+                                        alt="Bìa" width="50" height="70" />
+                                    <span th:unless="${proposal.series != null and proposal.series.bookJacket != null}">Chưa có ảnh</span>
+                                </td>
+
+                                <td th:text="${proposal.seriesName}"></td>
+
+                                <td th:text="${proposal.series != null ? proposal.series.description : 'Đang cập nhật'}"></td>
+                                
+                                <td th:text="${proposal.series != null ? proposal.series.startDate : 'Chưa có'}"></td>
+
+                                <td th:text="${proposal.status}"></td>
+
+                                <td>
+                                    <a th:href="@{'/files/' + ${proposal.filePath}}" target="_blank" class="btn-link">Xem bản thảo</a>
+                                </td>
+                                
+                                <td>
+                                    <form th:action="@{/tantou/review}" method="POST" style="display: inline-block;">
+                                        <input type="hidden" name="id" th:value="${proposal.id}">
+                                        <input type="hidden" name="action" value="yes">
+                                        <button type="submit" class="btn-action approve">Duyệt</button>
+                                    </form>
+                                    <form th:action="@{/tantou/review}" method="POST" style="display: inline-block;">
+                                        <input type="hidden" name="id" th:value="${proposal.id}">
+                                        <input type="hidden" name="action" value="no">
+                                        <button type="submit" class="btn-action reject">Từ chối</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -71,8 +129,7 @@
         </div>
         <script>
         /**
-         * Hàm điều phối việc chuyển đổi giữa các Tab.
-         * @param {string} tabId - Chuỗi ID của thẻ div chứa nội dung cần hiển thị.
+         * Hàm điều phối việc chuyển đổi giữa các Tab lớn.
          */
         function openTab(tabId) {
             var tabPanes = document.getElementsByClassName("tab-pane");
@@ -83,6 +140,24 @@
             
             document.getElementById(tabId).classList.add("active");
         }
-    </script>
-</body>
+
+        /**
+         * Hàm điều phối việc chuyển đổi giữa các Sub-Tab (Tác phẩm).
+         */
+        function openSubTab(subTabId) {
+            var subTabPanes = document.getElementsByClassName("sub-tab-pane");
+            for (var i = 0; i < subTabPanes.length; i++) {
+                subTabPanes[i].style.display = "none";
+            }
+            
+            var subTabBtns = document.getElementsByClassName("btn-sub-tab");
+            for (var i = 0; i < subTabBtns.length; i++) {
+                subTabBtns[i].classList.remove("active");
+            }
+            
+            document.getElementById(subTabId).style.display = "block";
+            event.currentTarget.classList.add("active");
+        }
+        </script>
+    </body>
 </html>

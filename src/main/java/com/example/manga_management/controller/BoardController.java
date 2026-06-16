@@ -1,6 +1,10 @@
 package com.example.manga_management.controller;
 
+import java.util.List;
+
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -13,6 +17,15 @@ public class BoardController {
 
     public BoardController(ProposalRepository proposalRepository) {
         this.proposalRepository = proposalRepository;
+    }
+
+    @GetMapping("/board")
+    public String boardPage(Model model) {
+        List<Proposal> list = proposalRepository.findByStatus("checked");
+
+        model.addAttribute("listProposals", list);
+
+        return "board";
     }
 
     @PostMapping("/board/review")

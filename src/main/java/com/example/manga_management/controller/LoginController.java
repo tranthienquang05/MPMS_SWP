@@ -50,7 +50,7 @@ public class LoginController {
         switch (user.getRole().toLowerCase()) {
             case "board":
                 return "redirect:/manga/editor";
-            case "editor":
+            case "tantor":
                 return "redirect:/manga/tantou";
             case "mangaka":
                 return "redirect:/manga/mangaka";

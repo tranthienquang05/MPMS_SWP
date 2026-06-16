@@ -8,7 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface MangakaRepository extends JpaRepository<Mangaka, String> {
-    
-    // Tìm kiếm thông tin Mangaka dựa trên đối tượng User truyền vào
     Optional<Mangaka> findByUser(User user);
 }

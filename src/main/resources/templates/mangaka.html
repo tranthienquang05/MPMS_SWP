@@ -54,13 +54,13 @@
         <div class="flex-container">
 
             <div id="tab-home" class="tab-pane"
-                th:classappend="${message == null && error == null} ? 'active' : ''">
+                th:classappend="${message == null } ? 'active' : ''">
                 <h2>Trang chủ</h2>
                 <button type="button">Xem ranking</button>
             </div>
 
             <div id="tab-project" class="tab-pane"
-                th:classappend="${message != null || error != null} ? 'active' : ''">
+                th:classappend="${message != null} ? 'active' : ''">
                 <h2>Tác phẩm</h2>
                 <button type="button">Thư viện tác phẩm</button>
 
@@ -103,7 +103,7 @@
                 </div>
 
                 <div id="notificationModalOverlay" class="modal-overlay"
-                    th:if="${message != null || error != null}"
+                    th:if="${message != null}"
                     style="display: flex;">
                     <div class="modal-content">
                         <div class="modal-header">

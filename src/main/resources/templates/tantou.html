@@ -14,7 +14,7 @@
 <body>
     <div class="header">
         <div class="logo">SANKYUU</div>
-        <a th:href="@{/manga/logout}"><button type="button">Logout</button></a>
+        <a th:href="@{/login/logout}"><button type="button">Logout</button></a>
     </div>
 
     <h1>Chào mừng Tantou</h1>
@@ -41,6 +41,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <p th:text="${#lists.size(listProposals)}"></p>
                         <tr th:if="${listProposals == null or listProposals.isEmpty()}">
                             <td colspan="4" style="text-align: center;">Không có dữ liệu bản thảo.</td>
                         </tr>

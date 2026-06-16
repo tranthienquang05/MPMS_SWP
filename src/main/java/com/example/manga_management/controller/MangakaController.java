@@ -36,7 +36,7 @@ public class MangakaController {
     public String mangakaPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if (user == null)
-            return "redirect:/manga/login";
+            return "redirect:/login";
 
         model.addAttribute("user", user);
         return "mangaka";
@@ -51,7 +51,7 @@ public class MangakaController {
 
         User user = (User) session.getAttribute("user");
         if (user == null)
-            return "redirect:/manga/login";
+            return "redirect:/login";
 
         Mangaka currentMangaka = mangakaRepository.findByUser(user).orElse(null);
         if (currentMangaka == null) {

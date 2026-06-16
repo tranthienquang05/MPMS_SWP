@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap');
+
 * {
     margin: 0;
     padding: 0;
@@ -11,6 +13,8 @@ html {
 }
 
 .header {
+    /* Đảm bảo padding không làm tăng tổng chiều cao 60px đã thiết lập */
+    box-sizing: border-box; 
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -18,6 +22,10 @@ html {
     background-color: #262626;
     border-bottom: 1px solid #ddd;
     height: 60px;
+    /* Cố định header trên cùng và ưu tiên lớp hiển thị cao nhất */
+    position: sticky; 
+    top: 0;
+    z-index: 1000; 
 }
 
 .header .logo {
@@ -33,10 +41,26 @@ html {
 }
 
 .main-background {
-    background-image: url("https://images.wallpapersden.com/image/download/monkey-d-luffy-manga_bGlsZ26UmZqaraWkpJRmbmdlrWZlbWU.jpg");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    background-image: 
+        url("./images/image-login-1.jpg"),
+        url("./images/image-center.png"),
+        url("./images/image-login-2.jpg");
+
+    background-size: 
+        calc(100% / 3) 100%, 
+        calc(100% / 3) 100%, 
+        calc(100% / 3) 100%;
+
+    background-position: 
+        left center, 
+        center center, 
+        right center;
+
+    background-repeat: 
+        no-repeat, 
+        no-repeat, 
+        no-repeat;
+    
     background-color: #262626;
     height: calc(100vh - 60px);
     display: flex;
@@ -46,16 +70,25 @@ html {
 }
 
 .main-title {
-    color: rgb(255, 255, 255);
+    color: #DA251D; 
+    /* Ưu tiên dùng Oswald, nếu lỗi mạng sẽ lùi về Impact */
+    font-family: 'Oswald', Arial, sans-serif; 
+    text-transform: uppercase; 
     font-size: 60px;
     font-weight: bold;
     margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(50, 50, 50, 0.8);
     display: inline-block;
-    background-color: rgba(0, 0, 0, 0.5);
     padding: 8px 16px;
     border-radius: 4px;
+    background-color: transparent; 
+    text-shadow: none; 
 }
+
+.main-title .indent-text {
+    display: block; 
+    margin-left: 150px; 
+} 
+
 .sub-background {
     background-size: cover;
     background-position: center;
@@ -69,14 +102,12 @@ html {
 }
 
 .sub-title {
-    color: rgb(255, 255, 255);
-    font-size: 20px;
-    margin-bottom: 30px;
-    text-shadow: 1px 1px 3px rgba(50, 50, 50, 0.8);
-    display: inline-block;
-    background-color: rgba(0, 0, 0, 0.5);
-    padding: 8px 16px;
-    border-radius: 4px;
+    color: #000000;
+    font-family: 'Oswald', Impact, sans-serif;
+    font-size: 22px;
+    text-transform: uppercase;
+    letter-spacing: 2px;   
+    font-weight: 600; 
 }
 
 .login-form {
@@ -118,4 +149,52 @@ button[type="submit"] {
 
 button[type="submit"]:hover {
     background-color: #686060;
+}
+
+/* design div */
+div.flex-container {
+  display: flex;
+  flex-direction: row;
+  /* Đẩy nội dung sang phải 200px để nhường chỗ cho thanh điều hướng fixed */
+  /* Lưu ý: Giá trị 200px này phải bằng đúng với thuộc tính 'width' của ul.topnav */
+  margin-left: 100px; 
+  
+  /* Cấu hình thêm padding để nội dung không bị dính sát vào mép của thanh menu */
+  padding-left: 20px; 
+}
+
+div.flex-container > div {
+  margin: 10px;
+}
+
+/* thanh điều hướng */
+ul.topnav {
+    display: flex;
+    flex-direction: column;
+    width: 100px;
+    /* Chiều cao tổng (100vh) trừ đi chiều cao của header (60px) */
+    height: calc(100vh - 60px); 
+    position: fixed;
+    left: 0;
+    /* Bắt đầu vẽ UI từ tọa độ 60px trở xuống, nhường chỗ cho header */
+    top: 60px; 
+    background-color: #333333;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+}
+
+/* Định dạng cho các thẻ liên kết bên trong */
+ul.topnav li a {
+  display: block; /* Đảm bảo vùng click chuột bao phủ toàn bộ chiều rộng của phần tử li */
+  color: #f1f1f1;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+/* Hiệu ứng tương tác khi di chuột qua liên kết */
+ul.topnav li a:hover {
+  background-color: #dddddd;
+  color: black;
 }

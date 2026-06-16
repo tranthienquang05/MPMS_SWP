@@ -1,46 +1,24 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<<<<<<< Updated upstream
 <head>
     <meta charset="UTF-8">
     <title>Đăng nhập hệ thống Manga</title>
-    <link rel="stylesheet" th:href="@{/css/login.css}">
+    <link rel="stylesheet" th:href="@{/css/all.css}">
 </head>
 <body>
 
     <div class="header">
         <div class="logo">SANKYUU</div>
-        <a href="#" class="login-link">Đăng nhập</a>
     </div>
 
     <div class="main-background">
-        <h1 class="main-title">Hệ thống vẽ và quản lý tiến độ truyện tranh</h1>
-        <p class="sub-title">Mỗi ngày còn sống là một ngày vui</p>
-        
-        <div class="login-form-container" style="background-color: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
-            <h2 style="text-align: center; margin-bottom: 20px; color: #333;">ĐĂNG NHẬP HỆ THỐNG</h2>
-
-            <div style="color: #ff3333; background-color: #ffe6e6; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-weight: bold; text-align: center; font-size: 14px;" 
-                 th:if="${error}" th:text="${error}"></div>
+        <h1 class="main-title">Công ty truyện tranh
+                <span class="indent-text">Sankyuu</span>
+        </h1>
+        <h2 class="sub-title">Hệ thống vẽ truyện tranh</h2>
             
-=======
-    <head>
-        <meta charset="UTF-8">
-        <title>Đăng nhập hệ thống Manga</title>
-        <link rel="stylesheet" th:href="@{/css/all.css}">
-    </head>
-    <body>
-
-        <div class="header">
-            <div class="logo">SANKYUU</div>
-        </div>
-
-        <div class="main-background">
-            <h1 class="main-title">Hệ thống vẽ và quản lý tiến độ truyện tranh</h1>
-            <p class="sub-title">Công ty truyện tranh Sankyuu</p>
-
->>>>>>> Stashed changes
             <form class="login-form" th:action="@{/manga/login}" method="POST">
+                <h2 class="form-group">ĐĂNG NHẬP HỆ THỐNG</h2>
                 <div class="form-group">
                     <label for="username">Tài khoản:</label>
                     <input type="text" id="username" name="txtUsername"
@@ -56,9 +34,6 @@
         </div>
     </div>
 
-<<<<<<< Updated upstream
 </body>
-=======
-    </body>
->>>>>>> Stashed changes
+
 </html>

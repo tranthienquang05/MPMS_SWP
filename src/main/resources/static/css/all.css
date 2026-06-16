@@ -33,6 +33,11 @@ html {
     font-weight: bold;
     color: white;
 }
+.header .name {
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+}
 
 .header .login-link {
     text-decoration: none;
@@ -111,7 +116,7 @@ html {
 }
 
 .login-form {
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: white;;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -135,22 +140,40 @@ html {
     border: 1px solid #ccc;
     border-radius: 4px;
 }
-
+/* submit */
 button[type="submit"] {
-    background-color: #262626;
+    background-color: #4c4c4c;
     color: white;
     border: none;
-    padding: 10px 40px;
+    padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
     border-radius: 4px;
-    margin-top: 10px;
+    margin-top: 2px;
 }
 
 button[type="submit"]:hover {
     background-color: #686060;
 }
-
+/* button small*/
+.btn-icon {
+    background-color: #4c4c4c;
+    color: white;
+    border: none;
+    width: 95px;
+    height: 40px;
+    padding: 0; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 2px;
+}
+.btn-icon:hover {
+    background-color: #686060;
+}
 /* design div */
 div.flex-container {
   display: flex;
@@ -188,8 +211,8 @@ ul.topnav {
 /* Định dạng cho các thẻ liên kết bên trong */
 ul.topnav li a {
   display: block; /* Đảm bảo vùng click chuột bao phủ toàn bộ chiều rộng của phần tử li */
-  color: #f1f1f1;
-  padding: 14px 16px;
+  color: white;
+  padding: 14px 20px;
   text-decoration: none;
 }
 
@@ -197,4 +220,19 @@ ul.topnav li a {
 ul.topnav li a:hover {
   background-color: #dddddd;
   color: black;
+}
+
+.tab-pane {
+    display: none;
+    animation: fadeIn 0.3s; 
+}
+
+/* Chỉ khối nào được gắn class 'active' mới được hiển thị */
+.tab-pane.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }

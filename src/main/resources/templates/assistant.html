@@ -4,6 +4,7 @@
         <meta charset="UTF-8">
         <title>Đăng nhập hệ thống Manga</title>
         <link rel="stylesheet" th:href="@{/css/all.css}">
+        <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
 
     <body>
@@ -15,26 +16,71 @@
         <h1>Chào mừng Tác giả</h1>
         <p>Đây là khu vực làm việc của Mangaka</p>
 
-        /* ui */
         <ul class="topnav">
-            <li><a href="#">Home</a></li>
-            <li><a href="#">News</a></li>
-            <li><a href="#">Contact</a></li>
-            <li><a href="#">About</a></li>
+            <li>
+                <button type="button" class="btn-icon" onclick="openTab('tab-home')">
+                    <i class="fa-solid fa-house"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon" onclick="openTab('tab-project')">
+                    <i class="fa-solid fa-folder-open"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon" onclick="openTab('tab-assistant')">
+                    <i class="fa-solid fa-user"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon" onclick="openTab('tab-other')">
+                    <i class="fa-solid fa-hashtag"></i>
+                </button>
+            </li>
         </ul>
-        
-        <h1>Trợ lý</h1>
-        <p>Danh sách các công việc được giao.</p>
 
-        <ul>
-            <li>Chương 12: Vẽ background trang 5-10</li>
-            <li>Chương 12: Đi nét nhân vật quần chúng</li>
-        </ul>
+        <div class="flex-container">
 
-        <br>
-        <a th:href="@{/manga/logout}">
-            <button type="submit">Đăng xuất</button>
-        </a>
+            <div id="tab-home" class="tab-pane active">
+                <h2>Trang chủ</h2>
+                <button type="button">Công việc được giao</button>
+            </div>
+
+            <div id="tab-project" class="tab-pane">
+                <h2>Tác phẩm</h2>
+                <button type="button">Công việc được giao</button>
+
+                <div class="modal fade" id="proposalModal" tabindex="-1"
+                    aria-hidden="true">
+                </div>
+            </div>
+
+            <div id="tab-assistant" class="tab-pane">
+                <h2>Quản lý Trợ lý</h2>
+                <p>Tính năng đang phát triển...</p>
+            </div>
+
+            <div id="tab-other" class="tab-pane">
+                <h2>Cài đặt khác</h2>
+                <p>Tính năng đang phát triển...</p>
+            </div>
+
+        </div>
+        <script>
+        /**
+         * Hàm điều phối việc chuyển đổi giữa các Tab.
+         * @param {string} tabId - Chuỗi ID của thẻ div chứa nội dung cần hiển thị.
+         */
+        function openTab(tabId) {
+            var tabPanes = document.getElementsByClassName("tab-pane");
+            
+            for (var i = 0; i < tabPanes.length; i++) {
+                tabPanes[i].classList.remove("active");
+            }
+            
+            document.getElementById(tabId).classList.add("active");
+        }
+    </script>
     </body>
 
 </html>

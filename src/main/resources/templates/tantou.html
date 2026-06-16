@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Biên tập viên</title>
-    <link rel="stylesheet" th:href="@{/css/all.css}">
-</head>
-<body>>
+        <meta charset="UTF-8">
+        <title>Đăng nhập hệ thống Manga</title>
+        <link rel="stylesheet" th:href="@{/css/all.css}">
+        <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </head>
+<body>
     <div class="header">
             <div class="logo">SANKYUU</div>
             <a th:href="@{/manga/logout}"><button type="submit">Logout</button></a>
@@ -14,44 +15,74 @@
         <h1>Chào mừng Tác giả</h1>
         <p>Đây là khu vực làm việc của Mangaka</p>
 
-        /* ui */
         <ul class="topnav">
-            <li><a href="#">Home</a></li>
-            <li><a href="#">News</a></li>
-            <li><a href="#">Contact</a></li>
-            <li><a href="#">About</a></li>
+            <li>
+                <button type="button" class="btn-icon" onclick="openTab('tab-home')">
+                    <i class="fa-solid fa-house"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon" onclick="openTab('tab-project')">
+                    <i class="fa-solid fa-folder-open"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon" onclick="openTab('tab-assistant')">
+                    <i class="fa-solid fa-user"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon" onclick="openTab('tab-other')">
+                    <i class="fa-solid fa-hashtag"></i>
+                </button>
+            </li>
         </ul>
-        
-    <h1 class="text-success">Chào mừng Biên tập viên phụ trách (Tantou)</h1>
-    <hr>
-    <h3>📌 Danh sách dự án mới cần duyệt sơ loại</h3>
-    <table class="table table-bordered table-striped bg-white shadow-sm mt-2">
-        <thead class="table-dark">
-            <tr>
-                <th>Mã Đề Xuất</th>
-                <th>Tên Bộ Truyện</th>
-                <th>Bản Thảo</th>
-                <th>Hành Động</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="p : ${pendingProposals}">
-                <td th:text="${p.id}"></td>
-                <td th:text="${p.seriesName}"></td>
-                <td>
-                    <a th:href="@{/manga/view-file(path=${p.filePath})}" target="_blank" class="btn btn-sm btn-info text-white">👁️ Mở file</a>
-                </td>
-                <td>
-                    <a th:href="@{/manga/tantou/approve(id=${p.id})}" class="btn btn-sm btn-success fw-bold">Duyệt sơ loại</a>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(pendingProposals)}">
-                <td colspan="4" class="text-center text-muted py-3">Không có đề xuất mới.</td>
-            </tr>
-        </tbody>
-    </table>
-    <br>
-    /* Nút Logout chung cho tất cả các trang sau khi đăng nhập */
-    <a th:href="@{/manga/logout}"><button type="submit">Logout</button></a>
+
+        <div class="flex-container">
+
+            <div id="tab-home" class="tab-pane active">
+                <h2>Trang chủ</h2>
+                <button type="button">Xem ranking</button>
+            </div>
+
+            <div id="tab-project" class="tab-pane">
+                <h2>Tác phẩm</h2>
+                <button type="button">Thư viện tác phẩm</button>
+                <button type="button" data-bs-toggle="modal"
+                    data-bs-target="#proposalModal">
+                    ➕ Tạo tác phẩm mới (Nộp dự án)
+                </button>
+
+                <div class="modal fade" id="proposalModal" tabindex="-1"
+                    aria-hidden="true">
+                </div>
+            </div>
+
+            <div id="tab-assistant" class="tab-pane">
+                <h2>Quản lý Trợ lý</h2>
+                <p>Tính năng đang phát triển...</p>
+            </div>
+
+            <div id="tab-other" class="tab-pane">
+                <h2>Cài đặt khác</h2>
+                <p>Tính năng đang phát triển...</p>
+            </div>
+
+        </div>
+        <script>
+        /**
+         * Hàm điều phối việc chuyển đổi giữa các Tab.
+         * @param {string} tabId - Chuỗi ID của thẻ div chứa nội dung cần hiển thị.
+         */
+        function openTab(tabId) {
+            var tabPanes = document.getElementsByClassName("tab-pane");
+            
+            for (var i = 0; i < tabPanes.length; i++) {
+                tabPanes[i].classList.remove("active");
+            }
+            
+            document.getElementById(tabId).classList.add("active");
+        }
+    </script>
 </body>
 </html>

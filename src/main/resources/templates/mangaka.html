@@ -2,71 +2,74 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
     <head>
         <meta charset="UTF-8">
-        <title>Tác giả</title>
+        <title>Đăng nhập hệ thống Manga</title>
         <link rel="stylesheet" th:href="@{/css/all.css}">
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
 
     <body>
         <div class="header">
-            <div class="logo">SANKYUU</div>
-            <a th:href="@{/manga/logout}"><button type="submit">Logout</button></a>
+            <div class="logo">SANKYUU
+                <p class="name">Tác giả truyện tranh</p>
+            </div>
+
+            <a th:href="@{/manga/logout}">
+                <button type="button" class="btn-icon" aria-label="Logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </button>
+            </a>
         </div>
 
-        <h1>Chào mừng Tác giả</h1>
-        <p>Đây là khu vực làm việc của Mangaka</p>
-
-        /* ui */
         <ul class="topnav">
-            <li><a href="#">Home</a></li>
-            <li><a href="#">News</a></li>
-            <li><a href="#">Contact</a></li>
-            <li><a href="#">About</a></li>
+            <li>
+                <button type="button" class="btn-icon" onclick="openTab('tab-home')">
+                    <i class="fa-solid fa-house"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon" onclick="openTab('tab-project')">
+                    <i class="fa-solid fa-folder-open"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon" onclick="openTab('tab-assistant')">
+                    <i class="fa-solid fa-user"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon" onclick="openTab('tab-other')">
+                    <i class="fa-solid fa-hashtag"></i>
+                </button>
+            </li>
         </ul>
 
-        /* Content */
         <div class="flex-container">
-            <div class="alert alert-success mt-2" th:if="${message}"
-                th:text="${message}"></div>
-            <div class="alert alert-danger mt-2" th:if="${error}"
-                th:text="${error}"></div>
 
-            <h2>Trang chủ</h2>
-            <button type="submit">Trang chủ</button>
-            <button type="submit">Xem ranking</button>
+            <div id="tab-home" class="tab-pane active">
+                <h2>Trang chủ</h2>
+                <button type="button">Xem ranking</button>
+            </div>
 
-            <h2>Tác phẩm</h2>
-            <button type="submit">Thư viện tác phẩm</button>
-            <button type="submit">➕ Tạo tác phẩm mới (Nộp dự án)</button>
-
-
-            <div class="modal fade" id="proposalModal" tabindex="-1" aria-labelledby="proposalModalLabel" aria-hidden="true">
+            <div id="tab-project" class="tab-pane">
+                <h2>Tác phẩm</h2>
+                <button type="button">Thư viện tác phẩm</button>
+                <div class="modal fade" id="proposalModal" tabindex="-1" aria-labelledby="proposalModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="proposalModalLabel">Đăng Ký Đề Xuất Dự Án Mới</h5>
-                            <button type="button" class="btn-close"
-                                data-bs-shadow="modal" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-shadow="modal" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <form th:action="@{/manga/mangaka/submit-proposal}"
-                            method="POST" enctype="multipart/form-data">
+                        <form th:action="@{/manga/mangaka/submit-proposal}" method="POST" enctype="multipart/form-data">
                             <div class="modal-body">
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Tên dự án
-                                        (Series Name):</label>
-                                    <input type="text" name="txtSeriesName"
-                                        class="form-control" maxlength="30"
-                                        required
-                                        placeholder="Nhập tên bộ truyện...">
+                                    <label class="form-label fw-bold">Tên dự án (Series Name):</label>
+                                    <input type="text" name="txtSeriesName" class="form-control" maxlength="30" required placeholder="Nhập tên bộ truyện...">
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Tệp bản
-                                        thảo
-                                        đính kèm (PDF/ZIP):</label>
-                                    <input type="file" name="fileManuscript"
-                                        class="form-control"
-                                        accept=".pdf,.zip,.rar"
-                                        required>
+                                    <label class="form-label fw-bold">Tệp bản thảo đính kèm (PDF/ZIP):</label>
+                                    <input type="file" name="fileManuscript" class="form-control"accept=".pdf,.zip,.rar" required>
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -77,6 +80,36 @@
                     </div>
                 </div>
             </div>
+
+                <div class="modal fade" id="proposalModal" tabindex="-1" aria-hidden="true">
+                </div>
+            </div>
+
+            <div id="tab-assistant" class="tab-pane">
+                <h2>Quản lý Trợ lý</h2>
+                <p>Tính năng đang phát triển...</p>
+            </div>
+
+            <div id="tab-other" class="tab-pane">
+                <h2>Cài đặt khác</h2>
+                <p>Tính năng đang phát triển...</p>
+            </div>
+
         </div>
+        <script>
+        /**
+         * Hàm điều phối việc chuyển đổi giữa các Tab.
+         * @param {string} tabId - Chuỗi ID của thẻ div chứa nội dung cần hiển thị.
+         */
+        function openTab(tabId) {
+            var tabPanes = document.getElementsByClassName("tab-pane");
+            
+            for (var i = 0; i < tabPanes.length; i++) {
+                tabPanes[i].classList.remove("active");
+            }
+            
+            document.getElementById(tabId).classList.add("active");
+        }
+    </script>
     </body>
 </html>

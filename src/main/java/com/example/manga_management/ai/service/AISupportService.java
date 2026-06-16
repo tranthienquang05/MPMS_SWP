@@ -1,13 +1,14 @@
 package com.example.manga_management.ai.service;
 
-import com.example.manga_management.ai.dto.AIRequestDTO;
-import com.example.manga_management.ai.dto.AIResponseDTO;
-import com.example.manga_management.ai.enums.AIFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+
+import com.example.manga_management.ai.dto.AIRequestDTO;
+import com.example.manga_management.ai.dto.AIResponseDTO;
+import com.example.manga_management.ai.enums.AIFeature;
 
 @Service
 public class AISupportService {
@@ -16,15 +17,12 @@ public class AISupportService {
 
     private final OpenAIService openAIService;
     private final String openaiApiKey;
-    private final String geminiApiKey;
 
     public AISupportService(
             OpenAIService openAIService,
-            @Qualifier("openaiApiKey") String openaiApiKey,
-            @Qualifier("geminiApiKey") String geminiApiKey) {
+            @Qualifier("openaiApiKey") String openaiApiKey) {
         this.openAIService = openAIService;
         this.openaiApiKey = openaiApiKey;
-        this.geminiApiKey = geminiApiKey;
     }
 
     /**
@@ -48,8 +46,8 @@ public class AISupportService {
 
             if ("vision".equals(feature.getType())) {
                 // Check if key is configured
-                if (!isKeyConfigured(geminiApiKey, "your-gemini-key")) {
-                    log.warn("Gemini API key not configured");
+                if (!isKeyConfigured(openaiApiKey, "your-openai-key")) {
+                    log.warn("OpenAI API key not configured for vision");
                     return AIResponseDTO.builder()
                             .status("error")
                             .message("Dịch vụ phân tích ảnh chưa được cấu hình API key.")
@@ -113,7 +111,7 @@ public class AISupportService {
             OpenAIService.AIResult result = openAIService.generateImage(prompt);
             return AIResponseDTO.builder()
                     .status("success")
-                    .type("image")
+                    .type("image_base64")
                     .result(result.content())
                     .requestId(result.requestId())
                     .build();

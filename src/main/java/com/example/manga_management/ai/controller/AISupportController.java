@@ -1,13 +1,14 @@
 package com.example.manga_management.ai.controller;
 
-import com.example.manga_management.ai.dto.AIRequestDTO;
-import com.example.manga_management.ai.dto.AIResponseDTO;
-import com.example.manga_management.ai.service.AISupportService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.manga_management.ai.dto.AIRequestDTO;
+import com.example.manga_management.ai.dto.AIResponseDTO;
+import com.example.manga_management.ai.service.AISupportService;
 
 @RestController
 @RequestMapping("/api/ai")

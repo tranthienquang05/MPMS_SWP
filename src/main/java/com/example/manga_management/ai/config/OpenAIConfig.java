@@ -22,13 +22,13 @@ public class OpenAIConfig {
     @Value("${openai.image.model}")
     private String openaiImageModel;
 
-    // ── Google Gemini ───────────────────────────────────────────────────
+    // ── OpenAI Vision ───────────────────────────────────────────────────
 
-    @Value("${gemini.api.key}")
-    private String geminiApiKey;
+    @Value("${openai.vision.model}")
+    private String openaiVisionModel;
 
-    @Value("${gemini.api.url}")
-    private String geminiUrl;
+    @Value("${openai.vision.url}")
+    private String openaiVisionUrl;
 
     // ── Beans: OpenAI ───────────────────────────────────────────────────
 
@@ -52,16 +52,16 @@ public class OpenAIConfig {
         return openaiUrl;
     }
 
-    // ── Beans: Gemini ───────────────────────────────────────────────────
+    // ── Beans: OpenAI Vision ────────────────────────────────────────────
 
-    @Bean(name = "geminiApiKey")
-    public String geminiApiKey() {
-        return geminiApiKey;
+    @Bean(name = "openaiVisionModel")
+    public String openaiVisionModel() {
+        return openaiVisionModel;
     }
 
-    @Bean(name = "geminiUrl")
-    public String geminiUrl() {
-        return geminiUrl;
+    @Bean(name = "openaiVisionUrl")
+    public String openaiVisionUrl() {
+        return openaiVisionUrl;
     }
 
     // ── helpers ─────────────────────────────────────────────────────────

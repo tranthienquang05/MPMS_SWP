@@ -23,21 +23,21 @@ public class OpenAIService {
     private final RestTemplate openaiRestTemplate;
     private final String openaiImageModel;
     private final String openaiUrl;
-    private final String geminiApiKey;
-    private final String geminiUrl;
+    private final String openaiVisionModel;
+    private final String openaiVisionUrl;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public OpenAIService(
             @Qualifier("openaiRestTemplate") RestTemplate openaiRestTemplate,
             @Qualifier("openaiImageModel") String openaiImageModel,
             @Qualifier("openaiUrl") String openaiUrl,
-            @Qualifier("geminiApiKey") String geminiApiKey,
-            @Qualifier("geminiUrl") String geminiUrl) {
+            @Qualifier("openaiVisionModel") String openaiVisionModel,
+            @Qualifier("openaiVisionUrl") String openaiVisionUrl) {
         this.openaiRestTemplate = openaiRestTemplate;
         this.openaiImageModel = openaiImageModel;
         this.openaiUrl = openaiUrl;
-        this.geminiApiKey = geminiApiKey;
-        this.geminiUrl = geminiUrl;
+        this.openaiVisionModel = openaiVisionModel;
+        this.openaiVisionUrl = openaiVisionUrl;
     }
 
     /**
@@ -45,69 +45,79 @@ public class OpenAIService {
      */
     public record AIResult(String content, String requestId) {}
 
-    // ── OpenAI DALL-E image generation ──────────────────────────────────
+    // ── OpenAI gpt-image-1 image generation ─────────────────────────────
 
     /**
-     * Generate an image via OpenAI DALL-E /images/generations endpoint.
-     * Returns the generated image URL.
+     * Generate an image via OpenAI /images/generations endpoint (gpt-image-1).
+     * Returns the generated image as a base64-encoded string.
      */
     public AIResult generateImage(String prompt) throws Exception {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", openaiImageModel);
         body.put("prompt", prompt);
-        body.put("n", 1);
         body.put("size", "1024x1024");
+        body.put("output_format", "png");
+
+        log.debug("OpenAI image request body: {}", body);
 
         ResponseEntity<String> response = openaiRestTemplate.postForEntity(openaiUrl, body, String.class);
         String requestId = extractRequestId(response);
+        String responseBody = response.getBody();
+
+        log.debug("OpenAI raw response [requestId={}]: {}", requestId, responseBody);
+
+        if (responseBody == null || responseBody.isBlank()) {
+            throw new RuntimeException("OpenAI returned an empty response body [requestId=" + requestId + "]");
+        }
 
         JsonNode root = objectMapper.readTree(response.getBody());
-        String imageUrl = root.path("data").get(0).path("url").asText();
+        String imageBase64 = root.path("data").get(0).path("b64_json").asText();
 
-        log.info("OpenAI image generated successfully [requestId={}]", requestId);
+        log.info("OpenAI gpt-image-1 image generated successfully [requestId={}]", requestId);
 
-        return new AIResult(imageUrl, requestId);
+        return new AIResult(imageBase64, requestId);
     }
 
-    // ── Gemini vision / analysis ────────────────────────────────────────
+    // ── OpenAI gpt-4o vision / analysis ──────────────────────────────────
 
     /**
-     * Analyse a canvas image using Google Gemini vision model.
+     * Analyse a canvas image using OpenAI gpt-4o vision model.
      */
     public AIResult analyzeCanvas(String imageBase64, String instruction) throws Exception {
-        String url = geminiUrl + "?key=" + geminiApiKey;
-
         String rawBase64 = imageBase64.startsWith("data:")
                 ? imageBase64.substring(imageBase64.indexOf(",") + 1)
                 : imageBase64;
 
-        Map<String, Object> textPart = Map.of("text", instruction);
-        Map<String, Object> inlineData = Map.of(
-                "inline_data", Map.of(
-                        "mime_type", "image/png",
-                        "data", rawBase64
-                )
-        );
+        Map<String, Object> textContent = new LinkedHashMap<>();
+        textContent.put("type", "text");
+        textContent.put("text", instruction);
 
-        Map<String, Object> content = Map.of(
-                "parts", List.of(textPart, inlineData)
-        );
+        Map<String, Object> imageUrlInner = new LinkedHashMap<>();
+        imageUrlInner.put("url", "data:image/png;base64," + rawBase64);
 
-        Map<String, Object> body = Map.of(
-                "contents", List.of(content)
-        );
+        Map<String, Object> imageContent = new LinkedHashMap<>();
+        imageContent.put("type", "image_url");
+        imageContent.put("image_url", imageUrlInner);
 
-        RestTemplate geminiRestTemplate = new RestTemplate();
-        ResponseEntity<String> response = geminiRestTemplate.postForEntity(url, body, String.class);
+        Map<String, Object> userMessage = new LinkedHashMap<>();
+        userMessage.put("role", "user");
+        userMessage.put("content", List.of(textContent, imageContent));
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("model", openaiVisionModel);
+        body.put("messages", List.of(userMessage));
+        body.put("max_tokens", 1000);
+
+        ResponseEntity<String> response = openaiRestTemplate.postForEntity(openaiVisionUrl, body, String.class);
+        String requestId = extractRequestId(response);
 
         JsonNode root = objectMapper.readTree(response.getBody());
-        String text = root.path("candidates").get(0)
-                .path("content").path("parts").get(0)
-                .path("text").asText();
+        String text = root.path("choices").get(0)
+                .path("message").path("content").asText();
 
-        log.info("Gemini analysis completed");
+        log.info("OpenAI gpt-4o vision analysis completed [requestId={}]", requestId);
 
-        return new AIResult(text, null);
+        return new AIResult(text, requestId);
     }
 
     // ── helper ──────────────────────────────────────────────────────────

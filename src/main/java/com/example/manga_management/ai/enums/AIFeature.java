@@ -5,22 +5,22 @@
         public enum AIFeature {
 
         COLOR("color", "image",
-                "Tô màu panel manga này theo gam màu tự nhiên, giữ nguyên lineart"),
+                "Color this manga panel with natural tones, preserve the original lineart exactly"),
 
         SHADOW("shadow", "image",
-                "Thêm shading và đổ bóng cho panel manga này, ánh sáng từ trên xuống"),
+                "Add professional shading and drop shadows to this manga panel, light source from top"),
 
         CLEAN_LINE("clean_line", "image",
-                "Clean up lineart của panel manga này, nét sạch sắc nét kiểu manga chuyên nghiệp"),
+                "Clean up and sharpen the lineart of this manga panel in professional manga style"),
 
         BACKGROUND("background", "image",
-                "Vẽ background chi tiết cho panel manga này"),
+                "Draw a detailed manga-style background for this panel"),
 
         LETTERING("lettering", "vision",
-                "Phân tích balloon trong panel này, gợi ý căn chỉnh và font chữ phù hợp"),
+                "Analyze speech bubbles in this manga panel, suggest alignment and suitable font styles"),
 
         EXPRESSION("expression", "vision",
-                "Nhận diện biểu cảm nhân vật trong panel, mô tả emotion và gợi ý cải thiện");
+                "Identify character expressions in this panel, describe emotions and suggest improvements");
 
         private final String code;
         private final String type;

@@ -352,3 +352,55 @@ ul.topnav li a:hover {
     text-decoration: none;
     font-weight: bold;
 }
+/* Container giữ các thành phần bên phải header nằm sát nhau */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Nút thông báo tùy biến co giãn linh hoạt */
+.btn-icon-alert {
+    background-color: #4c4c4c;
+    color: white;
+    border: none;
+    height: 40px;
+    padding: 0 15px; /* Sử dụng padding hai bên để tự động dãn rộng khi có chữ */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 2px;
+}
+
+.btn-icon-alert:hover {
+    background-color: #686060;
+}
+
+.message-text {
+    font-weight: bold;
+}
+/* Định dạng chung cho hộp thông báo */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    box-sizing: border-box;
+    animation: fadeIn 0.5s; /* Sử dụng keyframe fadeIn có sẵn trong all.css */
+}
+
+/* Định dạng riêng cho thông báo thành công (màu xanh lá) */
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}

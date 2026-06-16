@@ -4,7 +4,8 @@ import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.repository.ProposalRepository;
@@ -21,15 +22,25 @@ public class TantouController {
 
     @GetMapping("/tantou")
     public String tantouPage(HttpSession session, Model model) {
-        // Kiểm tra login
+
         if (session.getAttribute("user") == null)
             return "redirect:/manga/login";
 
-        List<Proposal> list = proposalRepository.findByStatus("unfinish");
+        List<Proposal> list = proposalRepository.findByStatus("finish");
 
         model.addAttribute("listProposals", list);
 
         return "tantou";
+    }
+
+    @PostMapping("/tantou/review")
+    public String tantouReview(@RequestParam String id, @RequestParam String action) {
+        Proposal p = proposalRepository.findById(id).orElse(null);
+        if (p != null) {
+            p.setStatus("yes".equals(action) ? "checked" : "unfinish");
+            proposalRepository.save(p);
+        }
+        return "redirect:/manga/tantou";
     }
 
 }

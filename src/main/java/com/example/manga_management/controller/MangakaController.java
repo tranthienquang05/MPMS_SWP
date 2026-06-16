@@ -97,7 +97,7 @@ public class MangakaController {
             proposal.setMangaka(currentMangaka);
             proposal.setSeriesName(txtSeriesName.trim());
             proposal.setFilePath("/proposal/" + shortFileName);
-            proposal.setStatus("unfinish");
+            proposal.setStatus("finish");
 
             proposalRepository.save(proposal);
             

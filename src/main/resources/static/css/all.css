@@ -1,7 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap');
+
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 * {
@@ -18,7 +24,7 @@ html {
 
 .header {
     /* Đảm bảo padding không làm tăng tổng chiều cao 60px đã thiết lập */
-    box-sizing: border-box; 
+    box-sizing: border-box;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -27,9 +33,9 @@ html {
     border-bottom: 1px solid #ddd;
     height: 60px;
     /* Cố định header trên cùng và ưu tiên lớp hiển thị cao nhất */
-    position: sticky; 
+    position: sticky;
     top: 0;
-    z-index: 1000; 
+    z-index: 1000;
 }
 
 .header .logo {
@@ -37,6 +43,7 @@ html {
     font-weight: bold;
     color: white;
 }
+
 .header .name {
     font-size: 14px;
     font-weight: bold;
@@ -50,26 +57,26 @@ html {
 }
 
 .main-background {
-    background-image: 
+    background-image:
         url("./images/image-login-1.jpg"),
         url("./images/image-center.png"),
         url("./images/image-login-2.jpg");
 
-    background-size: 
-        calc(100% / 3) 100%, 
-        calc(100% / 3) 100%, 
+    background-size:
+        calc(100% / 3) 100%,
+        calc(100% / 3) 100%,
         calc(100% / 3) 100%;
 
-    background-position: 
-        left center, 
-        center center, 
+    background-position:
+        left center,
+        center center,
         right center;
 
-    background-repeat: 
-        no-repeat, 
-        no-repeat, 
+    background-repeat:
+        no-repeat,
+        no-repeat,
         no-repeat;
-    
+
     background-color: #262626;
     height: calc(100vh - 60px);
     display: flex;
@@ -79,24 +86,24 @@ html {
 }
 
 .main-title {
-    color: #DA251D; 
+    color: #DA251D;
     /* Ưu tiên dùng Oswald, nếu lỗi mạng sẽ lùi về Impact */
-    font-family: 'Oswald', Arial, sans-serif; 
-    text-transform: uppercase; 
+    font-family: 'Oswald', Arial, sans-serif;
+    text-transform: uppercase;
     font-size: 60px;
     font-weight: bold;
     margin-bottom: 10px;
     display: inline-block;
     padding: 8px 16px;
     border-radius: 4px;
-    background-color: transparent; 
-    text-shadow: none; 
+    background-color: transparent;
+    text-shadow: none;
 }
 
 .main-title .indent-text {
-    display: block; 
-    margin-left: 150px; 
-} 
+    display: block;
+    margin-left: 150px;
+}
 
 .sub-background {
     background-size: cover;
@@ -115,12 +122,13 @@ html {
     font-family: 'Oswald', Impact, sans-serif;
     font-size: 22px;
     text-transform: uppercase;
-    letter-spacing: 2px;   
-    font-weight: 600; 
+    letter-spacing: 2px;
+    font-weight: 600;
 }
 
 .login-form {
-    background-color: white;;
+    background-color: white;
+    ;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -144,6 +152,7 @@ html {
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
 /* submit */
 button[type="submit"] {
     background-color: #4c4c4c;
@@ -159,6 +168,7 @@ button[type="submit"] {
 button[type="submit"]:hover {
     background-color: #686060;
 }
+
 /* button small*/
 .btn-icon {
     background-color: #4c4c4c;
@@ -166,7 +176,7 @@ button[type="submit"]:hover {
     border: none;
     width: 95px;
     height: 40px;
-    padding: 0; 
+    padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -175,23 +185,25 @@ button[type="submit"]:hover {
     border-radius: 4px;
     margin-top: 2px;
 }
+
 .btn-icon:hover {
     background-color: #686060;
 }
+
 /* design div */
 div.flex-container {
-  display: flex;
-  flex-direction: row;
-  /* Đẩy nội dung sang phải 200px để nhường chỗ cho thanh điều hướng fixed */
-  /* Lưu ý: Giá trị 200px này phải bằng đúng với thuộc tính 'width' của ul.topnav */
-  margin-left: 100px; 
-  
-  /* Cấu hình thêm padding để nội dung không bị dính sát vào mép của thanh menu */
-  padding-left: 20px; 
+    display: flex;
+    flex-direction: row;
+    /* Đẩy nội dung sang phải 200px để nhường chỗ cho thanh điều hướng fixed */
+    /* Lưu ý: Giá trị 200px này phải bằng đúng với thuộc tính 'width' của ul.topnav */
+    margin-left: 100px;
+
+    /* Cấu hình thêm padding để nội dung không bị dính sát vào mép của thanh menu */
+    padding-left: 20px;
 }
 
-div.flex-container > div {
-  margin: 10px;
+div.flex-container>div {
+    margin: 10px;
 }
 
 /* thanh điều hướng */
@@ -200,11 +212,11 @@ ul.topnav {
     flex-direction: column;
     width: 100px;
     /* Chiều cao tổng (100vh) trừ đi chiều cao của header (60px) */
-    height: calc(100vh - 60px); 
+    height: calc(100vh - 60px);
     position: fixed;
     left: 0;
     /* Bắt đầu vẽ UI từ tọa độ 60px trở xuống, nhường chỗ cho header */
-    top: 60px; 
+    top: 60px;
     background-color: #333333;
     list-style-type: none;
     margin: 0;
@@ -214,21 +226,22 @@ ul.topnav {
 
 /* Định dạng cho các thẻ liên kết bên trong */
 ul.topnav li a {
-  display: block; /* Đảm bảo vùng click chuột bao phủ toàn bộ chiều rộng của phần tử li */
-  color: white;
-  padding: 14px 20px;
-  text-decoration: none;
+    display: block;
+    /* Đảm bảo vùng click chuột bao phủ toàn bộ chiều rộng của phần tử li */
+    color: white;
+    padding: 14px 20px;
+    text-decoration: none;
 }
 
 /* Hiệu ứng tương tác khi di chuột qua liên kết */
 ul.topnav li a:hover {
-  background-color: #dddddd;
-  color: black;
+    background-color: #dddddd;
+    color: black;
 }
 
 .tab-pane {
     display: none;
-    animation: fadeIn 0.3s; 
+    animation: fadeIn 0.3s;
 }
 
 /* Chỉ khối nào được gắn class 'active' mới được hiển thị */
@@ -238,14 +251,16 @@ ul.topnav li a:hover {
 
 /* Giao diện vùng mờ bao phủ toàn màn hình */
 .modal-overlay {
-    display: none; /* Mặc định ẩn */
+    display: none;
+    /* Mặc định ẩn */
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); 
-    z-index: 2000; /* Nằm đè lên header (z-index: 1000) */
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    /* Nằm đè lên header (z-index: 1000) */
     justify-content: center;
     align-items: center;
 }
@@ -256,7 +271,8 @@ ul.topnav li a:hover {
     padding: 20px;
     border-radius: 8px;
     width: 500px;
-    max-width: 90%; /* Đảm bảo hiển thị tốt trên màn hình nhỏ */
+    max-width: 90%;
+    /* Đảm bảo hiển thị tốt trên màn hình nhỏ */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     animation: fadeIn 0.3s;
 }
@@ -319,7 +335,8 @@ ul.topnav li a:hover {
     margin-top: 10px;
 }
 
-.data-table th, .data-table td {
+.data-table th,
+.data-table td {
     border: 1px solid #ddd;
     padding: 12px;
     text-align: left;
@@ -352,6 +369,7 @@ ul.topnav li a:hover {
     text-decoration: none;
     font-weight: bold;
 }
+
 /* Container giữ các thành phần bên phải header nằm sát nhau */
 .header-actions {
     display: flex;
@@ -365,7 +383,8 @@ ul.topnav li a:hover {
     color: white;
     border: none;
     height: 40px;
-    padding: 0 15px; /* Sử dụng padding hai bên để tự động dãn rộng khi có chữ */
+    padding: 0 15px;
+    /* Sử dụng padding hai bên để tự động dãn rộng khi có chữ */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -383,6 +402,7 @@ ul.topnav li a:hover {
 .message-text {
     font-weight: bold;
 }
+
 /* Định dạng chung cho hộp thông báo */
 .alert {
     padding: 15px;
@@ -395,7 +415,8 @@ ul.topnav li a:hover {
     max-width: 600px;
     text-align: center;
     box-sizing: border-box;
-    animation: fadeIn 0.5s; /* Sử dụng keyframe fadeIn có sẵn trong all.css */
+    animation: fadeIn 0.5s;
+    /* Sử dụng keyframe fadeIn có sẵn trong all.css */
 }
 
 /* Định dạng riêng cho thông báo thành công (màu xanh lá) */
@@ -403,4 +424,37 @@ ul.topnav li a:hover {
     color: #155724;
     background-color: #d4edda;
     border-color: #c3e6cb;
+}
+
+/* Debug CSS để biết bảng có thực sự tồn tại hay không */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.data-table th,
+.data-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.notification {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    border: 1px solid;
+}
+
+.success {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
 }

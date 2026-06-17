@@ -755,8 +755,14 @@
 
             <div class="lt-divider"></div>
 
-            <button type="button" class="lt-btn" data-tool="select" title="Chọn vùng (M)">
+            <button type="button" class="lt-btn" data-tool="select" title="Chọn vùng chữ nhật (M)">
                 <i class="fa-solid fa-vector-square"></i>
+            </button>
+            <button type="button" class="lt-btn" data-tool="select-oval" title="Chọn vùng oval">
+                <i class="fa-regular fa-circle"></i>
+            </button>
+            <button type="button" class="lt-btn" data-tool="select-free" title="Chọn vùng tự do (Lasso)">
+                <i class="fa-solid fa-draw-polygon"></i>
             </button>
             <button type="button" class="lt-btn" id="toolEyedrop" title="Lấy màu từ canvas">
                 <i class="fa-solid fa-eye-dropper"></i>
@@ -969,7 +975,7 @@
         </div>
     </div>
 
-    <script th:inline="javascript">
+    <script th:inline="none">
         // ========================================================
         // PHẦN 1: Quản lý nhiều layer (mỗi layer = 1 canvas riêng)
         // ========================================================
@@ -1208,7 +1214,7 @@
 
         // ---- Mouse events chính ----
         inputLayer.addEventListener('mousedown', (e) => {
-            if (currentTool === 'select') return;
+            if (currentTool === 'select' || currentTool === 'select-oval' || currentTool === 'select-free') return;
             const p = getPos(e);
             const layerCtx = getActiveLayer().ctx;
 
@@ -1322,10 +1328,12 @@
                 const labels = {
                     pencil: 'Bút vẽ', brush: 'Cọ mềm', eraser: 'Tẩy', bucket: 'Đổ màu',
                     line: 'Đường thẳng', rect: 'Hình chữ nhật', oval: 'Hình tròn/Oval',
-                    text: 'Chèn chữ', select: 'Chọn vùng'
+                    text: 'Chèn chữ', select: 'Chọn vùng',
+                    'select-oval': 'Chọn vùng (oval)', 'select-free': 'Chọn vùng (tự do)'
                 };
                 document.getElementById('statusTool').textContent = 'Công cụ: ' + labels[currentTool];
-                inputLayer.style.cursor = currentTool === 'select' ? 'cell' : (currentTool === 'text' ? 'text' : 'crosshair');
+                const isSelTool = currentTool === 'select' || currentTool === 'select-oval' || currentTool === 'select-free';
+                inputLayer.style.cursor = isSelTool ? 'cell' : (currentTool === 'text' ? 'text' : 'crosshair');
 
                 // Hiện/ẩn property phù hợp
                 const isShape = ['line', 'rect', 'oval'].includes(currentTool);
@@ -1399,43 +1407,115 @@
         // PHẦN 4: Region selection
         // ========================================================
         let selectionRect = null;
+        let selectionShape = 'rect'; // 'rect' | 'oval' | 'free'
+        let selectionPath = [];      // array of {x, y} for freehand selection
         let isSelecting = false;
         let selStart = null;
         const regionBox = document.getElementById('regionSelectBox');
         const canvasViewport = document.getElementById('canvasViewport');
 
+        function isSelectTool(tool) {
+            return tool === 'select' || tool === 'select-oval' || tool === 'select-free';
+        }
+
         inputLayer.addEventListener('mousedown', (e) => {
-            if (currentTool !== 'select') return;
+            if (!isSelectTool(currentTool)) return;
             isSelecting = true;
             selStart = getPos(e);
-            regionBox.style.display = 'block';
+            clearShapePreview(); // clear any previous freehand preview
+
+            if (currentTool === 'select') {
+                selectionShape = 'rect';
+                regionBox.style.borderRadius = '0';
+                regionBox.style.display = 'block';
+            } else if (currentTool === 'select-oval') {
+                selectionShape = 'oval';
+                regionBox.style.borderRadius = '50%';
+                regionBox.style.display = 'block';
+            } else if (currentTool === 'select-free') {
+                selectionShape = 'free';
+                selectionPath = [selStart];
+                regionBox.style.display = 'none';
+            }
         });
 
         inputLayer.addEventListener('mousemove', (e) => {
-            if (currentTool !== 'select' || !isSelecting) return;
+            if (!isSelectTool(currentTool) || !isSelecting) return;
             const p = getPos(e);
             const rectCanvas = inputLayer.getBoundingClientRect();
-            const rectViewport = canvasStack.getBoundingClientRect();
             const scaleX = rectCanvas.width / CANVAS_W;
             const scaleY = rectCanvas.height / CANVAS_H;
 
-            selectionRect = {
-                x: Math.min(selStart.x, p.x),
-                y: Math.min(selStart.y, p.y),
-                w: Math.abs(p.x - selStart.x),
-                h: Math.abs(p.y - selStart.y)
-            };
+            if (selectionShape === 'rect' || selectionShape === 'oval') {
+                selectionRect = {
+                    x: Math.min(selStart.x, p.x),
+                    y: Math.min(selStart.y, p.y),
+                    w: Math.abs(p.x - selStart.x),
+                    h: Math.abs(p.y - selStart.y)
+                };
 
-            regionBox.style.left = (selectionRect.x * scaleX) + 'px';
-            regionBox.style.top = (selectionRect.y * scaleY) + 'px';
-            regionBox.style.width = (selectionRect.w * scaleX) + 'px';
-            regionBox.style.height = (selectionRect.h * scaleY) + 'px';
+                regionBox.style.left = (selectionRect.x * scaleX) + 'px';
+                regionBox.style.top = (selectionRect.y * scaleY) + 'px';
+                regionBox.style.width = (selectionRect.w * scaleX) + 'px';
+                regionBox.style.height = (selectionRect.h * scaleY) + 'px';
+            } else if (selectionShape === 'free') {
+                selectionPath.push(p);
+                // Draw freehand selection preview on input layer
+                clearShapePreview();
+                previewCtx.save();
+                previewCtx.setLineDash( [6, 4] );
+                previewCtx.strokeStyle = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--ps-accent').trim() || '#3d8eff';
+                previewCtx.lineWidth = 1.5;
+                previewCtx.beginPath();
+                previewCtx.moveTo(selectionPath[0].x, selectionPath[0].y);
+                for (let i = 1; i < selectionPath.length; i++) {
+                    previewCtx.lineTo(selectionPath[i].x, selectionPath[i].y);
+                }
+                previewCtx.stroke();
+                previewCtx.restore();
+            }
         });
 
         window.addEventListener('mouseup', () => {
-            if (currentTool === 'select' && isSelecting && selectionRect && selectionRect.w > 5) {
+            if (!isSelectTool(currentTool) || !isSelecting) {
+                isSelecting = false;
+                return;
+            }
+
+            if (selectionShape === 'free' && selectionPath.length > 2) {
+                // Close the freehand path visually
+                clearShapePreview();
+                previewCtx.save();
+                previewCtx.setLineDash( [6, 4] );
+                previewCtx.strokeStyle = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--ps-accent').trim() || '#3d8eff';
+                previewCtx.lineWidth = 1.5;
+                previewCtx.beginPath();
+                previewCtx.moveTo(selectionPath[0].x, selectionPath[0].y);
+                for (let i = 1; i < selectionPath.length; i++) {
+                    previewCtx.lineTo(selectionPath[i].x, selectionPath[i].y);
+                }
+                previewCtx.closePath();
+                previewCtx.stroke();
+                previewCtx.restore();
+
+                // Compute bounding box from selectionPath
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                for (let i = 0; i < selectionPath.length; i++) {
+                    const pt = selectionPath[i];
+                    if (pt.x < minX) minX = pt.x;
+                    if (pt.y < minY) minY = pt.y;
+                    if (pt.x > maxX) maxX = pt.x;
+                    if (pt.y > maxY) maxY = pt.y;
+                }
+                selectionRect = { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+            }
+
+            const shapeLabels = { rect: 'rect', oval: 'oval', free: 'freehand' };
+            if (selectionRect && selectionRect.w > 5) {
                 document.getElementById('statusRegion').textContent =
-                    `Vùng AI: ${Math.round(selectionRect.w)}×${Math.round(selectionRect.h)}px`;
+                    `Vùng AI (${shapeLabels[selectionShape]}): ${Math.round(selectionRect.w)}×${Math.round(selectionRect.h)}px`;
             }
             isSelecting = false;
         });
@@ -1570,14 +1650,50 @@
             const flat = flattenAllLayers();
             if (regionMode === 'select' && selectionRect && selectionRect.w > 5) {
                 const tmp = document.createElement('canvas');
-                tmp.width = selectionRect.w;
-                tmp.height = selectionRect.h;
+                tmp.width = Math.round(selectionRect.w);
+                tmp.height = Math.round(selectionRect.h);
                 const tmpCtx = tmp.getContext('2d');
-                tmpCtx.drawImage(
-                    flat,
-                    selectionRect.x, selectionRect.y, selectionRect.w, selectionRect.h,
-                    0, 0, selectionRect.w, selectionRect.h
-                );
+
+                if (selectionShape === 'oval') {
+                    // Clip to ellipse before drawing
+                    const rx = tmp.width / 2;
+                    const ry = tmp.height / 2;
+                    tmpCtx.save();
+                    tmpCtx.beginPath();
+                    tmpCtx.ellipse(rx, ry, rx, ry, 0, 0, Math.PI * 2);
+                    tmpCtx.clip();
+                    tmpCtx.drawImage(
+                        flat,
+                        selectionRect.x, selectionRect.y, selectionRect.w, selectionRect.h,
+                        0, 0, tmp.width, tmp.height
+                    );
+                    tmpCtx.restore();
+                } else if (selectionShape === 'free' && selectionPath.length > 2) {
+                    // Clip to freehand path before drawing
+                    tmpCtx.save();
+                    tmpCtx.beginPath();
+                    tmpCtx.moveTo(selectionPath[0].x - selectionRect.x,
+                                  selectionPath[0].y - selectionRect.y);
+                    for (let i = 1; i < selectionPath.length; i++) {
+                        tmpCtx.lineTo(selectionPath[i].x - selectionRect.x,
+                                      selectionPath[i].y - selectionRect.y);
+                    }
+                    tmpCtx.closePath();
+                    tmpCtx.clip();
+                    tmpCtx.drawImage(
+                        flat,
+                        selectionRect.x, selectionRect.y, selectionRect.w, selectionRect.h,
+                        0, 0, tmp.width, tmp.height
+                    );
+                    tmpCtx.restore();
+                } else {
+                    // Default: rectangular crop
+                    tmpCtx.drawImage(
+                        flat,
+                        selectionRect.x, selectionRect.y, selectionRect.w, selectionRect.h,
+                        0, 0, tmp.width, tmp.height
+                    );
+                }
                 return tmp.toDataURL('image/png').split(',')[1];
             }
             return flat.toDataURL('image/png').split(',')[1];

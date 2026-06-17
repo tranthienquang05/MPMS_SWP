@@ -10,13 +10,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.repository.ProposalRepository;
+import com.example.manga_management.service.ProposalService;
 
 @Controller
 public class BoardController {
     private final ProposalRepository proposalRepository;
+    private final ProposalService proposalService; // Thêm Service này
 
-    public BoardController(ProposalRepository proposalRepository) {
+    public BoardController(ProposalRepository proposalRepository, ProposalService proposalService) {
         this.proposalRepository = proposalRepository;
+        this.proposalService = proposalService;
     }
 
     @GetMapping("/board")
@@ -28,14 +31,9 @@ public class BoardController {
         return "board";
     }
 
-    @PostMapping("/board/review")
+    @PostMapping("/board/vote")
     public String boardReview(@RequestParam String id, @RequestParam String action) {
-        Proposal p = proposalRepository.findById(id).orElse(null);
-        if (p != null) {
-            // Yes: Pass dự án. No: Loại bỏ dự án (reject)
-            p.setStatus("yes".equals(action) ? "pass" : "reject");
-            proposalRepository.save(p);
-        }
+        proposalService.submitVote(id, action);
         return "redirect:/manga/board";
     }
 

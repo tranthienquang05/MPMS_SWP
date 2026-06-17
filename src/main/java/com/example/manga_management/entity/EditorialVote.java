@@ -25,7 +25,6 @@ public class EditorialVote {
     @JoinColumn(name = "BoardID", nullable = false)
     private Board board;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "Vote", nullable = false)
     private String vote;
 

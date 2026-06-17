@@ -1,67 +1,94 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8">
-        <title>Editor</title>
-        <link rel="stylesheet" th:href="@{/css/all.css}">
-        <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    </head>
-    <body>
-        <div class="header">
-            <div class="logo">SANKYUU</div>
-            <a th:href="@{/login/logout}"><button
-                    type="submit">Logout</button></a>
-        </div>
 
-        <h1>Chào mừng Tác giả</h1>
-        <p>Đây là khu vực làm việc của Mangaka</p>
+<head>
+    <meta charset="UTF-8">
+    <title>Hội Đồng Editor - Bình Chọn</title>
+    <link rel="stylesheet" th:href="@{/css/all.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS cho thông báo */
+        .notification {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid;
+        }
 
-        /* ui */
-        <ul class="topnav">
-            <li><a href="#">Home</a></li>
-            <li><a href="#">News</a></li>
-            <li><a href="#">Contact</a></li>
-            <li><a href="#">About</a></li>
-        </ul>
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
 
-        <h1 class="text-primary">Chào mừng Hội đồng Editor</h1>
-        <hr>
-        <h3 class="text-warning">🗳️ Danh sách dự án đang mở cổng Bình chọn
-            (Vote)</h3>
-        <table class="table table-bordered table-striped mt-2 shadow-sm">
-            <thead class="table-warning">
-                <tr>
-                    <th>Mã Dự Án</th>
-                    <th>Tên Tác Phẩm</th>
-                    <th>Đọc Bản Thảo</th>
-                    <th>Biểu Quyết</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="p : ${votingProposals}">
-                    <td th:text="${p.id}"></td>
-                    <td th:text="${p.seriesName}"></td>
-                    <td>
-                        <a th:href="@{/manga/view-file(path=${p.filePath})}"
-                            target="_blank"
-                            class="btn btn-sm btn-info text-white">📄 Xem
-                            file</a>
-                    </td>
-                    <td>
-                        <a th:href="@{/manga/editor/approve(id=${p.id})}"
-                            class="btn btn-sm btn-success me-1">👍 Chấp
-                            Thuận</a>
-                        <a th:href="@{/manga/editor/reject(id=${p.id})}"
-                            class="btn btn-sm btn-danger">👎 Bác Bỏ</a>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(votingProposals)}">
-                    <td colspan="4" class="text-center text-muted py-3">Chưa có
-                        dự án mới ở vòng này.</td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-        <a th:href="@{/login/logout}" class="btn btn-danger">Logout</a>
-    </body>
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo">SANKYUU</div>
+        <a th:href="@{/login/logout}"><button type="button">Logout</button></a>
+    </div>
+
+    <h1>Chào mừng Hội đồng Editor</h1>
+    <hr>
+
+    <div th:if="${message}" class="notification success">
+        <span th:text="${message}"></span>
+    </div>
+
+    <div th:if="${error}" class="notification error">
+        <span th:text="${error}"></span>
+    </div>
+
+    <h3 class="text-warning">Danh sách dự án đang mở cổng Bình chọn</h3>
+
+    <table class="table table-bordered table-striped mt-2 shadow-sm">
+        <thead class="table-warning">
+            <tr>
+                <th>Mã Dự Án</th>
+                <th>Tên Tác Phẩm</th>
+                <th>Đọc Bản Thảo</th>
+                <th>Biểu Quyết</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="p : ${listProposals}">
+                <td th:text="${p.id}"></td>
+                <td th:text="${p.seriesName}"></td>
+                <td>
+                    <a th:href="@{/manga/view-file(path=${p.filePath})}" target="_blank"
+                        class="btn btn-sm btn-info text-white">📄 Xem file</a>
+                </td>
+                <td>
+                    <div style="display: flex;">
+                        <form th:action="@{/manga/editor/vote}" method="post" style="margin-right: 5px;">
+                            <input type="hidden" name="id" th:value="${p.id}">
+                            <input type="hidden" name="action" value="pass">
+                            <button type="submit" class="btn btn-sm btn-success">Chấp Thuận</button>
+                        </form>
+
+                        <form th:action="@{/manga/editor/vote}" method="post">
+                            <input type="hidden" name="id" th:value="${p.id}">
+                            <input type="hidden" name="action" value="reject">
+                            <button type="submit" class="btn btn-sm btn-danger">Bác Bỏ</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(listProposals)}">
+                <td colspan="4" class="text-center text-muted py-3">Hiện không có dự án nào chờ bình chọn.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <a th:href="@{/login/logout}" class="btn btn-danger">Logout</a>
+</body>
+
 </html>

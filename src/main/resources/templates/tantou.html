@@ -113,7 +113,7 @@
                                 <td>
                                     <a
                                         th:if="${p.filePath != null and !#strings.isEmpty(p.filePath)}"
-                                        th:href="@{'/proposal/' + ${p.filePath} + '.pdf'}"
+                                        th:href="@{${p.filePath}}"
                                         class="btn-link"
                                         target="_blank">
                                         <i class="fa-solid fa-file-pdf"></i> Xem bản thảo

@@ -27,7 +27,7 @@ public class EditorialVote {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Vote", nullable = false)
-    private VoteType vote;
+    private String vote;
 
     @Column(name = "VoteDate", nullable = false)
     private LocalDate voteDate;

@@ -22,9 +22,6 @@ public class MangaPage {
     @Column(name = "FilePath", length = 60)
     private String filePath;
 
-    @Column(nullable = false, length = 20)
-    private String status;
-
-    @Column(length = 255)
-    private String feedback;
+   
+    
 }

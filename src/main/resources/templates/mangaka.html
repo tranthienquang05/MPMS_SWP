@@ -386,26 +386,8 @@
 
         <!-- Tab project content -->
         <div id="tab-project" class="tab-pane" th:classappend="${message != null} ? 'active' : ''">
-            <h2>Tác phẩm</h2>
-            <h3>Dự án đã được hội đồng duyệt:</h3>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Tên dự án</th>
-                        <th>Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="p : ${approvedList}">
-                        <td th:text="${p.seriesName}"></td>
-                        <td>Đã duyệt (Pass)</td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(approvedList)}">
-                        <td colspan="2">Chưa có dự án nào được duyệt.</td>
-                    </tr>
-                </tbody>
-            </table>
-            <a th:href="@{/login/mangaka/my-projects}">
+            
+            <a th:href="@{/manga/mangaka/my-projects}">
                 <button type="button">Thư viện tác phẩm</button>
             </a>
 
@@ -440,7 +422,7 @@
                             Ký Đề Xuất Dự Án Mới</h5>
                         <button type="button" class="btn-close" id="btnCloseTop">X</button>
                     </div>
-                    <form th:action="@{/login/mangaka/submit-proposal}" method="POST" enctype="multipart/form-data">
+                    <form th:action="@{/manga/mangaka/submit-proposal}" method="POST" enctype="multipart/form-data">
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Tên dự án

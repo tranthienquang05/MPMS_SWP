@@ -19,6 +19,9 @@ public class OpenAIConfig {
     @Value("${openai.api.url}")
     private String openaiUrl;
 
+    @Value("${openai.edit.url:https://api.openai.com/v1/images/edits}")
+    private String openaiEditUrl;
+
     @Value("${openai.image.model}")
     private String openaiImageModel;
 
@@ -52,6 +55,11 @@ public class OpenAIConfig {
         return openaiUrl;
     }
 
+    @Bean(name = "openaiEditUrl")
+    public String openaiEditUrl() {
+        return openaiEditUrl;
+    }
+
     // ── Beans: OpenAI Vision ────────────────────────────────────────────
 
     @Bean(name = "openaiVisionModel")
@@ -70,7 +78,9 @@ public class OpenAIConfig {
         RestTemplate restTemplate = new RestTemplate();
         ClientHttpRequestInterceptor authInterceptor = (request, body, execution) -> {
             request.getHeaders().set("Authorization", "Bearer " + apiKey);
-            request.getHeaders().set("Content-Type", "application/json");
+            // NOTE: Do NOT set Content-Type here.
+            // JSON calls set it via HttpEntity; multipart calls let Spring set
+            // the correct boundary automatically.
             return execution.execute(request, body);
         };
         restTemplate.setInterceptors(List.of(authInterceptor));

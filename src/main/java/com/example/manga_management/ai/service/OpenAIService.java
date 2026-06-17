@@ -80,7 +80,6 @@ public class OpenAIService {
         parts.add("prompt", prompt);
         parts.add("n", "1");
         parts.add("size", "1024x1024");
-        parts.add("response_format", "b64_json");
         parts.add("image", imageResource);
 
         HttpHeaders headers = new HttpHeaders();

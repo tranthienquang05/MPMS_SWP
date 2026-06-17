@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>Tantou Dashboard</title>
@@ -7,10 +8,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Debug CSS để biết bảng có thực sự tồn tại hay không */
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .data-table th, .data-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
     </style>
 </head>
+
 <body>
     <div class="header">
         <div class="logo">SANKYUU</div>
@@ -20,14 +32,16 @@
     <h1>Chào mừng Tantou</h1>
 
     <ul class="topnav">
-        <li><button type="button" class="btn-icon" onclick="openTab('tab-home')"><i class="fa-solid fa-house"></i></button></li>
-        <li><button type="button" class="btn-icon" onclick="openTab('tab-project')"><i class="fa-solid fa-folder-open"></i></button></li>
+        <li><button type="button" class="btn-icon" onclick="openTab('tab-home')"><i
+                    class="fa-solid fa-house"></i></button></li>
+        <li><button type="button" class="btn-icon" onclick="openTab('tab-project')"><i
+                    class="fa-solid fa-folder-open"></i></button></li>
     </ul>
 
     <div class="flex-container">
         <div id="tab-project" class="tab-pane active">
             <h2>Tác phẩm</h2>
-            
+
             <div id="sub-tab-new" class="sub-tab-pane">
                 <p th:text="'Tổng số bản thảo: ' + (${listProposals != null} ? ${listProposals.size()} : 0)"></p>
 
@@ -45,13 +59,13 @@
                         <tr th:if="${listProposals == null or listProposals.isEmpty()}">
                             <td colspan="4" style="text-align: center;">Không có dữ liệu bản thảo.</td>
                         </tr>
-                        
+
                         <tr th:each="p : ${listProposals}">
                             <td th:text="${p.id}">ID</td>
                             <td th:text="${p.seriesName}">Series Name</td>
                             <td th:text="${p.status}">Status</td>
                             <td>
-                                <form th:action="@{/tantou/review}" method="POST">
+                                <form th:action="@{/manga/tantou/review}" method="POST">
                                     <input type="hidden" name="id" th:value="${p.id}">
                                     <button type="submit" name="action" value="yes">Duyệt</button>
                                     <button type="submit" name="action" value="no">Từ chối</button>
@@ -71,4 +85,5 @@
         }
     </script>
 </body>
+
 </html>

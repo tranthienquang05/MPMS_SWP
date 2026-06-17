@@ -15,13 +15,17 @@ public class EditorialVote {
 
     @Id
     @Column(name = "EvoteID", length = 6)
-    private String id;
+    private String evoteID;
 
     @ManyToOne
     @JoinColumn(name = "ProposalID", nullable = false)
     private Proposal proposal;
 
-    @Column(nullable = false, length = 10)
+    @ManyToOne
+    @JoinColumn(name = "BoardID", nullable = false)
+    private Board board;
+
+    @Column(name = "Vote", nullable = false)
     private String vote;
 
     @Column(name = "VoteDate", nullable = false)

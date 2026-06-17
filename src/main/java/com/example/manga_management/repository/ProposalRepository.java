@@ -13,4 +13,5 @@ public interface ProposalRepository extends JpaRepository<Proposal, String> {
     // Spring Data JPA sẽ tự động tạo câu lệnh SQL từ tên phương thức này
     List<Proposal> findByStatus(String status);
 
+    List<Proposal> findByStatusAndMangaka_Id(String status, String mangakaId);
 }

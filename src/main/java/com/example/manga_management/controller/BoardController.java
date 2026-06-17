@@ -17,7 +17,7 @@ import com.example.manga_management.service.ProposalService;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
-@RequestMapping("/manga/editor") 
+@RequestMapping("/manga/editor")
 public class BoardController {
     private final ProposalRepository proposalRepository;
     private final ProposalService proposalService;
@@ -27,7 +27,7 @@ public class BoardController {
         this.proposalService = proposalService;
     }
 
-    @GetMapping("") 
+    @GetMapping("")
     public String boardPage(HttpSession session, Model model) {
         // Kiểm tra đăng nhập theo cách đã chạy ổn ở Tantou
         if (session.getAttribute("user") == null) {
@@ -36,24 +36,37 @@ public class BoardController {
 
         List<Proposal> list = proposalRepository.findByStatus("checked");
         model.addAttribute("listProposals", list);
-        return "editor"; 
+        return "editor";
     }
 
-    @PostMapping("/vote") 
+    @PostMapping("/vote")
     public String boardReview(@RequestParam String id,
-                              @RequestParam String action,
-                              HttpSession session,
-                              RedirectAttributes redirectAttributes) {
+            @RequestParam String action,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
 
-        String boardId = (String) session.getAttribute("boardId");
+        // 1. Lấy đối tượng User từ session (key là "user")
+        Object userObj = session.getAttribute("user");
 
-        if (id == null || id.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Dữ liệu dự án không hợp lệ!");
-            return "redirect:/manga/editor";
+        // 2. Kiểm tra nếu chưa đăng nhập
+        if (userObj == null) {
+            return "redirect:/login";
         }
 
+        // 3. Ép kiểu an toàn từ Object sang User
+        com.example.manga_management.entity.User user = (com.example.manga_management.entity.User) userObj;
+
+        // 4. Lấy ID từ đối tượng user vừa ép kiểu
+        String userId = user.getId();
+
         try {
-            proposalService.submitVote(id, action, boardId);
+            // Kiểm tra ID dự án
+            if (id == null || id.isEmpty()) {
+                throw new RuntimeException("Dữ liệu ID dự án không hợp lệ!");
+            }
+
+            // Gọi service với userId (String) đã lấy được
+            proposalService.submitVote(id, action, userId);
             redirectAttributes.addFlashAttribute("message", "Đã ghi nhận phiếu bầu!");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

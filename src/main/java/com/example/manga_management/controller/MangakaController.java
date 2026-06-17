@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -32,13 +33,32 @@ public class MangakaController {
         this.mangakaRepository = mangakaRepository;
     }
 
-    @GetMapping
+    @GetMapping("")
     public String mangakaPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if (user == null)
             return "redirect:/login";
 
         model.addAttribute("user", user);
+        return "mangaka";
+    }
+
+    @GetMapping("/my-projects")
+    public String myProjectsPage(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null)
+            return "redirect:/login";
+
+        Mangaka mangaka = mangakaRepository.findByUser(user).orElse(null);
+        if (mangaka == null) {
+            model.addAttribute("message", "Bạn chưa có thông tin Mangaka!");
+            return "mangaka";
+        }
+
+        List<Proposal> projectList = proposalRepository.findByStatusAndMangaka_Id("pass", mangaka.getId());
+
+        model.addAttribute("projectList", projectList);
+
         return "mangaka";
     }
 

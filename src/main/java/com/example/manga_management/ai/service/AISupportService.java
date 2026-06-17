@@ -41,7 +41,7 @@ public class AISupportService {
 
             // 3. Dispatch based on feature type
             if ("image".equals(feature.getType())) {
-                return handleImageFeature(request.getImageBase64(), finalPrompt);
+                return handleImageFeature(request.getImageBase64(), request.getMaskBase64(), finalPrompt);
             }
 
             if ("vision".equals(feature.getType())) {
@@ -97,8 +97,9 @@ public class AISupportService {
     /**
      * If imageBase64 is provided, use gpt-image-1 /images/edits to edit the
      * actual canvas drawing. Otherwise fall back to text-only generation.
+     * When maskBase64 is provided, it tells OpenAI which area to edit.
      */
-    private AIResponseDTO handleImageFeature(String imageBase64, String prompt) {
+    private AIResponseDTO handleImageFeature(String imageBase64, String maskBase64, String prompt) {
         if (!isKeyConfigured(openaiApiKey, "your-openai-key")) {
             log.warn("OpenAI API key not configured");
             return AIResponseDTO.builder()
@@ -111,8 +112,12 @@ public class AISupportService {
             OpenAIService.AIResult result;
             if (imageBase64 != null && !imageBase64.isBlank()) {
                 // Canvas image present → edit it with gpt-image-1
-                log.info("Using gpt-image-1 /images/edits with canvas input");
-                result = openAIService.editImage(imageBase64, prompt);
+                boolean hasMask = maskBase64 != null && !maskBase64.isBlank();
+                if (hasMask) {
+                    prompt += ". IMPORTANT: Only modify the transparent (unmasked) area of the mask. Keep all other regions exactly unchanged.";
+                }
+                log.info("Using gpt-image-1 /images/edits with canvas input (hasMask={})", hasMask);
+                result = openAIService.editImage(imageBase64, maskBase64, prompt);
             } else {
                 // No canvas → generate from text prompt only
                 log.info("No canvas input, falling back to text-only generation");

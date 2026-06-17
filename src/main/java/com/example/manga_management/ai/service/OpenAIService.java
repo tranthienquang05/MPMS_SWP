@@ -54,17 +54,17 @@ public class OpenAIService {
      */
     public record AIResult(String content, String requestId) {}
 
-    // ── OpenAI gpt-image-1 image edit (canvas → AI) ──────────────────────
-
     /**
      * Edit an existing canvas image via OpenAI /images/edits (gpt-image-1).
      * Sends the canvas PNG as multipart/form-data together with the prompt.
+     * When a mask is provided, only the transparent area of the mask will be edited.
      * Returns the edited image as a base64-encoded string.
      *
      * @param imageBase64 raw base64 string of the canvas PNG (no data: prefix)
+     * @param maskBase64  optional mask PNG base64 (transparent = area to edit, opaque = keep)
      * @param prompt      instruction for the edit
      */
-    public AIResult editImage(String imageBase64, String prompt) throws Exception {
+    public AIResult editImage(String imageBase64, String maskBase64, String prompt) throws Exception {
         byte[] imageBytes = Base64.getDecoder().decode(
                 imageBase64.startsWith("data:") ? imageBase64.substring(imageBase64.indexOf(",") + 1) : imageBase64
         );
@@ -82,12 +82,26 @@ public class OpenAIService {
         parts.add("size", "1024x1024");
         parts.add("image", imageResource);
 
+        // If a mask is provided, add it to tell OpenAI which area to edit
+        if (maskBase64 != null && !maskBase64.isBlank()) {
+            byte[] maskBytes = Base64.getDecoder().decode(
+                    maskBase64.startsWith("data:") ? maskBase64.substring(maskBase64.indexOf(",") + 1) : maskBase64
+            );
+            ByteArrayResource maskResource = new ByteArrayResource(maskBytes) {
+                @Override
+                public String getFilename() { return "mask.png"; }
+            };
+            parts.add("mask", maskResource);
+            log.debug("Mask PNG added to edit request ({} bytes)", maskBytes.length);
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         // Bearer token is added by the RestTemplate interceptor
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(parts, headers);
 
-        log.debug("OpenAI image edit request → {} (prompt length={})", openaiEditUrl, prompt.length());
+        log.debug("OpenAI image edit request → {} (prompt length={}, hasMask={})",
+                openaiEditUrl, prompt.length(), maskBase64 != null && !maskBase64.isBlank());
 
         ResponseEntity<String> response = openaiRestTemplate.postForEntity(openaiEditUrl, requestEntity, String.class);
         String requestId = extractRequestId(response);

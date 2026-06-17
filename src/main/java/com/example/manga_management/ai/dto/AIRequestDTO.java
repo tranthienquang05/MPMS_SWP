@@ -11,6 +11,9 @@ public class AIRequestDTO {
     /** Base64-encoded image (required for vision features, optional for image generation) */
     private String imageBase64;
 
+    /** Base64-encoded mask PNG (transparent area = region AI should edit, opaque = keep) */
+    private String maskBase64;
+
     public String getFeature() {
         return feature;
     }
@@ -33,5 +36,13 @@ public class AIRequestDTO {
 
     public void setImageBase64(String imageBase64) {
         this.imageBase64 = imageBase64;
+    }
+
+    public String getMaskBase64() {
+        return maskBase64;
+    }
+
+    public void setMaskBase64(String maskBase64) {
+        this.maskBase64 = maskBase64;
     }
 }

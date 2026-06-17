@@ -683,81 +683,93 @@ function flattenAllLayers() {
 
 function canvasRegionToBase64() {
     const flat = flattenAllLayers();
-    if (regionMode === 'select' && selectionRect && selectionRect.w > 5) {
-        const tmp = document.createElement('canvas');
-        tmp.width = Math.round(selectionRect.w);
-        tmp.height = Math.round(selectionRect.h);
-        const tmpCtx = tmp.getContext('2d');
-
-        if (selectionShape === 'oval') {
-            // Clip to ellipse before drawing
-            const rx = tmp.width / 2;
-            const ry = tmp.height / 2;
-            tmpCtx.save();
-            tmpCtx.beginPath();
-            tmpCtx.ellipse(rx, ry, rx, ry, 0, 0, Math.PI * 2);
-            tmpCtx.clip();
-            tmpCtx.drawImage(
-                flat,
-                selectionRect.x, selectionRect.y, selectionRect.w, selectionRect.h,
-                0, 0, tmp.width, tmp.height
-            );
-            tmpCtx.restore();
-        } else if (selectionShape === 'free' && selectionPath.length > 2) {
-            // Clip to freehand path before drawing
-            tmpCtx.save();
-            tmpCtx.beginPath();
-            tmpCtx.moveTo(selectionPath[0].x - selectionRect.x,
-                selectionPath[0].y - selectionRect.y);
-            for (let i = 1; i < selectionPath.length; i++) {
-                tmpCtx.lineTo(selectionPath[i].x - selectionRect.x,
-                    selectionPath[i].y - selectionRect.y);
-            }
-            tmpCtx.closePath();
-            tmpCtx.clip();
-            tmpCtx.drawImage(
-                flat,
-                selectionRect.x, selectionRect.y, selectionRect.w, selectionRect.h,
-                0, 0, tmp.width, tmp.height
-            );
-            tmpCtx.restore();
-        } else {
-            // Default: rectangular crop
-            tmpCtx.drawImage(
-                flat,
-                selectionRect.x, selectionRect.y, selectionRect.w, selectionRect.h,
-                0, 0, tmp.width, tmp.height
-            );
-        }
-        return tmp.toDataURL('image/png').split(',')[1];
-    }
+    // Always send full canvas — mask will tell AI which area to edit
     return flat.toDataURL('image/png').split(',')[1];
+}
+
+/**
+ * Generate a mask PNG for OpenAI /images/edits.
+ * Transparent pixels (alpha=0) = area AI should edit.
+ * Opaque white pixels = area to keep unchanged.
+ * Returns base64 string (no data: prefix), or null if no selection.
+ */
+function generateMaskBase64() {
+    if (regionMode !== 'select' || !selectionRect || selectionRect.w <= 5) {
+        return null;
+    }
+
+    const mask = document.createElement('canvas');
+    mask.width = CANVAS_W;
+    mask.height = CANVAS_H;
+    const mCtx = mask.getContext('2d');
+
+    // Fill entire canvas with opaque white (keep area)
+    mCtx.fillStyle = '#ffffff';
+    mCtx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // Cut out the selection region (make it transparent = edit area)
+    mCtx.globalCompositeOperation = 'destination-out';
+    mCtx.fillStyle = '#000000';
+
+    if (selectionShape === 'oval') {
+        const cx = selectionRect.x + selectionRect.w / 2;
+        const cy = selectionRect.y + selectionRect.h / 2;
+        const rx = selectionRect.w / 2;
+        const ry = selectionRect.h / 2;
+        mCtx.beginPath();
+        mCtx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+        mCtx.fill();
+    } else if (selectionShape === 'free' && selectionPath.length > 2) {
+        mCtx.beginPath();
+        mCtx.moveTo(selectionPath[0].x, selectionPath[0].y);
+        for (let i = 1; i < selectionPath.length; i++) {
+            mCtx.lineTo(selectionPath[i].x, selectionPath[i].y);
+        }
+        mCtx.closePath();
+        mCtx.fill();
+    } else {
+        // Rectangle selection
+        mCtx.fillRect(selectionRect.x, selectionRect.y, selectionRect.w, selectionRect.h);
+    }
+
+    mCtx.globalCompositeOperation = 'source-over';
+    return mask.toDataURL('image/png').split(',')[1];
 }
 
 document.getElementById('btnRunAi').addEventListener('click', async () => {
     if (!selectedFeature) return;
 
-    // BUG 2 FIX: store the region info at the moment "Run AI" is clicked
+    // Store the region info at the moment "Run AI" is clicked
     lastUsedRegion = {
         mode: regionMode,
-        rect: selectionRect ? { ...selectionRect } : null,
-        shape: selectionShape
+        rect: regionMode === 'select' ? { ...selectionRect } : null,
+        shape: selectionShape,
+        path: (regionMode === 'select' && selectionShape === 'free')
+            ? selectionPath.map(p => ({ ...p }))
+            : null
     };
 
     const promptVal = document.getElementById('aiPromptInput').value;
     const imageBase64 = canvasRegionToBase64();
+    const maskBase64 = generateMaskBase64();
 
     showAiLoadingView();
 
     try {
+        const requestBody = {
+            feature: selectedFeature.code,
+            prompt: promptVal,
+            imageBase64: imageBase64
+        };
+        // Only include mask when user selected a region
+        if (maskBase64) {
+            requestBody.maskBase64 = maskBase64;
+        }
+
         const response = await fetch('/api/ai/run', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                feature: selectedFeature.code,
-                prompt: promptVal,
-                imageBase64: imageBase64
-            })
+            body: JSON.stringify(requestBody)
         });
 
         const data = await response.json();
@@ -773,16 +785,38 @@ function applyAiResultToCanvas(base64) {
     const img = new Image();
     img.onload = () => {
         const layerCtx = getActiveLayer().ctx;
+
         if (lastUsedRegion && lastUsedRegion.mode === 'select' && lastUsedRegion.rect) {
             const r = lastUsedRegion.rect;
+            layerCtx.save();
+            layerCtx.beginPath();
+
+            if (lastUsedRegion.shape === 'oval') {
+                const cx = r.x + r.w / 2;
+                const cy = r.y + r.h / 2;
+                layerCtx.ellipse(cx, cy, r.w / 2, r.h / 2, 0, 0, Math.PI * 2);
+            } else if (lastUsedRegion.shape === 'free' && lastUsedRegion.path && lastUsedRegion.path.length > 2) {
+                layerCtx.moveTo(lastUsedRegion.path[0].x, lastUsedRegion.path[0].y);
+                for (let i = 1; i < lastUsedRegion.path.length; i++) {
+                    layerCtx.lineTo(lastUsedRegion.path[i].x, lastUsedRegion.path[i].y);
+                }
+                layerCtx.closePath();
+            } else {
+                // rect: bounding box chính là vùng chọn, không cần clip thêm
+                layerCtx.rect(r.x, r.y, r.w, r.h);
+            }
+
+            layerCtx.clip();
             layerCtx.drawImage(img, r.x, r.y, r.w, r.h);
+            layerCtx.restore();
         } else {
             layerCtx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
         }
-        pushHistoryEntry('Áp dụng kết quả AI');
+
+        pushHistoryEntry('AI: ' + (selectedFeature ? selectedFeature.name : ''));
         closeAiModal();
     };
-    img.src = base64.startsWith('data:') ? base64 : 'data:image/png;base64,' + base64;
+    img.src = 'data:image/png;base64,' + base64;
 }
 
 function renderAiResult(data) {

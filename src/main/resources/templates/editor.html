@@ -1,94 +1,217 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>Hội Đồng Editor - Bình Chọn</title>
+        <link rel="stylesheet" th:href="@{/css/all.css}">
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </head>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Hội Đồng Editor - Bình Chọn</title>
-    <link rel="stylesheet" th:href="@{/css/all.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* CSS cho thông báo */
-        .notification {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            border: 1px solid;
+    <body>
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">SANKYUU
+                <p class="name">Tổng biên tập</p>
+            </div>
+
+            <div class="header-actions">
+                <a th:href="@{/login/logout}">
+                    <button type="button" class="btn-icon" aria-label="Logout">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </button>
+                </a>
+            </div>
+        </div>
+
+        <!-- Thanh điều hướng -->
+        <ul class="topnav">
+            <li>
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-home')">
+                    <i class="fa-solid fa-house"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-project')">
+                    <i class="fa-solid fa-folder-open"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-proposal')">
+                    <i class="fa-solid fa-file-alt"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-assistant')">
+                    <i class="fa-solid fa-user"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-other')">
+                    <i class="fa-solid fa-hashtag"></i>
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="flex-container">
+            <!-- Tab home content -->
+            <div id="tab-home" class="tab-pane"
+                th:classappend="${message == null } ? 'active' : ''">
+                <h2>Trang chủ</h2>
+                <div class="ranking-container">
+                    <h2>Bảng Xếp Hạng Series</h2>
+                    <form th:action="@{/manga/ranking}" method="get"
+                        class="filter-row">
+                        <label>Tháng:
+                            <select name="month">
+                                <option value="0"
+                                    th:selected="${selectedMonth == 0}">-- Cả
+                                    năm --</option>
+                                <option
+                                    th:each="m : ${#numbers.sequence(1, 12)}"
+                                    th:value="${m}"
+                                    th:text="'Tháng ' + ${m}"
+                                    th:selected="${m == selectedMonth}">
+                                </option>
+                            </select>
+                        </label>
+                        <label>Năm:
+                            <select name="year">
+                                <option value="2026"
+                                    th:selected="${selectedYear == 2026}">2026</option>
+                                <option value="2025"
+                                    th:selected="${selectedYear == 2025}">2025</option>
+                            </select>
+                        </label>
+                        <button type="submit" class="btn-filter">Xem
+                            ranking</button>
+                    </form>
+                    <!-- Bảng xếp hạng -->
+                    <table th:if="${not #lists.isEmpty(rankings)}">
+                        <thead>
+                            <tr>
+                                <th style="width:80px">Hạng</th>
+                                <th style="width:110px">Mã Series</th>
+                                <th>Tên Series</th>
+                                <th style="width:130px">Tổng Phiếu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${rankings}">
+                                <td>
+                                    <span th:if="${item.rank == 1}"
+                                        class="rank-1">🥇 1</span>
+                                    <span th:if="${item.rank == 2}"
+                                        class="rank-2">🥈 2</span>
+                                    <span th:if="${item.rank == 3}"
+                                        class="rank-3">🥉 3</span>
+                                    <span th:if="${item.rank > 3}"
+                                        th:text="${item.rank}"></span>
+                                </td>
+                                <td th:text="${item.seriesId}"></td>
+                                <td style="text-align:left"
+                                    th:text="${item.seriesName}"></td>
+                                <td th:text="${item.totalVotes}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p class="empty-msg" th:if="${#lists.isEmpty(rankings)}">
+                        Không có dữ liệu cho kỳ này.
+                    </p>
+
+                </div>
+            </div>
+
+            <!-- Tab project content -->
+            <div id="tab-project" class="tab-pane active">
+                <h1>Xin chào Tổng biên tập</h1>
+                <hr>
+
+                <div th:if="${message}" class="notification success">
+                    <span th:text="${message}"></span>
+                </div>
+
+                <div th:if="${error}" class="notification error">
+                    <span th:text="${error}"></span>
+                </div>
+
+                <h3 class="text-warning">Danh sách dự án đang mở cổng Bình
+                    chọn</h3>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Mã Dự Án</th>
+                            <th>Tên Tác Giả</th>
+                            <th>Tên Series</th>
+                            <th>Tập tin bản thảo</th>
+                            <th>Biểu Quyết</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p : ${listProposals}">
+                            <td th:text="${p.id}">ID</td>
+                            <td th:text="${p.getMangaka()}">Mangaka Name</td>
+                            <td th:text="${p.seriesName}">Series Name</td>
+                            <td>
+                                <a
+                                    th:href="@{/manga/view-file(path=${p.filePath})}"
+                                    target="_blank"
+                                    class="btn btn-sm btn-info text-white">Xem file</a>
+                            </td>
+                            <td>
+                                <div style="display: flex;">
+                                    <form th:action="@{/manga/editor/vote}"
+                                        method="post"
+                                        style="margin-right: 5px;">
+                                        <input type="hidden" name="id"
+                                            th:value="${p.id}">
+                                        <input type="hidden" name="action"
+                                            value="pass">
+                                        <button type="submit"
+                                            class="btn btn-sm btn-success">Chấp
+                                            Thuận</button>
+                                    </form>
+
+                                    <form th:action="@{/manga/editor/vote}"
+                                        method="post">
+                                        <input type="hidden" name="id"
+                                            th:value="${p.id}">
+                                        <input type="hidden" name="action"
+                                            value="reject">
+                                        <button type="submit"
+                                            class="btn btn-sm btn-danger">Bác
+                                            Bỏ</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(listProposals)}">
+                            <td colspan="4"
+                                class="text-center text-muted py-3">Hiện
+                                không có dự án nào chờ bình chọn.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <br>
+                <a th:href="@{/login/logout}" class="btn btn-danger">Logout</a>
+            </div>
+            <!-- Tab project content -->
+        </div>
+        <!-- JS -->
+        <script>
+        function openTab(tabId) {
+            document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
+            document.getElementById(tabId).classList.add("active");
         }
-
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border-color: #c3e6cb;
-        }
-
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="header">
-        <div class="logo">SANKYUU</div>
-        <a th:href="@{/login/logout}"><button type="button">Logout</button></a>
-    </div>
-
-    <h1>Chào mừng Hội đồng Editor</h1>
-    <hr>
-
-    <div th:if="${message}" class="notification success">
-        <span th:text="${message}"></span>
-    </div>
-
-    <div th:if="${error}" class="notification error">
-        <span th:text="${error}"></span>
-    </div>
-
-    <h3 class="text-warning">Danh sách dự án đang mở cổng Bình chọn</h3>
-
-    <table class="table table-bordered table-striped mt-2 shadow-sm">
-        <thead class="table-warning">
-            <tr>
-                <th>Mã Dự Án</th>
-                <th>Tên Tác Phẩm</th>
-                <th>Đọc Bản Thảo</th>
-                <th>Biểu Quyết</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="p : ${listProposals}">
-                <td th:text="${p.id}"></td>
-                <td th:text="${p.seriesName}"></td>
-                <td>
-                    <a th:href="@{/manga/view-file(path=${p.filePath})}" target="_blank"
-                        class="btn btn-sm btn-info text-white">📄 Xem file</a>
-                </td>
-                <td>
-                    <div style="display: flex;">
-                        <form th:action="@{/manga/editor/vote}" method="post" style="margin-right: 5px;">
-                            <input type="hidden" name="id" th:value="${p.id}">
-                            <input type="hidden" name="action" value="pass">
-                            <button type="submit" class="btn btn-sm btn-success">Chấp Thuận</button>
-                        </form>
-
-                        <form th:action="@{/manga/editor/vote}" method="post">
-                            <input type="hidden" name="id" th:value="${p.id}">
-                            <input type="hidden" name="action" value="reject">
-                            <button type="submit" class="btn btn-sm btn-danger">Bác Bỏ</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(listProposals)}">
-                <td colspan="4" class="text-center text-muted py-3">Hiện không có dự án nào chờ bình chọn.</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <br>
-    <a th:href="@{/login/logout}" class="btn btn-danger">Logout</a>
-</body>
-
+    </script>
+    </body>
 </html>

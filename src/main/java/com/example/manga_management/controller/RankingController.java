@@ -5,15 +5,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.example.manga_management.repository.RankingRepository;
 
-@Controller
+@RestController
 @RequestMapping("/manga/ranking")
 public class RankingController {
 
@@ -24,10 +23,9 @@ public class RankingController {
     }
 
     @GetMapping
-    public String rankingPage(
+    public List<Map<String, Object>> getRanking(
             @RequestParam(defaultValue = "0") int month,
-            @RequestParam(defaultValue = "2026") int year,
-            Model model) {
+            @RequestParam(defaultValue = "2026") int year) {
 
         List<Object[]> rows;
 
@@ -37,7 +35,6 @@ public class RankingController {
             rows = rankingRepository.findRankingByMonthAndYear(month, year);
         }
 
-        // Đóng gói thành List<Map> để Thymeleaf dùng
         List<Map<String, Object>> rankings = new ArrayList<>();
         for (int i = 0; i < rows.size(); i++) {
             Object[] row = rows.get(i);
@@ -49,10 +46,6 @@ public class RankingController {
             rankings.add(map);
         }
 
-        model.addAttribute("rankings",      rankings);
-        model.addAttribute("selectedMonth", month);
-        model.addAttribute("selectedYear",  year);
-
-        return "ranking";
+        return rankings;
     }
 }

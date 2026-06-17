@@ -580,6 +580,7 @@ const aiResultView = document.getElementById('aiResultView');
 
 let selectedFeature = null;
 let regionMode = 'full';
+let lastUsedRegion = null;
 
 function openAiModal() { aiModalOverlay.style.display = 'flex'; }
 function closeAiModal() { aiModalOverlay.style.display = 'none'; }
@@ -625,6 +626,21 @@ document.querySelectorAll('.ai-feature-card').forEach(card => {
         };
         document.getElementById('aiDetailTitle').textContent = selectedFeature.name;
         document.getElementById('aiPromptInput').value = '';
+
+        // BUG 1 FIX: auto-detect existing selection
+        const statusEl = document.getElementById('aiRegionStatus');
+        if (selectionRect && selectionRect.w > 5) {
+            regionMode = 'select';
+            document.querySelectorAll('.ai-region-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.ai-region-btn[data-region="select"]').classList.add('active');
+            statusEl.textContent = `Sẽ áp dụng cho vùng đã chọn (${Math.round(selectionRect.w)}×${Math.round(selectionRect.h)}px)`;
+        } else {
+            regionMode = 'full';
+            document.querySelectorAll('.ai-region-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.ai-region-btn[data-region="full"]').classList.add('active');
+            statusEl.textContent = 'Sẽ áp dụng cho toàn bộ canvas';
+        }
+
         showAiDetailView();
     });
 });
@@ -721,6 +737,13 @@ function canvasRegionToBase64() {
 document.getElementById('btnRunAi').addEventListener('click', async () => {
     if (!selectedFeature) return;
 
+    // BUG 2 FIX: store the region info at the moment "Run AI" is clicked
+    lastUsedRegion = {
+        mode: regionMode,
+        rect: selectionRect ? { ...selectionRect } : null,
+        shape: selectionShape
+    };
+
     const promptVal = document.getElementById('aiPromptInput').value;
     const imageBase64 = canvasRegionToBase64();
 
@@ -745,16 +768,35 @@ document.getElementById('btnRunAi').addEventListener('click', async () => {
     }
 });
 
+// BUG 2 FIX: draw AI result image back onto the canvas at the correct position
+function applyAiResultToCanvas(base64) {
+    const img = new Image();
+    img.onload = () => {
+        const layerCtx = getActiveLayer().ctx;
+        if (lastUsedRegion && lastUsedRegion.mode === 'select' && lastUsedRegion.rect) {
+            const r = lastUsedRegion.rect;
+            layerCtx.drawImage(img, r.x, r.y, r.w, r.h);
+        } else {
+            layerCtx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
+        }
+        pushHistoryEntry('Áp dụng kết quả AI');
+        closeAiModal();
+    };
+    img.src = base64.startsWith('data:') ? base64 : 'data:image/png;base64,' + base64;
+}
+
 function renderAiResult(data) {
     showAiResultView();
     const titleEl = document.getElementById('aiResultTitle');
     const imgEl = document.getElementById('aiResultImage');
     const textEl = document.getElementById('aiResultText');
     const errEl = document.getElementById('aiErrorText');
+    const applyBtn = document.getElementById('btnApplyToCanvas');
 
     imgEl.style.display = 'none';
     textEl.style.display = 'none';
     errEl.style.display = 'none';
+    if (applyBtn) applyBtn.style.display = 'none';
 
     if (data.status === 'success') {
         titleEl.textContent = 'Hoàn thành — ' + (selectedFeature ? selectedFeature.name : '');
@@ -764,6 +806,12 @@ function renderAiResult(data) {
                 ? 'data:image/png;base64,' + data.result
                 : data.result;
             imgEl.style.display = 'block';
+
+            // BUG 2 FIX: show "Apply to canvas" button for image results
+            if (applyBtn) {
+                applyBtn.style.display = 'inline-block';
+                applyBtn.onclick = () => applyAiResultToCanvas(data.result);
+            }
         } else if (data.type === 'text') {
             textEl.textContent = data.result;
             textEl.style.display = 'block';

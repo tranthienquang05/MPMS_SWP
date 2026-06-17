@@ -61,61 +61,48 @@
         <!-- Tab home content -->
         <div id="tab-home" class="tab-pane" th:classappend="${message == null } ? 'active' : ''">
             <h2>Trang chủ</h2>
-            <div class="ranking-container">
 
-                <h2>Bảng Xếp Hạng Series</h2>
-
-                <form th:action="@{/manga/ranking}" method="get" class="filter-row">
-                    <label>Tháng:
-                        <select name="month">
-                            <option value="0" th:selected="${selectedMonth == 0}">-- Cả
-                                năm --</option>
-                            <option th:each="m : ${#numbers.sequence(1, 12)}" th:value="${m}" th:text="'Tháng ' + ${m}"
-                                th:selected="${m == selectedMonth}">
-                            </option>
-                        </select>
-                    </label>
-                    <label>Năm:
-                        <select name="year">
-                            <option value="2026" th:selected="${selectedYear == 2026}">2026</option>
-                            <option value="2025" th:selected="${selectedYear == 2025}">2025</option>
-                        </select>
-                    </label>
-                    <button type="submit" class="btn-filter">Xem
-                        ranking</button>
-                </form>
-
-                <!-- Bảng xếp hạng -->
-                <table th:if="${not #lists.isEmpty(rankings)}">
-                    <thead>
-                        <tr>
-                            <th style="width:80px">Hạng</th>
-                            <th style="width:110px">Mã Series</th>
-                            <th>Tên Series</th>
-                            <th style="width:130px">Tổng Phiếu</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="item : ${rankings}">
-                            <td>
-                                <span th:if="${item.rank == 1}" class="rank-1">🥇 1</span>
-                                <span th:if="${item.rank == 2}" class="rank-2">🥈 2</span>
-                                <span th:if="${item.rank == 3}" class="rank-3">🥉 3</span>
-                                <span th:if="${item.rank > 3}" th:text="${item.rank}"></span>
-                            </td>
-                            <td th:text="${item.seriesId}"></td>
-                            <td style="text-align:left" th:text="${item.seriesName}"></td>
-                            <td th:text="${item.totalVotes}"></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <p class="empty-msg" th:if="${#lists.isEmpty(rankings)}">
-                    Không có dữ liệu cho kỳ này.
-                </p>
-
+            <div style="margin-bottom:12px;">
+                <label>Tháng:
+                    <select id="rankMonth">
+                        <option value="0">-- Cả năm --</option>
+                        <option value="1">Tháng 1</option>
+                        <option value="2">Tháng 2</option>
+                        <option value="3">Tháng 3</option>
+                        <option value="4">Tháng 4</option>
+                        <option value="5">Tháng 5</option>
+                        <option value="6">Tháng 6</option>
+                        <option value="7">Tháng 7</option>
+                        <option value="8">Tháng 8</option>
+                        <option value="9">Tháng 9</option>
+                        <option value="10">Tháng 10</option>
+                        <option value="11">Tháng 11</option>
+                        <option value="12">Tháng 12</option>
+                    </select>
+                </label>
+                <label style="margin-left:10px;">Năm:
+                    <select id="rankYear">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </label>
+                <button type="button" onclick="loadRanking()">Xem ranking</button>
             </div>
+
+            <table id="rankingTable" border="1" style="width:100%;border-collapse:collapse;display:none;">
+                <thead style="background:#4a90d9;color:white;">
+                    <tr>
+                        <th>Hạng</th>
+                        <th>Mã Series</th>
+                        <th>Tên Series</th>
+                        <th>Tổng Phiếu</th>
+                    </tr>
+                </thead>
+                <tbody id="rankingBody"></tbody>
+            </table>
+            <p id="rankingMsg" style="display:none;color:gray;">Không có dữ liệu</p>
         </div>
+        
         <!-- Tab draw content -->
         <div id="tab-draw" class="tab-pane">
 
@@ -399,25 +386,7 @@
 
         <!-- Tab project content -->
         <div id="tab-project" class="tab-pane" th:classappend="${message != null} ? 'active' : ''">
-            <h2>Tác phẩm</h2>
-            <h3>Dự án đã được hội đồng duyệt:</h3>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Tên dự án</th>
-                        <th>Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="p : ${approvedList}">
-                        <td th:text="${p.seriesName}"></td>
-                        <td>Đã duyệt (Pass)</td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(approvedList)}">
-                        <td colspan="2">Chưa có dự án nào được duyệt.</td>
-                    </tr>
-                </tbody>
-            </table>
+            
             <a th:href="@{/manga/mangaka/my-projects}">
                 <button type="button">Thư viện tác phẩm</button>
             </a>
@@ -516,6 +485,43 @@
             document.getElementById(tabId).classList.add("active");
         }
 
+        //  THÊM: hàm loadRanking gọi API và hiển thị bảng ngay tại trang
+        function loadRanking() {
+            var month = document.getElementById('rankMonth').value;
+            var year  = document.getElementById('rankYear').value;
+
+            fetch('/manga/ranking?month=' + month + '&year=' + year)
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    var tbody = document.getElementById('rankingBody');
+                    var table = document.getElementById('rankingTable');
+                    var msg   = document.getElementById('rankingMsg');
+                    tbody.innerHTML = '';
+
+                    if (data.length === 0) {
+                        table.style.display = 'none';
+                        msg.style.display   = 'block';
+                        return;
+                    }
+
+                    table.style.display = 'table';
+                    msg.style.display   = 'none';
+
+                    var medals = ['🥇','🥈','🥉'];
+                    data.forEach(function(item) {
+                        var medal = item.rank <= 3 ? medals[item.rank - 1] + ' ' : '';
+                        tbody.innerHTML +=
+                            '<tr>' +
+                            '<td style="text-align:center">' + medal + item.rank + '</td>' +
+                            '<td style="text-align:center">' + item.seriesId + '</td>' +
+                            '<td>' + item.seriesName + '</td>' +
+                            '<td style="text-align:center">' + item.totalVotes + '</td>' +
+                            '</tr>';
+                    });
+                });
+        }
+
+        // Xử lý logic cho Modal nộp bản thảo
         document.addEventListener("DOMContentLoaded", function () {
             const modalOverlay = document.getElementById("proposalModalOverlay");
             const btnOpen = document.getElementById("btnOpenModal");
@@ -534,13 +540,18 @@
             });
         });
 
+        // Modal thông báo
         const notificationModal = document.getElementById("notificationModalOverlay");
         const btnCloseNotification = document.getElementById("btnCloseNotification");
         const btnOkNotification = document.getElementById("btnOkNotification");
 
-        function closeNotificationModal() { if (notificationModal) notificationModal.style.display = "none"; }
+        function closeNotificationModal() {
+            if (notificationModal) notificationModal.style.display = "none";
+        }
+
         if (btnCloseNotification) btnCloseNotification.addEventListener("click", closeNotificationModal);
         if (btnOkNotification) btnOkNotification.addEventListener("click", closeNotificationModal);
+
         if (notificationModal) {
             notificationModal.addEventListener("click", function (event) {
                 if (event.target === notificationModal) closeNotificationModal();

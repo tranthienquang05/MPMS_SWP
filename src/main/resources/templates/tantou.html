@@ -104,7 +104,7 @@
                             <tr th:each="p : ${listProposals}">
                                 <td th:text="${p.id}">ID</td>
 
-                                <td th:text="${p.getMangaka()}">Mangaka
+                                <td th:text="${p.mangaka.user.fullname}">Mangaka
                                     Name</td>
 
                                 <td th:text="${p.seriesName}">Series Name</td>

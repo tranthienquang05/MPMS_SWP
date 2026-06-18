@@ -59,7 +59,8 @@
     <!-- Tab Content -->
     <div class="flex-container">
         <!-- Tab home content -->
-        <div id="tab-home" class="tab-pane" th:classappend="${message == null } ? 'active' : ''">
+        <div id="tab-home" class="tab-pane"
+            th:classappend="${activeTab == null || activeTab == 'tab-home'} ? 'active' : ''">
             <h2>Trang chủ</h2>
 
             <div style="margin-bottom:12px;">
@@ -102,7 +103,7 @@
             </table>
             <p id="rankingMsg" style="display:none;color:gray;">Không có dữ liệu</p>
         </div>
-        
+
         <!-- Tab draw content -->
         <div id="tab-draw" class="tab-pane">
 
@@ -370,7 +371,8 @@
                             <div id="aiErrorText" class="ai-error-text" style="display: none;"></div>
                             <div class="ai-modal-footer">
                                 <button type="button" class="ai-btn-secondary" id="btnAiResultBack">Quay lại</button>
-                                <button type="button" class="ai-btn-run" id="btnApplyToCanvas" style="display:none;">Apply to canvas</button>
+                                <button type="button" class="ai-btn-run" id="btnApplyToCanvas"
+                                    style="display:none;">Apply to canvas</button>
                             </div>
                         </div>
                     </div>
@@ -384,8 +386,8 @@
         </div>
 
         <!-- Tab project content -->
-        <div id="tab-project" class="tab-pane" th:classappend="${message != null} ? 'active' : ''">
-            
+        <div id="tab-project" class="tab-pane" th:classappend="${activeTab == 'tab-project'} ? 'active' : ''">
+
             <a th:href="@{/manga/mangaka/my-projects}">
                 <button type="button">Thư viện tác phẩm</button>
             </a>
@@ -397,21 +399,55 @@
                         <tr>
                             <th>Tên series</th>
                             <th>Trạng thái</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="project : ${projectList}">
                             <td th:text="${project.seriesName}"></td>
                             <td th:text="${project.status}"></td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(projectList)}">
-                            <td colspan="2">Chưa có tác phẩm nào được
-                                duyệt.</td>
+                            <td>
+                                <form th:action="@{/manga/mangaka/start-series}" method="POST"
+                                    enctype="multipart/form-data">
+
+                                    <input type="hidden" name="proposalId" th:value="${project.id}">
+
+                                    <input type="text" name="txtSeriesName" th:value="${project.seriesName}" readonly>
+                                    <textarea name="txtDescription" placeholder="Mô tả..." required></textarea>
+                                    <input type="file" name="fileBookJacket" accept=".pdf" required>
+
+                                    <button type="submit">Khởi động dự án</button>
+                                </form>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
+            <label for="modal-toggle-start" class="btn-open">Khởi động dự án</label>
+
+            <input type="checkbox" id="modal-toggle-start" style="display:none;">
+
+            <div class="modal-overlay" id="startSeriesModalOverlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5>Khởi Động Tác Phẩm</h5>
+                        <label for="modal-toggle-start" class="btn-close">X</label>
+                    </div>
+                    <form th:action="@{/manga/mangaka/start-series}" method="POST"
+                        enctype="multipart/form-data">
+                        <div class="modal-body">
+                            <input type="text" name="txtSeriesName" placeholder="Tên series" required>
+                            <textarea name="txtDescription" required></textarea>
+                            <input type="file" name="fileBookJacket" accept=".pdf" required>
+                        </div>
+                        <div class="modal-footer">
+                            <label for="modal-toggle-start">Hủy</label>
+                            <button type="submit">Xác nhận</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
             <button id="btnOpenModal">Mở form nộp bản thảo</button>
 
             <div id="proposalModalOverlay" class="modal-overlay">
@@ -487,27 +523,27 @@
         //  THÊM: hàm loadRanking gọi API và hiển thị bảng ngay tại trang
         function loadRanking() {
             var month = document.getElementById('rankMonth').value;
-            var year  = document.getElementById('rankYear').value;
+            var year = document.getElementById('rankYear').value;
 
             fetch('/manga/ranking?month=' + month + '&year=' + year)
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
                     var tbody = document.getElementById('rankingBody');
                     var table = document.getElementById('rankingTable');
-                    var msg   = document.getElementById('rankingMsg');
+                    var msg = document.getElementById('rankingMsg');
                     tbody.innerHTML = '';
 
                     if (data.length === 0) {
                         table.style.display = 'none';
-                        msg.style.display   = 'block';
+                        msg.style.display = 'block';
                         return;
                     }
 
                     table.style.display = 'table';
-                    msg.style.display   = 'none';
+                    msg.style.display = 'none';
 
-                    var medals = ['🥇','🥈','🥉'];
-                    data.forEach(function(item) {
+                    var medals = ['🥇', '🥈', '🥉'];
+                    data.forEach(function (item) {
                         var medal = item.rank <= 3 ? medals[item.rank - 1] + ' ' : '';
                         tbody.innerHTML +=
                             '<tr>' +
@@ -556,6 +592,9 @@
                 if (event.target === notificationModal) closeNotificationModal();
             });
         }
+
+
+
     </script>
 
 </body>

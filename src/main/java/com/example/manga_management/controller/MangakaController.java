@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
@@ -16,9 +17,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import com.example.manga_management.entity.Mangaka;
 import com.example.manga_management.entity.Proposal;
+import com.example.manga_management.entity.Series;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.ProposalRepository;
+import com.example.manga_management.repository.SeriesRepository;
+
 import jakarta.servlet.http.HttpSession;
 
 @Controller
@@ -27,10 +31,14 @@ public class MangakaController {
 
     private final ProposalRepository proposalRepository;
     private final MangakaRepository mangakaRepository;
+    private final SeriesRepository seriesRepository;
 
-    public MangakaController(ProposalRepository proposalRepository, MangakaRepository mangakaRepository) {
+    public MangakaController(ProposalRepository proposalRepository,
+            MangakaRepository mangakaRepository,
+            SeriesRepository seriesRepository) {
         this.proposalRepository = proposalRepository;
         this.mangakaRepository = mangakaRepository;
+        this.seriesRepository = seriesRepository;
     }
 
     @GetMapping("")
@@ -133,6 +141,70 @@ public class MangakaController {
         }
 
         model.addAttribute("user", user);
+        model.addAttribute("message", "Đã nộp dự án mới thành công!");
+        model.addAttribute("activeTab", "tab-project");
+        return "mangaka";
+    }
+
+    @PostMapping("/start-series")
+    public String startSeries(
+            @RequestParam String proposalId,
+            @RequestParam String txtSeriesName,
+            @RequestParam String txtDescription,
+            @RequestParam MultipartFile fileBookJacket,
+            HttpSession session, Model model) {
+
+        // 1. Kiểm tra proposal
+        Proposal proposal = proposalRepository.findById(proposalId).orElse(null);
+        if (proposal == null) {
+            model.addAttribute("message", "Lỗi: Không tìm thấy đề xuất!");
+            return "mangaka";
+        }
+
+        // 2. Xử lý lưu file
+        if (fileBookJacket.isEmpty()) {
+            model.addAttribute("message", "Vui lòng chọn file bìa sách (PDF)!");
+            return "mangaka";
+        }
+
+        try {
+            String uploadDir = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
+                    + File.separator + "resources" + File.separator + "static" + File.separator + "bookjackets"
+                    + File.separator;
+
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath))
+                Files.createDirectories(uploadPath);
+
+            // Tạo ID mới cho Series
+            long count = seriesRepository.count();
+            String seriesId = String.format("SER%03d", count + 1);
+            String fileName = seriesId + ".pdf"; // Lưu cứng đuôi .pdf
+
+            fileBookJacket.transferTo(uploadPath.resolve(fileName).toFile());
+
+            // 3. Tạo Series
+            Series series = new Series();
+            series.setId(seriesId);
+            series.setProposal(proposal);
+            series.setSeriesName(txtSeriesName);
+            series.setDescription(txtDescription);
+            series.setBookJacket("/bookjackets/" + fileName);
+            series.setStartDate(LocalDate.now());
+            series.setStatus("unfinish"); // Mặc định khi bắt đầu
+
+            seriesRepository.save(series);
+
+            // 4. Update Proposal để không bị trùng lặp
+            proposal.setStatus("unfinish"); // Giữ nguyên hoặc đổi trạng thái để xác nhận đã xử lý
+            proposalRepository.save(proposal);
+
+            model.addAttribute("message", "Khởi động tác phẩm thành công!");
+        } catch (IOException e) {
+            model.addAttribute("message", "Lỗi hệ thống: " + e.getMessage());
+        }
+        model.addAttribute("message", "Khởi động tác phẩm thành công!");
+        model.addAttribute("activeTab", "tab-project");
         return "mangaka";
     }
 }

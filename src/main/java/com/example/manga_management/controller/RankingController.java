@@ -234,4 +234,14 @@ public class RankingController {
         response.put("history", voteList);
         return response;
     }
+
+    // ===== 5. API reset vote demo =====
+    @GetMapping("/reset-vote")
+    public Map<String, Object> resetVote() {
+        editorialVoteRepository.deleteAll();
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("success", true);
+        response.put("message", "Đã xóa tất cả vote! Sẵn sàng demo lại.");
+        return response;
+    }
 }

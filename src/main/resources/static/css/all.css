@@ -22,7 +22,7 @@ html {
     height: 100%;
 }
 body {
-    background-color: #1e1e1e; /* Nền tối tổng thể cho toàn trang */
+    background-color: #ffffff; /* Nền tối tổng thể cho toàn trang */
     color: #ffffff;            /* Toàn bộ chữ mặc định sẽ là màu trắng */
 }
 .header {
@@ -81,7 +81,8 @@ body {
         no-repeat;
 
     background-color: #262626;
-    height: calc(100vh - 60px);
+    /* do cao anh cua login */
+    height: calc(100vh);
     display: flex;
     flex-direction: column;
     align-items: center;

@@ -21,10 +21,14 @@ body,
 html {
     height: 100%;
 }
+
 body {
-    background-color: #ffffff; /* Nền tối tổng thể cho toàn trang */
-    color: #ffffff;            /* Toàn bộ chữ mặc định sẽ là màu trắng */
+    background-color: #ffffff;
+    /* Nền tối tổng thể cho toàn trang */
+    color: #ffffff;
+    /* Toàn bộ chữ mặc định sẽ là màu trắng */
 }
+
 .header {
     box-sizing: border-box;
     display: flex;
@@ -32,12 +36,15 @@ body {
     align-items: center;
     padding: 15px 30px;
     background-color: #262626;
-    border-bottom: 1px solid #333333; /* Thay đổi màu viền sang tối để hợp với Dark Mode */
+    border-bottom: 1px solid #333333;
+    /* Thay đổi màu viền sang tối để hợp với Dark Mode */
     height: 60px;
-    position: fixed; /* Chuyển từ sticky sang fixed để cố định hoàn toàn trên cùng */
+    position: fixed;
+    /* Chuyển từ sticky sang fixed để cố định hoàn toàn trên cùng */
     top: 0;
     left: 0;
-    width: 100%;    /* Ép header luôn phủ hết chiều ngang màn hình */
+    width: 100%;
+    /* Ép header luôn phủ hết chiều ngang màn hình */
     z-index: 1000;
 }
 
@@ -131,18 +138,24 @@ body {
 }
 
 .login-form {
-    background-color: white; /* Giữ nguyên nền trắng để chữ đen nổi bật */
+    background-color: white;
+    /* Giữ nguyên nền trắng để chữ đen nổi bật */
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     text-align: center;
 }
+
 .login-form h1.form-group {
-    color: #000000 !important; /* Sử dụng !important nếu bị các thuộc tính toàn cục đè lên */
-    font-size: 24px;          /* Điều chỉnh kích thước font cho cân đối (tùy chọn) */
+    color: #000000 !important;
+    /* Sử dụng !important nếu bị các thuộc tính toàn cục đè lên */
+    font-size: 24px;
+    /* Điều chỉnh kích thước font cho cân đối (tùy chọn) */
     margin-bottom: 20px;
-    text-align: center;       /* Căn giữa tiêu đề đăng nhập */
+    text-align: center;
+    /* Căn giữa tiêu đề đăng nhập */
 }
+
 .form-group {
     margin-bottom: 15px;
     text-align: left;
@@ -152,7 +165,8 @@ body {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
-    color: #000000 !important; /* Đảm bảo nhãn "Tài khoản:" và "Mật khẩu:" có màu đen */
+    color: #000000 !important;
+    /* Đảm bảo nhãn "Tài khoản:" và "Mật khẩu:" có màu đen */
 }
 
 .form-group input {
@@ -160,9 +174,12 @@ body {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    color: #000000;            /* Chữ người dùng gõ vào sẽ có màu đen */
-    background-color: #ffffff; /* Nền ô nhập liệu màu trắng */
+    color: #000000;
+    /* Chữ người dùng gõ vào sẽ có màu đen */
+    background-color: #ffffff;
+    /* Nền ô nhập liệu màu trắng */
 }
+
 .form-inline-action {
     display: flex;
     gap: 8px;
@@ -170,27 +187,32 @@ body {
 }
 
 /* submit */
-button, 
-button[type="submit"], 
+button,
+button[type="submit"],
 .btn-icon {
-    background-color: #333333; /* Màu nền nút xám đen */
-    color: #ffffff !important;  /* Ép buộc chữ bên trong nút luôn là màu trắng */
-    border: 1px solid #444444; /* Đường viền nhẹ để phân tách nút */
+    background-color: #333333;
+    /* Màu nền nút xám đen */
+    color: #ffffff !important;
+    /* Ép buộc chữ bên trong nút luôn là màu trắng */
+    border: 1px solid #444444;
+    /* Đường viền nhẹ để phân tách nút */
     padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
     border-radius: 4px;
-    transition: background-color 0.2s; /* Tạo hiệu ứng mượt mà khi hover */
+    transition: background-color 0.2s;
+    /* Tạo hiệu ứng mượt mà khi hover */
 }
 
 button[type="submit"]:hover {
     background-color: #686060;
 }
 
-button:hover, 
-button[type="submit"]:hover, 
+button:hover,
+button[type="submit"]:hover,
 .btn-icon:hover {
-    background-color: #444444; /* Sáng lên một chút khi di chuột vào */
+    background-color: #444444;
+    /* Sáng lên một chút khi di chuột vào */
 }
 
 /* button small*/
@@ -209,6 +231,7 @@ button[type="submit"]:hover,
     border-radius: 4px;
     margin-top: 2px;
 }
+
 .btn-icon {
     width: 95px;
     height: 40px;
@@ -226,18 +249,23 @@ button[type="submit"]:hover,
 div.flex-container {
     display: flex;
     flex-direction: column;
-    margin-left: 100px;      /* Chừa khoảng trống đúng bằng độ rộng thanh điều hướng trái */
-    margin-top: 60px;        /* Chừa khoảng trống đúng bằng chiều cao header trên cùng */
+    margin-left: 100px;
+    /* Chừa khoảng trống đúng bằng độ rộng thanh điều hướng trái */
+    margin-top: 60px;
+    /* Chừa khoảng trống đúng bằng chiều cao header trên cùng */
     background-color: #1e1e1e;
     padding: 20px;
-    
+
     /* --- SỬA ĐỔI ĐỂ SỬ DỤNG THANH CUỘN TRÌNH DUYỆT --- */
-    min-height: calc(100vh - 60px); /* Sử dụng min-height thay vì height để nền tối luôn phủ kín trang */
-    overflow: visible;              /* Cho phép nội dung tràn ra ngoài để kích hoạt thanh cuộn trình duyệt */
-    
+    min-height: calc(100vh - 60px);
+    /* Sử dụng min-height thay vì height để nền tối luôn phủ kín trang */
+    overflow: visible;
+    /* Cho phép nội dung tràn ra ngoài để kích hoạt thanh cuộn trình duyệt */
+
     box-sizing: border-box;
 }
-div.flex-container h2, 
+
+div.flex-container h2,
 div.flex-container p {
     color: #ffffff;
 }
@@ -251,15 +279,18 @@ ul.topnav {
     display: flex;
     flex-direction: column;
     width: 100px;
-    height: calc(100vh - 60px); /* Chiều cao bằng toàn màn hình trừ đi header */
+    height: calc(100vh - 60px);
+    /* Chiều cao bằng toàn màn hình trừ đi header */
     position: fixed;
     left: 0;
-    top: 60px; /* Nằm ngay sát phía dưới header */
+    top: 60px;
+    /* Nằm ngay sát phía dưới header */
     background-color: #121212;
     list-style-type: none;
     margin: 0;
     padding: 0;
-    overflow-y: auto; /* Chỉ cho phép cuộn dọc nội bộ menu nếu có quá nhiều icon */
+    overflow-y: auto;
+    /* Chỉ cho phép cuộn dọc nội bộ menu nếu có quá nhiều icon */
     border-right: 1px solid #2d2d2d;
     z-index: 999;
 }
@@ -275,7 +306,8 @@ ul.topnav li a {
 
 /* Hiệu ứng tương tác khi di chuột qua liên kết */
 ul.topnav li a:hover {
-    background-color: #2d2d2d; /* Khi hover sẽ có màu xám vừa thay vì màu trắng */
+    background-color: #2d2d2d;
+    /* Khi hover sẽ có màu xám vừa thay vì màu trắng */
     color: #ffffff;
 }
 
@@ -467,9 +499,26 @@ ul.topnav li a:hover {
     color: #ff1930;
     border-color: #f5c6cb;
 }
+
+.errorlogin {
+    color: #ff1930;
+    /* Giữ màu chữ đỏ nổi bật */
+    font-size: 14px;
+    /* Thu nhỏ cỡ chữ một chút để vừa vặn không gian form */
+    font-weight: bold;
+    /* Làm đậm chữ để người dùng dễ chú ý */
+    margin-top: -5px;
+    /* Kéo sát lên phía trên ô tài khoản */
+    margin-bottom: 15px;
+    /* Tạo khoảng cách an toàn với chữ Mật khẩu bên dưới */
+    text-align: left;
+    /* Căn lề trái bằng với chữ Tài khoản */
+    padding-left: 2px;
+}
+
 /* Khối bọc bảo vệ bảng - Giúp sinh thanh cuộn ngang khi màn hình hẹp hoặc bảng quá rộng */
 .sub-tab-pane {
-    width: 100%; 
+    width: 100%;
     margin-top: 15px;
 }
 
@@ -478,25 +527,33 @@ ul.topnav li a:hover {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
-    background-color: #252525; /* Nền tổng thể của bảng xám tối */
+    background-color: #252525;
+    /* Nền tổng thể của bảng xám tối */
 }
 
 .data-table th {
-    background-color: #121212 !important; /* Đen tuyền */
-    color: #ffffff !important;            /* Chữ trắng */
-    border: 1px solid #3a3a3a !important; /* Đường viền tối */
+    background-color: #121212 !important;
+    /* Đen tuyền */
+    color: #ffffff !important;
+    /* Chữ trắng */
+    border: 1px solid #3a3a3a !important;
+    /* Đường viền tối */
     padding: 12px;
     text-align: center;
 }
 
 .data-table td {
-    background-color: #2d2d2d !important; /* Đồng bộ nền màu xám vừa */
-    color: #e0e0e0 !important;            /* Chữ màu trắng xám nhẹ dịu mắt */
-    border: 1px solid #3a3a3a !important; /* Đường viền tối ngăn cách các ô */
+    background-color: #2d2d2d !important;
+    /* Đồng bộ nền màu xám vừa */
+    color: #e0e0e0 !important;
+    /* Chữ màu trắng xám nhẹ dịu mắt */
+    border: 1px solid #3a3a3a !important;
+    /* Đường viền tối ngăn cách các ô */
     padding: 12px;
     vertical-align: middle;
 }
 
 .data-table tr:hover td {
-    background-color: #383838 !important; /* Sáng hơn màu nền cũ một chút */
+    background-color: #383838 !important;
+    /* Sáng hơn màu nền cũ một chút */
 }

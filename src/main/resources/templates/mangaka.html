@@ -45,6 +45,11 @@
             </button>
         </li>
         <li>
+            <button type="button" class="btn-icon" onclick="openTab('tab-proposal')">
+                <i class="fa-solid fa-folder-plus"></i>
+            </button>
+        </li>
+        <li>
             <button type="button" class="btn-icon" onclick="openTab('tab-assistant')">
                 <i class="fa-solid fa-user"></i>
             </button>
@@ -90,7 +95,7 @@
                 <button type="button" onclick="loadRanking()">Xem ranking</button>
             </div>
 
-            <table id="rankingTable" border="1" style="width:100%;border-collapse:collapse;display:none;">
+            <table id="rankingTable" class="data-table" style="width:100%; display:none;">
                 <thead style="background:#4a90d9;color:white;">
                     <tr>
                         <th>Hạng</th>
@@ -378,23 +383,22 @@
                     </div>
                 </div>
             </div>
-            <a th:href="@{/api/ai/features}">
-                <button type="button" class="btn-icon" aria-label="AI">
-                    <i class="fa-solid fa-brain"></i>
-                </button>
-            </a>
         </div>
 
         <!-- Tab project content -->
-        <div id="tab-project" class="tab-pane" th:classappend="${activeTab == 'tab-project'} ? 'active' : ''">
+        <div id="tab-project" class="tab-pane">
+            <h2>Cài đặt khác</h2>
+            <p>Tính năng đang phát triển...</p>
+        </div>
 
-            <a th:href="@{/manga/mangaka/my-projects}">
-                <button type="button">Thư viện tác phẩm</button>
-            </a>
+        <!-- Tab proposal content -->
+        <div id="tab-proposal" class="tab-pane" th:classappend="${activeTab == 'tab-project'} ? 'active' : ''">
+
+            <h2>Thư viện tác phẩm</h2>
 
             <div th:if="${projectList != null}">
                 <h3>Danh sách tác phẩm đã được duyệt:</h3>
-                <table border="1">
+                <table border="1" id="rankingTable" class="data-table" style="width:100%;">
                     <thead>
                         <tr>
                             <th>Tên series</th>
@@ -409,9 +413,7 @@
                             <td>
                                 <form th:action="@{/manga/mangaka/start-series}" method="POST"
                                     enctype="multipart/form-data">
-
                                     <input type="hidden" name="proposalId" th:value="${project.id}">
-
                                     <input type="text" name="txtSeriesName" th:value="${project.seriesName}" readonly>
                                     <textarea name="txtDescription" placeholder="Mô tả..." required></textarea>
                                     <input type="file" name="fileBookJacket" accept=".pdf" required>
@@ -499,6 +501,7 @@
 
             <div class="modal fade" id="proposalModal" tabindex="-1" aria-hidden="true"></div>
         </div>
+
         <!-- Tab assistant content -->
         <div id="tab-assistant" class="tab-pane">
             <h2>Quản lý Trợ lý</h2>

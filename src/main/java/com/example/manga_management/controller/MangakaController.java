@@ -10,13 +10,18 @@ import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import com.example.manga_management.entity.Mangaka;
 import com.example.manga_management.entity.Proposal;
+import com.example.manga_management.entity.Series;
 import com.example.manga_management.entity.User;
+import com.example.manga_management.repository.SeriesRepository;
 import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.ProposalRepository;
 import jakarta.servlet.http.HttpSession;
@@ -27,10 +32,12 @@ public class MangakaController {
 
     private final ProposalRepository proposalRepository;
     private final MangakaRepository mangakaRepository;
+    private final SeriesRepository seriesRepository;
 
-    public MangakaController(ProposalRepository proposalRepository, MangakaRepository mangakaRepository) {
+    public MangakaController(ProposalRepository proposalRepository, MangakaRepository mangakaRepository, SeriesRepository seriesRepository) {
         this.proposalRepository = proposalRepository;
         this.mangakaRepository = mangakaRepository;
+        this.seriesRepository = seriesRepository;
     }
 
     @GetMapping("")
@@ -134,5 +141,49 @@ public class MangakaController {
 
         model.addAttribute("user", user);
         return "mangaka";
+
     }
+
+    @PostMapping("/createseries")
+    public String createSeries(
+        @ModelAttribute Series series,
+        @RequestParam("proposalId") String proposalId,
+        HttpSession session,
+        RedirectAttributes redirectAttributes) {
+
+    User user = (User) session.getAttribute("user");
+    if (user == null) {
+        return "redirect:/login";
+    }
+
+    Proposal proposal = proposalRepository
+            .findById(proposalId)
+            .orElse(null);
+
+    if (proposal == null) {
+        redirectAttributes.addFlashAttribute(
+                "message",
+                "Proposal không tồn tại!");
+        return "redirect:/manga/mangaka/createseries";
+    }
+
+    // Tạo mã Series
+    String seriesId = "SER" + String.format("%03d",seriesRepository.count() + 1);
+
+    series.setId(seriesId);
+    series.setProposal(proposal);
+
+    if (series.getStatus() == null) {
+        series.setStatus("unfinish");
+    }
+
+    seriesRepository.save(series);
+
+    redirectAttributes.addFlashAttribute(
+            "message",
+            "Tạo Series thành công!");
+
+    return "redirect:/manga/mangaka/myseries";
+    }
+
 }

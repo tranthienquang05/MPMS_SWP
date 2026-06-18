@@ -197,7 +197,7 @@ div.flex-container {
     /* Đẩy nội dung sang phải 200px để nhường chỗ cho thanh điều hướng fixed */
     /* Lưu ý: Giá trị 200px này phải bằng đúng với thuộc tính 'width' của ul.topnav */
     margin-left: 100px;
-    background-color: black;    
+    background-color: white;    
     /* Cấu hình thêm padding để nội dung không bị dính sát vào mép của thanh menu */
     padding-left: 20px;
 }

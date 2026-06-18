@@ -20,4 +20,16 @@ public interface RankingRepository extends JpaRepository<VoteResult, String> {
            "ORDER BY v.voteNumber DESC")
     List<Object[]> findRankingByMonthAndYear(@Param("month") int month,
                                               @Param("year") int year);
+
+    @Query("SELECT v.series.id, v.series.seriesName, SUM(v.voteNumber) " +
+           "FROM VoteResult v WHERE v.year = :year " +
+           "GROUP BY v.series.id, v.series.seriesName " +
+           "ORDER BY SUM(v.voteNumber) ASC")
+    List<Object[]> findBottomByYear(@Param("year") int year);
+
+    @Query("SELECT v.series.id, v.series.seriesName, v.voteNumber " +
+           "FROM VoteResult v WHERE v.month = :month AND v.year = :year " +
+           "ORDER BY v.voteNumber ASC")
+    List<Object[]> findBottomByMonthAndYear(@Param("month") int month,
+                                             @Param("year") int year);
 }

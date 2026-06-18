@@ -10,12 +10,12 @@ import java.util.Optional;
 
 @Repository
 public interface ProposalRepository extends JpaRepository<Proposal, String> {
-    // Spring Data JPA sẽ tự động tạo câu lệnh SQL từ tên phương thức này
     List<Proposal> findByStatus(String status);
 
     List<Proposal> findByStatusAndMangaka_Id(String status, String mangakaId);
 
-    // Trong ProposalRepository.java
     List<Proposal> findByStatusAndMangaka_Editor_Id(String status, String editorId);
 
+    @Query("SELECT p FROM Proposal p WHERE p.series.id = :seriesId")
+    Optional<Proposal> findBySeriesId(@Param("seriesId") String seriesId);
 }

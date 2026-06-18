@@ -11,16 +11,20 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.manga_management.entity.Chapter;
 import com.example.manga_management.entity.Mangaka;
 import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.Series;
 import com.example.manga_management.entity.User;
+import com.example.manga_management.repository.ChapterRepository;
+import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.SeriesRepository;
 import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.ProposalRepository;
@@ -33,11 +37,13 @@ public class MangakaController {
     private final ProposalRepository proposalRepository;
     private final MangakaRepository mangakaRepository;
     private final SeriesRepository seriesRepository;
+    private final ChapterRepository chapterRepository;
 
-    public MangakaController(ProposalRepository proposalRepository, MangakaRepository mangakaRepository, SeriesRepository seriesRepository) {
+    public MangakaController(ProposalRepository proposalRepository, MangakaRepository mangakaRepository, SeriesRepository seriesRepository, ChapterRepository chapterRepository) {
         this.proposalRepository = proposalRepository;
         this.mangakaRepository = mangakaRepository;
         this.seriesRepository = seriesRepository;
+        this.chapterRepository = chapterRepository;
     }
 
     @GetMapping("")
@@ -186,4 +192,94 @@ public class MangakaController {
     return "redirect:/manga/mangaka/myseries";
     }
 
+    @GetMapping("/myseries/{seriesId}")
+    public String viewSeries(
+        @PathVariable String seriesId,
+        HttpSession session,
+        Model model) {
+
+    User user = (User) session.getAttribute("user");
+    if (user == null) {
+        return "redirect:/login";
+    }
+
+    Series series = seriesRepository
+            .findById(seriesId)
+            .orElse(null);
+
+    if (series == null) {
+        model.addAttribute("message", "Series không tồn tại!");
+        return "redirect:/manga/mangaka/myseries";
+    }
+
+    model.addAttribute("series", series);
+    model.addAttribute(
+            "chapters",
+            chapterRepository.findBySeries(series));
+
+    return "manga/mangaka/viewseries";
+}
+
+    @GetMapping("/myseries/{seriesId}/createchapter")
+    public String createChapterPage(
+        @PathVariable String seriesId,
+        HttpSession session,
+        Model model) {
+
+    User user = (User) session.getAttribute("user");
+    if (user == null) {
+        return "redirect:/login";
+    }
+
+    Series series = seriesRepository
+            .findById(seriesId)
+            .orElse(null);
+
+    if (series == null) {
+        return "redirect:/manga/mangaka/myseries";
+    }
+
+    model.addAttribute("series", series);
+    model.addAttribute("chapter", new Chapter());
+
+    return "manga/mangaka/createchapter";
+    }
+
+    @PostMapping("/myseries/{seriesId}/createchapter")
+    public String createChapter(
+        @PathVariable String seriesId,
+        @ModelAttribute Chapter chapter,
+        RedirectAttributes redirectAttributes) {
+
+    Series series = seriesRepository
+            .findById(seriesId)
+            .orElse(null);
+
+    if (series == null) {
+        redirectAttributes.addFlashAttribute(
+                "message",
+                "Series không tồn tại!");
+        return "redirect:/manga/mangaka/myseries";
+    }
+
+    String chapterId = "CHA"
+            + String.format("%04d",
+            chapterRepository.count() + 1);
+
+    chapter.setId(chapterId);
+    chapter.setSeries(series);
+
+    if (chapter.getStatus() == null
+            || chapter.getStatus().isBlank()) {
+        chapter.setStatus("unfinish");
+    }
+
+    chapterRepository.save(chapter);
+
+    redirectAttributes.addFlashAttribute(
+            "message",
+            "Tạo Chapter thành công!");
+
+    return "redirect:/manga/mangaka/myseries/" + seriesId;
+    }
 }

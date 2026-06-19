@@ -11,22 +11,36 @@
             background-color: white !important;
             color: #000 !important;
         }
-        .tab-pane { color: #000; }
+
+        .tab-pane {
+            color: #000;
+        }
+
         #rankingTable td,
         #bottomTable td {
             color: #000 !important;
             background-color: white !important;
         }
+
         #rankingTable tr:nth-child(even) td,
         #bottomTable tr:nth-child(even) td {
             background-color: #f5f5f5 !important;
         }
+
         #rankingTable tr:hover td,
         #bottomTable tr:hover td {
             background-color: #e3f2fd !important;
         }
-        #rankingTable th { background:#4a90d9; color:white; }
-        #bottomTable th  { background:#e74c3c; color:white; }
+
+        #rankingTable th {
+            background: #4a90d9;
+            color: white;
+        }
+
+        #bottomTable th {
+            background: #e74c3c;
+            color: white;
+        }
     </style>
 </head>
 
@@ -45,10 +59,14 @@
     </div>
 
     <ul class="topnav">
-        <li><button type="button" class="btn-icon" onclick="openTab('tab-home')"><i class="fa-solid fa-house"></i></button></li>
-        <li><button type="button" class="btn-icon" onclick="openTab('tab-project')"><i class="fa-solid fa-folder-open"></i></button></li>
-        <li><button type="button" class="btn-icon" onclick="openTab('tab-assistant')"><i class="fa-solid fa-user"></i></button></li>
-        <li><button type="button" class="btn-icon" onclick="openTab('tab-other')"><i class="fa-solid fa-hashtag"></i></button></li>
+        <li><button type="button" class="btn-icon" onclick="openTab('tab-home')"><i
+                    class="fa-solid fa-house"></i></button></li>
+        <li><button type="button" class="btn-icon" onclick="openTab('tab-project')"><i
+                    class="fa-solid fa-folder-open"></i></button></li>
+        <li><button type="button" class="btn-icon" onclick="openTab('tab-assistant')"><i
+                    class="fa-solid fa-user"></i></button></li>
+        <li><button type="button" class="btn-icon" onclick="openTab('tab-other')"><i
+                    class="fa-solid fa-hashtag"></i></button></li>
     </ul>
 
     <div class="flex-container">
@@ -84,8 +102,8 @@
             </div>
 
             <div id="rankingSection" style="display:none;">
-                <h3>Bảng Xếp Hạng Series</h3>
-                <table id="rankingTable" class="data-table" style="width:100%; display:none;">
+                <h3>🏆 Bảng Xếp Hạng Series</h3>
+                <table id="rankingTable" border="1" style="width:100%;border-collapse:collapse;display:none;">
                     <thead>
                         <tr>
                             <th>Hạng</th>
@@ -100,12 +118,12 @@
             </div>
 
             <div id="bottomSection" style="display:none;">
-                <h3 class="error">3 Series Xếp Hạng Cuối — Vote Dừng / Giữ</h3>
+                <h3 style="margin-top:30px;color:#e74c3c;">⚠️ 3 Series Xếp Hạng Cuối — Vote Dừng / Giữ</h3>
                 <p style="color:gray;font-size:13px;">
                     Mỗi board phải vote 1 trong 2: <b>Dừng</b> hoặc <b>Giữ</b>.
                     Khi tất cả board đã vote, nếu ≥ 60% chọn Dừng → series sẽ bị ngừng phát hành.
                 </p>
-                <table id="bottomTable" class="data-table" style="width:100%; display:none;">
+                <table id="bottomTable" border="1" style="width:100%;border-collapse:collapse;display:none;">
                     <thead>
                         <tr>
                             <th>Mã Series</th>
@@ -143,7 +161,8 @@
                         <td th:text="${p.id}">ID</td>
                         <td th:text="${p.getMangaka()}">Mangaka Name</td>
                         <td th:text="${p.seriesName}">Series Name</td>
-                        <td><a th:href="@{/manga/view-file(path=${p.filePath})}" target="_blank" class="btn btn-sm btn-info text-white">Xem file</a></td>
+                        <td><a th:href="@{/manga/view-file(path=${p.filePath})}" target="_blank"
+                                class="btn btn-sm btn-info text-white">Xem file</a></td>
                         <td>
                             <div style="display: flex;">
                                 <form th:action="@{/manga/editor/vote}" method="post" style="margin-right: 5px;">
@@ -185,8 +204,7 @@
             <div style="display:flex;justify-content:space-between;align-items:center;
                  border-bottom:1px solid #ddd;padding-bottom:10px;margin-bottom:15px;">
                 <h3 style="color:#333;margin:0;">📋 Lịch Sử Vote</h3>
-                <button onclick="closeHistory()" style="background:none;border:none;font-size:20px;
-                    cursor:pointer;color:#333;">✕</button>
+                <button class="btn-action reject" onclick="closeHistory()">Dong</button>
             </div>
             <p id="historyInfo" style="color:#555;margin-bottom:10px;"></p>
             <table id="historyTable" border="1" style="width:100%;border-collapse:collapse;">
@@ -267,12 +285,12 @@
                         var actionBtn = item.alreadyVoted
                             ? '<span style="color:gray;font-style:italic;">Đã vote</span>' + historyBtn
                             : '<button onclick="doVote(\'' + item.seriesId + '\',\'stop\')" '
-                              + 'style="background:#e74c3c;color:white;border:none;padding:6px 10px;'
-                              + 'border-radius:4px;cursor:pointer;margin-right:4px;">Vote Dừng</button>'
-                              + '<button onclick="doVote(\'' + item.seriesId + '\',\'keep\')" '
-                              + 'style="background:#28a745;color:white;border:none;padding:6px 10px;'
-                              + 'border-radius:4px;cursor:pointer;">Vote Giữ</button>'
-                              + historyBtn;
+                            + 'style="background:#e74c3c;color:white;border:none;padding:6px 10px;'
+                            + 'border-radius:4px;cursor:pointer;margin-right:4px;">Vote Dừng</button>'
+                            + '<button onclick="doVote(\'' + item.seriesId + '\',\'keep\')" '
+                            + 'style="background:#28a745;color:white;border:none;padding:6px 10px;'
+                            + 'border-radius:4px;cursor:pointer;">Vote Giữ</button>'
+                            + historyBtn;
 
                         tbody.innerHTML +=
                             '<tr>' +
@@ -310,7 +328,7 @@
                     var tbody = document.getElementById('historyBody');
                     var table = document.getElementById('historyTable');
                     var empty = document.getElementById('historyEmpty');
-                    var info  = document.getElementById('historyInfo');
+                    var info = document.getElementById('historyInfo');
 
                     info.textContent = 'Series: ' + data.seriesId + ' — Tổng phiếu: ' + data.totalVotes;
                     tbody.innerHTML = '';
@@ -321,7 +339,7 @@
                     } else {
                         table.style.display = 'table';
                         empty.style.display = 'none';
-                        data.history.forEach(function(v) {
+                        data.history.forEach(function (v) {
                             var voteColor = v.vote === 'stop' ? '#e74c3c' : '#28a745';
                             var voteLabel = v.vote === 'stop' ? '🚫 Dừng' : '✅ Giữ';
                             tbody.innerHTML +=

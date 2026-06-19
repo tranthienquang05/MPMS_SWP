@@ -12,19 +12,29 @@
     --ps-canvas-checker-a: #4a4a4a;
 }
 
+/* Định dạng cho chính thẻ tab bao bọc chức năng vẽ */
+#tab-draw.tab-pane {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Ngăn chặn việc sinh thanh cuộn ngoài mong muốn */
+}
+
 .draw-wrapper * {
     box-sizing: border-box;
 }
 
 .draw-wrapper {
-    height: calc(100vh - 60px);
+    width: 100%;
+    height: calc(100vh - 60px); /* Chiều cao bằng toàn màn hình trừ đi header */
     display: flex;
     background-color: var(--ps-bg-darkest);
     font-family: "Segoe UI", Arial, sans-serif;
     color: var(--ps-text);
     user-select: none;
+    overflow: hidden; /* Giữ luồng hiển thị nội bộ ổn định */
 }
-
 /* =================== TOOLBAR TRÁI =================== */
 .left-toolbar {
     width: 52px;

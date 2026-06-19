@@ -23,7 +23,7 @@ html {
 }
 
 body {
-    background-color: #ffffff;
+    background-color: #1e1e1e ;
     /* Nền tối tổng thể cho toàn trang */
     color: #ffffff;
     /* Toàn bộ chữ mặc định sẽ là màu trắng */
@@ -249,19 +249,12 @@ button[type="submit"]:hover,
 div.flex-container {
     display: flex;
     flex-direction: column;
-    margin-left: 100px;
-    /* Chừa khoảng trống đúng bằng độ rộng thanh điều hướng trái */
-    margin-top: 60px;
-    /* Chừa khoảng trống đúng bằng chiều cao header trên cùng */
+    margin-left: 100px; /* Chừa khoảng trống cho thanh điều hướng trái */
+    margin-top: 60px;   /* Chừa khoảng trống cho header trên cùng */
     background-color: #1e1e1e;
     padding: 20px;
-
-    /* --- SỬA ĐỔI ĐỂ SỬ DỤNG THANH CUỘN TRÌNH DUYỆT --- */
     min-height: calc(100vh - 60px);
-    /* Sử dụng min-height thay vì height để nền tối luôn phủ kín trang */
     overflow: visible;
-    /* Cho phép nội dung tràn ra ngoài để kích hoạt thanh cuộn trình duyệt */
-
     box-sizing: border-box;
 }
 
@@ -272,6 +265,10 @@ div.flex-container p {
 
 div.flex-container>div {
     margin: 10px;
+}
+
+div.flex-container:has(#tab-draw.active) {
+    padding: 0 !important;
 }
 
 /* thanh điều hướng */

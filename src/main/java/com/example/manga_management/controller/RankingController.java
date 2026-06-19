@@ -235,13 +235,24 @@ public class RankingController {
         return response;
     }
 
-    // ===== 5. API reset vote demo =====
+    // ===== 5. API reset vote để demo =====
     @GetMapping("/reset-vote")
     public Map<String, Object> resetVote() {
+        // Xóa tất cả vote
         editorialVoteRepository.deleteAll();
+
+        // Reset trạng thái series stopped → unfinish
+        List<Proposal> allProposals = proposalRepository.findAll();
+        for (Proposal p : allProposals) {
+            if (p.getSeries() != null && "stopped".equals(p.getSeries().getStatus())) {
+                p.getSeries().setStatus("unfinish");
+                proposalRepository.save(p);
+            }
+        }
+
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("success", true);
-        response.put("message", "Đã xóa tất cả vote! Sẵn sàng demo lại.");
+        response.put("message", "Đã xóa tất cả vote và reset trạng thái series!");
         return response;
     }
 }

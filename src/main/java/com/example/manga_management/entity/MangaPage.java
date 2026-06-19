@@ -19,6 +19,9 @@ public class MangaPage {
     @JoinColumn(name = "ChapterID", nullable = false)
     private Chapter chapter;
 
+    @Column(name = "Pagenumber")
+    private Integer pageNumber;
+
     @Column(name = "FilePath", length = 60)
     private String filePath;
 

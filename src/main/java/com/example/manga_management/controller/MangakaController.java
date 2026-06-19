@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -29,6 +30,7 @@ import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.SeriesRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.example.manga_management.repository.MangakaRepository;
@@ -53,6 +55,7 @@ public class MangakaController {
         this.chapterRepository = chapterRepository;
     }
 
+    @Operation(summary = "View the Mangaka dashboard", description = "Allows a Mangaka to view their dashboard with available actions and information. Requires the user to be logged in and have an associated Mangaka profile.")
     @GetMapping("")
     public String mangakaPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
@@ -62,7 +65,7 @@ public class MangakaController {
         model.addAttribute("user", user);
         return "mangaka";
     }
-
+    @Operation(summary = "View all approved projects for the logged-in Mangaka", description = "Allows a Mangaka to view a list of all their approved projects. Requires the user to be logged in and have an associated Mangaka profile.") 
     @GetMapping("/my-projects")
     public String myProjectsPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
@@ -81,11 +84,13 @@ public class MangakaController {
 
         return "mangaka";
     }
-
+    @Operation(summary = "Start a new series from an approved proposal", description = "Allows a Mangaka to start a new series based on an approved proposal. Requires the proposal ID, series name, description, and a book jacket file (PDF).")
     @PostMapping("/submit-proposal")
     public String handleSubmitting(
             @RequestParam String txtSeriesName,
-            @RequestParam MultipartFile fileManuscript,
+            @Parameter(description = "Manuscript file")
+            @RequestPart MultipartFile fileManuscript,
+
             HttpSession session,
             Model model) {
 
@@ -157,7 +162,7 @@ public class MangakaController {
         model.addAttribute("activeTab", "tab-project");
         return "mangaka";
     }
-
+    @Operation(summary = "Start a new series from an approved proposal", description = "Allows a Mangaka to start a new series based on an approved proposal. Requires the proposal ID, series name, description, and a book jacket file (PDF).")
     @PostMapping("/start-series")
     public String startSeries(
             @RequestParam String proposalId,
@@ -221,7 +226,7 @@ public class MangakaController {
 
     }
 
-
+    @Operation(summary = "View series details and chapters", description = "Allows a Mangaka to view the details of a specific series along with its chapters. Requires the series ID.")
     @GetMapping("/myseries/{seriesId}")
     public String viewSeries(
             @PathVariable String seriesId,
@@ -247,9 +252,9 @@ public class MangakaController {
                 "chapters",
                 chapterRepository.findBySeries(series));
 
-        return "manga/mangaka/viewseries";
+        return "manga/mangaka/myseries/{seriesId}";
     }
-    @Operation(summary = "Create a new chapter for a specific series", description = "Allows a Mangaka to create a new chapter for their series. Requires the series ID and chapter details.")
+    
     @GetMapping("/myseries/{seriesId}/createchapter")
     public String createChapterPage(
             @PathVariable String seriesId,
@@ -274,7 +279,8 @@ public class MangakaController {
 
         return "manga/mangaka/createchapter";
     }
-
+    
+    @Operation(summary = "Create a new chapter for a specific series", description = "Allows a Mangaka to create a new chapter for their series. Requires the series ID and chapter details.")
     @PostMapping("/myseries/{seriesId}/createchapter")
     public String createChapter(
             @PathVariable String seriesId,
@@ -312,5 +318,26 @@ public class MangakaController {
 
         return "redirect:/manga/mangaka/myseries/" + seriesId;
     }
+
+    @GetMapping("/myseries/{seriesId}/{chapterId}")
+    public String viewChapter(
+            @PathVariable String seriesId,
+            @PathVariable String chapterId,
+            Model model) {
+
+        Chapter chapter = chapterRepository
+                .findById(chapterId)
+                .orElse(null);
+
+        if (chapter == null) {
+            model.addAttribute("message", "Chapter không tồn tại!");
+            return "redirect:/manga/mangaka/myseries/" + seriesId;
+        }
+
+        model.addAttribute("chapter", chapter);
+        return "manga/mangaka/{seriesId}/{chapterId}";
+    }
+
+    
 
 }

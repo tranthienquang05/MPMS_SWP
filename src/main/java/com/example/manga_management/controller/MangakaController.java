@@ -27,12 +27,16 @@ import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.SeriesRepository;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.ProposalRepository;
 import com.example.manga_management.repository.SeriesRepository;
-
 import jakarta.servlet.http.HttpSession;
 
+@Tag(name = "Mangaka Controller", description = "Endpoints for Mangaka operations, including project submission, series management, and chapter creation.")
 @Controller
 @RequestMapping("/manga/mangaka")
 public class MangakaController {
@@ -245,7 +249,7 @@ public class MangakaController {
 
         return "manga/mangaka/viewseries";
     }
-
+    @Operation(summary = "Create a new chapter for a specific series", description = "Allows a Mangaka to create a new chapter for their series. Requires the series ID and chapter details.")
     @GetMapping("/myseries/{seriesId}/createchapter")
     public String createChapterPage(
             @PathVariable String seriesId,
@@ -288,7 +292,7 @@ public class MangakaController {
             return "redirect:/manga/mangaka/myseries";
         }
 
-        String chapterId = "CHA"
+        String chapterId = "CPT"
                 + String.format("%04d",
                         chapterRepository.count() + 1);
 
@@ -308,4 +312,5 @@ public class MangakaController {
 
         return "redirect:/manga/mangaka/myseries/" + seriesId;
     }
+
 }

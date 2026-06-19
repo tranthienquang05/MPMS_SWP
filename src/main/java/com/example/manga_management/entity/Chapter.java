@@ -22,8 +22,8 @@ public class Chapter {
     @Column(name = "Chaptername", nullable = false, length = 30)
     private String chapterName;
 
-    @Column(name = "Volnumber")
-    private Integer volNumber;
+    @Column(name = "Chapternumber")
+    private Integer chapterNumber;
 
     @Column(nullable = false, length = 20)
     private String status;

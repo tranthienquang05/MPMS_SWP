@@ -13,11 +13,11 @@ public class Submission {
 
     @Id
     @Column(name = "SubmissionID", length = 7)
-    private String id;
+    private String submissionID;
 
     @ManyToOne
     @JoinColumn(name = "PageID", nullable = false)
-    private MangaPage page;
+    private MangaPage mangaPage;
 
     @ManyToOne
     @JoinColumn(name = "AssistantID", nullable = false)
@@ -26,9 +26,11 @@ public class Submission {
     @Column(name = "FilePath", length = 60)
     private String filePath;
 
-    @Column(name = "Status", nullable = false, length = 20)
-    private String status;
+    @Column(name = "comment", length = 1000)
+    private String comment;
 
-    @Column(name = "Feedback", length = 255)
-    private String feedback;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "Status", nullable = false)
+    private String status;
+    
 }

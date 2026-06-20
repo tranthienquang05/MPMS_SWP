@@ -90,6 +90,7 @@ public class MangakaController {
         List<Proposal> projectList = proposalRepository.findByStatusAndMangaka_Id("pass", mangaka.getId());
 
         model.addAttribute("projectList", projectList);
+        model.addAttribute("activeTab", "tab-proposal");
 
         return "mangaka";
     }

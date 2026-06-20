@@ -72,8 +72,7 @@ public class DrawService {
             String projectId = projectName + "_" + timestamp();
             Path projectPath = Paths.get(PROJECT_DIR, projectId);
             Files.createDirectories(projectPath);
-
-            ArrayNode layersArray = buildAndPersistLayers(projectPath, layersInput);
+ArrayNode layersArray = buildAndPersistLayers(projectPath, layersInput);
 
             ObjectNode projectMeta = objectMapper.createObjectNode();
             projectMeta.put("projectId", projectId);
@@ -139,7 +138,7 @@ public class DrawService {
             Path metaPath = projectPath.resolve("project.json");
 
             if (!Files.exists(metaPath)) {
-                return errorResult("Không tìm thấy project: " + projectId);
+return errorResult("Không tìm thấy project: " + projectId);
             }
 
             JsonNode projectMeta = objectMapper.readTree(metaPath.toFile());
@@ -207,8 +206,7 @@ public class DrawService {
             return errorResult("Không thể đọc danh sách project: " + ex.getMessage());
         }
     }
-
-    // ── helpers chung ───────────────────────────────────────────────────
+// ── helpers chung ───────────────────────────────────────────────────
 
     private byte[] decodeBase64(String base64Str) {
         return Base64.getDecoder().decode(stripDataPrefix(base64Str));

@@ -28,7 +28,7 @@ public class LoginController {
         this.userService = userService;
         this.proposalRepository = proposalRepository;
         this.tantoEditorRepository = tantoEditorRepository;
-    }
+    }   
 
     @GetMapping("")
     public String loginPage() {

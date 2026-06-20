@@ -856,6 +856,56 @@ function renderAiResult(data) {
         errEl.style.display = 'block';
     }
 }
+// Lưu trang
+const btnSavePage = document.getElementById('btnSavePage');
+if (btnSavePage) {
+    btnSavePage.addEventListener('click', async () => {
+        const pageId = btnSavePage.dataset.pageId;
+        const base64 = flattenAllLayers().toDataURL('image/png');
 
+        btnSavePage.disabled = true;
+        btnSavePage.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+
+        try {
+            const res = await fetch(`/api/page/${pageId}/savefile`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: base64 })
+            });
+            const data = await res.json();
+            alert(data.status === 'success' ? '✅ Đã lưu!' : '❌ ' + data.message);
+        } catch (err) {
+            alert('❌ Lỗi: ' + err.message);
+        } finally {
+            btnSavePage.disabled = false;
+            btnSavePage.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu trang';
+        }
+    });
+}
+const btnLoadPage = document.getElementById('btnLoadPage');
+const inputLoadPage = document.getElementById('inputLoadPage');
+
+if (btnLoadPage) {
+    btnLoadPage.addEventListener('click', () => {
+        inputLoadPage.click();
+    });
+
+    inputLoadPage.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+                layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+                layers[1].ctx.drawImage(img, 0, 0);
+                pushHistoryEntry('Load file thủ công');
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
 // Khởi tạo layer list lần đầu
 renderLayerList();

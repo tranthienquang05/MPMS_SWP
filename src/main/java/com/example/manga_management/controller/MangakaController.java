@@ -6,7 +6,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.stereotype.Controller;
@@ -14,9 +17,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -317,8 +322,68 @@ public class MangakaController {
     }
 
     model.addAttribute("page", page);
-    // chuyển sang trang vẽ, truyền theo pageId
-    return "draw"; 
-}
+    model.addAttribute("activeTab", "tab-draw"); // để tab vẽ tự hiện active khi load lại trang
+    // chuyển sang tab vẽ trong mangaka.html (canvas đã được nhúng vào đây)
+    return "mangaka"; 
+    }
+
+    // Tạo trang mới
+    @PostMapping("/myseries/{seriesId}/{chapterId}/addpage")
+    public String addPage(@PathVariable String seriesId, @PathVariable String chapterId) {
+    Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+    if (chapter == null) return "redirect:/manga/mangaka/myseries/" + seriesId;
+
+    long count = mangaPageRepository.count();
+    String pageId = String.format("PG%05d", count + 1);
+
+    List<MangaPage> existing = mangaPageRepository.findByChapter(chapter);
+    int nextNum = existing.size() + 1;  
+
+    MangaPage page = new MangaPage();
+    page.setId(pageId);
+    page.setChapter(chapter);
+    page.setPageNumber(nextNum);
+    page.setStatus("unfinish");
+    mangaPageRepository.save(page);
+
+    return "redirect:/manga/mangaka/myseries/" + seriesId + "/" + chapterId + "/" + pageId + "/edit";
+    }
+
+    // Lưu file PNG
+    @PostMapping("/api/page/{pageId}/savefile")
+    @ResponseBody
+    public Map<String, String> savePage(@PathVariable String pageId,
+        @RequestBody Map<String, String> body, HttpSession session) {
+
+    Map<String, String> result = new HashMap<>();
+
+    User user = (User) session.getAttribute("user");
+    if (user == null) { result.put("status", "error"); result.put("message", "Chưa đăng nhập"); return result; }
+
+    MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
+    if (page == null) { result.put("status", "error"); result.put("message", "Không tìm thấy trang"); return result; }
+
+    try {
+        String uploadDir = System.getProperty("user.dir")
+            + File.separator + "src/main/resources/static/MangaPage/";
+        Path uploadPath = Paths.get(uploadDir);
+        if (!Files.exists(uploadPath)) Files.createDirectories(uploadPath);
+
+        String raw = body.get("imageBase64");
+        if (raw.contains(",")) raw = raw.substring(raw.indexOf(",") + 1);
+        Files.write(uploadPath.resolve(pageId + ".png"), Base64.getDecoder().decode(raw));
+
+        page.setFilePath("/MangaPage/" + pageId + ".png");
+        page.setStatus("done");
+        mangaPageRepository.save(page);
+
+        result.put("status", "success");
+        result.put("path", "/MangaPage/" + pageId + ".png");
+    } catch (IOException e) {
+        result.put("status", "error");
+        result.put("message", e.getMessage());
+    }
+    return result;
+    }
     
 }   

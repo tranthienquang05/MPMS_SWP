@@ -8,6 +8,9 @@ import java.util.Optional;
 
 public interface VoteSessionRepository extends JpaRepository<VoteSession, String> {
     List<VoteSession> findByStatusOrderByCreatedAtDesc(String status);
+    List<VoteSession> findByAutoCreatedOrderByCreatedAtDesc(boolean autoCreated);
     boolean existsBySeriesIdAndStatus(String seriesId, String status);
+    boolean existsBySeriesIdAndAutoCreatedAndStatus(String seriesId, boolean autoCreated, String status);
     Optional<VoteSession> findFirstBySeriesIdAndVoteTypeAndStatus(String seriesId, String voteType, String status);
+    Optional<VoteSession> findFirstBySeriesIdAndVoteTypeOrderByCreatedAtDesc(String seriesId, String voteType);
 }

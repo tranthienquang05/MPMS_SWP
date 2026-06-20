@@ -21,7 +21,7 @@ public class VoteSession {
     private Series series;
 
     @ManyToOne
-    @JoinColumn(name = "CreatedByBoardID", nullable = false)
+    @JoinColumn(name = "CreatedByBoardID", nullable = true)
     private Board createdBy;
 
     @Column(name = "VoteType", nullable = false, length = 10)
@@ -32,4 +32,7 @@ public class VoteSession {
 
     @Column(name = "CreatedAt", nullable = false)
     private LocalDate createdAt;
+
+    @Column(name = "AutoCreated", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    private boolean autoCreated = false;
 }

@@ -1,9 +1,12 @@
 package com.example.manga_management.controller;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
 
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.example.manga_management.entity.*;
 import com.example.manga_management.repository.*;
@@ -58,13 +61,13 @@ public class RankingController {
     // ===== 2. Lấy danh sách series cho dropdown tạo vote =====
     @GetMapping("/all-series")
     public List<Map<String, Object>> getAllSeries() {
-        List<Series> list = rankingRepository.findAllSeriesOrdered();
+        List<Object[]> rows = rankingRepository.findAllSeriesDistinct();
         List<Map<String, Object>> result = new ArrayList<>();
-        for (Series s : list) {
+        for (Object[] row : rows) {
             Map<String, Object> map = new LinkedHashMap<>();
-            map.put("id", s.getId());
-            map.put("name", s.getSeriesName());
-            map.put("status", s.getStatus());
+            map.put("id", row[0]);
+            map.put("name", row[1]);
+            map.put("status", row[2]);
             result.add(map);
         }
         return result;
@@ -106,6 +109,12 @@ public class RankingController {
             return response;
         }
 
+        if (voteSessionRepository.existsBySeriesIdAndAutoCreatedAndStatus(seriesId, true, "active")) {
+            response.put("success", false);
+            response.put("message", "Series này đã được hệ thống tạo phiên vote tự động! Các board không thể tạo vote riêng cho series này.");
+            return response;
+        }
+
         if (voteSessionRepository.existsBySeriesIdAndStatus(seriesId, "active")) {
             response.put("success", false);
             response.put("message", "Series này đang có phiên vote đang mở rồi! Phải đóng phiên hiện tại trước.");
@@ -139,7 +148,8 @@ public class RankingController {
         }
 
         long totalBoards = boardRepository.count();
-        List<VoteSession> sessions = voteSessionRepository.findByStatusOrderByCreatedAtDesc("active");
+        // Lấy tất cả phiên do board tạo thủ công (cả active lẫn closed)
+        List<VoteSession> sessions = voteSessionRepository.findByAutoCreatedOrderByCreatedAtDesc(false);
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (VoteSession vs : sessions) {
@@ -160,13 +170,19 @@ public class RankingController {
             map.put("seriesId", sid);
             map.put("seriesName", vs.getSeries().getSeriesName());
             map.put("voteType", vs.getVoteType());
+            map.put("sessionStatus", vs.getStatus());
             map.put("createdAt", vs.getCreatedAt().toString());
+            map.put("autoCreated", vs.isAutoCreated());
             map.put("createdBy", vs.getCreatedBy().getUser().getFullname());
             map.put("voted", voted);
             map.put("totalBoards", totalBoards);
             map.put("positiveVotes", positive);
             map.put("percent", Math.round(percent));
             map.put("alreadyVoted", alreadyVoted);
+            boolean isCreator = !vs.isAutoCreated() && boardId != null
+                    && vs.getCreatedBy() != null
+                    && vs.getCreatedBy().getId().equals(boardId);
+            map.put("isCreator", isCreator);
             result.add(map);
         }
         return result;
@@ -234,6 +250,12 @@ public class RankingController {
             return response;
         }
 
+        // Đếm trước khi save để tránh lỗi JPA flush timing
+        long totalBoards = boardRepository.count();
+        String positiveChoice = vs.getVoteType().equals("stop") ? "stop" : "reward";
+        long votedBefore = rankingRepository.countSeriesVoteSince(seriesId, since);
+        long positiveBefore = rankingRepository.countSeriesVoteByChoiceSince(seriesId, positiveChoice, since);
+
         SeriesVote sv = new SeriesVote();
         sv.setID(generateSvoteId());
         sv.setSeries(vs.getSeries());
@@ -242,11 +264,8 @@ public class RankingController {
         sv.setVoteDate(LocalDate.now());
         seriesVoteRepository.save(sv);
 
-        // Kiểm tra kết quả sau khi vote
-        long totalBoards = boardRepository.count();
-        String positiveChoice = vs.getVoteType().equals("stop") ? "stop" : "reward";
-        long voted = rankingRepository.countSeriesVoteSince(seriesId, since);
-        long positive = rankingRepository.countSeriesVoteByChoiceSince(seriesId, positiveChoice, since);
+        long voted = votedBefore + 1;
+        long positive = positiveBefore + (voteChoice.equals(positiveChoice) ? 1 : 0);
 
         response.put("success", true);
 
@@ -283,10 +302,17 @@ public class RankingController {
         return response;
     }
 
-    // ===== 6. Lịch sử vote của một phiên =====
+    // ===== 6. Lịch sử vote của một phiên (chỉ board tạo mới xem được) =====
     @GetMapping("/session-history")
-    public Map<String, Object> getSessionHistory(@RequestParam String sessionId) {
+    public Map<String, Object> getSessionHistory(@RequestParam String sessionId, HttpSession session) {
         Map<String, Object> response = new LinkedHashMap<>();
+
+        User user = (User) session.getAttribute("user");
+        String boardId = null;
+        if (user != null) {
+            boardId = boardRepository.findByUserId(user.getId())
+                    .map(Board::getId).orElse(null);
+        }
 
         Optional<VoteSession> sessionOpt = voteSessionRepository.findById(sessionId);
         if (sessionOpt.isEmpty()) {
@@ -295,6 +321,15 @@ public class RankingController {
             return response;
         }
         VoteSession vs = sessionOpt.get();
+
+        // Phiên auto-created hoặc board không phải người tạo → không được xem
+        if (vs.isAutoCreated() || boardId == null
+                || vs.getCreatedBy() == null
+                || !vs.getCreatedBy().getId().equals(boardId)) {
+            response.put("success", false);
+            response.put("message", "Bạn không có quyền xem lịch sử phiên vote này!");
+            return response;
+        }
         String seriesId = vs.getSeries().getId();
         LocalDate since = vs.getCreatedAt();
 
@@ -323,22 +358,121 @@ public class RankingController {
 
     // ===== 7. Reset toàn bộ vote để demo =====
     @GetMapping("/reset-vote")
-    public Map<String, Object> resetVote() {
-        voteSessionRepository.deleteAll();
+    public void resetVote(HttpServletResponse httpResp) throws IOException {
+        // Xóa SeriesVote trước, sau đó VoteSession để tránh lỗi FK
         seriesVoteRepository.deleteAll();
+        voteSessionRepository.deleteAll();
 
-        // Reset trạng thái series stopped/rewarded → unfinish
-        List<Series> allSeries = seriesRepository.findAll();
-        for (Series s : allSeries) {
-            if ("stopped".equals(s.getStatus()) || "rewarded".equals(s.getStatus())) {
-                s.setStatus("unfinish");
-                seriesRepository.save(s);
-            }
+        // Dùng UPDATE trực tiếp để tránh lỗi duplicate ID khi load entity
+        rankingRepository.resetSeriesStatus();
+
+        httpResp.sendRedirect("/manga/editor");
+    }
+
+    // ===== 8. Lấy 3 series cuối bảng xếp hạng =====
+    @GetMapping("/bottom")
+    public List<Map<String, Object>> getBottomSeries(
+            @RequestParam(defaultValue = "0") int month,
+            @RequestParam(defaultValue = "2026") int year,
+            HttpSession session) {
+
+        User user = (User) session.getAttribute("user");
+        String boardId = null;
+        if (user != null) {
+            boardId = boardRepository.findByUserId(user.getId())
+                    .map(Board::getId).orElse(null);
         }
+        long totalBoards = boardRepository.count();
+
+        List<Object[]> rows = (month == 0)
+                ? rankingRepository.findBottomByYear(year)
+                : rankingRepository.findBottomByMonthAndYear(month, year);
+
+        int count = Math.min(3, rows.size());
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            Object[] row = rows.get(i);
+            String sid = (String) row[0];
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("seriesId", sid);
+            map.put("seriesName", row[1]);
+            map.put("totalVotes", row[2]);
+
+            // Lấy session gần nhất (active hoặc closed)
+            Optional<VoteSession> vsOpt = voteSessionRepository
+                    .findFirstBySeriesIdAndVoteTypeOrderByCreatedAtDesc(sid, "stop");
+            if (vsOpt.isPresent()) {
+                VoteSession vs = vsOpt.get();
+                LocalDate since = vs.getCreatedAt();
+                long voted = rankingRepository.countSeriesVoteSince(sid, since);
+                long positive = rankingRepository.countSeriesVoteByChoiceSince(sid, "stop", since);
+                final String bid = boardId;
+                boolean alreadyVoted = bid != null &&
+                        rankingRepository.countSeriesVoteByBoardSince(sid, bid, since) > 0;
+                map.put("hasSession", true);
+                map.put("sessionStatus", vs.getStatus()); // "active" or "closed"
+                map.put("sessionId", vs.getId());
+                map.put("voted", voted);
+                map.put("totalBoards", totalBoards);
+                map.put("positiveVotes", positive);
+                map.put("alreadyVoted", alreadyVoted);
+            } else {
+                map.put("hasSession", false);
+            }
+            result.add(map);
+        }
+        return result;
+    }
+
+    // ===== 9. Tự động tạo phiên vote dừng cho 3 series cuối =====
+    @PostMapping("/auto-stop-sessions")
+    public Map<String, Object> autoStopSessions(
+            @RequestParam(defaultValue = "0") int month,
+            @RequestParam(defaultValue = "2026") int year) {
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("success", true);
-        response.put("message", "Đã reset toàn bộ vote và trạng thái series!");
+        try {
+            List<Object[]> rows = (month == 0)
+                    ? rankingRepository.findBottomByYear(year)
+                    : rankingRepository.findBottomByMonthAndYear(month, year);
+
+            int count = Math.min(3, rows.size());
+            int created = 0;
+            int skipped = 0;
+
+            for (int i = 0; i < count; i++) {
+                String sid = (String) rows.get(i)[0];
+                if (voteSessionRepository.existsBySeriesIdAndStatus(sid, "active")) {
+                    skipped++;
+                    continue;
+                }
+                VoteSession vs = new VoteSession();
+                vs.setId(generateSessionId());
+                vs.setSeries(seriesRepository.getReferenceById(sid));
+                vs.setCreatedBy(null);
+                vs.setVoteType("stop");
+                vs.setStatus("active");
+                vs.setCreatedAt(LocalDate.now());
+                vs.setAutoCreated(true);
+                voteSessionRepository.save(vs);
+                created++;
+            }
+
+            response.put("success", true);
+            response.put("created", created);
+            response.put("skipped", skipped);
+            if (created > 0 && skipped > 0) {
+                response.put("message", "Đã tạo " + created + " phiên mới! (" + skipped + " series đã có phiên đang mở)");
+            } else if (created > 0) {
+                response.put("message", "Đã tạo " + created + " phiên vote dừng!");
+            } else {
+                response.put("message", "Tất cả series cuối đã có phiên vote đang mở!");
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("created", 0);
+            response.put("message", "Lỗi tạo phiên: " + e.getMessage());
+        }
         return response;
     }
 

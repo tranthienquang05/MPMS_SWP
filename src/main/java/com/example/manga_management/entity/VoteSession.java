@@ -1,0 +1,35 @@
+package com.example.manga_management.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "voteSession")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class VoteSession {
+
+    @Id
+    @Column(name = "SessionID", length = 8)
+    private String id;
+
+    @ManyToOne
+    @JoinColumn(name = "SeriesID", nullable = false)
+    private Series series;
+
+    @ManyToOne
+    @JoinColumn(name = "CreatedByBoardID", nullable = false)
+    private Board createdBy;
+
+    @Column(name = "VoteType", nullable = false, length = 10)
+    private String voteType; // "stop" or "reward"
+
+    @Column(name = "Status", nullable = false, length = 10)
+    private String status; // "active" or "closed"
+
+    @Column(name = "CreatedAt", nullable = false)
+    private LocalDate createdAt;
+}

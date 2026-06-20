@@ -15,18 +15,21 @@ import jakarta.servlet.http.HttpSession;
 public class RankingController {
 
     private final RankingRepository rankingRepository;
-    private final EditorialVoteRepository editorialVoteRepository;
-    private final ProposalRepository proposalRepository;
     private final BoardRepository boardRepository;
-    
+    private final VoteSessionRepository voteSessionRepository;
+    private final SeriesVoteRepository seriesVoteRepository;
+    private final SeriesRepository seriesRepository;
+
     public RankingController(RankingRepository rankingRepository,
-            EditorialVoteRepository editorialVoteRepository,
-            ProposalRepository proposalRepository,
-            BoardRepository boardRepository) {
+            BoardRepository boardRepository,
+            VoteSessionRepository voteSessionRepository,
+            SeriesVoteRepository seriesVoteRepository,
+            SeriesRepository seriesRepository) {
         this.rankingRepository = rankingRepository;
-        this.editorialVoteRepository = editorialVoteRepository;
-        this.proposalRepository = proposalRepository;
         this.boardRepository = boardRepository;
+        this.voteSessionRepository = voteSessionRepository;
+        this.seriesVoteRepository = seriesVoteRepository;
+        this.seriesRepository = seriesRepository;
     }
 
     // ===== 1. API ranking =====
@@ -52,57 +55,24 @@ public class RankingController {
         return result;
     }
 
-    // ===== 2. API lấy 3 series cuối =====
-    @GetMapping("/bottom")
-    public List<Map<String, Object>> getBottom(
-            @RequestParam(defaultValue = "0") int month,
-            @RequestParam(defaultValue = "2026") int year,
-            HttpSession session) {
-
-        List<Object[]> rows = (month == 0)
-                ? rankingRepository.findBottomByYear(year)
-                : rankingRepository.findBottomByMonthAndYear(month, year);
-
-        List<Object[]> bottom3 = rows.size() > 3 ? rows.subList(0, 3) : rows;
-
-        // Lấy boardId từ session
-        User user = (User) session.getAttribute("user");
-        String boardId = (user != null)
-                ? boardRepository.findByUserId(user.getId())
-                        .map(Board::getId).orElse(null)
-                : null;
-
-        long totalBoardMembers = boardRepository.count();
-
+    // ===== 2. Lấy danh sách series cho dropdown tạo vote =====
+    @GetMapping("/all-series")
+    public List<Map<String, Object>> getAllSeries() {
+        List<Series> list = rankingRepository.findAllSeriesOrdered();
         List<Map<String, Object>> result = new ArrayList<>();
-        for (Object[] row : bottom3) {
-            String seriesId = (String) row[0];
-
-            long totalVoted = editorialVoteRepository.countBySeriesId(seriesId);
-            long stopVote = editorialVoteRepository.countBySeriesIdAndVote(seriesId, "stop");
-            boolean alreadyVoted = (boardId != null) &&
-                    editorialVoteRepository.countBySeriesIdAndBoardId(seriesId, boardId) > 0;
-
-            double percent = (totalVoted >= totalBoardMembers && totalBoardMembers > 0)
-                    ? (stopVote * 100.0 / totalBoardMembers)
-                    : 0;
-
+        for (Series s : list) {
             Map<String, Object> map = new LinkedHashMap<>();
-            map.put("seriesId", seriesId);
-            map.put("seriesName", row[1]);
-            map.put("totalVotes", row[2]);
-            map.put("stopVote", stopVote);
-            map.put("totalBoard", totalBoardMembers);
-            map.put("stopPercent", Math.round(percent));
-            map.put("alreadyVoted", alreadyVoted);
+            map.put("id", s.getId());
+            map.put("name", s.getSeriesName());
+            map.put("status", s.getStatus());
             result.add(map);
         }
         return result;
     }
 
-    // ===== 3. API Board vote (stop hoặc keep) =====
-    @PostMapping("/vote")
-    public Map<String, Object> vote(
+    // ===== 3. Tạo phiên vote thủ công =====
+    @PostMapping("/create-session")
+    public Map<String, Object> createSession(
             @RequestParam String seriesId,
             @RequestParam String voteType,
             HttpSession session) {
@@ -122,137 +92,269 @@ public class RankingController {
             response.put("message", "Bạn không phải thành viên Editorial Board!");
             return response;
         }
-        Board board = boardOpt.get();
 
-        if (editorialVoteRepository.countBySeriesIdAndBoardId(seriesId, board.getId()) > 0) {
+        if (!voteType.equals("stop") && !voteType.equals("reward")) {
             response.put("success", false);
-            response.put("message", "Bạn đã vote series này rồi!");
+            response.put("message", "Loại vote không hợp lệ (stop hoặc reward)!");
             return response;
         }
 
-        if (!voteType.equals("stop") && !voteType.equals("keep")) {
-            response.put("success", false);
-            response.put("message", "Loại vote không hợp lệ!");
-            return response;
-        }
-
-        Optional<Proposal> proposalOpt = proposalRepository.findBySeriesId(seriesId);
-        if (proposalOpt.isEmpty()) {
-            response.put("success", false);
-            response.put("message", "Không tìm thấy proposal của series này!");
-            return response;
-        }
-        Proposal proposal = proposalOpt.get();
-
-        // Lưu vote
-        EditorialVote vote = new EditorialVote();
-        vote.setEvoteID(generateEvoteId());
-        vote.setProposal(proposal);
-        vote.setBoard(board);
-        vote.setVote(voteType);
-        vote.setVoteDate(LocalDate.now());
-        editorialVoteRepository.save(vote);
-
-        // Đếm thống kê
-        long totalBoardMembers = boardRepository.count();
-        long totalVoted = editorialVoteRepository.countBySeriesId(seriesId);
-        long stopVote = editorialVoteRepository.countBySeriesIdAndVote(seriesId, "stop");
-
-        response.put("success", true);
-
-        // Chưa đủ tất cả board vote → chỉ ghi nhận
-        if (totalVoted < totalBoardMembers) {
-            response.put("stopped", false);
-            response.put("stopPercent", 0);
-            response.put("message", "Đã ghi nhận vote! Chờ thêm "
-                    + (totalBoardMembers - totalVoted) + " board nữa vote.");
-            return response;
-        }
-
-        // Đã đủ tất cả board vote → tính %
-        double percent = (stopVote * 100.0 / totalBoardMembers);
-        response.put("stopPercent", Math.round(percent));
-
-        if (percent >= 60 && proposal.getSeries() != null) {
-            Series series = proposal.getSeries();
-            series.setStatus("stopped");
-            proposalRepository.save(proposal);
-            response.put("stopped", true);
-            response.put("message", "⚠️ Series đã bị DỪNG phát hành! ("
-                    + Math.round(percent) + "% board vote dừng)");
-        } else {
-            response.put("stopped", false);
-            response.put("message", "Tất cả board đã vote. Kết quả: "
-                    + Math.round(percent) + "% vote dừng (chưa đủ 60% → series tiếp tục phát hành).");
-        }
-
-        return response;
-    }
-
-    // Sinh EvoteID 6 ký tự ngẫu nhiên
-    private String generateEvoteId() {
-        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
-        Random rand = new Random();
-        StringBuilder sb = new StringBuilder("EV");
-        for (int i = 0; i < 4; i++) {
-            sb.append(chars.charAt(rand.nextInt(chars.length())));
-        }
-        return sb.toString();
-    }
-
-    // ===== 4. API xem lịch sử vote của 1 series =====
-    @GetMapping("/vote-history")
-    public Map<String, Object> getVoteHistory(@RequestParam String seriesId) {
-
-        Map<String, Object> response = new LinkedHashMap<>();
-
-        // Lấy proposal của series
-        Optional<Proposal> proposalOpt = proposalRepository.findBySeriesId(seriesId);
-        if (proposalOpt.isEmpty()) {
+        Optional<Series> seriesOpt = seriesRepository.findById(seriesId);
+        if (seriesOpt.isEmpty()) {
             response.put("success", false);
             response.put("message", "Không tìm thấy series!");
             return response;
         }
 
-        // Lấy tất cả vote của proposal này
-        List<EditorialVote> votes = editorialVoteRepository.findByProposalId(proposalOpt.get().getId());
+        if (voteSessionRepository.existsBySeriesIdAndStatus(seriesId, "active")) {
+            response.put("success", false);
+            response.put("message", "Series này đang có phiên vote đang mở rồi! Phải đóng phiên hiện tại trước.");
+            return response;
+        }
+
+        VoteSession vs = new VoteSession();
+        vs.setId(generateSessionId());
+        vs.setSeries(seriesOpt.get());
+        vs.setCreatedBy(boardOpt.get());
+        vs.setVoteType(voteType);
+        vs.setStatus("active");
+        vs.setCreatedAt(LocalDate.now());
+        voteSessionRepository.save(vs);
+
+        response.put("success", true);
+        response.put("sessionId", vs.getId());
+        response.put("message", "Đã tạo phiên vote " + (voteType.equals("stop") ? "dừng" : "khen thưởng")
+                + " cho series \"" + seriesOpt.get().getSeriesName() + "\"!");
+        return response;
+    }
+
+    // ===== 4. Lấy danh sách phiên vote đang mở (tất cả board thấy) =====
+    @GetMapping("/active-sessions")
+    public List<Map<String, Object>> getActiveSessions(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        String boardId = null;
+        if (user != null) {
+            boardId = boardRepository.findByUserId(user.getId())
+                    .map(Board::getId).orElse(null);
+        }
+
+        long totalBoards = boardRepository.count();
+        List<VoteSession> sessions = voteSessionRepository.findByStatusOrderByCreatedAtDesc("active");
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (VoteSession vs : sessions) {
+            String sid = vs.getSeries().getId();
+            LocalDate since = vs.getCreatedAt();
+            String positiveChoice = vs.getVoteType().equals("stop") ? "stop" : "reward";
+
+            long voted = rankingRepository.countSeriesVoteSince(sid, since);
+            long positive = rankingRepository.countSeriesVoteByChoiceSince(sid, positiveChoice, since);
+            boolean alreadyVoted = boardId != null &&
+                    rankingRepository.countSeriesVoteByBoardSince(sid, boardId, since) > 0;
+
+            double percent = (totalBoards > 0 && voted >= totalBoards)
+                    ? (positive * 100.0 / totalBoards) : 0;
+
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("sessionId", vs.getId());
+            map.put("seriesId", sid);
+            map.put("seriesName", vs.getSeries().getSeriesName());
+            map.put("voteType", vs.getVoteType());
+            map.put("createdAt", vs.getCreatedAt().toString());
+            map.put("createdBy", vs.getCreatedBy().getUser().getFullname());
+            map.put("voted", voted);
+            map.put("totalBoards", totalBoards);
+            map.put("positiveVotes", positive);
+            map.put("percent", Math.round(percent));
+            map.put("alreadyVoted", alreadyVoted);
+            result.add(map);
+        }
+        return result;
+    }
+
+    // ===== 5. Board cast vote vào phiên =====
+    @PostMapping("/cast-session-vote")
+    public Map<String, Object> castSessionVote(
+            @RequestParam String sessionId,
+            @RequestParam String voteChoice,
+            HttpSession session) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        User user = (User) session.getAttribute("user");
+
+        if (user == null) {
+            response.put("success", false);
+            response.put("message", "Bạn chưa đăng nhập!");
+            return response;
+        }
+
+        Optional<Board> boardOpt = boardRepository.findByUserId(user.getId());
+        if (boardOpt.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Bạn không phải thành viên Editorial Board!");
+            return response;
+        }
+        Board board = boardOpt.get();
+
+        Optional<VoteSession> sessionOpt = voteSessionRepository.findById(sessionId);
+        if (sessionOpt.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Không tìm thấy phiên vote!");
+            return response;
+        }
+        VoteSession vs = sessionOpt.get();
+
+        if (!vs.getStatus().equals("active")) {
+            response.put("success", false);
+            response.put("message", "Phiên vote này đã đóng!");
+            return response;
+        }
+
+        String seriesId = vs.getSeries().getId();
+        LocalDate since = vs.getCreatedAt();
+
+        // Validate lựa chọn theo loại vote
+        if (vs.getVoteType().equals("stop")) {
+            if (!voteChoice.equals("stop") && !voteChoice.equals("keep")) {
+                response.put("success", false);
+                response.put("message", "Lựa chọn không hợp lệ (stop hoặc keep)!");
+                return response;
+            }
+        } else {
+            if (!voteChoice.equals("reward") && !voteChoice.equals("against")) {
+                response.put("success", false);
+                response.put("message", "Lựa chọn không hợp lệ (reward hoặc against)!");
+                return response;
+            }
+        }
+
+        if (rankingRepository.countSeriesVoteByBoardSince(seriesId, board.getId(), since) > 0) {
+            response.put("success", false);
+            response.put("message", "Bạn đã vote trong phiên này rồi!");
+            return response;
+        }
+
+        SeriesVote sv = new SeriesVote();
+        sv.setID(generateSvoteId());
+        sv.setSeries(vs.getSeries());
+        sv.setBoard(board);
+        sv.setVote(voteChoice);
+        sv.setVoteDate(LocalDate.now());
+        seriesVoteRepository.save(sv);
+
+        // Kiểm tra kết quả sau khi vote
+        long totalBoards = boardRepository.count();
+        String positiveChoice = vs.getVoteType().equals("stop") ? "stop" : "reward";
+        long voted = rankingRepository.countSeriesVoteSince(seriesId, since);
+        long positive = rankingRepository.countSeriesVoteByChoiceSince(seriesId, positiveChoice, since);
+
+        response.put("success", true);
+
+        if (voted < totalBoards) {
+            response.put("message", "Đã ghi nhận vote! Còn " + (totalBoards - voted) + " board chưa vote.");
+            return response;
+        }
+
+        // Đủ tất cả board → tính kết quả
+        double percent = totalBoards > 0 ? (positive * 100.0 / totalBoards) : 0;
+        response.put("percent", Math.round(percent));
+
+        vs.setStatus("closed");
+        voteSessionRepository.save(vs);
+
+        Series series = vs.getSeries();
+        if (vs.getVoteType().equals("stop")) {
+            if (percent >= 60) {
+                series.setStatus("stopped");
+                seriesRepository.save(series);
+                response.put("message", "⚠️ Tất cả board đã vote. Series bị DỪNG! (" + Math.round(percent) + "% đồng ý dừng)");
+            } else {
+                response.put("message", "Tất cả board đã vote. Kết quả: " + Math.round(percent) + "% vote dừng → Series tiếp tục.");
+            }
+        } else {
+            if (percent >= 60) {
+                series.setStatus("rewarded");
+                seriesRepository.save(series);
+                response.put("message", "🏆 Tất cả board đã vote. Series được KHEN THƯỞNG! (" + Math.round(percent) + "% đồng ý)");
+            } else {
+                response.put("message", "Tất cả board đã vote. Kết quả: " + Math.round(percent) + "% vote khen thưởng → Không đủ 60%.");
+            }
+        }
+        return response;
+    }
+
+    // ===== 6. Lịch sử vote của một phiên =====
+    @GetMapping("/session-history")
+    public Map<String, Object> getSessionHistory(@RequestParam String sessionId) {
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        Optional<VoteSession> sessionOpt = voteSessionRepository.findById(sessionId);
+        if (sessionOpt.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Không tìm thấy phiên vote!");
+            return response;
+        }
+        VoteSession vs = sessionOpt.get();
+        String seriesId = vs.getSeries().getId();
+        LocalDate since = vs.getCreatedAt();
 
         List<Map<String, Object>> voteList = new ArrayList<>();
-        for (EditorialVote v : votes) {
-            Map<String, Object> map = new LinkedHashMap<>();
-            map.put("evoteId", v.getEvoteID());
-            map.put("boardId", v.getBoard().getId());
-            map.put("boardName", v.getBoard().getUser().getFullname());
-            map.put("vote", v.getVote());
-            map.put("voteDate", v.getVoteDate().toString());
-            voteList.add(map);
+
+        List<SeriesVote> votes = rankingRepository.findSeriesVotesSince(seriesId, since);
+        for (SeriesVote v : votes) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("boardId", v.getBoard().getId());
+            m.put("boardName", v.getBoard().getUser().getFullname());
+            m.put("choice", v.getVote());
+            m.put("voteDate", v.getVoteDate().toString());
+            voteList.add(m);
         }
 
         response.put("success", true);
+        response.put("sessionId", sessionId);
         response.put("seriesId", seriesId);
-        response.put("totalVotes", votes.size());
+        response.put("seriesName", vs.getSeries().getSeriesName());
+        response.put("voteType", vs.getVoteType());
+        response.put("status", vs.getStatus());
+        response.put("totalVotes", voteList.size());
         response.put("history", voteList);
         return response;
     }
 
-    // ===== 5. API reset vote để demo =====
+    // ===== 7. Reset toàn bộ vote để demo =====
     @GetMapping("/reset-vote")
     public Map<String, Object> resetVote() {
-        // Xóa tất cả vote
-        editorialVoteRepository.deleteAll();
+        voteSessionRepository.deleteAll();
+        seriesVoteRepository.deleteAll();
 
-        // Reset trạng thái series stopped → unfinish
-        List<Proposal> allProposals = proposalRepository.findAll();
-        for (Proposal p : allProposals) {
-            if (p.getSeries() != null && "stopped".equals(p.getSeries().getStatus())) {
-                p.getSeries().setStatus("unfinish");
-                proposalRepository.save(p);
+        // Reset trạng thái series stopped/rewarded → unfinish
+        List<Series> allSeries = seriesRepository.findAll();
+        for (Series s : allSeries) {
+            if ("stopped".equals(s.getStatus()) || "rewarded".equals(s.getStatus())) {
+                s.setStatus("unfinish");
+                seriesRepository.save(s);
             }
         }
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("success", true);
-        response.put("message", "Đã xóa tất cả vote và reset trạng thái series!");
+        response.put("message", "Đã reset toàn bộ vote và trạng thái series!");
         return response;
+    }
+
+    private String generateSessionId() {
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+        Random rand = new Random();
+        StringBuilder sb = new StringBuilder("VS");
+        for (int i = 0; i < 4; i++) sb.append(chars.charAt(rand.nextInt(chars.length())));
+        return sb.toString();
+    }
+
+    private String generateSvoteId() {
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+        Random rand = new Random();
+        StringBuilder sb = new StringBuilder("SV");
+        for (int i = 0; i < 4; i++) sb.append(chars.charAt(rand.nextInt(chars.length())));
+        return sb.toString();
     }
 }

@@ -13,7 +13,7 @@ public class Submission {
 
     @Id
     @Column(name = "SubmissionID", length = 7)
-    private String submissionID;
+    private String ID;
 
     @ManyToOne
     @JoinColumn(name = "PageID", nullable = false)
@@ -32,5 +32,5 @@ public class Submission {
     @Enumerated(EnumType.STRING)
     @Column(name = "Status", nullable = false)
     private String status;
-    
+
 }

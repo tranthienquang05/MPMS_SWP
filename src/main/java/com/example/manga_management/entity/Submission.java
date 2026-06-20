@@ -29,8 +29,7 @@ public class Submission {
     @Column(name = "comment", length = 1000)
     private String comment;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "Status", nullable = false)
+    @Column(name = "Status", nullable = false, length = 20)
     private String status;
 
 }

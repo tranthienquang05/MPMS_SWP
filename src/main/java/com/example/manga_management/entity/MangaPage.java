@@ -25,6 +25,7 @@ public class MangaPage {
     @Column(name = "FilePath", length = 60)
     private String filePath;
 
-   
+    @Column(name = "Status", nullable = false, length = 20)
+    private String status;
     
 }

@@ -25,8 +25,8 @@ public class SeriesVote {
     @JoinColumn(name = "BoardID", nullable = false)
     private Board board;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "Vote", nullable = false)
+
+    @Column(name = "Vote", nullable = false, length = 10)
     private String vote;
 
     @Column(name = "VoteDate", nullable = false)

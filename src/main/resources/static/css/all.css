@@ -23,7 +23,7 @@ html {
 }
 
 body {
-    background-color: #1e1e1e ;
+    background-color: #1e1e1e;
     /* Nền tối tổng thể cho toàn trang */
     color: #ffffff;
     /* Toàn bộ chữ mặc định sẽ là màu trắng */
@@ -249,8 +249,10 @@ button[type="submit"]:hover,
 div.flex-container {
     display: flex;
     flex-direction: column;
-    margin-left: 100px; /* Chừa khoảng trống cho thanh điều hướng trái */
-    margin-top: 60px;   /* Chừa khoảng trống cho header trên cùng */
+    margin-left: 100px;
+    /* Chừa khoảng trống cho thanh điều hướng trái */
+    margin-top: 60px;
+    /* Chừa khoảng trống cho header trên cùng */
     background-color: #1e1e1e;
     padding: 20px;
     min-height: calc(100vh - 60px);
@@ -553,4 +555,54 @@ ul.topnav li a:hover {
 .data-table tr:hover td {
     background-color: #383838 !important;
     /* Sáng hơn màu nền cũ một chút */
+}
+
+.btn-toggle-library {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #DA251D;
+    /* Màu đỏ thương hiệu */
+    color: #ffffff;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    margin-top: 10px;
+    transition: background 0.3s;
+    border: 1px solid #333;
+}
+
+.btn-toggle-library:hover {
+    background-color: #b01e18;
+}
+
+/* Ẩn nội dung bảng mặc định */
+.library-content {
+    display: none;
+    transition: all 0.3s ease;
+}
+
+/* Logic: Khi checkbox được check (hoặc mặc định có thuộc tính 'checked'), bảng sẽ hiện */
+#toggle-library-checkbox:checked+.library-content {
+    display: block;
+    animation: fadeIn 0.5s;
+}
+
+.btn-custom {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #DA251D;
+    /* Màu đỏ của bạn */
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn-custom:hover {
+    background-color: #b01e17;
+    /* Hiệu ứng tối hơn khi rê chuột vào */
 }

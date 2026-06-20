@@ -399,9 +399,14 @@
         <!-- Tab proposal content -->
         <div id="tab-proposal" class="tab-pane" th:classappend="${activeTab == 'tab-project'} ? 'active' : ''">
 
-            <h2>Thư viện tác phẩm</h2>
+            
+            <a th:href="@{/manga/mangaka/my-projects}" class="btn-custom">
+                Dự án của tôi
+            </a>
 
-            <div th:if="${projectList != null}">
+            <input type="checkbox" id="toggle-library-checkbox" checked style="display: none;">
+
+            <div class="library-content" th:if="${projectList != null}">
                 <h3>Danh sách tác phẩm đã được duyệt:</h3>
                 <table border="1" id="rankingTable" class="data-table" style="width:100%;">
                     <thead>

@@ -59,6 +59,12 @@
                 <i class="fa-solid fa-hashtag"></i>
             </button>
         </li>
+        <!-- Icon mới: mở tab "Series của tôi" để xem danh sách series → chapter → trang -->
+        <li>
+            <button type="button" class="btn-icon" onclick="openTab('tab-myseries')">
+                <i class="fa-solid fa-book"></i>
+            </button>
+        </li>
     </ul>
 
     <!-- Tab Content -->
@@ -435,8 +441,7 @@
                         <h5>Khởi Động Tác Phẩm</h5>
                         <label for="modal-toggle-start" class="btn-close">X</label>
                     </div>
-                    <form th:action="@{/manga/mangaka/start-series}" method="POST"
-                        enctype="multipart/form-data">
+                    <form th:action="@{/manga/mangaka/start-series}" method="POST" enctype="multipart/form-data">
                         <div class="modal-body">
                             <input type="text" name="txtSeriesName" placeholder="Tên series" required>
                             <textarea name="txtDescription" required></textarea>
@@ -511,6 +516,141 @@
             <h2>Cài đặt khác</h2>
             <p>Tính năng đang phát triển...</p>
         </div>
+
+        <!-- ========================================================
+             TAB MỚI: Series của tôi
+             Hiện 3 cấp dữ liệu lồng nhau trong cùng 1 tab, tự động
+             chuyển nội dung dựa vào biến Model server trả về:
+             - Nếu chưa có "series" và "chapter" → hiện danh sách Series
+             - Nếu có "series" nhưng chưa có "chapter" → hiện danh sách Chapter
+             - Nếu có "chapter" → hiện danh sách Page (trang) để bấm vào vẽ
+             ======================================================== -->
+        <div id="tab-myseries" class="tab-pane" th:classappend="${series != null or chapter != null} ? 'active' : ''">
+
+            <h2>Series của tôi</h2>
+
+            <!-- KHỐI 1: Danh sách tất cả Series đã khởi động của mangaka -->
+            <div th:if="${series == null and chapter == null}">
+                <table class="data-table" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th>Tên Series</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày bắt đầu</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Lặp qua từng series, bấm "Xem chapter" để sang Khối 2 -->
+                        <tr th:each="s : ${mySeriesList}">
+                            <td th:text="${s.seriesName}"></td>
+                            <td th:text="${s.status}"></td>
+                            <td th:text="${s.startDate}"></td>
+                            <td>
+                                <a th:href="@{/manga/mangaka/myseries/{id}(id=${s.id})}" class="btn-link">
+                                    Xem chapter
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- Thông báo khi chưa có series nào -->
+                <p th:if="${mySeriesList == null or mySeriesList.isEmpty()}" style="color:gray;">
+                    Bạn chưa có series nào đang hoạt động. Khởi động 1 đề xuất ở tab "Đề xuất" để bắt đầu.
+                </p>
+            </div>
+
+            <!-- KHỐI 2: Danh sách Chapter của 1 Series đã chọn -->
+            <div th:if="${series != null and chapter == null}">
+                <h3>
+                    Chapter của series:
+                    <span th:text="${series.seriesName}"></span>
+                </h3>
+                <!-- Link quay lại danh sách series -->
+                <a th:href="@{/manga/mangaka/myseries}" class="btn-link">
+                    &larr; Quay lại danh sách series
+                </a>
+
+                <!-- Form tạo nhanh 1 chapter mới ngay trong trang này -->
+                <form th:action="@{/manga/mangaka/myseries/{id}/createchapter(id=${series.id})}" method="POST"
+                    style="margin: 12px 0;">
+                    <input type="text" name="txtChapterName" placeholder="Tên chapter mới" required>
+                    <button type="submit">Tạo Chapter</button>
+                </form>
+
+                <table class="data-table" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th>Số chương</th>
+                            <th>Tên Chapter</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Lặp qua từng chapter, bấm "Xem trang" để sang Khối 3 -->
+                        <tr th:each="c : ${chapters}">
+                            <td th:text="${c.chapterNumber}"></td>
+                            <td th:text="${c.chapterName}"></td>
+                            <td th:text="${c.status}"></td>
+                            <td>
+                                <a th:href="@{/manga/mangaka/myseries/{sid}/{cid}(sid=${series.id}, cid=${c.id})}"
+                                    class="btn-link">
+                                    Xem trang
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- Thông báo khi series chưa có chapter nào -->
+                <p th:if="${chapters == null or chapters.isEmpty()}" style="color:gray;">
+                    Series này chưa có chapter nào. Tạo chapter mới ở form trên.
+                </p>
+            </div>
+
+            <!-- KHỐI 3: Danh sách Page (trang) của 1 Chapter đã chọn -->
+            <div th:if="${chapter != null}">
+                <h3>
+                    Danh sách trang — Chapter:
+                    <span th:text="${chapter.chapterName}"></span>
+                </h3>
+                <!-- Link quay lại danh sách chapter của series này -->
+                <a th:href="@{/manga/mangaka/myseries/{id}(id=${chapter.series.id})}" class="btn-link">
+                    &larr; Quay lại danh sách chapter
+                </a>
+
+                <!-- Hiện từng trang dạng thẻ ảnh, bấm "Mở để vẽ" sẽ sang trang canvas thật -->
+                <div style="display:flex; flex-wrap:wrap; gap:14px; margin-top:14px;">
+                    <div th:each="p : ${pages}"
+                        style="width:140px; border:1px solid #ddd; border-radius:6px; padding:8px; text-align:center;">
+
+                        <!-- Ảnh xem trước của trang, nếu chưa có ảnh thì hiện icon placeholder -->
+                        <div style="width:100%; height:160px; background:#f1f1f1; border-radius:4px;
+                                    display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                            <img th:if="${p.thumbnailPath != null}" th:src="@{${p.thumbnailPath}}"
+                                style="max-width:100%; max-height:100%;">
+                            <i th:unless="${p.thumbnailPath != null}" class="fa-solid fa-image"
+                                style="font-size:32px; color:#bbb;"></i>
+                        </div>
+
+                        <p style="margin:8px 0 4px; font-weight:bold;" th:text="'Trang ' + ${p.pageNumber}"></p>
+                        <p style="margin:0 0 8px; font-size:12px; color:gray;" th:text="${p.status}"></p>
+
+                        <!-- Link dẫn thẳng tới route editPage() đã có trong MangakaController -->
+                        <a th:href="@{/manga/mangaka/myseries/{sid}/{cid}/{pid}/edit(sid=${chapter.series.id}, cid=${chapter.id}, pid=${p.id})}"
+                            class="btn-link">
+                            Mở để vẽ
+                        </a>
+                    </div>
+                </div>
+                <!-- Thông báo khi chapter chưa có trang nào -->
+                <p th:if="${pages == null or pages.isEmpty()}" style="color:gray; margin-top:14px;">
+                    Chapter này chưa có trang nào.
+                </p>
+            </div>
+
+        </div>
+        <!-- ======================== KẾT THÚC TAB MỚI ======================== -->
     </div>
 
     <script>

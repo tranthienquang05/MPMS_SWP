@@ -5,19 +5,23 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Entity
 @Table(name = "series")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"proposal"})
 public class Series {
 
     @Id
     @Column(name = "SeriesID", length = 6)
     private String id;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "ProposalID", nullable = false)
     private Proposal proposal;
 

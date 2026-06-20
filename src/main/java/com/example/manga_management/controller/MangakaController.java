@@ -12,7 +12,6 @@ import java.util.Optional;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,15 +29,12 @@ import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.MangakaRepository;
+import com.example.manga_management.repository.ProposalRepository;
 import com.example.manga_management.repository.SeriesRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import com.example.manga_management.repository.MangakaRepository;
-import com.example.manga_management.repository.ProposalRepository;
-import com.example.manga_management.repository.SeriesRepository;
 import jakarta.servlet.http.HttpSession;
 
 @Tag(name = "Mangaka Controller", description = "Endpoints for Mangaka operations, including project submission, series management, and chapter creation.")
@@ -304,6 +300,25 @@ public class MangakaController {
         model.addAttribute("pages", mangaPageRepository.findByChapter(chapter));
         return "manga/mangaka/myseries/"+seriesId+"/"+chapterId;
     }
+    @GetMapping("/myseries/{seriesId}/{chapterId}/{pageId}/edit")
+    public String editPage(
+        @PathVariable String seriesId,
+        @PathVariable String chapterId,
+        @PathVariable String pageId,
+        Model model, HttpSession session) {
 
-    
+    User user = (User) session.getAttribute("user");
+    if (user == null) return "redirect:/login";
+
+    MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
+    if (page == null) {
+        model.addAttribute("message", "Trang không tồn tại!");
+        return "redirect:/manga/mangaka/myseries/" + seriesId + "/" + chapterId;
+    }
+
+    model.addAttribute("page", page);
+    // chuyển sang trang vẽ, truyền theo pageId
+    return "draw"; 
 }
+    
+}   

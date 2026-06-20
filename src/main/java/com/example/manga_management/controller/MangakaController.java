@@ -12,7 +12,6 @@ import java.util.Optional;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,15 +29,12 @@ import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.MangakaRepository;
+import com.example.manga_management.repository.ProposalRepository;
 import com.example.manga_management.repository.SeriesRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import com.example.manga_management.repository.MangakaRepository;
-import com.example.manga_management.repository.ProposalRepository;
-import com.example.manga_management.repository.SeriesRepository;
 import jakarta.servlet.http.HttpSession;
 
 @Tag(name = "Mangaka Controller", description = "Endpoints for Mangaka operations, including project submission, series management, and chapter creation.")
@@ -229,4 +225,100 @@ public class MangakaController {
         return "mangaka";
 
     }
+
+    @Operation(summary = "View series details and chapters", description = "Allows a Mangaka to view the details of a specific series along with its chapters. Requires the series ID.")
+    @GetMapping("/myseries/{seriesId}")
+    public String viewSeries(@PathVariable String seriesId, HttpSession session, Model model) {
+
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        Series series = seriesRepository.findById(seriesId).orElse(null);
+
+        if (series == null) {
+            model.addAttribute("message", "Series không tồn tại!");
+            return "redirect:/manga/mangaka/myseries";
+        }
+
+        model.addAttribute("series", series);
+        model.addAttribute("chapters", chapterRepository.findBySeries(series));
+
+        return "manga/mangaka/myseries/{seriesId}";
+    }
+
+    @PostMapping("/myseries/{seriesId}/createchapter")
+    public String createChapter(@PathVariable String seriesId, @RequestParam String txtChapterName, HttpSession session,
+            Model model, RedirectAttributes redirectAttributes) {
+        Series series = seriesRepository.findById(seriesId).orElse(null);
+
+        if (series == null) {
+            model.addAttribute("message", "Series không tồn tại!");
+            return "redirect:/manga/mangaka/myseries";
+        }
+        Optional<Chapter> lastChapter = chapterRepository.findTopByOrderByIdDesc();
+
+        int maxId = 0;
+
+        if (lastChapter.isPresent()) {
+            maxId = Integer.parseInt(lastChapter.get().getId().substring(3));
+        }
+        Optional<Chapter> lastChapternumber = chapterRepository.findTopBySeriesOrderByChapterNumberDesc(series);
+
+        int nextNumber = lastChapternumber.map(Chapter::getChapterNumber).orElse(0) + 1;
+
+        // Tạo chapter mới
+        Chapter chapter = new Chapter();
+        chapter.setId("CPT" + String.format("%04d", maxId + 1));
+        chapter.setSeries(series);
+        chapter.setChapterName(txtChapterName);
+        chapter.setChapterNumber(nextNumber);
+        chapter.setStatus("unfinish"); // Mặc định khi tạo mới
+
+        chapterRepository.save(chapter);
+
+        model.addAttribute("message", "Tạo Chapter thành công!");
+
+        return "redirect:/manga/mangaka/myseries/" + seriesId;
+    }
+
+    @GetMapping("/myseries/{seriesId}/{chapterId}")
+    public String viewChapter(
+        @PathVariable String seriesId, 
+        @PathVariable String chapterId, 
+        Model model,HttpSession session) {
+
+        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+
+        if (chapter == null) {
+            model.addAttribute("message", "Chapter không tồn tại!");
+            return "redirect:/manga/mangaka/myseries/" + seriesId;
+        }
+
+        model.addAttribute("chapter", chapter);
+        model.addAttribute("pages", mangaPageRepository.findByChapter(chapter));
+        return "manga/mangaka/myseries/"+seriesId+"/"+chapterId;
+    }
+    @GetMapping("/myseries/{seriesId}/{chapterId}/{pageId}/edit")
+    public String editPage(
+        @PathVariable String seriesId,
+        @PathVariable String chapterId,
+        @PathVariable String pageId,
+        Model model, HttpSession session) {
+
+    User user = (User) session.getAttribute("user");
+    if (user == null) return "redirect:/login";
+
+    MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
+    if (page == null) {
+        model.addAttribute("message", "Trang không tồn tại!");
+        return "redirect:/manga/mangaka/myseries/" + seriesId + "/" + chapterId;
+    }
+
+    model.addAttribute("page", page);
+    // chuyển sang trang vẽ, truyền theo pageId
+    return "draw"; 
 }
+    
+}   

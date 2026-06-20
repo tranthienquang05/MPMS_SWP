@@ -18,7 +18,7 @@ public class RankingController {
     private final EditorialVoteRepository editorialVoteRepository;
     private final ProposalRepository proposalRepository;
     private final BoardRepository boardRepository;
-
+    
     public RankingController(RankingRepository rankingRepository,
             EditorialVoteRepository editorialVoteRepository,
             ProposalRepository proposalRepository,

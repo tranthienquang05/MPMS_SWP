@@ -25,6 +25,8 @@ public class MangaPage {
     @Column(name = "FilePath", length = 60)
     private String filePath;
 
-   
+    @Enumerated(EnumType.STRING)
+    @Column(name = "Status", nullable = false)
+    private String status;
     
 }

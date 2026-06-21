@@ -162,8 +162,8 @@ public class MangakaController {
             proposalRepository.save(proposal);
 
             // Thông báo cho Tantou (Xuyên Role)
-            notificationController.send("edior", null,
-                    "Có đề xuất mới từ Mangaka đang chờ duyệt: " + txtSeriesName, "/manga/tantou");
+            notificationController.send("tantou", null,
+                    "Có đề xuất mới từ Mangaka đang chờ duyệt: " + txtSeriesName, "/manga/editor");
 
             // Truyền thông báo sang trang sau khi redirect
             redirectAttributes.addFlashAttribute("message", "Đã nộp dự án thành công!");
@@ -227,9 +227,9 @@ public class MangakaController {
             proposal.setStatus("unfinish");
             proposalRepository.save(proposal);
 
-            notificationController.send("editor", null,
+            notificationController.send("tantou", null,
                     "Mangaka đã khởi động dự án mới: " + txtSeriesName,
-                    "/manga/tantou");
+                    "/manga/editor");
 
             model.addAttribute("message", "Khởi động tác phẩm thành công!");
         } catch (IOException e) {

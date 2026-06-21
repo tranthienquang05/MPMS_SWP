@@ -72,7 +72,7 @@ public class BoardController {
             proposalService.submitVote(id, action, userId);
             Proposal p = proposalRepository.findById(id).orElse(null);
             if (p != null) {
-                String result = "yes".equals(action) ? "đã thông qua" : "bị từ chối";
+                String result = "pass".equals(action) ? "đã thông qua" : "bị từ chối";
 
                 // 1. Thông báo cho Mangaka
                 notificationController.send(null, p.getMangaka().getUser().getId(),
@@ -80,7 +80,7 @@ public class BoardController {
                         "/manga/mangaka/my-projects");
                 // 2. Thông báo cho Tanto nếu dự án bị từ chối
 
-                notificationController.send("editor", null,
+                notificationController.send("tantou", null,
                         "Dự án '" + p.getSeriesName() + "' mà bạn duyệt đã được Board quyết định: " + result,
                         "/manga/tantou");
             }

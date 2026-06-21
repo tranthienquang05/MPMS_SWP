@@ -1,5 +1,5 @@
 package com.example.manga_management.entity;
-
+import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -22,19 +22,19 @@ public class Notification {
     private String content;
 
     @Column(name = "Role", length = 20)
-    private String role; 
+    private String role;
 
-    @Column(name = "UserID", length = 20)   
-    private String userId; 
+    @Column(name = "UserID", length = 20)
+    private String userId;
 
     @Column(name = "Link", length = 255)
-    private String link; // Đường dẫn khi click vào thông báo
+    private String link;
 
     @Column(name = "IsRead", nullable = false)
     private boolean isRead = false;
 
-    @Column(name = "CreatedAt", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    // Bạn có thể thêm @ManyToOne với bảng User nếu muốn quản lý quan hệ chặt chẽ
+    // Tự động điền thời gian lúc insert
+    @CreationTimestamp
+    @Column(name = "CreatedAt", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 }

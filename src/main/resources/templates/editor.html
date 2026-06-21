@@ -50,6 +50,36 @@
             <p class="name">Tổng biên tập</p>
         </div>
         <div class="header-actions">
+
+            <div class="header">
+                <div class="logo">SANKYUU
+                    <p class="name">Tác giả truyện tranh</p>
+                </div>
+
+                <div class="header-actions">
+                    <div class="notification-container">
+                        <button type="button" class="btn-icon" id="btnNoti" style="position: relative;">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="badge" th:if="${unreadCount > 0}" th:text="${unreadCount}">0</span>
+                        </button>
+
+                        <div class="notification-dropdown">
+                            <div class="dropdown-header">Thông báo mới</div>
+                            <div th:each="note : ${myNotifications}" class="notification-item"
+                                th:classappend="${!note.isRead} ? 'unread' : ''">
+                                <a th:href="@{'/notification/read/' + ${note.id}}" th:text="${note.content}"></a>
+                                <span class="time" th:text="${#temporals.format(note.createdAt, 'HH:mm dd/MM')}"></span>
+                            </div>
+                            <div th:if="${#lists.isEmpty(myNotifications)}" class="no-notify">Không có thông báo</div>
+                        </div>
+                    </div>
+                    <a th:href="@{/login/logout}">
+                        <button type="button" class="btn-icon" aria-label="Logout">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        </button>
+                    </a>
+                </div>
+            </div>
             <a th:href="@{/login/logout}">
                 <button type="button" class="btn-icon" aria-label="Logout">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -121,7 +151,8 @@
                 <div style="margin-top:24px;">
                     <div style="margin-bottom:8px;">
                         <h3 style="margin:0;color:#e74c3c;">⚠️ 3 Series Cuối Bảng Xếp Hạng</h3>
-                        <p style="color:#888;font-size:13px;margin-top:4px;">Hệ thống tự động tạo phiên vote dừng cho các series này.</p>
+                        <p style="color:#888;font-size:13px;margin-top:4px;">Hệ thống tự động tạo phiên vote dừng cho
+                            các series này.</p>
                     </div>
                     <table id="bottomTable" border="1" style="width:100%;border-collapse:collapse;display:none;">
                         <thead>
@@ -144,8 +175,7 @@
             <!-- Phiên vote đang mở -->
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                 <h3 style="margin:0;color:#4a90d9;">📋 Phiên Vote Đang Mở</h3>
-                <button type="button" onclick="openCreateVoteModal()"
-                    style="background:#4a90d9;color:white;border:none;padding:8px 16px;border-radius:6px;
+                <button type="button" onclick="openCreateVoteModal()" style="background:#4a90d9;color:white;border:none;padding:8px 16px;border-radius:6px;
                            cursor:pointer;font-size:14px;font-weight:bold;">
                     ＋ Tạo Vote Mới
                 </button>
@@ -258,7 +288,8 @@
                 <button onclick="document.getElementById('createVoteModal').style.display='none'"
                     style="background:#6c757d;color:white;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;">Hủy</button>
                 <button onclick="submitCreateVote()"
-                    style="background:#4a90d9;color:white;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-weight:bold;">Tạo Vote</button>
+                    style="background:#4a90d9;color:white;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-weight:bold;">Tạo
+                    Vote</button>
             </div>
         </div>
     </div>
@@ -266,7 +297,8 @@
     <!-- Modal lịch sử phiên vote -->
     <div id="sessionHistoryModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
          background:rgba(0,0,0,0.5);z-index:2000;justify-content:center;align-items:center;">
-        <div style="background:white;padding:24px;border-radius:8px;width:650px;max-width:90%;max-height:80vh;overflow-y:auto;">
+        <div
+            style="background:white;padding:24px;border-radius:8px;width:650px;max-width:90%;max-height:80vh;overflow-y:auto;">
             <div style="display:flex;justify-content:space-between;align-items:center;
                  border-bottom:1px solid #ddd;padding-bottom:10px;margin-bottom:15px;">
                 <h3 style="color:#333;margin:0;">📋 Lịch Sử Phiên Vote</h3>
@@ -341,9 +373,9 @@
                     var table = document.getElementById('bottomTable');
                     var msg = document.getElementById('bottomMsg');
                     tbody.innerHTML = '';
-                    if (data.length === 0) { table.style.display='none'; msg.style.display='block'; return; }
+                    if (data.length === 0) { table.style.display = 'none'; msg.style.display = 'block'; return; }
                     table.style.display = 'table'; msg.style.display = 'none';
-                    data.forEach(function(item) {
+                    data.forEach(function (item) {
                         var progressCell, actionCell;
                         if (item.hasSession && item.sessionId) {
                             progressCell = item.voted + '/' + item.totalBoards + ' đã vote';
@@ -385,13 +417,13 @@
             var month = document.getElementById('rankMonth').value;
             var year = document.getElementById('rankYear').value;
             fetch('/manga/ranking/auto-stop-sessions?month=' + month + '&year=' + year, { method: 'POST' })
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
                     console.log('[autoCreate]', data);
                     loadBottom();
                     loadActiveSessions();
                 })
-                .catch(function(err) {
+                .catch(function (err) {
                     console.log('[autoCreate error]', err);
                     loadBottom();
                 });
@@ -414,7 +446,7 @@
                     }
                     table.style.display = 'table';
                     empty.style.display = 'none';
-                    data.forEach(function(s) {
+                    data.forEach(function (s) {
                         var typeLabel = s.voteType === 'stop'
                             ? '<span style="background:#e74c3c;color:white;padding:2px 8px;border-radius:4px;font-size:12px;">🚫 Dừng</span>'
                             : '<span style="background:#f39c12;color:white;padding:2px 8px;border-radius:4px;font-size:12px;">🏆 Khen Thưởng</span>';
@@ -472,10 +504,10 @@
             fetch('/manga/ranking/all-series')
                 .then(res => res.json())
                 .then(data => {
-                    data.sort(function(a, b) { return a.id.localeCompare(b.id); });
+                    data.sort(function (a, b) { return a.id.localeCompare(b.id); });
                     var sel = document.getElementById('newVoteSeries');
                     sel.innerHTML = '<option value="">-- Chọn series --</option>';
-                    data.forEach(function(s) {
+                    data.forEach(function (s) {
                         var label = s.id + ' — ' + s.name + (s.status !== 'unfinish' ? ' [' + s.status + ']' : '');
                         sel.innerHTML += '<option value="' + s.id + '">' + label + '</option>';
                     });
@@ -549,7 +581,7 @@
                     } else {
                         table.style.display = 'table';
                         empty.style.display = 'none';
-                        data.history.forEach(function(v) {
+                        data.history.forEach(function (v) {
                             var positiveChoices = ['stop', 'reward'];
                             var isPositive = positiveChoices.indexOf(v.choice) >= 0;
                             var choiceLabels = { stop: '🚫 Dừng', keep: '✅ Giữ', reward: '🏆 Đồng ý', against: '❌ Không đồng ý' };
@@ -567,8 +599,27 @@
         }
 
         // Tải active sessions khi trang load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             loadActiveSessions();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnNoti = document.getElementById('btnNoti');
+            const dropdown = document.querySelector('.notification-dropdown');
+
+            if (btnNoti) {
+                btnNoti.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('show');
+                });
+            }
+
+            // Đóng khi click ra ngoài
+            document.addEventListener('click', () => {
+                if (dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            });
         });
     </script>
 </body>

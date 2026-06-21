@@ -24,9 +24,13 @@ public class TantouController {
     private final ProposalRepository proposalRepository;
     private final TantoEditorRepository tantoEditorRepository;
 
-    public TantouController(ProposalRepository proposalRepository, TantoEditorRepository tantoEditorRepository) {
+    private NotificationController notificationController;
+
+    public TantouController(ProposalRepository proposalRepository, TantoEditorRepository tantoEditorRepository,
+            NotificationController notificationController) {
         this.proposalRepository = proposalRepository;
         this.tantoEditorRepository = tantoEditorRepository;
+        this.notificationController = notificationController;
     }
 
     @GetMapping("")
@@ -50,6 +54,20 @@ public class TantouController {
         if (p != null) {
             p.setStatus("yes".equals(action) ? "checked" : "unfinish");
             proposalRepository.save(p);
+        }
+
+        // Gửi thông báo cho Mangaka
+        String statusMsg = "yes".equals(action) ? "đã được duyệt" : "bị từ chối";
+        notificationController.send(
+                null,
+                p.getMangaka().getUser().getId(),
+                "Dự án '" + p.getSeriesName() + "' " + statusMsg,
+                "/manga/mangaka/my-projects");
+
+        // Nếu duyệt -> Gửi tiếp thông báo cho Board
+        if ("yes".equals(action)) {
+            notificationController.send("ROLE_BOARD", null,
+                    "Có dự án mới '" + p.getSeriesName() + "' cần bỏ phiếu!", "/manga/editor");
         }
         return "redirect:/manga/tantou";
     }

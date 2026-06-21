@@ -66,7 +66,7 @@ public class TantouController {
 
         // Nếu duyệt -> Gửi tiếp thông báo cho Board
         if ("yes".equals(action)) {
-            notificationController.send("ROLE_BOARD", null,
+            notificationController.send("board", null,
                     "Có dự án mới '" + p.getSeriesName() + "' cần bỏ phiếu!", "/manga/editor");
         }
         return "redirect:/manga/tantou";

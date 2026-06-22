@@ -606,3 +606,127 @@ ul.topnav li a:hover {
     background-color: #b01e17;
     /* Hiệu ứng tối hơn khi rê chuột vào */
 }
+
+.notification-container {
+    position: relative;
+    display: inline-block;
+}
+
+.notification-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 50px;
+    /* Điều chỉnh tùy theo độ cao header của bạn */
+    width: 280px;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    border-radius: 4px;
+}
+
+.notification-dropdown.show {
+    display: block;
+}
+
+.dropdown-header {
+    padding: 10px;
+    font-weight: bold;
+    border-bottom: 1px solid #eee;
+    background: #f9f9f9;
+}
+
+.notification-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.notification-item.unread {
+    background-color: #eef7ff;
+}
+
+/* Màu nền cho tin mới */
+.notification-item a {
+    text-decoration: none;
+    color: #333;
+    display: block;
+}
+
+.time {
+    font-size: 10px;
+    color: #777;
+}
+
+.badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: red;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 10px;
+}
+
+.notification-container {
+    position: relative;
+    display: inline-block;
+}
+
+.notification-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 50px;
+    /* Điều chỉnh tùy theo độ cao header của bạn */
+    width: 280px;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    border-radius: 4px;
+}
+
+.notification-dropdown.show {
+    display: block;
+}
+
+.dropdown-header {
+    padding: 10px;
+    font-weight: bold;
+    border-bottom: 1px solid #eee;
+    background: #f9f9f9;
+}
+
+.notification-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.notification-item.unread {
+    background-color: #eef7ff;
+}
+
+/* Màu nền cho tin mới */
+.notification-item a {
+    text-decoration: none;
+    color: #333;
+    display: block;
+}
+
+.time {
+    font-size: 10px;
+    color: #777;
+}
+
+.badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: red;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 10px;
+}

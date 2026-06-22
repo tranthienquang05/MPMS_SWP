@@ -21,10 +21,13 @@ import jakarta.servlet.http.HttpSession;
 public class BoardController {
     private final ProposalRepository proposalRepository;
     private final ProposalService proposalService;
+    private final NotificationController notificationController;
 
-    public BoardController(ProposalRepository proposalRepository, ProposalService proposalService) {
+    public BoardController(ProposalRepository proposalRepository, ProposalService proposalService,
+            NotificationController notificationController) {
         this.proposalRepository = proposalRepository;
         this.proposalService = proposalService;
+        this.notificationController = notificationController;
     }
 
     @GetMapping("")
@@ -67,6 +70,20 @@ public class BoardController {
 
             // Gọi service với userId (String) đã lấy được
             proposalService.submitVote(id, action, userId);
+            Proposal p = proposalRepository.findById(id).orElse(null);
+            if (p != null) {
+                String result = "pass".equals(action) ? "đã thông qua" : "bị từ chối";
+
+                // 1. Thông báo cho Mangaka
+                notificationController.send(null, p.getMangaka().getUser().getId(),
+                        "Kết quả bỏ phiếu dự án '" + p.getSeriesName() + "': " + result,
+                        "/manga/mangaka/my-projects");
+                // 2. Thông báo cho Tanto nếu dự án bị từ chối
+
+                notificationController.send("tantou", null,
+                        "Dự án '" + p.getSeriesName() + "' mà bạn duyệt đã được Board quyết định: " + result,
+                        "/manga/tantou");
+            }
             redirectAttributes.addFlashAttribute("message", "Đã ghi nhận phiếu bầu!");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

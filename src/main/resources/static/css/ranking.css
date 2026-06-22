@@ -86,3 +86,31 @@ tr:nth-child(even) td {
     color: #999;
     padding: 30px;
 }
+
+
+
+#rankingTable td,
+#bottomTable td {
+    color: #ffffff !important;
+    background-color: #1e1e1e ;
+}
+
+#rankingTable tr:nth-child(even) td,
+#bottomTable tr:nth-child(even) td {
+    background-color: ##1e1e1e !important;
+}
+
+#rankingTable tr:hover td,
+#bottomTable tr:hover td {
+    background-color: ##1e1e1e !important;
+}
+
+#rankingTable th {
+    background: #4a90d9;
+    color: #1e1e1e;
+}
+
+#bottomTable th {
+    background: #e74c3c;
+    color: #1e1e1e;
+}

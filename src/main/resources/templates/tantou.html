@@ -1,162 +1,178 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Tantou Dashboard</title>
-    <link rel="stylesheet" th:href="@{/css/all.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <head>
+        <meta charset="UTF-8">
+        <title>Tantou Dashboard</title>
+        <link rel="stylesheet" th:href="@{/css/all.css}">
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-</head>
+    </head>
 
-<body>
-    <!-- Header -->
-    <div class="header">
-        <div class="logo">SANKYUU
-            <p class="name">Biên tập viên</p>
-        </div>
+    <body>
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">SANKYUU
+                <p class="name">Biên tập viên</p>
+            </div>
 
-        <div class="header-actions">
-            <div class="header">
-                <div class="logo">SANKYUU
-                    <p class="name">Tác giả truyện tranh</p>
-                </div>
+            <div class="header-actions">
 
-                <div class="header-actions">
-                    <div class="notification-container">
-                        <button type="button" class="btn-icon" id="btnNoti" style="position: relative;">
-                            <i class="fa-solid fa-bell"></i>
-                            <span class="badge" th:if="${unreadCount > 0}" th:text="${unreadCount}">0</span>
-                        </button>
+                <div class="notification-container">
+                    <button type="button" class="btn-icon" id="btnNoti"
+                        style="position: relative;">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="badge" th:if="${unreadCount > 0}"
+                            th:text="${unreadCount}">0</span>
+                    </button>
 
-                        <div class="notification-dropdown">
-                            <div class="dropdown-header">Thông báo mới</div>
-                            <div th:each="note : ${myNotifications}" class="notification-item"
-                                th:classappend="${!note.isRead} ? 'unread' : ''">
-                                <a th:href="@{'/notification/read/' + ${note.id}}" th:text="${note.content}"></a>
-                                <span class="time" th:text="${#temporals.format(note.createdAt, 'HH:mm dd/MM')}"></span>
-                            </div>
-                            <div th:if="${#lists.isEmpty(myNotifications)}" class="no-notify">Không có thông báo</div>
+                    <div class="notification-dropdown">
+                        <div class="dropdown-header">Thông báo mới</div>
+                        <div th:each="note : ${myNotifications}"
+                            class="notification-item"
+                            th:classappend="${!note.isRead} ? 'unread' : ''">
+                            <a th:href="@{'/notification/read/' + ${note.id}}"
+                                th:text="${note.content}"></a>
+                            <span class="time"
+                                th:text="${#temporals.format(note.createdAt, 'HH:mm dd/MM')}"></span>
                         </div>
+                        <div th:if="${#lists.isEmpty(myNotifications)}"
+                            class="no-notify">Không có thông báo</div>
                     </div>
-                    <a th:href="@{/login/logout}">
-                        <button type="button" class="btn-icon" aria-label="Logout">
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                        </button>
-                    </a>
+                </div>
+
+                <a th:href="@{/login/logout}">
+                    <button type="button" class="btn-icon" aria-label="Logout">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </button>
+                </a>
+            </div>
+        </div>
+
+        <!-- Thanh điều hướng -->
+        <ul class="topnav">
+            <li>
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-home')">
+                    <i class="fa-solid fa-house"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-project')">
+                    <i class="fa-solid fa-folder-open"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-proposal')">
+                    <i class="fa-solid fa-file-alt"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-assistant')">
+                    <i class="fa-solid fa-user"></i>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="btn-icon"
+                    onclick="openTab('tab-other')">
+                    <i class="fa-solid fa-hashtag"></i>
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="flex-container">
+            <!-- Tab home content -->
+            <div id="tab-home" class="tab-pane"
+                th:classappend="${message == null} ? 'active' : ''">
+                <h2>Trang chủ</h2>
+                <p>Tính năng đang phát triển...</p>
+            </div>
+
+            <!-- Tab project content -->
+            <div id="tab-project" class="tab-pane ">
+                <h2>Tất cả dự án</h2>
+                <p>Tính năng đang phát triển...</p>
+            </div>
+
+            <!-- Tab Proposal content -->
+            <div id="tab-proposal" class="tab-pane">
+                <h2>Bản thảo chờ xét duyệt</h2>
+                <div id="sub-tab-new" class="sub-tab-pane">
+                    <p
+                        th:text="'Tổng số bản thảo: ' + (${listProposals != null} ? ${listProposals.size()} : 0)"></p>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Đề Xuất</th>
+                                <th>Tên Tác Giả</th>
+                                <th>Tên Series</th>
+                                <th>Trạng Thái</th>
+                                <th>Tập tin bản thảo</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr
+                                th:if="${listProposals == null or listProposals.isEmpty()}">
+                                <td colspan="4"
+                                    style="text-align: center;">Không có dữ liệu
+                                    bản thảo.</td>
+                            </tr>
+
+                            <tr th:each="p : ${listProposals}">
+                                <td th:text="${p.id}">ID</td>
+                                <td th:text="${p.mangaka.user.fullname}">Mangaka
+                                    Name</td>
+                                <td th:text="${p.seriesName}">Series Name</td>
+                                <td th:text="${p.status}">Status</td>
+
+                                <td>
+                                    <a
+                                        th:if="${p.filePath != null and !#strings.isEmpty(p.filePath)}"
+                                        th:href="@{${p.filePath}}"
+                                        class="btn-link" target="_blank">
+                                        <i class="fa-solid fa-file-pdf"></i> Xem
+                                        bản thảo
+                                    </a>
+                                    <span
+                                        th:unless="${p.filePath != null and !#strings.isEmpty(p.filePath)}">Không
+                                        có
+                                        file</span>
+                                </td>
+
+                                <td>
+                                    <form th:action="@{/manga/tantou/review}"
+                                        method="POST"
+                                        class="form-inline-action">
+                                        <input type="hidden" name="id"
+                                            th:value="${p.id}">
+                                        <button type="submit" name="action"
+                                            value="yes">Duyệt</button>
+                                        <button type="submit" name="action"
+                                            value="no">Từ chối</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-
-            <a th:href="@{/login/logout}">
-                <button type="button" class="btn-icon" aria-label="Logout">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                </button>
-            </a>
-        </div>
-    </div>
-
-    <!-- Thanh điều hướng -->
-    <ul class="topnav">
-        <li>
-            <button type="button" class="btn-icon" onclick="openTab('tab-home')">
-                <i class="fa-solid fa-house"></i>
-            </button>
-        </li>
-        <li>
-            <button type="button" class="btn-icon" onclick="openTab('tab-project')">
-                <i class="fa-solid fa-folder-open"></i>
-            </button>
-        </li>
-        <li>
-            <button type="button" class="btn-icon" onclick="openTab('tab-proposal')">
-                <i class="fa-solid fa-file-alt"></i>
-            </button>
-        </li>
-        <li>
-            <button type="button" class="btn-icon" onclick="openTab('tab-assistant')">
-                <i class="fa-solid fa-user"></i>
-            </button>
-        </li>
-        <li>
-            <button type="button" class="btn-icon" onclick="openTab('tab-other')">
-                <i class="fa-solid fa-hashtag"></i>
-            </button>
-        </li>
-    </ul>
-
-    <!-- Tab Content -->
-    <div class="flex-container">
-        <!-- Tab home content -->
-        <div id="tab-home" class="tab-pane" th:classappend="${message == null } ? 'active' : ''">
-            <h1>Chào mừng Tantou</h1>
-            <h2>Trang chủ</h2>
-            <p>Tính năng đang phát triển...</p>
-        </div>
-        <!-- Tab project content -->
-        <div id="tab-project" class="tab-pane active">
-            <h2>Tất cả dự án</h2>
-            <p>Tính năng đang phát triển...</p>
-        </div>
-        <!-- Tab Proposal content -->
-        <div id="tab-proposal" class="tab-pane">
-            <h2>Bản thảo chờ xét duyệt</h2>
-            <div id="sub-tab-new" class="sub-tab-pane">
-                <p th:text="'Tổng số bản thảo: ' + (${listProposals != null} ? ${listProposals.size()} : 0)"></p>
-
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Mã Đề Xuất</th>
-                            <th>Tên Tác Giả</th>
-                            <th>Tên Series</th>
-                            <th>Trạng Thái</th>
-                            <th>Tập tin bản thảo</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <p th:text="${#lists.size(listProposals)}"></p>
-                        <tr th:if="${listProposals == null or listProposals.isEmpty()}">
-                            <td colspan="4" style="text-align: center;">Không có dữ liệu
-                                bản thảo.</td>
-                        </tr>
-
-                        <tr th:each="p : ${listProposals}">
-                            <td th:text="${p.id}">ID</td>
-                            <td th:text="${p.mangaka.user.fullname}">Mangaka Name</td>
-                            <td th:text="${p.seriesName}">Series Name</td>
-                            <td th:text="${p.status}">Status</td>
-
-                            <td>
-                                <a th:if="${p.filePath != null and !#strings.isEmpty(p.filePath)}"
-                                    th:href="@{${p.filePath}}" class="btn-link" target="_blank">
-                                    <i class="fa-solid fa-file-pdf"></i> Xem bản thảo
-                                </a>
-                                <span th:unless="${p.filePath != null and !#strings.isEmpty(p.filePath)}">Không có
-                                    file</span>
-                            </td>
-
-                            <td>
-                                <form th:action="@{/manga/tantou/review}" method="POST" class="form-inline-action">
-                                    <input type="hidden" name="id" th:value="${p.id}">
-                                    <button type="submit" name="action" value="yes">Duyệt</button>
-                                    <button type="submit" name="action" value="no">Từ chối</button>
-                                </form>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Tab other content -->
+            <div id="tab-other" class="tab-pane">
+                <h2>Cài đặt khác</h2>
+                <p>Tính năng đang phát triển...</p>
             </div>
-        </div>
-        <!-- Tab other content -->
-        <div id="tab-other" class="tab-pane">
-            <h2>Cài đặt khác</h2>
-            <p>Tính năng đang phát triển...</p>
-        </div>
 
-    </div>
-    <!-- JS -->
-    <script>
+        </div>
+        <!-- JS -->
+        <script>
         function openTab(tabId) {
             document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
             document.getElementById(tabId).classList.add("active");
@@ -181,6 +197,6 @@
             });
         });
     </script>
-</body>
+    </body>
 
 </html>

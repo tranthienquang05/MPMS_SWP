@@ -1,328 +1,350 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>Hội đồng biên tập</title>
+        <link rel="stylesheet" th:href="@{/css/all.css}">
+        <link rel="stylesheet" th:href="@{/css/ranking.css}">
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </head>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Hội Đồng Editor - Bình Chọn</title>
-    <link rel="stylesheet" th:href="@{/css/all.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        div.flex-container {
-            background-color: white !important;
-            color: #000 !important;
-        }
+    <body>
+        <div class="header">
+            <div class="logo">SANKYUU
+                <p class="name">Hội đồng biên tập</p>
+            </div>
 
-        .tab-pane {
-            color: #000;
-        }
+            <div class="header-actions">
 
-        #rankingTable td,
-        #bottomTable td {
-            color: #000 !important;
-            background-color: white !important;
-        }
+                <div class="notification-container">
+                    <button type="button" class="btn-icon" id="btnNoti"
+                        style="position: relative;">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="badge" th:if="${unreadCount > 0}"
+                            th:text="${unreadCount}">0</span>
+                    </button>
 
-        #rankingTable tr:nth-child(even) td,
-        #bottomTable tr:nth-child(even) td {
-            background-color: #f5f5f5 !important;
-        }
-
-        #rankingTable tr:hover td,
-        #bottomTable tr:hover td {
-            background-color: #e3f2fd !important;
-        }
-
-        #rankingTable th {
-            background: #4a90d9;
-            color: white;
-        }
-
-        #bottomTable th {
-            background: #e74c3c;
-            color: white;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="header">
-        <div class="logo">SANKYUU
-            <p class="name">Tổng biên tập</p>
-        </div>
-        <div class="header-actions">
-
-            <div class="header">
-                <div class="logo">SANKYUU
-                    <p class="name">Tác giả truyện tranh</p>
-                </div>
-
-                <div class="header-actions">
-                    <div class="notification-container">
-                        <button type="button" class="btn-icon" id="btnNoti" style="position: relative;">
-                            <i class="fa-solid fa-bell"></i>
-                            <span class="badge" th:if="${unreadCount > 0}" th:text="${unreadCount}">0</span>
-                        </button>
-
-                        <div class="notification-dropdown">
-                            <div class="dropdown-header">Thông báo mới</div>
-                            <div th:each="note : ${myNotifications}" class="notification-item"
-                                th:classappend="${!note.isRead} ? 'unread' : ''">
-                                <a th:href="@{'/notification/read/' + ${note.id}}" th:text="${note.content}"></a>
-                                <span class="time" th:text="${#temporals.format(note.createdAt, 'HH:mm dd/MM')}"></span>
-                            </div>
-                            <div th:if="${#lists.isEmpty(myNotifications)}" class="no-notify">Không có thông báo</div>
+                    <div class="notification-dropdown">
+                        <div class="dropdown-header">Thông báo mới</div>
+                        <div th:each="note : ${myNotifications}"
+                            class="notification-item"
+                            th:classappend="${!note.isRead} ? 'unread' : ''">
+                            <a th:href="@{'/notification/read/' + ${note.id}}"
+                                th:text="${note.content}"></a>
+                            <span class="time"
+                                th:text="${#temporals.format(note.createdAt, 'HH:mm dd/MM')}"></span>
                         </div>
+                        <div th:if="${#lists.isEmpty(myNotifications)}"
+                            class="no-notify">Không có thông báo</div>
                     </div>
-                    <a th:href="@{/login/logout}">
-                        <button type="button" class="btn-icon" aria-label="Logout">
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                        </button>
-                    </a>
                 </div>
+
+                <a th:href="@{/login/logout}">
+                    <button type="button" class="btn-icon" aria-label="Logout">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </button>
+                </a>
             </div>
-            <a th:href="@{/login/logout}">
-                <button type="button" class="btn-icon" aria-label="Logout">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                </button>
-            </a>
         </div>
-    </div>
 
-    <ul class="topnav">
-        <li><button type="button" class="btn-icon" onclick="openTab('tab-home')"><i
-                    class="fa-solid fa-house"></i></button></li>
-        <li><button type="button" class="btn-icon" onclick="openTab('tab-project')"><i
-                    class="fa-solid fa-folder-open"></i></button></li>
-        <li><button type="button" class="btn-icon" onclick="openTab('tab-assistant')"><i
-                    class="fa-solid fa-user"></i></button></li>
-        <li><button type="button" class="btn-icon" onclick="openTab('tab-other')"><i
-                    class="fa-solid fa-hashtag"></i></button></li>
-    </ul>
+        <ul class="topnav">
+            <li><button type="button" class="btn-icon"
+                    onclick="openTab('tab-home')"><i
+                        class="fa-solid fa-house"></i></button></li>
+            <li><button type="button" class="btn-icon"
+                    onclick="openTab('tab-project')"><i
+                        class="fa-solid fa-folder-open"></i></button></li>
+            <li><button type="button" class="btn-icon"
+                    onclick="openTab('tab-assistant')"><i
+                        class="fa-solid fa-user"></i></button></li>
+            <li><button type="button" class="btn-icon"
+                    onclick="openTab('tab-other')"><i
+                        class="fa-solid fa-hashtag"></i></button></li>
+        </ul>
 
-    <div class="flex-container">
+        <div class="flex-container">
 
-        <div id="tab-home" class="tab-pane" th:classappend="${message == null} ? 'active' : ''">
-            <h2>Trang chủ</h2>
+            <div id="tab-home" class="tab-pane"
+                th:classappend="${message == null} ? 'active' : ''">
+                <h2>Trang chủ</h2>
 
-            <!-- Ranking -->
-            <div style="margin-bottom:12px;">
-                <label>Tháng:
-                    <select id="rankMonth">
-                        <option value="0">-- Cả năm --</option>
-                        <option value="1">Tháng 1</option>
-                        <option value="2">Tháng 2</option>
-                        <option value="3">Tháng 3</option>
-                        <option value="4">Tháng 4</option>
-                        <option value="5">Tháng 5</option>
-                        <option value="6">Tháng 6</option>
-                        <option value="7">Tháng 7</option>
-                        <option value="8">Tháng 8</option>
-                        <option value="9">Tháng 9</option>
-                        <option value="10">Tháng 10</option>
-                        <option value="11">Tháng 11</option>
-                        <option value="12">Tháng 12</option>
-                    </select>
-                </label>
-                <label style="margin-left:10px;">Năm:
-                    <select id="rankYear">
-                        <option value="2026">2026</option>
-                        <option value="2025">2025</option>
-                    </select>
-                </label>
-                <button type="button" onclick="loadAll()">Xem ranking</button>
-            </div>
+                <!-- Ranking -->
+                <div style="margin-bottom:12px;">
+                    <label>Tháng:
+                        <select id="rankMonth">
+                            <option value="0">-- Cả năm --</option>
+                            <option value="1">Tháng 1</option>
+                            <option value="2">Tháng 2</option>
+                            <option value="3">Tháng 3</option>
+                            <option value="4">Tháng 4</option>
+                            <option value="5">Tháng 5</option>
+                            <option value="6">Tháng 6</option>
+                            <option value="7">Tháng 7</option>
+                            <option value="8">Tháng 8</option>
+                            <option value="9">Tháng 9</option>
+                            <option value="10">Tháng 10</option>
+                            <option value="11">Tháng 11</option>
+                            <option value="12">Tháng 12</option>
+                        </select>
+                    </label>
+                    <label style="margin-left:10px;">Năm:
+                        <select id="rankYear">
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                        </select>
+                    </label>
+                    <button type="button" onclick="loadAll()">Xem ranking</button>
+                </div>
 
-            <div id="rankingSection" style="display:none;">
-                <h3>🏆 Bảng Xếp Hạng Series</h3>
-                <table id="rankingTable" border="1" style="width:100%;border-collapse:collapse;display:none;">
-                    <thead>
-                        <tr>
-                            <th>Hạng</th>
-                            <th>Mã Series</th>
-                            <th>Tên Series</th>
-                            <th>Tổng Phiếu</th>
-                        </tr>
-                    </thead>
-                    <tbody id="rankingBody"></tbody>
-                </table>
-                <p id="rankingMsg" style="display:none;color:gray;">Không có dữ liệu.</p>
-
-                <!-- 3 Series Cuối Bảng -->
-                <div style="margin-top:24px;">
-                    <div style="margin-bottom:8px;">
-                        <h3 style="margin:0;color:#e74c3c;">⚠️ 3 Series Cuối Bảng Xếp Hạng</h3>
-                        <p style="color:#888;font-size:13px;margin-top:4px;">Hệ thống tự động tạo phiên vote dừng cho
-                            các series này.</p>
-                    </div>
-                    <table id="bottomTable" border="1" style="width:100%;border-collapse:collapse;display:none;">
+                <div id="rankingSection" style="display:none;">
+                    <h3>🏆 Bảng Xếp Hạng Series</h3>
+                    <table id="rankingTable" border="1"
+                        style="width:100%;border-collapse:collapse;display:none;">
                         <thead>
                             <tr>
+                                <th>Hạng</th>
                                 <th>Mã Series</th>
                                 <th>Tên Series</th>
                                 <th>Tổng Phiếu</th>
-                                <th>Tiến Độ</th>
-                                <th>Hành Động</th>
                             </tr>
                         </thead>
-                        <tbody id="bottomBody"></tbody>
+                        <tbody id="rankingBody"></tbody>
                     </table>
-                    <p id="bottomMsg" style="display:none;color:gray;">Không có dữ liệu xếp hạng.</p>
+                    <p id="rankingMsg" style="display:none;color:gray;">Không có
+                        dữ liệu.</p>
+
+                    <!-- 3 Series Cuối Bảng -->
+                    <div style="margin-top:24px;">
+                        <div style="margin-bottom:8px;">
+                            <h3 style="margin:0;color:#e74c3c;">⚠️ 3 Series Cuối
+                                Bảng Xếp Hạng</h3>
+                            <p
+                                style="color:#888;font-size:13px;margin-top:4px;">Hệ
+                                thống tự động tạo phiên vote dừng cho
+                                các series này.</p>
+                        </div>
+                        <table id="bottomTable" border="1"
+                            style="width:100%;border-collapse:collapse;display:none;">
+                            <thead>
+                                <tr>
+                                    <th>Mã Series</th>
+                                    <th>Tên Series</th>
+                                    <th>Tổng Phiếu</th>
+                                    <th>Tiến Độ</th>
+                                    <th>Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bottomBody"></tbody>
+                        </table>
+                        <p id="bottomMsg" style="display:none;color:gray;">Không
+                            có dữ liệu xếp hạng.</p>
+                    </div>
                 </div>
-            </div>
 
-            <hr style="margin:20px 0;">
+                <hr style="margin:20px 0;">
 
-            <!-- Phiên vote đang mở -->
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                <h3 style="margin:0;color:#4a90d9;">📋 Phiên Vote Đang Mở</h3>
-                <button type="button" onclick="openCreateVoteModal()" style="background:#4a90d9;color:white;border:none;padding:8px 16px;border-radius:6px;
+                <!-- Phiên vote đang mở -->
+                <div
+                    style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <h3 style="margin:0;color:#4a90d9;">📋 Phiên Vote Đang
+                        Mở</h3>
+                    <button type="button" onclick="openCreateVoteModal()"
+                        style="background:#4a90d9;color:white;border:none;padding:8px 16px;border-radius:6px;
                            cursor:pointer;font-size:14px;font-weight:bold;">
-                    ＋ Tạo Vote Mới
-                </button>
+                        ＋ Tạo Vote Mới
+                    </button>
+                </div>
+                <div id="activeSessionsSection">
+                    <table id="activeSessionsTable" border="1"
+                        style="width:100%;border-collapse:collapse;display:none;">
+                        <thead>
+                            <tr>
+                                <th
+                                    style="background:#4a90d9;color:white;">Phiên</th>
+                                <th
+                                    style="background:#4a90d9;color:white;">Series</th>
+                                <th style="background:#4a90d9;color:white;">Loại
+                                    Vote</th>
+                                <th
+                                    style="background:#4a90d9;color:white;">Người
+                                    Tạo</th>
+                                <th style="background:#4a90d9;color:white;">Tiến
+                                    Độ</th>
+                                <th style="background:#4a90d9;color:white;">Hành
+                                    Động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activeSessionsBody"></tbody>
+                    </table>
+                    <p id="activeSessionsEmpty"
+                        style="color:gray;font-style:italic;">Chưa có phiên vote
+                        nào đang mở.</p>
+                </div>
+
             </div>
-            <div id="activeSessionsSection">
-                <table id="activeSessionsTable" border="1" style="width:100%;border-collapse:collapse;display:none;">
+
+            <div id="tab-project" class="tab-pane">
+                <h1>Xin chào Tổng biên tập</h1>
+                <hr>
+                <div th:if="${message}" class="notification success"><span
+                        th:text="${message}"></span></div>
+                <div th:if="${error}" class="notification error"><span
+                        th:text="${error}"></span></div>
+                <h3 class="text-warning">Danh sách dự án đang mở cổng Bình
+                    chọn</h3>
+                <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="background:#4a90d9;color:white;">Phiên</th>
-                            <th style="background:#4a90d9;color:white;">Series</th>
-                            <th style="background:#4a90d9;color:white;">Loại Vote</th>
-                            <th style="background:#4a90d9;color:white;">Người Tạo</th>
-                            <th style="background:#4a90d9;color:white;">Tiến Độ</th>
-                            <th style="background:#4a90d9;color:white;">Hành Động</th>
+                            <th>Mã Dự Án</th>
+                            <th>Tên Tác Giả</th>
+                            <th>Tên Series</th>
+                            <th>Tập tin bản thảo</th>
+                            <th>Biểu Quyết</th>
                         </tr>
                     </thead>
-                    <tbody id="activeSessionsBody"></tbody>
+                    <tbody>
+                        <tr th:each="p : ${listProposals}">
+                            <td th:text="${p.id}">ID</td>
+                            <td th:text="${p.getMangaka()}">Mangaka Name</td>
+                            <td th:text="${p.seriesName}">Series Name</td>
+                            <td><a
+                                    th:href="@{/manga/view-file(path=${p.filePath})}"
+                                    target="_blank"
+                                    class="btn btn-sm btn-info text-white">Xem
+                                    file</a></td>
+                            <td>
+                                <div style="display: flex;">
+                                    <form th:action="@{/manga/editor/vote}"
+                                        method="post"
+                                        style="margin-right: 5px;">
+                                        <input type="hidden" name="id"
+                                            th:value="${p.id}">
+                                        <input type="hidden" name="action"
+                                            value="pass">
+                                        <button type="submit"
+                                            class="btn btn-sm btn-success">Chấp
+                                            Thuận</button>
+                                    </form>
+                                    <form th:action="@{/manga/editor/vote}"
+                                        method="post">
+                                        <input type="hidden" name="id"
+                                            th:value="${p.id}">
+                                        <input type="hidden" name="action"
+                                            value="reject">
+                                        <button type="submit"
+                                            class="btn btn-sm btn-danger">Bác
+                                            Bỏ</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(listProposals)}">
+                            <td colspan="5"
+                                class="text-center text-muted py-3">Hiện không
+                                có dự án nào chờ bình chọn.</td>
+                        </tr>
+                    </tbody>
                 </table>
-                <p id="activeSessionsEmpty" style="color:gray;font-style:italic;">Chưa có phiên vote nào đang mở.</p>
+                
             </div>
 
+            <div id="tab-assistant" class="tab-pane">
+                <h2>Quản lý Trợ lý</h2>
+                <p>Tính năng đang phát triển...</p>
+            </div>
+            <div id="tab-other" class="tab-pane">
+                <h2>Cài đặt khác</h2>
+                <p>Tính năng đang phát triển...</p>
+            </div>
         </div>
 
-        <div id="tab-project" class="tab-pane">
-            <h1>Xin chào Tổng biên tập</h1>
-            <hr>
-            <div th:if="${message}" class="notification success"><span th:text="${message}"></span></div>
-            <div th:if="${error}" class="notification error"><span th:text="${error}"></span></div>
-            <h3 class="text-warning">Danh sách dự án đang mở cổng Bình chọn</h3>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Mã Dự Án</th>
-                        <th>Tên Tác Giả</th>
-                        <th>Tên Series</th>
-                        <th>Tập tin bản thảo</th>
-                        <th>Biểu Quyết</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="p : ${listProposals}">
-                        <td th:text="${p.id}">ID</td>
-                        <td th:text="${p.getMangaka()}">Mangaka Name</td>
-                        <td th:text="${p.seriesName}">Series Name</td>
-                        <td><a th:href="@{/manga/view-file(path=${p.filePath})}" target="_blank"
-                                class="btn btn-sm btn-info text-white">Xem file</a></td>
-                        <td>
-                            <div style="display: flex;">
-                                <form th:action="@{/manga/editor/vote}" method="post" style="margin-right: 5px;">
-                                    <input type="hidden" name="id" th:value="${p.id}">
-                                    <input type="hidden" name="action" value="pass">
-                                    <button type="submit" class="btn btn-sm btn-success">Chấp Thuận</button>
-                                </form>
-                                <form th:action="@{/manga/editor/vote}" method="post">
-                                    <input type="hidden" name="id" th:value="${p.id}">
-                                    <input type="hidden" name="action" value="reject">
-                                    <button type="submit" class="btn btn-sm btn-danger">Bác Bỏ</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(listProposals)}">
-                        <td colspan="5" class="text-center text-muted py-3">Hiện không có dự án nào chờ bình chọn.</td>
-                    </tr>
-                </tbody>
-            </table>
-            <br><a th:href="@{/login/logout}" class="btn btn-danger">Logout</a>
-        </div>
-
-        <div id="tab-assistant" class="tab-pane">
-            <h2>Quản lý Trợ lý</h2>
-            <p>Tính năng đang phát triển...</p>
-        </div>
-        <div id="tab-other" class="tab-pane">
-            <h2>Cài đặt khác</h2>
-            <p>Tính năng đang phát triển...</p>
-        </div>
-    </div>
-
-    <!-- Modal tạo vote mới -->
-    <div id="createVoteModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+        <!-- Modal tạo vote mới -->
+        <div id="createVoteModal"
+            style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
          background:rgba(0,0,0,0.5);z-index:2000;justify-content:center;align-items:center;">
-        <div style="background:white;padding:28px;border-radius:8px;width:480px;max-width:90%;">
-            <div style="display:flex;justify-content:space-between;align-items:center;
+            <div
+                style="background:white;padding:28px;border-radius:8px;width:480px;max-width:90%;">
+                <div
+                    style="display:flex;justify-content:space-between;align-items:center;
                  border-bottom:1px solid #ddd;padding-bottom:10px;margin-bottom:18px;">
-                <h3 style="color:#333;margin:0;">＋ Tạo Phiên Vote Mới</h3>
-                <button onclick="document.getElementById('createVoteModal').style.display='none'"
-                    style="background:#dc3545;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">✕</button>
+                    <h3 style="color:#333;margin:0;">＋ Tạo Phiên Vote Mới</h3>
+                    <button
+                        onclick="document.getElementById('createVoteModal').style.display='none'"
+                        style="background:#dc3545;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">✕</button>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label
+                        style="display:block;font-weight:bold;margin-bottom:6px;color:#333;">Loại
+                        Vote:</label>
+                    <select id="newVoteType"
+                        style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:14px;"
+                        onchange="updateVoteTypeHint()">
+                        <option value="stop">🚫 Vote Dừng Series</option>
+                        <option value="reward">🏆 Vote Khen Thưởng
+                            Series</option>
+                    </select>
+                    <p id="voteTypeHint"
+                        style="color:gray;font-size:12px;margin-top:6px;">
+                        Nếu ≥ 60% board đồng ý → Series sẽ bị DỪNG phát hành.
+                    </p>
+                </div>
+                <div style="margin-bottom:20px;">
+                    <label
+                        style="display:block;font-weight:bold;margin-bottom:6px;color:#333;">Chọn
+                        Series:</label>
+                    <select id="newVoteSeries"
+                        style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:14px;">
+                        <option value>-- Đang tải danh sách series...
+                            --</option>
+                    </select>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:10px;">
+                    <button
+                        onclick="document.getElementById('createVoteModal').style.display='none'"
+                        style="background:#6c757d;color:white;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;">Hủy</button>
+                    <button onclick="submitCreateVote()"
+                        style="background:#4a90d9;color:white;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-weight:bold;">Tạo
+                        Vote</button>
+                </div>
             </div>
-            <div style="margin-bottom:16px;">
-                <label style="display:block;font-weight:bold;margin-bottom:6px;color:#333;">Loại Vote:</label>
-                <select id="newVoteType"
-                    style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:14px;"
-                    onchange="updateVoteTypeHint()">
-                    <option value="stop">🚫 Vote Dừng Series</option>
-                    <option value="reward">🏆 Vote Khen Thưởng Series</option>
-                </select>
-                <p id="voteTypeHint" style="color:gray;font-size:12px;margin-top:6px;">
-                    Nếu ≥ 60% board đồng ý → Series sẽ bị DỪNG phát hành.
+        </div>
+
+        <!-- Modal lịch sử phiên vote -->
+        <div id="sessionHistoryModal"
+            style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+         background:rgba(0,0,0,0.5);z-index:2000;justify-content:center;align-items:center;">
+            <div
+                style="background:white;padding:24px;border-radius:8px;width:650px;max-width:90%;max-height:80vh;overflow-y:auto;">
+                <div
+                    style="display:flex;justify-content:space-between;align-items:center;
+                 border-bottom:1px solid #ddd;padding-bottom:10px;margin-bottom:15px;">
+                    <h3 style="color:#333;margin:0;">📋 Lịch Sử Phiên Vote</h3>
+                    <button
+                        onclick="document.getElementById('sessionHistoryModal').style.display='none'"
+                        style="background:#dc3545;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">✕</button>
+                </div>
+                <p id="sessionHistoryInfo"
+                    style="color:#555;margin-bottom:10px;"></p>
+                <table id="sessionHistoryTable" border="1"
+                    style="width:100%;border-collapse:collapse;">
+                    <thead style="background:#6c757d;color:white;">
+                        <tr>
+                            <th style="padding:8px;">Board</th>
+                            <th style="padding:8px;">Lựa Chọn</th>
+                            <th style="padding:8px;">Ngày Vote</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessionHistoryBody"></tbody>
+                </table>
+                <p id="sessionHistoryEmpty"
+                    style="display:none;color:gray;text-align:center;padding:20px;">
+                    Chưa có ai vote trong phiên này.
                 </p>
             </div>
-            <div style="margin-bottom:20px;">
-                <label style="display:block;font-weight:bold;margin-bottom:6px;color:#333;">Chọn Series:</label>
-                <select id="newVoteSeries"
-                    style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:14px;">
-                    <option value="">-- Đang tải danh sách series... --</option>
-                </select>
-            </div>
-            <div style="display:flex;justify-content:flex-end;gap:10px;">
-                <button onclick="document.getElementById('createVoteModal').style.display='none'"
-                    style="background:#6c757d;color:white;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;">Hủy</button>
-                <button onclick="submitCreateVote()"
-                    style="background:#4a90d9;color:white;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-weight:bold;">Tạo
-                    Vote</button>
-            </div>
         </div>
-    </div>
 
-    <!-- Modal lịch sử phiên vote -->
-    <div id="sessionHistoryModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-         background:rgba(0,0,0,0.5);z-index:2000;justify-content:center;align-items:center;">
-        <div
-            style="background:white;padding:24px;border-radius:8px;width:650px;max-width:90%;max-height:80vh;overflow-y:auto;">
-            <div style="display:flex;justify-content:space-between;align-items:center;
-                 border-bottom:1px solid #ddd;padding-bottom:10px;margin-bottom:15px;">
-                <h3 style="color:#333;margin:0;">📋 Lịch Sử Phiên Vote</h3>
-                <button onclick="document.getElementById('sessionHistoryModal').style.display='none'"
-                    style="background:#dc3545;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">✕</button>
-            </div>
-            <p id="sessionHistoryInfo" style="color:#555;margin-bottom:10px;"></p>
-            <table id="sessionHistoryTable" border="1" style="width:100%;border-collapse:collapse;">
-                <thead style="background:#6c757d;color:white;">
-                    <tr>
-                        <th style="padding:8px;">Board</th>
-                        <th style="padding:8px;">Lựa Chọn</th>
-                        <th style="padding:8px;">Ngày Vote</th>
-                    </tr>
-                </thead>
-                <tbody id="sessionHistoryBody"></tbody>
-            </table>
-            <p id="sessionHistoryEmpty" style="display:none;color:gray;text-align:center;padding:20px;">
-                Chưa có ai vote trong phiên này.
-            </p>
-        </div>
-    </div>
-
-    <script>
+        <script>
         function openTab(tabId) {
             document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
             document.getElementById(tabId).classList.add("active");
@@ -622,6 +644,6 @@
             });
         });
     </script>
-</body>
+    </body>
 
 </html>

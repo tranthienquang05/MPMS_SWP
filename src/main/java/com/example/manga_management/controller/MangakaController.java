@@ -71,6 +71,13 @@ public class MangakaController {
             return "redirect:/login";
 
         model.addAttribute("user", user);
+
+        Mangaka mangaka = mangakaRepository.findByUser(user).orElse(null);
+        if (mangaka != null) {
+            List<Series> mySeriesList = seriesRepository.findByProposal_Mangaka_Id(mangaka.getId());
+            model.addAttribute("mySeriesList", mySeriesList);
+        }
+
         return "mangaka";
     }
 
@@ -226,6 +233,12 @@ public class MangakaController {
         } catch (IOException e) {
             model.addAttribute("message", "Lỗi hệ thống: " + e.getMessage());
         }
+        User user = (User) session.getAttribute("user");
+        Mangaka mangaka = mangakaRepository.findByUser(user).orElse(null);
+        if (mangaka != null) {
+            List<Series> mySeriesList = seriesRepository.findByProposal_Mangaka_Id(mangaka.getId());
+            model.addAttribute("mySeriesList", mySeriesList);
+        }        
         model.addAttribute("message", "Khởi động tác phẩm thành công!");
         model.addAttribute("activeTab", "tab-project");
         return "mangaka";
@@ -251,7 +264,7 @@ public class MangakaController {
         model.addAttribute("series", series);
         model.addAttribute("chapters", chapterRepository.findBySeries(series));
 
-        return "manga/mangaka/myseries/{seriesId}";
+        return "mangaka";
     }
 
     @PostMapping("/myseries/{seriesId}/createchapter")
@@ -304,7 +317,7 @@ public class MangakaController {
 
         model.addAttribute("chapter", chapter);
         model.addAttribute("pages", mangaPageRepository.findByChapter(chapter));
-        return "manga/mangaka/myseries/"+seriesId+"/"+chapterId;
+        return "mangaka";
     }
     @GetMapping("/myseries/{seriesId}/{chapterId}/{pageId}/edit")
     public String editPage(
@@ -386,5 +399,18 @@ public class MangakaController {
     }
     return result;
     }
+    @GetMapping("/myseries")
+    public String mySeriesPage(HttpSession session, Model model) {
+    User user = (User) session.getAttribute("user");
+    if (user == null) return "redirect:/login";
+
+    Mangaka mangaka = mangakaRepository.findByUser(user).orElse(null);
+    if (mangaka != null) {
+        List<Series> mySeriesList = seriesRepository.findByProposal_Mangaka_Id(mangaka.getId());
+        model.addAttribute("mySeriesList", mySeriesList);
+    }
+    model.addAttribute("activeTab", "tab-myseries");
+    return "mangaka";
+}
     
 }   

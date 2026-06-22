@@ -411,7 +411,7 @@
         <!-- Tab proposal content -->
         <div id="tab-proposal" class="tab-pane" th:classappend="${activeTab == 'tab-project'} ? 'active' : ''">
 
-            
+
             <a th:href="@{/manga/mangaka/my-projects}" class="btn-custom">
                 Dự án của tôi
             </a>
@@ -542,7 +542,8 @@
              - Nếu có "series" nhưng chưa có "chapter" → hiện danh sách Chapter
              - Nếu có "chapter" → hiện danh sách Page (trang) để bấm vào vẽ
              ======================================================== -->
-        <div id="tab-myseries" class="tab-pane" th:classappend="${series != null or chapter != null} ? 'active' : ''">
+        <div id="tab-myseries" class="tab-pane"
+            th:classappend="${series != null or chapter != null or activeTab == 'tab-myseries'} ? 'active' : ''">
 
             <h2>Series của tôi</h2>
 

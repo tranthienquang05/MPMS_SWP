@@ -13,11 +13,11 @@ public class Submission {
 
     @Id
     @Column(name = "SubmissionID", length = 7)
-    private String ID;
+    private String id;
 
     @ManyToOne
     @JoinColumn(name = "PageID", nullable = false)
-    private MangaPage mangaPage;
+    private MangaPage pageId;
 
     @ManyToOne
     @JoinColumn(name = "AssistantID", nullable = false)

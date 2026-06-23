@@ -1,5 +1,7 @@
 package com.example.manga_management.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +22,7 @@ public class Assistant {
     private User user;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "MangakaID", nullable = false)
     private Mangaka mangaka;
 

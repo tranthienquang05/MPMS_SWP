@@ -30,12 +30,14 @@ import com.example.manga_management.entity.MangaPage;
 import com.example.manga_management.entity.Mangaka;
 import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.Series;
+import com.example.manga_management.entity.Submission;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.ProposalRepository;
 import com.example.manga_management.repository.SeriesRepository;
+import com.example.manga_management.repository.SubmissionRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -46,7 +48,7 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 @RequestMapping("/manga/mangaka")
 public class MangakaController {
-
+    private final SubmissionRepository submissionRepository;
     private final ProposalRepository proposalRepository;
     private final MangakaRepository mangakaRepository;
     private final SeriesRepository seriesRepository;
@@ -56,12 +58,14 @@ public class MangakaController {
 
     public MangakaController(ProposalRepository proposalRepository, MangakaRepository mangakaRepository,
             SeriesRepository seriesRepository, ChapterRepository chapterRepository,
-            MangaPageRepository mangaPageRepository, NotificationController notificationController) {
+            MangaPageRepository mangaPageRepository, SubmissionRepository submissionRepository,
+            NotificationController notificationController) {
         this.proposalRepository = proposalRepository;
         this.mangakaRepository = mangakaRepository;
         this.seriesRepository = seriesRepository;
         this.chapterRepository = chapterRepository;
         this.mangaPageRepository = mangaPageRepository;
+        this.submissionRepository = submissionRepository;
         this.notificationController = notificationController;
     }
 
@@ -109,8 +113,8 @@ public class MangakaController {
     @Operation(summary = "Start a new series from an approved proposal", description = "Allows a Mangaka to start a new series based on an approved proposal. Requires the proposal ID, series name, description, and a book jacket file (PDF).")
     @PostMapping("/submit-proposal")
     public String handleSubmitting(@RequestParam String txtSeriesName,
-            @Parameter(description = "Manuscript file") @RequestPart MultipartFile fileManuscript,
-            HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+            @Parameter(description = "Manuscript file") @RequestPart MultipartFile fileManuscript, HttpSession session,
+            Model model, RedirectAttributes redirectAttributes) {
 
         User user = (User) session.getAttribute("user");
         if (user == null) {
@@ -171,8 +175,8 @@ public class MangakaController {
             proposalRepository.save(proposal);
 
             // Thông báo cho Tantou (Xuyên Role)
-            notificationController.send("tantou", null,
-                    "Có đề xuất mới từ Mangaka đang chờ duyệt: " + txtSeriesName, "/manga/editor");
+            notificationController.send("tantou", null, "Có đề xuất mới từ Mangaka đang chờ duyệt: " + txtSeriesName,
+                    "/manga/editor");
 
             // Truyền thông báo sang trang sau khi redirect
             redirectAttributes.addFlashAttribute("message", "Đã nộp dự án thành công!");
@@ -237,8 +241,7 @@ public class MangakaController {
             proposal.setStatus("unfinish");
             proposalRepository.save(proposal);
 
-            notificationController.send("tantou", null,
-                    "Mangaka đã khởi động dự án mới: " + txtSeriesName,
+            notificationController.send("tantou", null, "Mangaka đã khởi động dự án mới: " + txtSeriesName,
                     "/manga/editor");
 
             model.addAttribute("message", "Khởi động tác phẩm thành công!");
@@ -310,10 +313,8 @@ public class MangakaController {
     }
 
     @GetMapping("/myseries/{seriesId}/{chapterId}")
-    public String viewChapter(
-            @PathVariable String seriesId,
-            @PathVariable String chapterId,
-            Model model, HttpSession session) {
+    public String viewChapter(@PathVariable String seriesId, @PathVariable String chapterId, Model model,
+            HttpSession session) {
 
         Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
 
@@ -324,7 +325,15 @@ public class MangakaController {
 
         // Đổ dữ liệu vào Model để kích hoạt hiển thị "KHỐI 3" trong tab-project
         model.addAttribute("chapter", chapter);
-        model.addAttribute("pages", mangaPageRepository.findByChapter(chapter));
+        Map<String, Submission> submissionMap = new HashMap<>();
+
+        List<MangaPage> pages = mangaPageRepository.findByChapter(chapter);
+        for (MangaPage page : pages) {
+            submissionRepository.findByPageIdId(page.getId()).ifPresent(sub -> submissionMap.put(page.getId(), sub));
+        }
+
+        model.addAttribute("submissionMap", submissionMap);
+        model.addAttribute("pages", pages);
         // SỬA TẠI ĐÂY: Trả về đúng tên template HTML gốc của bạn
         model.addAttribute("activeTab", "tab-project");
 
@@ -333,10 +342,7 @@ public class MangakaController {
     }
 
     @GetMapping("/myseries/{seriesId}/{chapterId}/{pageId}/edit")
-    public String editPage(
-            @PathVariable String seriesId,
-            @PathVariable String chapterId,
-            @PathVariable String pageId,
+    public String editPage(@PathVariable String seriesId, @PathVariable String chapterId, @PathVariable String pageId,
             Model model, HttpSession session) {
 
         User user = (User) session.getAttribute("user");
@@ -379,7 +385,5 @@ public class MangakaController {
 
         return "redirect:/manga/mangaka/myseries/" + seriesId + "/" + chapterId + "/" + pageId + "/edit";
     }
-
-    
 
 }

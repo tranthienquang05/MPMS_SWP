@@ -5,10 +5,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,16 +19,31 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.manga_management.entity.Assistant;
 import com.example.manga_management.entity.MangaPage;
+import com.example.manga_management.entity.Submission;
+import com.example.manga_management.entity.User;
+import com.example.manga_management.repository.AssistantRepository;
 import com.example.manga_management.repository.MangaPageRepository;
+import com.example.manga_management.repository.SubmissionRepository;
+
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api/page")
 public class PageController {
     @Autowired
+    private final AssistantRepository assistantRepository;
+
+    @Autowired
+    private final SubmissionRepository submissionRepository;
+    @Autowired
     private final MangaPageRepository mangaPageRepository;
 
-    public PageController(MangaPageRepository mangaPageRepository) {
+    public PageController(AssistantRepository assistantRepository, SubmissionRepository submissionRepository,
+            MangaPageRepository mangaPageRepository) {
+        this.assistantRepository = assistantRepository;
+        this.submissionRepository = submissionRepository;
         this.mangaPageRepository = mangaPageRepository;
     }
 
@@ -72,4 +90,60 @@ public class PageController {
         }
     }
 
+    @GetMapping("/{pageId}/submission")
+    @ResponseBody
+    public Map<String, Object> getPageSubmission(@PathVariable String pageId) {
+        Submission submission = submissionRepository.findByPageId(pageId);
+        if (submission == null) {
+            return Map.of("hasSubmission", false);
+        }
+        return Map.of("hasSubmission", true, "assistantName", submission.getAssistant().getUser().getFullname(),
+                "status", submission.getStatus());
+    }
+
+    @PostMapping("/{pageId}/assign")
+    @ResponseBody
+    public Map<String, Object> assignPage(@PathVariable String pageId, @RequestBody Map<String, String> body,
+            HttpSession session) {
+
+        try {
+            User user = (User) session.getAttribute("user");
+            if (user == null)
+                return Map.of("status", "error", "message", "Chưa đăng nhập");
+
+            MangaPage page = mangaPageRepository.findById(pageId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy page"));
+
+            String assistantId = body.get("assistantId");
+            Assistant assistant = assistantRepository.findById(assistantId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy assistant"));
+
+            // Sinh ID mới
+            String lastId = submissionRepository.findTopByOrderByIdDesc().map(Submission::getId).orElse("SUB000");
+            int num = Integer.parseInt(lastId.replaceAll("[^0-9]", "")) + 1;
+            String newId = "SUB" + String.format("%03d", num);
+            if (submissionRepository.existsByPageIdIdAndStatus(pageId, "unfinish")) {
+                return Map.of("status", "error", "message", "Trang này đã được giao");
+            }
+            Submission submission = new Submission();
+            submission.setId(newId);
+            submission.setPageId(page);
+            submission.setAssistant(assistant);
+            submission.setStatus("unfinish");
+            submissionRepository.save(submission);
+
+            return Map.of("status", "success");
+
+        } catch (Exception e) {
+            return Map.of("status", "error", "message", e.getMessage());
+        }
+    }
+
+    // API 3: Lấy danh sách assistant của mangaka (để hiện dropdown giao việc)
+    @GetMapping("/api/mangaka/{mangakaId}/assistants")
+    @ResponseBody
+    public List<Map<String, String>> getAssistants(@PathVariable String mangakaId) {
+        return assistantRepository.findByMangakaId(mangakaId).stream()
+                .map(a -> Map.of("id", a.getId(), "name", a.getUser().getFullname())).collect(Collectors.toList());
+    }
 }

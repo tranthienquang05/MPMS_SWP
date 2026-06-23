@@ -24,7 +24,7 @@ public class Notification {
     @Column(name = "Role", length = 20)
     private String role;
 
-    @Column(name = "UserID", length = 20)
+    @Column(name = "UserID", length = 6)
     private String userId;
 
     @Column(name = "Link", length = 255)

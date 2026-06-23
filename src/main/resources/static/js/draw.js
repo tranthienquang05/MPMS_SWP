@@ -857,10 +857,15 @@ function renderAiResult(data) {
     }
 }
 // Lưu trang
+// ========================================================
+// PHẦN 8: Lưu trang & Submission
+// ========================================================
 const btnSavePage = document.getElementById('btnSavePage');
+const pageId = btnSavePage?.dataset.pageId;
+
+// Lưu trang
 if (btnSavePage) {
     btnSavePage.addEventListener('click', async () => {
-        const pageId = btnSavePage.dataset.pageId;
         const base64 = flattenAllLayers().toDataURL('image/png');
 
         btnSavePage.disabled = true;
@@ -874,19 +879,27 @@ if (btnSavePage) {
             });
             const data = await res.json();
             if (data.status === 'success') {
-                alert('✅ Đã lưu!');
-                window.location.href = data.redirectUrl;
+                btnSavePage.innerHTML = '<i class="fa-solid fa-check"></i> Đã lưu!';
+                setTimeout(() => {
+                    btnSavePage.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu trang';
+                    // Thêm dòng này để xử lý redirectUrl trả về từ backend
+                    if (data.redirectUrl) {
+                        window.location.href = data.redirectUrl;
+                    }
+                }, 2000);
             } else {
                 alert('❌ ' + data.message);
+                btnSavePage.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu trang';
             }
         } catch (err) {
             alert('❌ Lỗi: ' + err.message);
+            btnSavePage.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu trang';
         } finally {
             btnSavePage.disabled = false;
-            btnSavePage.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu trang';
         }
     });
 }
+
 const btnLoadPage = document.getElementById('btnLoadPage');
 const inputLoadPage = document.getElementById('inputLoadPage');
 

@@ -80,7 +80,7 @@ public class MangakaController {
             List<Series> mySeriesList = seriesRepository.findByProposal_Mangaka_Id(mangaka.getId());
             model.addAttribute("mySeriesList", mySeriesList);
         }
-
+        model.addAttribute("activeTab", "tab-home");
         return "mangaka";
     }
 
@@ -269,6 +269,7 @@ public class MangakaController {
 
         model.addAttribute("series", series);
         model.addAttribute("chapters", chapterRepository.findBySeries(series));
+        model.addAttribute("activeTab", "tab-project");
 
         return "mangaka";
     }
@@ -305,7 +306,7 @@ public class MangakaController {
 
         model.addAttribute("message", "Tạo Chapter thành công!");
 
-        return "redirect:/manga/mangaka/myseries/" + seriesId;
+        return "mangaka";
     }
 
     @GetMapping("/myseries/{seriesId}/{chapterId}")
@@ -324,9 +325,11 @@ public class MangakaController {
         // Đổ dữ liệu vào Model để kích hoạt hiển thị "KHỐI 3" trong tab-project
         model.addAttribute("chapter", chapter);
         model.addAttribute("pages", mangaPageRepository.findByChapter(chapter));
-
         // SỬA TẠI ĐÂY: Trả về đúng tên template HTML gốc của bạn
+        model.addAttribute("activeTab", "tab-project");
+
         return "mangaka";
+
     }
 
     @GetMapping("/myseries/{seriesId}/{chapterId}/{pageId}/edit")
@@ -345,7 +348,7 @@ public class MangakaController {
         if (page == null) {
             model.addAttribute("message", "Trang không tồn tại!");
             // Đã sửa redirect cho đúng với cấu trúc route hiển thị của hệ thống
-            return "redirect:/manga/mangaka/myseries/" + seriesId + "/" + chapterId;
+            return "mangaka";
         }
 
         model.addAttribute("page", page);
@@ -377,53 +380,6 @@ public class MangakaController {
         return "redirect:/manga/mangaka/myseries/" + seriesId + "/" + chapterId + "/" + pageId + "/edit";
     }
 
-    // Lưu file PNG
-    @PostMapping("/api/page/{pageId}/savefile")
-    @ResponseBody
-    public Map<String, String> savePage(@PathVariable String pageId,
-            @RequestBody Map<String, String> body, HttpSession session) {
-
-        Map<String, String> result = new HashMap<>();
-
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            result.put("status", "error");
-            result.put("message", "Chưa đăng nhập");
-            return result;
-        }
-
-        MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
-        if (page == null) {
-            result.put("status", "error");
-            result.put("message", "Không tìm thấy trang");
-            return result;
-        }
-
-        try {
-            String uploadDir = System.getProperty("user.dir")
-                    + File.separator + "src/main/resources/static/MangaPage/";
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            String raw = body.get("imageBase64");
-            if (raw.contains(",")) {
-                raw = raw.substring(raw.indexOf(",") + 1);
-            }
-            Files.write(uploadPath.resolve(pageId + ".png"), Base64.getDecoder().decode(raw));
-
-            page.setFilePath("/MangaPage/" + pageId + ".png");
-            page.setStatus("done");
-            mangaPageRepository.save(page);
-
-            result.put("status", "success");
-            result.put("path", "/MangaPage/" + pageId + ".png");
-        } catch (IOException e) {
-            result.put("status", "error");
-            result.put("message", e.getMessage());
-        }
-        return result;
-    }
+    
 
 }

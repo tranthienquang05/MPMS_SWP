@@ -873,7 +873,12 @@ if (btnSavePage) {
                 body: JSON.stringify({ imageBase64: base64 })
             });
             const data = await res.json();
-            alert(data.status === 'success' ? '✅ Đã lưu!' : '❌ ' + data.message);
+            if (data.status === 'success') {
+                alert('✅ Đã lưu!');
+                window.location.href = data.redirectUrl;
+            } else {
+                alert('❌ ' + data.message);
+            }
         } catch (err) {
             alert('❌ Lỗi: ' + err.message);
         } finally {
@@ -909,3 +914,14 @@ if (btnLoadPage) {
 }
 // Khởi tạo layer list lần đầu
 renderLayerList();
+// Load ảnh đã lưu lên canvas khi mở trang edit
+const savedPath = btnSavePage ? btnSavePage.dataset.savedPath : null;
+if (savedPath && savedPath !== 'null' && savedPath !== '') {
+    const img = new Image();
+    img.onload = () => {
+        layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+        layers[1].ctx.drawImage(img, 0, 0);
+        pushHistoryEntry('Load trang đã lưu');
+    };
+    img.src = savedPath; // VD: /MangaPage/MGP001.png
+}

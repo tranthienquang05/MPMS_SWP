@@ -504,7 +504,7 @@
                     trên.
                 </p>
             </div>
-
+            <div id="mangaka-meta" th:data-mangaka-id="${mangakaId}" style="display:none;"></div>
             <!-- KHỐI 3: Danh sách Page (trang) của 1 Chapter đã chọn -->
             <div th:if="${chapter != null}">
                 <h3>
@@ -515,7 +515,8 @@
                 <a th:href="@{/manga/mangaka/myseries/{id}(id=${chapter.series.id})}" class="btn-link">
                     &larr; Quay lại danh sách chapter
                 </a>
-
+                <!-- mangaka-meta để JS lấy mangakaId -->
+                <div id="mangaka-meta" th:data-mangaka-id="${mangakaId}" style="display:none;"></div>
                 <form
                     th:action="@{/manga/mangaka/myseries/{sid}/{cid}/addpage(sid=${chapter.series.id}, cid=${chapter.id})}"
                     method="POST" style="margin:12px 0;">
@@ -556,15 +557,15 @@
                             Mở để vẽ
                         </a>
 
-                        <button type="button" th:onclick="|openAssignModal('${p.id}')|" style="width:100%;
+                        <button type="button" th:data-page-id="${p.id}" onclick="openAssignModal(this.dataset.pageId)"
+                            style="width:100%;
                margin-top:8px;
-               background:#ff7f00;
+               background:#204fa6;
                color:white;
                border:none;
                padding:6px;
                border-radius:4px;
                cursor:pointer;">
-
                             <i class="fa-solid fa-user-plus"></i>
                             Giao việc
                         </button>
@@ -596,8 +597,7 @@
                 </div>
             </div>
 
-            <!-- mangaka-meta để JS lấy mangakaId -->
-            <div id="mangaka-meta" th:data-mangaka-id="${mangakaId}" style="display:none;"></div>
+
 
 
         </div>
@@ -836,43 +836,98 @@
         });
         let _currentPageId = null;
 
+
+
         function openAssignModal(pageId) {
             _currentPageId = pageId;
-            const mangakaId = document.getElementById('mangaka-meta')?.dataset.mangakaId;
-            if (!mangakaId) { alert('Không tìm thấy mangakaId!'); return; }
+
+            const mangakaId =
+                document.getElementById('mangaka-meta')?.dataset.mangakaId;
+
+            if (!mangakaId) {
+                alert('Không tìm thấy mangakaId!');
+                return;
+            }
 
             fetch(`/api/mangaka/${mangakaId}/assistants`)
                 .then(r => r.json())
                 .then(assistants => {
-                    if (!assistants?.length) { alert('Chưa có trợ lý nào.'); return; }
-                    document.getElementById('assignSelect').innerHTML =
-                        assistants.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+
+                    if (!assistants || assistants.length === 0) {
+                        alert('Chưa có trợ lý nào!');
+                        return;
+                    }
+
+                    const select = document.getElementById('assignSelect');
+
+                    // Lưu danh sách assistant để submit dùng lại
+                    select.dataset.assistants =
+                        JSON.stringify(assistants);
+
+                    // Hiển thị fullname
+                    select.innerHTML = assistants.map(a =>
+                        `<option value="${a.id}">
+                    ${a.user.fullname}
+                </option>`
+                    ).join('');
+
                     document.getElementById('assignModalOverlay').style.display = 'flex';
                 })
-                .catch(err => alert('❌ ' + err.message));
+                .catch(err => {
+                    console.error(err);
+                    alert('❌ Không tải được danh sách trợ lý');
+                });
         }
 
         function submitAssign() {
-            const assistantId = document.getElementById('assignSelect').value;
-            const assistants = JSON.parse(document.getElementById('assignSelect').dataset.assistants || '[]');
-            const assistantName = assistants.find(a => a.id === assistantId)?.user?.username;
-            if (!assistantId || !_currentPageId) return;
+
+            const select = document.getElementById('assignSelect');
+
+            const assistantId = select.value;
+
+            if (!assistantId || !_currentPageId) {
+                alert('Thiếu dữ liệu!');
+                return;
+            }
+
+            const assistants = JSON.parse(
+                select.dataset.assistants || '[]'
+            );
+
+            const assistantName =
+                assistants.find(a => a.id === assistantId)
+                    ?.user?.fullname;
 
             fetch(`/api/page/${_currentPageId}/assign`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ assistantId })
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    assistantId: assistantId
+                })
             })
                 .then(r => r.json())
                 .then(data => {
+
                     if (data.status === 'success') {
-                        alert('✅ Đã giao việc!');
+
+                        alert(`✅ Đã giao việc cho ${assistantName}`);
+
+                        document.getElementById(
+                            'assignModalOverlay'
+                        ).style.display = 'none';
+
                         location.reload();
+
                     } else {
                         alert('❌ ' + data.message);
                     }
                 })
-                .catch(err => alert('❌ ' + err.message));
+                .catch(err => {
+                    console.error(err);
+                    alert('❌ ' + err.message);
+                });
         }
     </script>
 

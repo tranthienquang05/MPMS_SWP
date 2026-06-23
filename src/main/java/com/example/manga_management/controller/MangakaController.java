@@ -312,33 +312,25 @@ public class MangakaController {
         return "mangaka";
     }
 
-    @GetMapping("/myseries/{seriesId}/{chapterId}")
-    public String viewChapter(@PathVariable String seriesId, @PathVariable String chapterId, Model model,
-            HttpSession session) {
+    @GetMapping("/myseries/{sid}/{cid}")
+    public String viewChapter(@PathVariable String sid, @PathVariable String cid, Model model) {
 
-        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+        Chapter chapter = chapterRepository.findById(cid).orElseThrow();
 
-        if (chapter == null) {
-            model.addAttribute("message", "Chapter không tồn tại!");
-            return "redirect:/manga/mangaka/myseries/" + seriesId;
-        }
+        List<MangaPage> pages = mangaPageRepository.findByChapterId(cid);
 
-        // Đổ dữ liệu vào Model để kích hoạt hiển thị "KHỐI 3" trong tab-project
-        model.addAttribute("chapter", chapter);
         Map<String, Submission> submissionMap = new HashMap<>();
 
-        List<MangaPage> pages = mangaPageRepository.findByChapter(chapter);
         for (MangaPage page : pages) {
             submissionRepository.findByPageIdId(page.getId()).ifPresent(sub -> submissionMap.put(page.getId(), sub));
         }
-
-        model.addAttribute("submissionMap", submissionMap);
+        Mangaka mangaka = chapter.getSeries().getProposal().getMangaka();
+        model.addAttribute("chapter", chapter);
         model.addAttribute("pages", pages);
-        // SỬA TẠI ĐÂY: Trả về đúng tên template HTML gốc của bạn
+        model.addAttribute("submissionMap", submissionMap);
         model.addAttribute("activeTab", "tab-project");
-
+        model.addAttribute("mangakaId", mangaka.getId());
         return "mangaka";
-
     }
 
     @GetMapping("/myseries/{seriesId}/{chapterId}/{pageId}/edit")

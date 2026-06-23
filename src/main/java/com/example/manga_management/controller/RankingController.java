@@ -109,15 +109,24 @@ public class RankingController {
             return response;
         }
 
-        if (voteSessionRepository.existsBySeriesIdAndAutoCreatedAndStatus(seriesId, true, "active")) {
+        String seriesStatus = seriesOpt.get().getStatus();
+        if ("stopped".equals(seriesStatus) || "rewarded".equals(seriesStatus)) {
             response.put("success", false);
-            response.put("message", "Series này đã được hệ thống tạo phiên vote tự động! Các board không thể tạo vote riêng cho series này.");
+            response.put("message", "Series này đã có kết quả vote, không thể tạo phiên mới!");
             return response;
         }
 
         if (voteSessionRepository.existsBySeriesIdAndStatus(seriesId, "active")) {
             response.put("success", false);
             response.put("message", "Series này đang có phiên vote đang mở rồi! Phải đóng phiên hiện tại trước.");
+            return response;
+        }
+
+        if (voteSessionRepository.existsBySeriesIdAndVoteType(seriesId, voteType)) {
+            response.put("success", false);
+            response.put("message", "Series này đã từng có phiên vote "
+                    + (voteType.equals("stop") ? "dừng" : "khen thưởng")
+                    + " rồi, không thể tạo lại!");
             return response;
         }
 
@@ -302,61 +311,7 @@ public class RankingController {
         return response;
     }
 
-    // ===== 6. Lịch sử vote của một phiên (chỉ board tạo mới xem được) =====
-    @GetMapping("/session-history")
-    public Map<String, Object> getSessionHistory(@RequestParam String sessionId, HttpSession session) {
-        Map<String, Object> response = new LinkedHashMap<>();
-
-        User user = (User) session.getAttribute("user");
-        String boardId = null;
-        if (user != null) {
-            boardId = boardRepository.findByUserId(user.getId())
-                    .map(Board::getId).orElse(null);
-        }
-
-        Optional<VoteSession> sessionOpt = voteSessionRepository.findById(sessionId);
-        if (sessionOpt.isEmpty()) {
-            response.put("success", false);
-            response.put("message", "Không tìm thấy phiên vote!");
-            return response;
-        }
-        VoteSession vs = sessionOpt.get();
-
-        // Phiên auto-created hoặc board không phải người tạo → không được xem
-        if (vs.isAutoCreated() || boardId == null
-                || vs.getCreatedBy() == null
-                || !vs.getCreatedBy().getId().equals(boardId)) {
-            response.put("success", false);
-            response.put("message", "Bạn không có quyền xem lịch sử phiên vote này!");
-            return response;
-        }
-        String seriesId = vs.getSeries().getId();
-        LocalDate since = vs.getCreatedAt();
-
-        List<Map<String, Object>> voteList = new ArrayList<>();
-
-        List<SeriesVote> votes = rankingRepository.findSeriesVotesSince(seriesId, since);
-        for (SeriesVote v : votes) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("boardId", v.getBoard().getId());
-            m.put("boardName", v.getBoard().getUser().getFullname());
-            m.put("choice", v.getVote());
-            m.put("voteDate", v.getVoteDate().toString());
-            voteList.add(m);
-        }
-
-        response.put("success", true);
-        response.put("sessionId", sessionId);
-        response.put("seriesId", seriesId);
-        response.put("seriesName", vs.getSeries().getSeriesName());
-        response.put("voteType", vs.getVoteType());
-        response.put("status", vs.getStatus());
-        response.put("totalVotes", voteList.size());
-        response.put("history", voteList);
-        return response;
-    }
-
-    // ===== 7. Reset toàn bộ vote để demo =====
+    // ===== 6. Reset toàn bộ vote để demo =====
     @GetMapping("/reset-vote")
     public void resetVote(HttpServletResponse httpResp) throws IOException {
         // Xóa SeriesVote trước, sau đó VoteSession để tránh lỗi FK
@@ -369,105 +324,81 @@ public class RankingController {
         httpResp.sendRedirect("/manga/editor");
     }
 
-    // ===== 8. Lấy 3 series cuối bảng xếp hạng =====
-    @GetMapping("/bottom")
-    public List<Map<String, Object>> getBottomSeries(
+    // ===== 7. Board tạo phiên vote dừng cho 3 series cuối =====
+    @PostMapping("/create-bottom-sessions")
+    public Map<String, Object> createBottomSessions(
             @RequestParam(defaultValue = "0") int month,
             @RequestParam(defaultValue = "2026") int year,
             HttpSession session) {
 
-        User user = (User) session.getAttribute("user");
-        String boardId = null;
-        if (user != null) {
-            boardId = boardRepository.findByUserId(user.getId())
-                    .map(Board::getId).orElse(null);
-        }
-        long totalBoards = boardRepository.count();
-
-        List<Object[]> rows = (month == 0)
-                ? rankingRepository.findBottomByYear(year)
-                : rankingRepository.findBottomByMonthAndYear(month, year);
-
-        int count = Math.min(3, rows.size());
-        List<Map<String, Object>> result = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            Object[] row = rows.get(i);
-            String sid = (String) row[0];
-            Map<String, Object> map = new LinkedHashMap<>();
-            map.put("seriesId", sid);
-            map.put("seriesName", row[1]);
-            map.put("totalVotes", row[2]);
-
-            // Lấy session gần nhất (active hoặc closed)
-            Optional<VoteSession> vsOpt = voteSessionRepository
-                    .findFirstBySeriesIdAndVoteTypeOrderByCreatedAtDesc(sid, "stop");
-            if (vsOpt.isPresent()) {
-                VoteSession vs = vsOpt.get();
-                LocalDate since = vs.getCreatedAt();
-                long voted = rankingRepository.countSeriesVoteSince(sid, since);
-                long positive = rankingRepository.countSeriesVoteByChoiceSince(sid, "stop", since);
-                final String bid = boardId;
-                boolean alreadyVoted = bid != null &&
-                        rankingRepository.countSeriesVoteByBoardSince(sid, bid, since) > 0;
-                map.put("hasSession", true);
-                map.put("sessionStatus", vs.getStatus()); // "active" or "closed"
-                map.put("sessionId", vs.getId());
-                map.put("voted", voted);
-                map.put("totalBoards", totalBoards);
-                map.put("positiveVotes", positive);
-                map.put("alreadyVoted", alreadyVoted);
-            } else {
-                map.put("hasSession", false);
-            }
-            result.add(map);
-        }
-        return result;
-    }
-
-    // ===== 9. Tự động tạo phiên vote dừng cho 3 series cuối =====
-    @PostMapping("/auto-stop-sessions")
-    public Map<String, Object> autoStopSessions(
-            @RequestParam(defaultValue = "0") int month,
-            @RequestParam(defaultValue = "2026") int year) {
-
         Map<String, Object> response = new LinkedHashMap<>();
+        User user = (User) session.getAttribute("user");
+
+        if (user == null) {
+            response.put("success", false);
+            response.put("message", "Bạn chưa đăng nhập!");
+            return response;
+        }
+
+        Optional<Board> boardOpt = boardRepository.findByUserId(user.getId());
+        if (boardOpt.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Bạn không phải thành viên Editorial Board!");
+            return response;
+        }
+        Board board = boardOpt.get();
+
         try {
             List<Object[]> rows = (month == 0)
                     ? rankingRepository.findBottomByYear(year)
                     : rankingRepository.findBottomByMonthAndYear(month, year);
 
             int count = Math.min(3, rows.size());
-            int created = 0;
-            int skipped = 0;
+            List<String> createdNames = new ArrayList<>();
+            List<String> skippedNames = new ArrayList<>();
 
             for (int i = 0; i < count; i++) {
                 String sid = (String) rows.get(i)[0];
-                if (voteSessionRepository.existsBySeriesIdAndStatus(sid, "active")) {
-                    skipped++;
+                String sname = (String) rows.get(i)[1];
+
+                Optional<Series> seriesOpt = seriesRepository.findById(sid);
+                if (seriesOpt.isEmpty()) continue;
+                String seriesStatus = seriesOpt.get().getStatus();
+
+                // Skip nếu series đã có kết quả (stopped/rewarded) hoặc đã từng có phiên vote dừng
+                if ("stopped".equals(seriesStatus) || "rewarded".equals(seriesStatus)
+                        || voteSessionRepository.existsBySeriesIdAndVoteType(sid, "stop")) {
+                    skippedNames.add(sname);
                     continue;
                 }
+
                 VoteSession vs = new VoteSession();
                 vs.setId(generateSessionId());
-                vs.setSeries(seriesRepository.getReferenceById(sid));
-                vs.setCreatedBy(null);
+                vs.setSeries(seriesOpt.get());
+                vs.setCreatedBy(board);
                 vs.setVoteType("stop");
                 vs.setStatus("active");
                 vs.setCreatedAt(LocalDate.now());
-                vs.setAutoCreated(true);
+                vs.setAutoCreated(false);
                 voteSessionRepository.save(vs);
-                created++;
+                createdNames.add(sname);
+            }
+
+            String message;
+            if (skippedNames.isEmpty()) {
+                message = "Đã tạo phiên vote cho 3 series cuối bảng: "
+                        + String.join(", ", createdNames) + "!";
+            } else if (createdNames.isEmpty()) {
+                message = "Cả 3 series cuối bảng (" + String.join(", ", skippedNames)
+                        + ") đều đã có phiên vote trước đó, không tạo được phiên mới!";
+            } else {
+                message = "Series " + String.join(", ", skippedNames)
+                        + " đã có phiên vote trước đó. Chỉ tạo được phiên vote cho: "
+                        + String.join(", ", createdNames);
             }
 
             response.put("success", true);
-            response.put("created", created);
-            response.put("skipped", skipped);
-            if (created > 0 && skipped > 0) {
-                response.put("message", "Đã tạo " + created + " phiên mới! (" + skipped + " series đã có phiên đang mở)");
-            } else if (created > 0) {
-                response.put("message", "Đã tạo " + created + " phiên vote dừng!");
-            } else {
-                response.put("message", "Tất cả series cuối đã có phiên vote đang mở!");
-            }
+            response.put("message", message);
         } catch (Exception e) {
             response.put("success", false);
             response.put("created", 0);

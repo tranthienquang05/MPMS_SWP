@@ -11,6 +11,6 @@ public interface VoteSessionRepository extends JpaRepository<VoteSession, String
     List<VoteSession> findByAutoCreatedOrderByCreatedAtDesc(boolean autoCreated);
     boolean existsBySeriesIdAndStatus(String seriesId, String status);
     boolean existsBySeriesIdAndAutoCreatedAndStatus(String seriesId, boolean autoCreated, String status);
+    boolean existsBySeriesIdAndVoteType(String seriesId, String voteType);
     Optional<VoteSession> findFirstBySeriesIdAndVoteTypeAndStatus(String seriesId, String voteType, String status);
-    Optional<VoteSession> findFirstBySeriesIdAndVoteTypeOrderByCreatedAtDesc(String seriesId, String voteType);
 }

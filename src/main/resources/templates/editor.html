@@ -114,32 +114,6 @@
                     <p id="rankingMsg" style="display:none;color:gray;">Không có
                         dữ liệu.</p>
 
-                    <!-- 3 Series Cuối Bảng -->
-                    <div style="margin-top:24px;">
-                        <div style="margin-bottom:8px;">
-                            <h3 style="margin:0;color:#e74c3c;">⚠️ 3 Series Cuối
-                                Bảng Xếp Hạng</h3>
-                            <p
-                                style="color:#888;font-size:13px;margin-top:4px;">Hệ
-                                thống tự động tạo phiên vote dừng cho
-                                các series này.</p>
-                        </div>
-                        <table id="bottomTable" border="1"
-                            style="width:100%;border-collapse:collapse;display:none;">
-                            <thead>
-                                <tr>
-                                    <th>Mã Series</th>
-                                    <th>Tên Series</th>
-                                    <th>Tổng Phiếu</th>
-                                    <th>Tiến Độ</th>
-                                    <th>Hành Động</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bottomBody"></tbody>
-                        </table>
-                        <p id="bottomMsg" style="display:none;color:gray;">Không
-                            có dữ liệu xếp hạng.</p>
-                    </div>
                 </div>
 
                 <hr style="margin:20px 0;">
@@ -149,30 +123,30 @@
                     style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                     <h3 style="margin:0;color:#4a90d9;">📋 Phiên Vote Đang
                         Mở</h3>
-                    <button type="button" onclick="openCreateVoteModal()"
-                        style="background:#4a90d9;color:white;border:none;padding:8px 16px;border-radius:6px;
-                           cursor:pointer;font-size:14px;font-weight:bold;">
-                        ＋ Tạo Vote Mới
-                    </button>
+                    <div class="action-buttons-row">
+                        <button type="button"
+                            class="btn-action reject large"
+                            onclick="createBottomSessions()">
+                            ⚠️ Tạo Vote 3 Series Cuối Bảng
+                        </button>
+                        <button type="button"
+                            class="btn-action primary large"
+                            onclick="openCreateVoteModal()">
+                            ＋ Tạo Vote Mới
+                        </button>
+                    </div>
                 </div>
                 <div id="activeSessionsSection">
-                    <table id="activeSessionsTable" border="1"
-                        style="width:100%;border-collapse:collapse;display:none;">
+                    <table id="activeSessionsTable" class="data-table"
+                        style="display:none;">
                         <thead>
                             <tr>
-                                <th
-                                    style="background:#4a90d9;color:white;">Phiên</th>
-                                <th
-                                    style="background:#4a90d9;color:white;">Series</th>
-                                <th style="background:#4a90d9;color:white;">Loại
-                                    Vote</th>
-                                <th
-                                    style="background:#4a90d9;color:white;">Người
-                                    Tạo</th>
-                                <th style="background:#4a90d9;color:white;">Tiến
-                                    Độ</th>
-                                <th style="background:#4a90d9;color:white;">Hành
-                                    Động</th>
+                                <th>Phiên</th>
+                                <th>Series</th>
+                                <th>Loại Vote</th>
+                                <th>Người Tạo</th>
+                                <th>Tiến Độ</th>
+                                <th>Hành Động</th>
                             </tr>
                         </thead>
                         <tbody id="activeSessionsBody"></tbody>
@@ -310,40 +284,6 @@
             </div>
         </div>
 
-        <!-- Modal lịch sử phiên vote -->
-        <div id="sessionHistoryModal"
-            style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-         background:rgba(0,0,0,0.5);z-index:2000;justify-content:center;align-items:center;">
-            <div
-                style="background:white;padding:24px;border-radius:8px;width:650px;max-width:90%;max-height:80vh;overflow-y:auto;">
-                <div
-                    style="display:flex;justify-content:space-between;align-items:center;
-                 border-bottom:1px solid #ddd;padding-bottom:10px;margin-bottom:15px;">
-                    <h3 style="color:#333;margin:0;">📋 Lịch Sử Phiên Vote</h3>
-                    <button
-                        onclick="document.getElementById('sessionHistoryModal').style.display='none'"
-                        style="background:#dc3545;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">✕</button>
-                </div>
-                <p id="sessionHistoryInfo"
-                    style="color:#555;margin-bottom:10px;"></p>
-                <table id="sessionHistoryTable" border="1"
-                    style="width:100%;border-collapse:collapse;">
-                    <thead style="background:#6c757d;color:white;">
-                        <tr>
-                            <th style="padding:8px;">Board</th>
-                            <th style="padding:8px;">Lựa Chọn</th>
-                            <th style="padding:8px;">Ngày Vote</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sessionHistoryBody"></tbody>
-                </table>
-                <p id="sessionHistoryEmpty"
-                    style="display:none;color:gray;text-align:center;padding:20px;">
-                    Chưa có ai vote trong phiên này.
-                </p>
-            </div>
-        </div>
-
         <script>
         function openTab(tabId) {
             document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
@@ -352,8 +292,6 @@
 
         function loadAll() {
             loadRanking();
-            loadBottom();
-            autoCreateStopSessions();
         }
 
         function loadRanking() {
@@ -384,70 +322,20 @@
                 });
         }
 
-        function loadBottom() {
-            var month = document.getElementById('rankMonth').value;
-            var year = document.getElementById('rankYear').value;
-            fetch('/manga/ranking/bottom?month=' + month + '&year=' + year)
-                .then(res => res.json())
-                .then(data => {
-                    console.log('[bottom]', data);
-                    var tbody = document.getElementById('bottomBody');
-                    var table = document.getElementById('bottomTable');
-                    var msg = document.getElementById('bottomMsg');
-                    tbody.innerHTML = '';
-                    if (data.length === 0) { table.style.display = 'none'; msg.style.display = 'block'; return; }
-                    table.style.display = 'table'; msg.style.display = 'none';
-                    data.forEach(function (item) {
-                        var progressCell, actionCell;
-                        if (item.hasSession && item.sessionId) {
-                            progressCell = item.voted + '/' + item.totalBoards + ' đã vote';
-                            if (item.voted >= item.totalBoards && item.totalBoards > 0) {
-                                var stopPct = Math.round(item.positiveVotes / item.totalBoards * 100);
-                                actionCell = stopPct >= 60
-                                    ? '<span style="color:#e74c3c;font-weight:bold;">Đã DỪNG</span>'
-                                    : '<span style="color:#28a745;font-weight:bold;">Được Giữ</span>';
-                            } else if (item.sessionStatus === 'active') {
-                                if (item.alreadyVoted) {
-                                    actionCell = '<span style="color:gray;font-style:italic;">✅ Đã vote</span>';
-                                } else {
-                                    actionCell =
-                                        '<button onclick="castSessionVote(\'' + item.sessionId + '\',\'stop\')" '
-                                        + 'style="background:#e74c3c;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;margin-right:4px;font-size:13px;">Vote Dừng</button>'
-                                        + '<button onclick="castSessionVote(\'' + item.sessionId + '\',\'keep\')" '
-                                        + 'style="background:#28a745;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:13px;">Vote Giữ</button>';
-                                }
-                            } else {
-                                actionCell = '<span style="color:#888;">—</span>';
-                            }
-                        } else {
-                            progressCell = '—';
-                            actionCell = '<span style="color:#888;">—</span>';
-                        }
-                        tbody.innerHTML +=
-                            '<tr>' +
-                            '<td style="text-align:center">' + item.seriesId + '</td>' +
-                            '<td>' + item.seriesName + '</td>' +
-                            '<td style="text-align:center">' + item.totalVotes + '</td>' +
-                            '<td style="text-align:center">' + progressCell + '</td>' +
-                            '<td style="text-align:center">' + actionCell + '</td>' +
-                            '</tr>';
-                    });
-                });
-        }
+        function createBottomSessions() {
+            if (!confirm('Phiên vote cho 3 series cuối sẽ được khởi tạo.')) return;
 
-        function autoCreateStopSessions() {
             var month = document.getElementById('rankMonth').value;
             var year = document.getElementById('rankYear').value;
-            fetch('/manga/ranking/auto-stop-sessions?month=' + month + '&year=' + year, { method: 'POST' })
+            fetch('/manga/ranking/create-bottom-sessions?month=' + month + '&year=' + year, { method: 'POST' })
                 .then(function (res) { return res.json(); })
                 .then(function (data) {
-                    console.log('[autoCreate]', data);
-                    loadBottom();
+                    alert(data.message);
                     loadActiveSessions();
                 })
                 .catch(function (err) {
-                    console.log('[autoCreate error]', err);
-                    loadBottom();
+                    console.log('[createBottom error]', err);
+                    alert('Lỗi khi tạo phiên vote!');
                 });
         }
 
@@ -485,7 +373,7 @@
                             } else {
                                 actionBtn = stopPct2 >= 60
                                     ? '<span style="color:#f39c12;font-weight:bold;">Được Khen Thưởng</span>'
-                                    : '<span style="color:#888;font-weight:bold;">Không đủ phiếu</span>';
+                                    : '<span style="color:#888;font-weight:bold;">Không Khen Thưởng</span>';
                             }
                         } else if (s.alreadyVoted) {
                             actionBtn = '<span style="color:gray;font-style:italic;font-size:13px;">Đã vote</span>';
@@ -500,20 +388,14 @@
                                 + '<button onclick="castSessionVote(\'' + s.sessionId + '\',\'against\')" '
                                 + 'style="background:#6c757d;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:13px;">Không Đồng Ý</button>';
                         }
-                        // Chỉ board tạo phiên mới thấy nút Chi tiết
-                        if (s.isCreator) {
-                            actionBtn += ' <button onclick="showSessionHistory(\'' + s.sessionId + '\')" '
-                                + 'style="background:#6c757d;color:white;border:none;padding:5px 8px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:4px;">Chi tiết</button>';
-                        }
-
                         tbody.innerHTML +=
                             '<tr>' +
-                            '<td style="text-align:center;color:#000;background:white;padding:8px;font-size:12px;">' + s.sessionId + '</td>' +
-                            '<td style="color:#000;background:white;padding:8px;">' + s.seriesName + '<br><small style="color:#888;">' + s.seriesId + '</small></td>' +
-                            '<td style="text-align:center;background:white;padding:8px;">' + typeLabel + '</td>' +
-                            '<td style="color:#000;background:white;padding:8px;font-size:13px;">' + s.createdBy + '</td>' +
-                            '<td style="text-align:center;color:#000;background:white;padding:8px;font-size:13px;">' + progress + '</td>' +
-                            '<td style="text-align:center;background:white;padding:8px;">' + actionBtn + '</td>' +
+                            '<td style="text-align:center;">' + s.sessionId + '</td>' +
+                            '<td>' + s.seriesName + '<br><small style="color:#888;">' + s.seriesId + '</small></td>' +
+                            '<td style="text-align:center;">' + typeLabel + '</td>' +
+                            '<td>' + s.createdBy + '</td>' +
+                            '<td style="text-align:center;">' + progress + '</td>' +
+                            '<td style="text-align:center;">' + actionBtn + '</td>' +
                             '</tr>';
                     });
                 });
@@ -574,49 +456,6 @@
                 .then(data => {
                     alert(data.message);
                     loadActiveSessions();
-                    if (document.getElementById('rankingSection').style.display !== 'none') {
-                        loadBottom();
-                    }
-                });
-        }
-
-        function showSessionHistory(sessionId) {
-            fetch('/manga/ranking/session-history?sessionId=' + sessionId)
-                .then(res => res.json())
-                .then(data => {
-                    var modal = document.getElementById('sessionHistoryModal');
-                    var tbody = document.getElementById('sessionHistoryBody');
-                    var table = document.getElementById('sessionHistoryTable');
-                    var empty = document.getElementById('sessionHistoryEmpty');
-                    var info = document.getElementById('sessionHistoryInfo');
-
-                    var typeLabel = data.voteType === 'stop' ? '🚫 Vote Dừng' : '🏆 Vote Khen Thưởng';
-                    info.innerHTML = '<b>' + data.seriesName + '</b> (' + data.seriesId + ') — ' + typeLabel
-                        + ' — <span style="color:' + (data.status === 'active' ? '#28a745' : '#6c757d') + ';">'
-                        + (data.status === 'active' ? 'Đang mở' : 'Đã đóng') + '</span>'
-                        + ' — Tổng: ' + data.totalVotes + ' phiếu';
-
-                    tbody.innerHTML = '';
-                    if (!data.history || data.history.length === 0) {
-                        table.style.display = 'none';
-                        empty.style.display = 'block';
-                    } else {
-                        table.style.display = 'table';
-                        empty.style.display = 'none';
-                        data.history.forEach(function (v) {
-                            var positiveChoices = ['stop', 'reward'];
-                            var isPositive = positiveChoices.indexOf(v.choice) >= 0;
-                            var choiceLabels = { stop: '🚫 Dừng', keep: '✅ Giữ', reward: '🏆 Đồng ý', against: '❌ Không đồng ý' };
-                            var color = isPositive ? '#e74c3c' : '#28a745';
-                            tbody.innerHTML +=
-                                '<tr>' +
-                                '<td style="color:#000;background:white;padding:8px;">' + v.boardName + ' <small>(' + v.boardId + ')</small></td>' +
-                                '<td style="text-align:center;background:white;padding:8px;color:' + color + ';font-weight:bold;">' + (choiceLabels[v.choice] || v.choice) + '</td>' +
-                                '<td style="text-align:center;color:#000;background:white;padding:8px;">' + v.voteDate + '</td>' +
-                                '</tr>';
-                        });
-                    }
-                    modal.style.display = 'flex';
                 });
         }
 

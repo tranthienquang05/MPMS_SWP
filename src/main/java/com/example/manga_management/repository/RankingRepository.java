@@ -1,6 +1,5 @@
 package com.example.manga_management.repository;
 
-import com.example.manga_management.entity.SeriesVote;
 import com.example.manga_management.entity.VoteResult;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -13,27 +12,27 @@ import java.util.List;
 
 public interface RankingRepository extends JpaRepository<VoteResult, String> {
 
-    @Query("SELECT v.series.id, v.series.seriesName, SUM(v.voteNumber) " +
-           "FROM VoteResult v WHERE v.year = :year " +
-           "GROUP BY v.series.id, v.series.seriesName " +
-           "ORDER BY SUM(v.voteNumber) DESC")
+    @Query("SELECT s.id, s.seriesName, COALESCE(SUM(v.voteNumber), 0L) " +
+           "FROM Series s LEFT JOIN VoteResult v ON v.series.id = s.id AND v.year = :year " +
+           "GROUP BY s.id, s.seriesName " +
+           "ORDER BY COALESCE(SUM(v.voteNumber), 0L) DESC")
     List<Object[]> findRankingByYear(@Param("year") int year);
 
-    @Query("SELECT v.series.id, v.series.seriesName, v.voteNumber " +
-           "FROM VoteResult v WHERE v.month = :month AND v.year = :year " +
-           "ORDER BY v.voteNumber DESC")
+    @Query("SELECT s.id, s.seriesName, COALESCE(v.voteNumber, 0) " +
+           "FROM Series s LEFT JOIN VoteResult v ON v.series.id = s.id AND v.month = :month AND v.year = :year " +
+           "ORDER BY COALESCE(v.voteNumber, 0) DESC")
     List<Object[]> findRankingByMonthAndYear(@Param("month") int month,
                                               @Param("year") int year);
 
-    @Query("SELECT v.series.id, v.series.seriesName, SUM(v.voteNumber) " +
-           "FROM VoteResult v WHERE v.year = :year " +
-           "GROUP BY v.series.id, v.series.seriesName " +
-           "ORDER BY SUM(v.voteNumber) ASC")
+    @Query("SELECT s.id, s.seriesName, COALESCE(SUM(v.voteNumber), 0L) " +
+           "FROM Series s LEFT JOIN VoteResult v ON v.series.id = s.id AND v.year = :year " +
+           "GROUP BY s.id, s.seriesName " +
+           "ORDER BY COALESCE(SUM(v.voteNumber), 0L) ASC")
     List<Object[]> findBottomByYear(@Param("year") int year);
 
-    @Query("SELECT v.series.id, v.series.seriesName, v.voteNumber " +
-           "FROM VoteResult v WHERE v.month = :month AND v.year = :year " +
-           "ORDER BY v.voteNumber ASC")
+    @Query("SELECT s.id, s.seriesName, COALESCE(v.voteNumber, 0) " +
+           "FROM Series s LEFT JOIN VoteResult v ON v.series.id = s.id AND v.month = :month AND v.year = :year " +
+           "ORDER BY COALESCE(v.voteNumber, 0) ASC")
     List<Object[]> findBottomByMonthAndYear(@Param("month") int month,
                                              @Param("year") int year);
 
@@ -58,11 +57,6 @@ public interface RankingRepository extends JpaRepository<VoteResult, String> {
     long countSeriesVoteByChoiceSince(@Param("seriesId") String seriesId,
                                       @Param("voteChoice") String voteChoice,
                                       @Param("since") LocalDate since);
-
-    @Query("SELECT sv FROM SeriesVote sv " +
-           "WHERE sv.series.id = :seriesId AND sv.voteDate >= :since")
-    List<SeriesVote> findSeriesVotesSince(@Param("seriesId") String seriesId,
-                                          @Param("since") LocalDate since);
 
     @Query(value = "SELECT Status FROM series WHERE SeriesID = :seriesId LIMIT 1", nativeQuery = true)
     String getSeriesStatus(@Param("seriesId") String seriesId);

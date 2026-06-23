@@ -69,8 +69,9 @@ public class MangakaController {
     @GetMapping("")
     public String mangakaPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
-        if (user == null)
+        if (user == null) {
             return "redirect:/login";
+        }
 
         model.addAttribute("user", user);
 
@@ -87,8 +88,9 @@ public class MangakaController {
     @GetMapping("/my-projects")
     public String myProjectsPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
-        if (user == null)
+        if (user == null) {
             return "redirect:/login";
+        }
 
         Mangaka mangaka = mangakaRepository.findByUser(user).orElse(null);
         if (mangaka == null) {
@@ -108,12 +110,12 @@ public class MangakaController {
     @PostMapping("/submit-proposal")
     public String handleSubmitting(@RequestParam String txtSeriesName,
             @Parameter(description = "Manuscript file") @RequestPart MultipartFile fileManuscript,
-
             HttpSession session, Model model, RedirectAttributes redirectAttributes) {
 
         User user = (User) session.getAttribute("user");
-        if (user == null)
+        if (user == null) {
             return "redirect:/login";
+        }
 
         Mangaka currentMangaka = mangakaRepository.findByUser(user).orElse(null);
         if (currentMangaka == null) {
@@ -208,8 +210,9 @@ public class MangakaController {
                     + File.separator;
 
             Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath))
+            if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
+            }
 
             // Tạo ID mới cho Series
             long count = seriesRepository.count();
@@ -318,9 +321,12 @@ public class MangakaController {
             return "redirect:/manga/mangaka/myseries/" + seriesId;
         }
 
+        // Đổ dữ liệu vào Model để kích hoạt hiển thị "KHỐI 3" trong tab-project
         model.addAttribute("chapter", chapter);
         model.addAttribute("pages", mangaPageRepository.findByChapter(chapter));
-        return "manga/mangaka/myseries/"+seriesId+"/"+chapterId;
+
+        // SỬA TẠI ĐÂY: Trả về đúng tên template HTML gốc của bạn
+        return "mangaka";
     }
 
     @GetMapping("/myseries/{seriesId}/{chapterId}/{pageId}/edit")
@@ -331,18 +337,19 @@ public class MangakaController {
             Model model, HttpSession session) {
 
         User user = (User) session.getAttribute("user");
-        if (user == null)
+        if (user == null) {
             return "redirect:/login";
+        }
 
         MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
         if (page == null) {
             model.addAttribute("message", "Trang không tồn tại!");
+            // Đã sửa redirect cho đúng với cấu trúc route hiển thị của hệ thống
             return "redirect:/manga/mangaka/myseries/" + seriesId + "/" + chapterId;
         }
 
         model.addAttribute("page", page);
-        model.addAttribute("activeTab", "tab-draw"); // để tab vẽ tự hiện active khi load lại trang
-        // chuyển sang tab vẽ trong mangaka.html (canvas đã được nhúng vào đây)
+        model.addAttribute("activeTab", "tab-draw");
         return "mangaka";
     }
 
@@ -350,8 +357,9 @@ public class MangakaController {
     @PostMapping("/myseries/{seriesId}/{chapterId}/addpage")
     public String addPage(@PathVariable String seriesId, @PathVariable String chapterId) {
         Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
-        if (chapter == null)
+        if (chapter == null) {
             return "redirect:/manga/mangaka/myseries/" + seriesId;
+        }
 
         long count = mangaPageRepository.count();
         String pageId = String.format("PG%05d", count + 1);
@@ -395,25 +403,27 @@ public class MangakaController {
             String uploadDir = System.getProperty("user.dir")
                     + File.separator + "src/main/resources/static/MangaPage/";
             Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath))
+            if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
+            }
 
             String raw = body.get("imageBase64");
-            if (raw.contains(","))
+            if (raw.contains(",")) {
                 raw = raw.substring(raw.indexOf(",") + 1);
+            }
             Files.write(uploadPath.resolve(pageId + ".png"), Base64.getDecoder().decode(raw));
 
             page.setFilePath("/MangaPage/" + pageId + ".png");
             page.setStatus("done");
             mangaPageRepository.save(page);
 
-        result.put("status", "success");
-        result.put("path", "/MangaPage/" + pageId + ".png");
-    } catch (IOException e) {
-        result.put("status", "error");
-        result.put("message", e.getMessage());
+            result.put("status", "success");
+            result.put("path", "/MangaPage/" + pageId + ".png");
+        } catch (IOException e) {
+            result.put("status", "error");
+            result.put("message", e.getMessage());
+        }
+        return result;
     }
-    return result;
-    }
-    
-}   
+
+}

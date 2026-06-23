@@ -73,9 +73,9 @@ body {
         url("./images/image-login-2.jpg");
 
     background-size:
-        calc(100% / 3) 100%,
-        calc(100% / 3) 100%,
-        calc(100% / 3) 100%;
+        calc((100% - 450px) / 2) 100%,
+        450px 100%,
+        calc((100% - 450px) / 2) 100%;
 
     background-position:
         left center,
@@ -88,7 +88,6 @@ body {
         no-repeat;
 
     background-color: #262626;
-    /* do cao anh cua login */
     height: calc(100vh);
     display: flex;
     flex-direction: column;
@@ -131,7 +130,7 @@ body {
 .sub-title {
     color: #000000;
     font-family: 'Oswald', Impact, sans-serif;
-    font-size: 22px;
+    font-size: 30px;
     text-transform: uppercase;
     letter-spacing: 2px;
     font-weight: 600;
@@ -139,13 +138,13 @@ body {
 
 .login-form {
     background-color: white;
-    /* Giữ nguyên nền trắng để chữ đen nổi bật */
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     text-align: center;
+    width: 450px;
+    box-sizing: border-box;
 }
-
 .login-form h1.form-group {
     color: #000000 !important;
     /* Sử dụng !important nếu bị các thuộc tính toàn cục đè lên */

@@ -899,7 +899,76 @@ if (btnSavePage) {
         }
     });
 }
+const btnSubmitSubmission =
+    document.getElementById('btnSubmitSubmission');
 
+if (btnSubmitSubmission) {
+
+    btnSubmitSubmission.addEventListener('click', async () => {
+
+        const submissionId =
+            btnSubmitSubmission.dataset.submissionId;
+
+        const base64 =
+            flattenAllLayers().toDataURL('image/png');
+
+        btnSubmitSubmission.disabled = true;
+
+        btnSubmitSubmission.innerHTML =
+            '<i class="fa-solid fa-spinner fa-spin"></i> Đang nộp...';
+
+        try {
+
+            const res = await fetch(
+                `/api/submission/${submissionId}/savefile`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        imageBase64: base64
+                    })
+                }
+            );
+
+            const data = await res.json();
+
+            if (data.status === 'success') {
+
+                btnSubmitSubmission.innerHTML =
+                    '<i class="fa-solid fa-check"></i> Đã nộp';
+
+                setTimeout(() => {
+
+                    if (data.redirectUrl) {
+                        window.location.href =
+                            data.redirectUrl;
+                    }
+
+                }, 1000);
+
+            } else {
+
+                alert('❌ ' + data.message);
+
+                btnSubmitSubmission.innerHTML =
+                    '<i class="fa-solid fa-paper-plane"></i> Nộp bài';
+            }
+
+        } catch (err) {
+
+            alert('❌ ' + err.message);
+
+            btnSubmitSubmission.innerHTML =
+                '<i class="fa-solid fa-paper-plane"></i> Nộp bài';
+
+        } finally {
+
+            btnSubmitSubmission.disabled = false;
+        }
+    });
+}
 const btnLoadPage = document.getElementById('btnLoadPage');
 const inputLoadPage = document.getElementById('inputLoadPage');
 
@@ -937,4 +1006,23 @@ if (savedPath && savedPath !== 'null' && savedPath !== '') {
         pushHistoryEntry('Load trang đã lưu');
     };
     img.src = savedPath; // VD: /MangaPage/MGP001.png
+}
+
+
+const savedPath1 = btnSubmitSubmission?.dataset.savedPath;
+
+// giống hệt page save
+if (savedPath1 && savedPath1 !== 'null' && savedPath1 !== '') {
+
+    const img = new Image();
+
+    img.onload = () => {
+
+        layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+        layers[1].ctx.drawImage(img, 0, 0);
+
+        pushHistoryEntry('Load submission đã lưu');
+    };
+
+    img.src = savedPath1;
 }

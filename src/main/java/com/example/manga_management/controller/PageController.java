@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +51,9 @@ public class PageController {
 
     @PostMapping("/{pageId}/savefile")
     @ResponseBody
-    public Map<String, String> savePageFile(@PathVariable String pageId, @RequestBody Map<String, String> body) {
+    public Map<String, String> savePageFile(
+        @PathVariable String pageId, 
+        @RequestBody Map<String, String> body) {
 
         try {
             MangaPage page = mangaPageRepository.findById(pageId)
@@ -107,34 +111,79 @@ public class PageController {
             HttpSession session) {
 
         try {
+
             User user = (User) session.getAttribute("user");
-            if (user == null)
+
+            if (user == null) {
                 return Map.of("status", "error", "message", "Chưa đăng nhập");
+            }
 
             MangaPage page = mangaPageRepository.findById(pageId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy page"));
 
-            String assistantId = body.get("assistantId");
-            Assistant assistant = assistantRepository.findById(assistantId)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy assistant"));
-
-            // Sinh ID mới
-            String lastId = submissionRepository.findTopByOrderByIdDesc().map(Submission::getId).orElse("SUB000");
-            int num = Integer.parseInt(lastId.replaceAll("[^0-9]", "")) + 1;
-            String newId = "SUB" + String.format("%03d", num);
             if (submissionRepository.existsByPageIdIdAndStatus(pageId, "unfinish")) {
                 return Map.of("status", "error", "message", "Trang này đã được giao");
             }
+
+            String assistantId = body.get("assistantId");
+            String comment = body.get("comment");
+            String deadlineStr = body.get("deadline");
+
+            Assistant assistant = assistantRepository.findById(assistantId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy assistant"));
+
+            LocalDate deadline = null;
+
+            if (deadlineStr != null && !deadlineStr.isBlank()) {
+
+                deadline = LocalDate.parse(deadlineStr);
+
+                if (!deadline.isAfter(LocalDate.now())) {
+                    return Map.of("status", "error", "message", "Deadline phải sau ngày hiện tại");
+                }
+            }
+
+            String lastId = submissionRepository.findTopByOrderByIdDesc().map(Submission::getId).orElse("SUB0000");
+
+            int num = Integer.parseInt(lastId.replaceAll("[^0-9]", "")) + 1;
+
+            String newId = "SUB" + String.format("%04d", num);
+
             Submission submission = new Submission();
+
             submission.setId(newId);
             submission.setPageId(page);
             submission.setAssistant(assistant);
+            submission.setComment(comment);
+            submission.setDeadline(deadline);
             submission.setStatus("unfinish");
+
+            // Copy file page -> submission
+            if (page.getFilePath() != null && !page.getFilePath().isBlank()) {
+
+                String oldPath = page.getFilePath();
+
+                String fileName = newId + ".png";
+
+                Path source = Paths.get("src/main/resources/static" + oldPath);
+
+                Path targetDir = Paths.get("src/main/resources/static/Submission");
+
+                Files.createDirectories(targetDir);
+
+                Path target = targetDir.resolve(fileName);
+
+                Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+
+                submission.setFilePath("/Submission/" + fileName);
+            }
+
             submissionRepository.save(submission);
 
-            return Map.of("status", "success");
+            return Map.of("status", "success", "message", "Giao việc thành công");
 
         } catch (Exception e) {
+
             return Map.of("status", "error", "message", e.getMessage());
         }
     }

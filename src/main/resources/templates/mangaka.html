@@ -556,18 +556,49 @@
                             Mở để vẽ
                         </a>
 
-                        <button type="button" th:data-page-id="${p.id}" onclick="openAssignModal(this.dataset.pageId)"
-                            style="width:100%;
-                                margin-top:8px;
-                                background:#204fa6;
-                                color:white;
-                                border:none;
-                                padding:6px;
-                                border-radius:4px;
-                                cursor:pointer;">
-                            <i class="fa-solid fa-user-plus"></i>
-                            Giao việc
-                        </button>
+                        <div style="margin-top:8px;">
+
+                            <div th:if="${submissionMap[p.id] != null}" style="
+            background:#f4f8ff;
+            border:1px solid #cfdfff;
+            border-radius:6px;
+            padding:6px;
+            font-size:12px;">
+
+                                <div>
+                                    👤
+                                    <b th:text="${submissionMap[p.id].assistant.user.fullname}"></b>
+                                </div>
+
+                                <div>
+                                    📌
+                                    <span th:text="${submissionMap[p.id].status}"></span>
+                                </div>
+
+                                <div>
+                                    📅
+                                    <span th:text="${submissionMap[p.id].deadline}"></span>
+                                </div>
+
+                            </div>
+
+                            <button th:if="${submissionMap[p.id] == null}" type="button"
+                                th:attr="onclick=|openAssignModal('${p.id}')|" style="
+                width:100%;
+                margin-top:8px;
+                background:#ff7f00;
+                color:white;
+                border:none;
+                padding:6px;
+                border-radius:4px;
+                cursor:pointer;">
+
+                                <i class="fa-solid fa-user-plus"></i>
+                                Giao việc
+
+                            </button>
+
+                        </div>
 
                     </div>
                 </div>
@@ -578,20 +609,64 @@
             </div>
 
             <!-- Modal giao việc — đặt ngoài vòng lặp -->
-            <div id="assignModalOverlay" style="display:none; position:fixed; inset:0;
-                        background:rgba(0,0,0,0.5); z-index:9999;
-                        align-items:center; justify-content:center;">
-                <div style="background:white; border-radius:8px; padding:24px; min-width:300px;">
-                    <h5>Chọn trợ lý</h5>
-                    <select id="assignSelect" style="width:100%; margin:12px 0; padding:6px;"></select>
-                    <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <div id="assignModalOverlay" style="display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;">
+
+                <div style="
+        background:white;
+        border-radius:8px;
+        padding:24px;
+        min-width:400px;">
+
+                    <h4>Giao việc cho trợ lý</h4>
+
+                    <label>Trợ lý:</label>
+                    <select id="assignSelect" style="
+            width:100%;
+            margin:8px 0 12px;
+            padding:8px;">
+                    </select>
+
+                    <label>Yêu cầu / Ghi chú:</label>
+                    <textarea id="assignComment" rows="4" placeholder="Nhập yêu cầu chỉnh sửa..." style="
+            width:100%;
+            padding:8px;
+            resize:vertical;">
+        </textarea>
+
+                    <label style="display:block; margin-top:12px;">
+                        Deadline:
+                    </label>
+
+                    <input type="date" id="assignDeadline" style="
+            width:100%;
+            padding:8px;" required>
+
+                    <div style="
+            display:flex;
+            justify-content:flex-end;
+            gap:8px;
+            margin-top:16px;">
+
                         <button onclick="document.getElementById('assignModalOverlay').style.display='none'">
                             Hủy
                         </button>
-                        <button onclick="submitAssign()" style="background:#ff7f00; color:white; border:none;
-                                padding:6px 16px; border-radius:4px; cursor:pointer;">
+
+                        <button onclick="submitAssign()" style="
+                background:#ff7f00;
+                color:white;
+                border:none;
+                padding:8px 16px;
+                border-radius:4px;
+                cursor:pointer;">
                             Xác nhận
                         </button>
+
                     </div>
                 </div>
             </div>
@@ -896,18 +971,16 @@
 
             const assistantId = select.value;
 
+            const comment =
+                document.getElementById('assignComment').value;
+
+            const deadline =
+                document.getElementById('assignDeadline').value;
+
             if (!assistantId || !_currentPageId) {
                 alert('Thiếu dữ liệu!');
                 return;
             }
-
-            const assistants = JSON.parse(
-                select.dataset.assistants || '[]'
-            );
-
-            const assistantName =
-                assistants.find(a => a.id === assistantId)
-                    ?.user?.fullname;
 
             fetch(`/api/page/${_currentPageId}/assign`, {
                 method: 'POST',
@@ -915,22 +988,16 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    assistantId: assistantId
+                    assistantId: assistantId,
+                    comment: comment,
+                    deadline: deadline
                 })
             })
                 .then(r => r.json())
                 .then(data => {
-
                     if (data.status === 'success') {
-
-                        alert(`✅ Đã giao việc cho ${assistantName}`);
-
-                        document.getElementById(
-                            'assignModalOverlay'
-                        ).style.display = 'none';
-
+                        alert('✅ Đã giao việc');
                         location.reload();
-
                     } else {
                         alert('❌ ' + data.message);
                     }
@@ -940,7 +1007,9 @@
                     alert('❌ ' + err.message);
                 });
         }
-        // Hàm mở Modal Khởi động dự án và nạp dữ liệu từ dòng tương ứng trong bảng
+
+
+
         function openStartSeriesModal(buttonElement) {
             // Trích xuất dữ liệu lưu tại data-* của nút được nhấn
             const proposalId = buttonElement.dataset.proposalId;

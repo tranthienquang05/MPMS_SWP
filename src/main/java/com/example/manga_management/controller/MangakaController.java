@@ -325,6 +325,7 @@ public class MangakaController {
             submissionRepository.findByPageIdId(page.getId()).ifPresent(sub -> submissionMap.put(page.getId(), sub));
         }
         Mangaka mangaka = chapter.getSeries().getProposal().getMangaka();
+        
         model.addAttribute("chapter", chapter);
         model.addAttribute("pages", pages);
         model.addAttribute("submissionMap", submissionMap);

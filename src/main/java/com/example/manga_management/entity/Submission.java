@@ -1,5 +1,7 @@
 package com.example.manga_management.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,6 +25,9 @@ public class Submission {
     @JoinColumn(name = "AssistantID", nullable = false)
     private Assistant assistant;
 
+    @Column(name = "Deadline", nullable = false)
+    private LocalDate deadline;
+
     @Column(name = "FilePath", length = 60)
     private String filePath;
 
@@ -31,5 +36,7 @@ public class Submission {
 
     @Column(name = "Status", nullable = false, length = 20)
     private String status;
+
+
 
 }

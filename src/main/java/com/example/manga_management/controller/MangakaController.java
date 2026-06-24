@@ -83,6 +83,13 @@ public class MangakaController {
         if (mangaka != null) {
             List<Series> mySeriesList = seriesRepository.findByProposal_Mangaka_Id(mangaka.getId());
             model.addAttribute("mySeriesList", mySeriesList);
+
+            model.addAttribute("mySeriesList", seriesRepository.findByProposal_Mangaka_Id(mangaka.getId()));
+            model.addAttribute("allProposals", proposalRepository.findByMangaka_Id(mangaka.getId()));
+            model.addAttribute("approvedList",
+                    proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangaka.getId()));
+            model.addAttribute("rejectedList",
+                    proposalRepository.findByStatusAndMangaka_Id("unfinish", mangaka.getId()));
         }
         model.addAttribute("activeTab", "tab-home");
         return "mangaka";
@@ -102,11 +109,19 @@ public class MangakaController {
             return "mangaka";
         }
 
-        List<Proposal> projectList = proposalRepository.findByStatusAndMangaka_Id("pass", mangaka.getId());
+        // Tất cả proposals
+        List<Proposal> allProposals = proposalRepository.findByMangaka_Id(mangaka.getId());
+        // Đã duyệt bởi Tantou
+        List<Proposal> approvedList = proposalRepository.findByStatusInAndMangaka_Id(
+                List.of("checked", "pass"), mangaka.getId());
+        // Bị từ chối
+        List<Proposal> rejectedList = proposalRepository.findByStatusAndMangaka_Id(
+                "unfinish", mangaka.getId());
 
-        model.addAttribute("projectList", projectList);
+        model.addAttribute("allProposals", allProposals);
+        model.addAttribute("approvedList", approvedList);
+        model.addAttribute("rejectedList", rejectedList);
         model.addAttribute("activeTab", "tab-proposal");
-
         return "mangaka";
     }
 

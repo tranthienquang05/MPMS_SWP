@@ -600,30 +600,179 @@
 
         <!-- Tab proposal content -->
         <div id="tab-proposal" class="tab-pane">
-            <h2 for="modal-toggle-start" class="btn-open">Bản thảo</h2>
-            <a th:href="@{/manga/mangaka/my-projects}" class="btn-custom">Bản thảo đang chờ xét duyệt</a>
+            <h2>Bản thảo</h2>
 
-            <input type="checkbox" id="toggle-library-checkbox" checked style="display: none;">
+            <!-- Sub-tab buttons -->
+            <div style="display:flex; gap:8px; margin-bottom:18px; border-bottom:2px solid #e0e0e0; padding-bottom:0;">
+                <button type="button" onclick="openProposalTab('ptab-all')" id="pbtn-all"
+                    class="proposal-tab-btn active" style="padding:8px 18px; border:none; border-bottom:3px solid #204fa6;
+                       background:transparent; font-weight:600; cursor:pointer; color:#204fa6;">
+                    Tất cả
+                </button>
+                <button type="button" onclick="openProposalTab('ptab-approved')" id="pbtn-approved"
+                    class="proposal-tab-btn" style="padding:8px 18px; border:none; border-bottom:3px solid transparent;
+                       background:transparent; font-weight:600; cursor:pointer; color:#888;">
+                    Đã duyệt
+                </button>
+                <button type="button" onclick="openProposalTab('ptab-rejected')" id="pbtn-rejected"
+                    class="proposal-tab-btn" style="padding:8px 18px; border:none; border-bottom:3px solid transparent;
+                       background:transparent; font-weight:600; cursor:pointer; color:#888;">
+                    Bị từ chối
+                </button>
+            </div>
 
-            <div class="library-content" th:if="${projectList != null}">
-                <h3>Danh sách tác phẩm đã được duyệt:</h3>
-                <table border="1" id="rankingTable" class="data-table" style="width:100%;">
+            <!-- ===== SUB-TAB: TẤT CẢ ===== -->
+            <div id="ptab-all" class="proposal-sub-tab">
+                <table class="data-table" style="width:100%;">
                     <thead>
                         <tr>
-                            <th>Tên series</th>
+                            <th>Mã</th>
+                            <th>Tên Series</th>
                             <th>Trạng thái</th>
+                            <th>Nhận xét từ Tantou</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${allProposals == null or allProposals.isEmpty()}">
+                            <td colspan="4" style="text-align:center; color:gray;">
+                                Chưa có bản thảo nào.
+                            </td>
+                        </tr>
+                        <tr th:each="p : ${allProposals}">
+                            <td th:text="${p.id}"></td>
+                            <td th:text="${p.seriesName}"></td>
+                            <td>
+                                <span th:switch="${p.status}">
+                                    <span th:case="'finish'" style="background:#f0ad4e; color:white;
+                                         padding:3px 10px; border-radius:12px; font-size:12px;">
+                                        Chờ duyệt
+                                    </span>
+                                    <span th:case="'checked'" style="background:#5cb85c; color:white;
+                                         padding:3px 10px; border-radius:12px; font-size:12px;">
+                                        Tantou đã duyệt
+                                    </span>
+                                    <span th:case="'unfinish'" style="background:#d9534f; color:white;
+                                         padding:3px 10px; border-radius:12px; font-size:12px;">
+                                        Bị từ chối
+                                    </span>
+                                    <span th:case="'pass'" style="background:#204fa6; color:white;
+                                         padding:3px 10px; border-radius:12px; font-size:12px;">
+                                        Hội đồng thông qua
+                                    </span>
+                                    <span th:case="*" style="background:#aaa; color:white;
+                                         padding:3px 10px; border-radius:12px; font-size:12px;" th:text="${p.status}">
+                                    </span>
+                                </span>
+                            </td>
+                            <td>
+                                <span th:if="${p.comment != null and !#strings.isEmpty(p.comment)}"
+                                    th:text="${p.comment}" style="color:#e67e22; font-style:italic;">
+                                </span>
+                                <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
+                                    style="color:#bbb;">—</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ===== SUB-TAB: ĐÃ DUYỆT ===== -->
+            <div id="ptab-approved" class="proposal-sub-tab" style="display:none;">
+                <p style="color:gray; font-size:13px; margin-bottom:12px;">
+                    Các bản thảo đã được Tantou duyệt. Bạn có thể khởi động dự án khi hội đồng thông qua.
+                </p>
+                <table class="data-table" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th>Mã</th>
+                            <th>Tên Series</th>
+                            <th>Trạng thái</th>
+                            <th>Nhận xét từ Tantou</th>
                             <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="project : ${projectList}">
-                            <td th:text="${project.seriesName}"></td>
-                            <td th:text="${project.status}"></td>
-                            <td class="text-center-align">
-                                <button type="button" th:data-proposal-id="${project.id}"
-                                    th:data-series-name="${project.seriesName}" onclick="openStartSeriesModal(this)"
+                        <tr th:if="${approvedList == null or approvedList.isEmpty()}">
+                            <td colspan="5" style="text-align:center; color:gray;">
+                                Chưa có bản thảo nào được duyệt.
+                            </td>
+                        </tr>
+                        <tr th:each="p : ${approvedList}">
+                            <td th:text="${p.id}"></td>
+                            <td th:text="${p.seriesName}"></td>
+                            <td>
+                                <span th:if="${p.status == 'checked'}" style="background:#5cb85c; color:white;
+                                     padding:3px 10px; border-radius:12px; font-size:12px;">
+                                    Tantou đã duyệt
+                                </span>
+                                <span th:if="${p.status == 'pass'}" style="background:#204fa6; color:white;
+                                     padding:3px 10px; border-radius:12px; font-size:12px;">
+                                    Hội đồng thông qua
+                                </span>
+                            </td>
+                            <td>
+                                <span th:if="${p.comment != null and !#strings.isEmpty(p.comment)}"
+                                    th:text="${p.comment}" style="color:#e67e22; font-style:italic;">
+                                </span>
+                                <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
+                                    style="color:#bbb;">—</span>
+                            </td>
+                            <td>
+                                <!-- Chỉ cho khởi động khi hội đồng đã pass -->
+                                <button th:if="${p.status == 'pass'}" type="button" th:data-proposal-id="${p.id}"
+                                    th:data-series-name="${p.seriesName}" onclick="openStartSeriesModal(this)"
                                     class="btn-start-project">
                                     Khởi động dự án
+                                </button>
+                                <span th:if="${p.status == 'checked'}" style="color:#888; font-size:13px;">
+                                    Chờ hội đồng bỏ phiếu
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ===== SUB-TAB: BỊ TỪ CHỐI ===== -->
+            <div id="ptab-rejected" class="proposal-sub-tab" style="display:none;">
+                <p style="color:gray; font-size:13px; margin-bottom:12px;">
+                    Các bản thảo bị từ chối. Đọc nhận xét từ Tantou và nộp lại bản thảo mới.
+                </p>
+                <table class="data-table" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th>Mã</th>
+                            <th>Tên Series</th>
+                            <th>Nhận xét từ Tantou</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${rejectedList == null or rejectedList.isEmpty()}">
+                            <td colspan="4" style="text-align:center; color:gray;">
+                                Không có bản thảo nào bị từ chối.
+                            </td>
+                        </tr>
+                        <tr th:each="p : ${rejectedList}">
+                            <td th:text="${p.id}"></td>
+                            <td th:text="${p.seriesName}"></td>
+                            <td>
+                                <!-- Nổi bật feedback hơn vì đây là lý do từ chối -->
+                                <div th:if="${p.comment != null and !#strings.isEmpty(p.comment)}" style="background:#fff3cd; border-left:4px solid #e67e22;
+                                    padding:8px 12px; border-radius:4px; font-style:italic;
+                                    color:#856404; max-width:300px;">
+                                    <i class="fa-solid fa-comment" style="margin-right:6px;"></i>
+                                    <span th:text="${p.comment}"></span>
+                                </div>
+                                <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
+                                    style="color:#bbb;">Không có nhận xét</span>
+                            </td>
+                            <td>
+                                <!-- Nộp lại bản thảo mới với tên series cũ được điền sẵn -->
+                                <button type="button" th:data-series-name="${p.seriesName}"
+                                    onclick="openResubmitModal(this)" style="background:#e67e22; color:white; border:none;
+                                       padding:6px 14px; border-radius:6px; cursor:pointer;">
+                                    Nộp lại
                                 </button>
                             </td>
                         </tr>
@@ -631,31 +780,59 @@
                 </table>
             </div>
 
-            <div class="modal-overlay" id="startSeriesModalOverlay" style="display: none;">
+            <!-- Nút nộp bản thảo mới -->
+            <button id="btnOpenModal" class="margin-top-btn" style="margin-top:20px;">
+                + Nộp bản thảo mới
+            </button>
+
+            <!-- Modal nộp bản thảo mới (giữ nguyên) -->
+            <div id="proposalModalOverlay" class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Đăng Ký Đề Xuất Dự Án Mới</h5>
+                        <button type="button" id="btnCloseTop">X</button>
+                    </div>
+                    <form th:action="@{/manga/mangaka/submit-proposal}" method="POST" enctype="multipart/form-data">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold form-label-dark">Tên dự án:</label>
+                                <input type="text" id="newProposalName" name="txtSeriesName" class="form-control"
+                                    maxlength="30" required placeholder="Nhập tên bộ truyện...">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold form-label-dark">Tệp bản thảo (PDF/ZIP):</label>
+                                <input type="file" name="fileManuscript" class="form-control" accept=".pdf,.zip,.rar"
+                                    required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="btnCancel">Hủy</button>
+                            <button type="submit">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal khởi động series (giữ nguyên) -->
+            <div class="modal-overlay" id="startSeriesModalOverlay" style="display:none;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5>Khởi Động Tác Phẩm</h5>
                         <button type="button" class="btn-close" onclick="closeStartSeriesModal()">X</button>
                     </div>
-
-                    <div id="server-metadata" th:data-active-tab="${activeTab}" style="display: none;"></div>
-
                     <form th:action="@{/manga/mangaka/start-series}" method="POST" enctype="multipart/form-data">
                         <div class="modal-body">
                             <input type="hidden" id="modalProposalId" name="proposalId">
-
                             <div class="form-group-block">
                                 <label>Tên series:</label>
                                 <input type="text" id="modalSeriesName" name="txtSeriesName"
                                     class="input-series-name-readonly" readonly>
                             </div>
-
                             <div class="form-group-block">
                                 <label>Mô tả:</label>
                                 <textarea name="txtDescription" placeholder="Nhập mô tả tác phẩm..." required
                                     class="textarea-description"></textarea>
                             </div>
-
                             <div class="form-group-block">
                                 <label>Bìa sách (PDF):</label>
                                 <input type="file" name="fileBookJacket" accept=".pdf" required
@@ -671,58 +848,22 @@
                 </div>
             </div>
 
-            <button id="btnOpenModal" class="margin-top-btn">Nộp bản thảo
-                mới</button>
-
-            <div id="proposalModalOverlay" class="modal-overlay">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="proposalModalLabel">Đăng
-                            Ký Đề Xuất Dự Án Mới</h5>
-                        <button type="button" id="btnCloseTop">X</button>
-                    </div>
-                    <form th:action="@{/manga/mangaka/submit-proposal}" method="POST" enctype="multipart/form-data">
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold form-label-dark">Tên
-                                    dự án (Series Name):</label>
-                                <input type="text" name="txtSeriesName" class="form-control" maxlength="30" required
-                                    placeholder="Nhập tên bộ truyện...">
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold form-label-dark">Tệp
-                                    bản thảo đính kèm (PDF/ZIP):</label>
-                                <input type="file" name="fileManuscript" class="form-control" accept=".pdf,.zip,.rar"
-                                    required>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" id="btnCancel">Hủy</button>
-                            <button type="submit">Submit</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div id="notificationModalOverlay" class="modal-overlay" th:if="${message != null}" style="display: flex;">
+            <!-- Modal thông báo (giữ nguyên) -->
+            <div id="notificationModalOverlay" class="modal-overlay" th:if="${message != null}" style="display:flex;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Thông báo hệ thống</h5>
                         <button type="button" class="btn-close" id="btnCloseNotification">X</button>
                     </div>
                     <div class="modal-body">
-                        <p style="text-align: center; font-weight: bold; font-size: 16px;" th:text="${message ?: error}"
-                            th:styleappend="${message != null} ? 'color: #28a745;' : 'color: #dc3545;'"></p>
+                        <p style="text-align:center; font-weight:bold; font-size:16px;" th:text="${message ?: error}"
+                            th:styleappend="${message != null} ? 'color:#28a745;' : 'color:#dc3545;'"></p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" id="btnOkNotification" class="btn-action approve"
-                            style="padding: 8px 20px;">OK</button>
+                            style="padding:8px 20px;">OK</button>
                     </div>
                 </div>
-            </div>
-
-            <div class="modal fade" id="proposalModal" tabindex="-1" aria-hidden="true">
             </div>
         </div>
 
@@ -806,6 +947,51 @@
             });
 
         });
+
+        // ===== SUB-TAB SWITCHING =====
+        function openProposalTab(tabId) {
+            // Ẩn tất cả sub-tab
+            document.querySelectorAll('.proposal-sub-tab').forEach(function (el) {
+                el.style.display = 'none';
+            });
+            // Bỏ active tất cả buttons
+            document.querySelectorAll('.proposal-tab-btn').forEach(function (btn) {
+                btn.style.borderBottomColor = 'transparent';
+                btn.style.color = '#888';
+            });
+
+            // Hiện sub-tab được chọn
+            document.getElementById(tabId).style.display = 'block';
+
+            // Active button tương ứng
+            var btnMap = {
+                'ptab-all': 'pbtn-all',
+                'ptab-approved': 'pbtn-approved',
+                'ptab-rejected': 'pbtn-rejected'
+            };
+            var activeBtn = document.getElementById(btnMap[tabId]);
+            if (activeBtn) {
+                activeBtn.style.borderBottomColor = '#204fa6';
+                activeBtn.style.color = '#204fa6';
+            }
+        }
+
+        // ===== NỘP LẠI BẢN THẢO =====
+        // Mở modal nộp bản thảo và điền sẵn tên series cũ
+        function openResubmitModal(btn) {
+            var seriesName = btn.dataset.seriesName;
+            var nameInput = document.getElementById('newProposalName');
+            if (nameInput) {
+                nameInput.value = seriesName;
+            }
+            document.getElementById('proposalModalOverlay').style.display = 'flex';
+        }
+
+
+
+
+
+
 
 
         // Modal thông báo

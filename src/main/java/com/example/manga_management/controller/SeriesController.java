@@ -39,19 +39,21 @@ public class SeriesController {
     public List<Series> getAllSeries() {
         return seriesRepository.findAll();
     }
+
     // Lấy danh sách series theo Mangaka ID
     @GetMapping("/mangaka/{mangakaId}")
     @Operation(summary = "Get all series by Mangaka ID")
     public ResponseEntity<List<Series>> getSeriesByMangakaId(@PathVariable String mangakaId) {
-        
+
         List<Series> seriesList = seriesRepository.findByProposal_Mangaka_Id(mangakaId);
-        
+
         if (seriesList.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        
+
         return ResponseEntity.ok(seriesList);
     }
+
     // Get series by ID
     @GetMapping("/{seriesId}")
     @Operation(summary = "Get series details")

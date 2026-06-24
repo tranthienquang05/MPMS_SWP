@@ -72,16 +72,16 @@ public class BoardController {
             proposalService.submitVote(id, action, userId);
             Proposal p = proposalRepository.findById(id).orElse(null);
             if (p != null) {
-                String result = "pass".equals(action) ? "đã thông qua" : "bị từ chối";
+                String result = "pass".equals(action) ? "Thông qua" : "Từ chối";
 
                 // 1. Thông báo cho Mangaka
                 notificationController.send(null, p.getMangaka().getUser().getId(),
-                        "Kết quả bỏ phiếu dự án '" + p.getSeriesName() + "': " + result,
+                        "Dự án '" + p.getSeriesName() + "'đã nhận được từ hội đồng một phiếu: " + result,
                         "/manga/mangaka/my-projects");
                 // 2. Thông báo cho Tanto nếu dự án bị từ chối
 
                 notificationController.send("tantou", null,
-                        "Dự án '" + p.getSeriesName() + "' mà bạn duyệt đã được Board quyết định: " + result,
+                        "Dự án '" + p.getSeriesName() + "' mà bạn duyệt đã nhận được từ hội đồng một phiếu:" + result,
                         "/manga/tantou");
             }
             redirectAttributes.addFlashAttribute("message", "Đã ghi nhận phiếu bầu!");

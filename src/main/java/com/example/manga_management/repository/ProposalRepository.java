@@ -12,10 +12,14 @@ import java.util.Optional;
 public interface ProposalRepository extends JpaRepository<Proposal, String> {
     List<Proposal> findByStatus(String status);
 
-    List<Proposal> findByStatusAndMangaka_Id(String status, String mangakaId);
-
     List<Proposal> findByStatusAndMangaka_Editor_Id(String status, String editorId);
 
     @Query("SELECT p FROM Proposal p WHERE p.series.id = :seriesId")
     Optional<Proposal> findBySeriesId(@Param("seriesId") String seriesId);
+
+    List<Proposal> findByMangaka_Id(String mangakaId);
+
+    List<Proposal> findByStatusAndMangaka_Id(String status, String mangakaId);
+
+    List<Proposal> findByStatusInAndMangaka_Id(List<String> statuses, String mangakaId);
 }

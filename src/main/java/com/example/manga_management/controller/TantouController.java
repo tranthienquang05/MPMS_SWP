@@ -49,10 +49,16 @@ public class TantouController {
     }
 
     @PostMapping("/review")
-    public String tantouReview(@RequestParam String id, @RequestParam String action) {
+    public String tantouReview(
+            @RequestParam String id,
+            @RequestParam String action,
+            @RequestParam(required = false) String comment) {
         Proposal p = proposalRepository.findById(id).orElse(null);
         if (p != null) {
             p.setStatus("yes".equals(action) ? "checked" : "unfinish");
+            if (comment != null && !comment.isBlank()) {
+                p.setComment(comment.trim());
+            }
             proposalRepository.save(p);
         }
 

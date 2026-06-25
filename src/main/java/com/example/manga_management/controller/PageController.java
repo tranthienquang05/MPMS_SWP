@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,10 +98,11 @@ public class PageController {
     @GetMapping("/{pageId}/submission")
     @ResponseBody
     public Map<String, Object> getPageSubmission(@PathVariable String pageId) {
-        Submission submission = submissionRepository.findByPageId(pageId);
-        if (submission == null) {
+        Optional<Submission> optSubmission = submissionRepository.findByPageIdId(pageId);
+        if (optSubmission.isEmpty()) {
             return Map.of("hasSubmission", false);
         }
+        Submission submission = optSubmission.get();
         return Map.of("hasSubmission", true, "assistantName", submission.getAssistant().getUser().getFullname(),
                 "status", submission.getStatus());
     }

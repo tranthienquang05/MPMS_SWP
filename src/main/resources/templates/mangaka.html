@@ -227,12 +227,48 @@
                             <span class="prop-value" id="textSizeValue">24</span>
                         </div>
 
-                        <button type="button" class="btn-ai-support-top" id="btnSavePage" th:if="${page != null}"
-                            th:data-page-id="${page.id}" th:data-saved-path="${page.filePath}"
-                            style="background-color:#28a745; margin-left:0;">
+                        <button th:if="${page != null && (typeDraw == null || typeDraw == 'page')}" type="button"
+                            class="btn-ai-support-top" id="btnSavePage" th:data-page-id="${page.id}"
+                            th:data-saved-path="${page.filePath}" style="background-color:#28a745; margin-left:0;">
                             <i class="fa-solid fa-floppy-disk"></i>
                             Lưu trang
                         </button>
+
+                        <button th:if="${submission != null && typeDraw == 'submission'}" type="button"
+                            class="btn-ai-support-top" id="btnEditSubmission" th:data-submission-id="${submission.id}"
+                            th:data-saved-path="${submission.filePath}"
+                            style="background-color:#007bff; margin-left:0;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật
+                        </button>
+
+                        <div id="editSubmissionModal"
+                            style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+                            <div style="background:#fff; padding:20px; border-radius:8px; width:350px;">
+                                <h3>Cập nhật Bài nộp</h3>
+
+                                <div style="margin-bottom:12px;">
+                                    <label>Trạng thái:</label>
+                                    <select id="subStatus" style="width:100%; padding:8px;">
+                                        <option value="pass">Hoàn thành (Finished)</option>
+                                        <option value="unfinish">Yêu cầu vẽ lại (Rejected)</option>
+                                    </select>
+                                </div>
+                                <div style="margin-bottom:15px;">
+                                    <label>Góp ý:</label>
+                                    <textarea id="subComment" rows="4" style="width:100%; padding:8px;"></textarea>
+                                </div>
+
+                                <div style="text-align:right;">
+                                    <button type="button" onclick="closeEditSubmissionModal()"
+                                        style="background:#bbb; color:#fff; border:none; padding:8px 12px; border-radius:4px;">Hủy</button>
+
+                                    <button type="button" id="btnConfirmEdit"
+                                        style="background:#007bff; color:#fff; border:none; padding:8px 12px; border-radius:4px;">
+                                        Xác nhận Lưu
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                         <button type="button" class="btn-ai-support-top" id="btnLoadPage" th:if="${page != null}"
                             style="background-color:#007bff; margin-left:0;">
                             <i class="fa-solid fa-folder-open"></i>
@@ -590,7 +626,8 @@
 
                                 <div th:if="${submissionMap[p.id].status == 'FINISHED' || submissionMap[p.id].status == 'finish'}"
                                     style="margin-top: 8px;">
-                                    <a th:href="@{/submission/{id}/edit(id=${submissionMap[p.id].id})}" style="display: block;
+                                    <a th:href="@{/manga/mangaka/submission/{id}/edit(id=${submissionMap[p.id].id})}"
+                                        style="display: block;
                               background: #28a745;
                               color: white;
                               text-decoration: none;
@@ -1256,7 +1293,7 @@
                 });
         }
 
-
+        // Tránh xung đột biến bằng cách bọc block scope hoặc khai báo rõ ràng
 
         function openStartSeriesModal(buttonElement) {
             // Trích xuất dữ liệu lưu tại data-* của nút được nhấn

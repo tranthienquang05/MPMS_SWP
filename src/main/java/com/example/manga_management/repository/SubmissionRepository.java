@@ -8,8 +8,6 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SubmissionRepository extends JpaRepository<Submission, String> {
-    Submission findByPageId(String pageId);
-
     Optional<Submission> findTopByOrderByIdDesc();
     boolean existsByPageIdIdAndStatus(
         String pageId,

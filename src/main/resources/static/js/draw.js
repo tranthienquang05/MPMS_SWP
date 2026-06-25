@@ -1317,6 +1317,10 @@ if (btnSavePage) {
 const btnSubmitSubmission =
     document.getElementById('btnSubmitSubmission');
 
+
+
+
+
 if (btnSubmitSubmission) {
 
     btnSubmitSubmission.addEventListener('click', async () => {
@@ -1342,7 +1346,8 @@ if (btnSubmitSubmission) {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        imageBase64: base64
+                        imageBase64: base64,
+
                     })
                 }
             );
@@ -1384,12 +1389,118 @@ if (btnSubmitSubmission) {
         }
     });
 }
+
+
+
+
+
+// Đặt toàn bộ vào một khối IIFE độc lập để tránh xung đột biến hệ thống
+(() => {
+    const btnToolbar = document.getElementById('btnEditSubmission');
+    const btnModalConfirm = document.getElementById('btnConfirmEdit');
+    const modalForm = document.getElementById('editSubmissionModal');
+
+    // HÀNH ĐỘNG 1: Nhấn nút ở ngoài thanh công cụ -> CHỈ HIỆN MODAL, không tự ý gửi dữ liệu
+    if (btnToolbar) {
+        btnToolbar.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation(); // Ngăn chặn bong bóng sự kiện kích hoạt các hàm xử lý khác
+
+            if (modalForm) {
+                modalForm.style.display = 'flex'; // Hiện form lên cho người dùng nhập thông tin
+            } else {
+                alert("Không tìm thấy cấu trúc Modal 'editSubmissionModal' trên HTML!");
+            }
+        });
+    }
+
+    // HÀNH ĐỘNG 2: Chỉ khi người dùng điền xong và nhấn "Xác nhận Lưu" trong Modal -> Mới bắt đầu gom data gửi đi
+    if (btnModalConfirm && btnToolbar) {
+        btnModalConfirm.addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            // Lấy dữ liệu ID từ dataset của nút bấm ngoài toolbar
+            const submissionId = btnToolbar.dataset.submissionId;
+            if (!submissionId) {
+                alert("Không tìm thấy mã số bài nộp (submissionId)!");
+                return;
+            }
+
+            // Thu thập dữ liệu từ các input/select nằm bên trong cấu trúc Modal
+            const statusElement = document.getElementById('subStatus');
+            const commentElement = document.getElementById('subComment');
+
+            const statusValue = statusElement ? statusElement.value : '';
+            const commentValue = commentElement ? commentElement.value : '';
+
+            // Gộp các layer nét vẽ thành một chuỗi hình ảnh Base64 duy nhất
+            const base64 = flattenAllLayers().toDataURL('image/png');
+
+            // Tạo trạng thái Loading đóng băng nút bấm tránh việc người dùng nhấn liên tục (Double Click)
+            btnModalConfirm.disabled = true;
+            btnModalConfirm.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang cập nhật...';
+
+            try {
+                // Gửi request dữ liệu bằng cấu trúc AJAX (fetch async/await) lên API backend
+                const res = await fetch(`/api/submission/${submissionId}/edit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        imageBase64: base64,
+                        status: statusValue,
+                        comment: commentValue,
+                        who: "mangaka" // Gửi kèm thông tin định danh vai trò để Backend điều hướng link chính xác
+                    })
+                });
+
+                const data = await res.json();
+
+                // Xử lý phản hồi trả về từ máy chủ sau khi lưu file vật lý thành công
+                if (data.status === 'success') {
+                    btnModalConfirm.innerHTML = '<i class="fa-solid fa-check"></i> Đã cập nhật';
+
+                    // Ẩn modal ngay sau khi hệ thống xử lý hoàn tất thành công
+                    if (modalForm) modalForm.style.display = 'none';
+
+                    // Chờ 1 giây tạo hiệu ứng thị giác mượt mà rồi tiến hành điều hướng trang (Redirect)
+                    setTimeout(() => {
+                        if (data.redirectUrl) {
+                            window.location.href = data.redirectUrl;
+                        } else {
+                            window.location.href = '/manga/mangaka';
+                        }
+                    }, 1000);
+
+                } else {
+                    alert('❌ Lỗi xử lý: ' + data.message);
+                    btnModalConfirm.innerHTML = 'Xác nhận Lưu';
+                    btnModalConfirm.disabled = false;
+                }
+
+            } catch (err) {
+                alert('❌ Lỗi đường truyền hệ thống: ' + err.message);
+                btnModalConfirm.innerHTML = 'Xác nhận Lưu';
+                btnModalConfirm.disabled = false;
+            }
+        });
+    }
+})();
+
+// Hàm hỗ trợ đóng modal nhanh khi người dùng bấm nút Hủy
+function closeEditSubmissionModal() {
+    const modal = document.getElementById('editSubmissionModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// --- LOGIC XỬ LÝ ĐỌC FILE LÊN KHÔNG GIAN VẼ THỦ CÔNG ---
 const btnLoadPage = document.getElementById('btnLoadPage');
 const inputLoadPage = document.getElementById('inputLoadPage');
 
-if (btnLoadPage) {
+if (btnLoadPage && inputLoadPage) {
     btnLoadPage.addEventListener('click', () => {
-        inputLoadPage.click();
+        inputLoadPage.click(); // Kích hoạt sự kiện click giả lập vào thẻ input file ẩn
     });
 
     inputLoadPage.addEventListener('change', (e) => {
@@ -1400,6 +1511,7 @@ if (btnLoadPage) {
         reader.onload = (ev) => {
             const img = new Image();
             img.onload = () => {
+                // Xóa vùng canvas cũ trên layer chỉ định và vẽ đè file mới tải lên lên
                 layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
                 layers[1].ctx.drawImage(img, 0, 0);
                 pushHistoryEntry('Load file thủ công');
@@ -1440,6 +1552,23 @@ if (savedPath1 && savedPath1 !== 'null' && savedPath1 !== '') {
     };
 
     img.src = savedPath1;
+}
+const savedPath2 = btnEditSubmission?.dataset.savedPath;
+
+// giống hệt page save
+if (savedPath2 && savedPath2 !== 'null' && savedPath2 !== '') {
+
+    const img = new Image();
+
+    img.onload = () => {
+
+        layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+        layers[1].ctx.drawImage(img, 0, 0);
+
+        pushHistoryEntry('Load submission đã lưu');
+    };
+
+    img.src = savedPath2;
 }
 
 // ========================================

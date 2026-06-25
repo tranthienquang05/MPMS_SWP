@@ -588,18 +588,26 @@
                                     <span th:text="${submissionMap[p.id].deadline}"></span>
                                 </div>
 
+                                <div th:if="${submissionMap[p.id].status == 'FINISHED' || submissionMap[p.id].status == 'finish'}"
+                                    style="margin-top: 8px;">
+                                    <a th:href="@{/submission/{id}/edit(id=${submissionMap[p.id].id})}" style="display: block;
+                              background: #28a745;
+                              color: white;
+                              text-decoration: none;
+                              padding: 4px 0;
+                              border-radius: 4px;
+                              font-weight: bold;
+                              text-align: center;">
+                                        <i class="fa-solid fa-pen-to-square"></i> Sửa bài nộp
+                                    </a>
+                                </div>
+
                             </div>
 
                             <button th:if="${submissionMap[p.id] == null}" type="button"
-                                th:attr="onclick=|openAssignModal('${p.id}')|" style="
-                width:100%;
-                margin-top:8px;
-                background:#ff7f00;
-                color:white;
-                border:none;
-                padding:6px;
-                border-radius:4px;
-                cursor:pointer;">
+                                th:attr="onclick=|openAssignModal('${p.id}')|" style=" width:100%; margin-top:8px;
+                                background:#ff7f00; color:white; border:none; padding:6px; border-radius:4px;
+                                cursor:pointer;">
 
                                 <i class="fa-solid fa-user-plus"></i>
                                 Giao việc

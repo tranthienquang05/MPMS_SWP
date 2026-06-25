@@ -215,20 +215,433 @@ function hexToRgba(hex, alpha) {
     return [r, g, b, alpha !== undefined ? Math.round(alpha * 255) : 255];
 }
 
-// ---- Text tool state ----
-let pendingTextPos = null;
+// ========================================================
+// TEXT TOOL — Canva-style (fixed + enhanced)
+// ========================================================
+let activeTextBox = null;
+
+const FONTS = ['Arial', 'Georgia', 'Courier New', 'Impact', 'Comic Sans MS', 'Trebuchet MS'];
+
+function createTextBox(x, y) {
+    if (activeTextBox) commitTextBox();
+
+    const viewport = document.getElementById('canvasViewport');
+    const canvasRect = document.getElementById('canvasStack').getBoundingClientRect();
+    const viewportRect = viewport.getBoundingClientRect();
+
+    const scaleX = canvasRect.width / CANVAS_W;
+    const scaleY = canvasRect.height / CANVAS_H;
+
+    const screenX = canvasRect.left - viewportRect.left + x * scaleX;
+    const screenY = canvasRect.top - viewportRect.top + y * scaleY;
+
+    const initFontSize = parseInt(document.getElementById('textSize').value) * scaleX;
+    const color = getFgColor();
+
+    // ---- Wrapper ----
+    const box = document.createElement('div');
+    box.style.cssText = `
+        position: absolute;
+        left: ${screenX}px;
+        top: ${screenY}px;
+        width: 200px;
+        min-height: 40px;
+        border: 2px solid #3d8eff;
+        border-radius: 2px;
+        cursor: move;
+        z-index: 1000;
+        box-sizing: border-box;
+        background: transparent;
+    `;
+
+    // ---- Toolbar (font, bold, italic, align, delete) ----
+    const toolbar = document.createElement('div');
+    toolbar.style.cssText = `
+        position: absolute;
+        top: -38px;
+        left: 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: #1e1e1e;
+        border-radius: 6px;
+        padding: 4px 8px;
+        white-space: nowrap;
+        z-index: 20;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        pointer-events: auto;
+    `;
+
+    // Font selector
+    const fontSelect = document.createElement('select');
+    fontSelect.style.cssText = `
+        background:#2a2a2a; color:#fff; border:1px solid #555;
+        border-radius:4px; font-size:11px; padding:2px 4px; cursor:pointer;
+    `;
+    FONTS.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f;
+        opt.textContent = f;
+        opt.style.fontFamily = f;
+        fontSelect.appendChild(opt);
+    });
+
+    // Bold button
+    const btnBold = makeToolbarBtn('<b>B</b>', 'font-weight:bold;');
+    let isBold = false;
+    btnBold.addEventListener('mousedown', e => {
+        e.preventDefault(); e.stopPropagation();
+        isBold = !isBold;
+        ta.style.fontWeight = isBold ? 'bold' : 'normal';
+        btnBold.style.background = isBold ? '#3d8eff' : '#2a2a2a';
+    });
+
+    // Italic button
+    const btnItalic = makeToolbarBtn('<i>I</i>', 'font-style:italic;');
+    let isItalic = false;
+    btnItalic.addEventListener('mousedown', e => {
+        e.preventDefault(); e.stopPropagation();
+        isItalic = !isItalic;
+        ta.style.fontStyle = isItalic ? 'italic' : 'normal';
+        btnItalic.style.background = isItalic ? '#3d8eff' : '#2a2a2a';
+    });
+
+    // Align buttons
+    let textAlign = 'left';
+    const alignBtns = ['left', 'center', 'right'].map(align => {
+        const icons = { left: '≡', center: '☰', right: '≣' };
+        const btn = makeToolbarBtn(icons[align]);
+        btn.title = align;
+        btn.addEventListener('mousedown', e => {
+            e.preventDefault(); e.stopPropagation();
+            textAlign = align;
+            ta.style.textAlign = align;
+            alignBtns.forEach(b => b.style.background = '#2a2a2a');
+            btn.style.background = '#3d8eff';
+        });
+        if (align === 'left') btn.style.background = '#3d8eff';
+        return btn;
+    });
+
+    // Delete button
+    const btnDelete = makeToolbarBtn('✕', 'color:#ff5c5c;');
+    btnDelete.addEventListener('mousedown', e => {
+        e.preventDefault(); e.stopPropagation();
+        box.remove();
+        activeTextBox = null;
+        document.removeEventListener('mousedown', onOutsideClick);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    });
+
+    toolbar.appendChild(fontSelect);
+    toolbar.appendChild(btnBold);
+    toolbar.appendChild(btnItalic);
+    alignBtns.forEach(b => toolbar.appendChild(b));
+    toolbar.appendChild(btnDelete);
+    box.appendChild(toolbar);
+
+    // ---- Textarea ----
+    const ta = document.createElement('textarea');
+    ta.style.cssText = `
+        width: 100%;
+        min-height: 36px;
+        background: transparent;
+        border: none;
+        outline: none;
+        resize: none;
+        font-size: ${initFontSize}px;
+        color: ${color};
+        font-family: Arial, sans-serif;
+        cursor: text;
+        overflow: hidden;
+        line-height: 1.2;
+        padding: 4px;
+        box-sizing: border-box;
+        text-align: left;
+    `;
+    ta.placeholder = 'Nhập chữ...';
+
+    // Sync font family
+    fontSelect.addEventListener('change', () => {
+        ta.style.fontFamily = fontSelect.value;
+    });
+
+    // Auto height
+    ta.addEventListener('input', () => {
+        ta.style.height = 'auto';
+        ta.style.height = ta.scrollHeight + 'px';
+        box.style.height = 'auto';
+    });
+
+    // ---- 8 resize handles ----
+    const handlePositions = [
+        { id: 'nw', style: 'top:-6px;left:-6px;cursor:nw-resize;' },
+        { id: 'n', style: 'top:-6px;left:50%;transform:translateX(-50%);cursor:n-resize;' },
+        { id: 'ne', style: 'top:-6px;right:-6px;cursor:ne-resize;' },
+        { id: 'e', style: 'top:50%;right:-6px;transform:translateY(-50%);cursor:e-resize;' },
+        { id: 'se', style: 'bottom:-6px;right:-6px;cursor:se-resize;' },
+        { id: 's', style: 'bottom:-6px;left:50%;transform:translateX(-50%);cursor:s-resize;' },
+        { id: 'sw', style: 'bottom:-6px;left:-6px;cursor:sw-resize;' },
+        { id: 'w', style: 'top:50%;left:-6px;transform:translateY(-50%);cursor:w-resize;' },
+    ];
+
+    handlePositions.forEach(h => {
+        const handle = document.createElement('div');
+        handle.dataset.handle = h.id;
+        handle.style.cssText = `
+            position:absolute;width:12px;height:12px;
+            background:#fff;border:2px solid #3d8eff;
+            border-radius:2px;z-index:10;${h.style}
+        `;
+        box.appendChild(handle);
+    });
+
+    // ---- Rotate handle ----
+    const rotateHandle = document.createElement('div');
+    rotateHandle.style.cssText = `
+        position:absolute;bottom:-28px;left:50%;
+        transform:translateX(-50%);
+        width:16px;height:16px;
+        background:#3d8eff;border-radius:50%;
+        cursor:grab;z-index:10;
+        display:flex;align-items:center;justify-content:center;
+        color:white;font-size:10px;user-select:none;
+    `;
+    rotateHandle.innerHTML = '↻';
+    box.appendChild(rotateHandle);
+
+    box.appendChild(ta);
+    viewport.style.position = 'relative';
+    viewport.appendChild(box);
+    ta.focus();
+
+    let rotation = 0;
+    activeTextBox = {
+        box, ta, fontSelect, scaleX, scaleY, rotation,
+        originX: x, originY: y,
+        isBold: () => isBold, isItalic: () => isItalic, getAlign: () => textAlign
+    };
+
+    // ---- Drag move ----
+    let dragging = false, dragStartX, dragStartY, boxStartX, boxStartY;
+
+    box.addEventListener('mousedown', (e) => {
+        if (e.target.dataset.handle || e.target === rotateHandle || e.target === ta || toolbar.contains(e.target)) return;
+        dragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        boxStartX = parseInt(box.style.left);
+        boxStartY = parseInt(box.style.top);
+        e.preventDefault();
+    });
+
+    // ---- Resize ----
+    let resizing = false, activeHandle = null;
+    let resizeStartX, resizeStartY, resizeStartW, resizeStartH, resizeStartL, resizeStartT, resizeStartFontSize;
+
+    box.querySelectorAll('[data-handle]').forEach(h => {
+        h.addEventListener('mousedown', (e) => {
+            resizing = true;
+            activeHandle = h.dataset.handle;
+            resizeStartX = e.clientX;
+            resizeStartY = e.clientY;
+            resizeStartW = box.offsetWidth;
+            resizeStartH = box.offsetHeight;
+            resizeStartL = parseInt(box.style.left);
+            resizeStartT = parseInt(box.style.top);
+            resizeStartFontSize = parseFloat(ta.style.fontSize);
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+
+    // ---- Rotate ----
+    let rotating = false;
+    rotateHandle.addEventListener('mousedown', (e) => {
+        rotating = true;
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    function onMouseMove(e) {
+        if (dragging) {
+            box.style.left = (boxStartX + e.clientX - dragStartX) + 'px';
+            box.style.top = (boxStartY + e.clientY - dragStartY) + 'px';
+        }
+
+        if (resizing) {
+            const dx = e.clientX - resizeStartX;
+            const dy = e.clientY - resizeStartY;
+
+            if (activeHandle.includes('e')) {
+                box.style.width = Math.max(80, resizeStartW + dx) + 'px';
+            }
+            if (activeHandle.includes('w')) {
+                const newW = Math.max(80, resizeStartW - dx);
+                box.style.width = newW + 'px';
+                box.style.left = (resizeStartL + resizeStartW - newW) + 'px';
+            }
+            // Scale font proportionally for corner handles
+            if (activeHandle === 'se' || activeHandle === 'sw') {
+                const scale = Math.max(0.1, (resizeStartH + dy) / resizeStartH);
+                ta.style.fontSize = Math.max(8, resizeStartFontSize * scale) + 'px';
+            }
+            if (activeHandle === 'ne' || activeHandle === 'nw') {
+                const newH = Math.max(40, resizeStartH - dy);
+                box.style.top = (resizeStartT + resizeStartH - newH) + 'px';
+                const scale = Math.max(0.1, newH / resizeStartH);
+                ta.style.fontSize = Math.max(8, resizeStartFontSize * scale) + 'px';
+            }
+            if (activeHandle === 'n') {
+                const newH = Math.max(40, resizeStartH - dy);
+                box.style.top = (resizeStartT + resizeStartH - newH) + 'px';
+            }
+            if (activeHandle === 's') {
+                // no-op height — auto height from content
+            }
+        }
+
+        if (rotating) {
+            const rect = box.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const angle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI + 90;
+            rotation = angle;
+            activeTextBox.rotation = angle;
+            box.style.transform = `rotate(${angle}deg)`;
+        }
+    }
+
+    function onMouseUp() {
+        dragging = false;
+        resizing = false;
+        rotating = false;
+    }
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    // ---- Click ngoài → commit ----
+    setTimeout(() => {
+        document.addEventListener('mousedown', onOutsideClick);
+    }, 100);
+
+    function onOutsideClick(e) {
+        if (!box.contains(e.target)) {
+            commitTextBox();
+            document.removeEventListener('mousedown', onOutsideClick);
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+    }
+}
+
+// ---- Helper: tạo toolbar button ----
+function makeToolbarBtn(html, extraStyle = '') {
+    const btn = document.createElement('button');
+    btn.innerHTML = html;
+    btn.style.cssText = `
+        background:#2a2a2a; color:#fff; border:1px solid #555;
+        border-radius:4px; font-size:12px; padding:2px 7px;
+        cursor:pointer; min-width:24px; line-height:1.4;
+        ${extraStyle}
+    `;
+    return btn;
+}
+
+// ---- Commit: vẽ text lên canvas ----
+function commitTextBox() {
+    if (!activeTextBox) return;
+    const { box, ta, fontSelect, scaleX, scaleY, rotation, isBold, isItalic, getAlign } = activeTextBox;
+    const text = ta.value.trim();
+
+    if (text) {
+        const viewport = document.getElementById('canvasViewport');
+        const canvasEl = document.getElementById('canvasStack');
+        const canvasRect = canvasEl.getBoundingClientRect();
+        const viewportRect = viewport.getBoundingClientRect();
+
+        const boxLeft = parseInt(box.style.left);
+        const boxTop = parseInt(box.style.top);
+        const boxW = box.offsetWidth;
+
+        // box.style.left/top relative to viewport; canvasStack offset cũng tính từ viewport
+        const canvasOffX = canvasRect.left - viewportRect.left;
+        const canvasOffY = canvasRect.top - viewportRect.top;
+        const canvasX = (boxLeft - canvasOffX) / scaleX;
+        const canvasY = (boxTop - canvasOffY) / scaleY;
+        const fontSize = parseFloat(ta.style.fontSize) / scaleX;
+        const canvasBoxW = boxW / scaleX;
+        const fontFamily = fontSelect ? fontSelect.value : 'Arial';
+        const fontWeight = isBold() ? 'bold' : 'normal';
+        const fontStyle = isItalic() ? 'italic' : 'normal';
+        const align = getAlign();
+
+        const layerCtx = getActiveLayer().ctx;
+        layerCtx.save();
+
+        if (rotation !== 0) {
+            const cx = canvasX + canvasBoxW / 2;
+            const cy = canvasY + fontSize / 2;
+            layerCtx.translate(cx, cy);
+            layerCtx.rotate(rotation * Math.PI / 180);
+            layerCtx.translate(-cx, -cy);
+        }
+
+        layerCtx.globalAlpha = getOpacity();
+        layerCtx.fillStyle = ta.style.color;
+        layerCtx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+        layerCtx.textBaseline = 'top';
+        layerCtx.textAlign = 'left'; // luôn dùng left, tự tính x bên dưới
+
+        const padding = 4;
+        const maxW = canvasBoxW - padding * 2;
+
+        // Tính lines trước (word-wrap)
+        const allLines = [];
+        text.split('\n').forEach(paragraph => {
+            if (paragraph.trim() === '') { allLines.push(''); return; }
+            const words = paragraph.split(' ');
+            let current = '';
+            words.forEach(word => {
+                const test = current ? current + ' ' + word : word;
+                if (layerCtx.measureText(test).width > maxW && current) {
+                    allLines.push(current);
+                    current = word;
+                } else {
+                    current = test;
+                }
+            });
+            if (current) allLines.push(current);
+        });
+
+        // Vẽ từng dòng với x tính đúng theo align
+        let lineY = canvasY + padding;
+        allLines.forEach(line => {
+            let drawX;
+            if (align === 'center') {
+                const lineW = layerCtx.measureText(line).width;
+                drawX = canvasX + (canvasBoxW - lineW) / 2;
+            } else if (align === 'right') {
+                const lineW = layerCtx.measureText(line).width;
+                drawX = canvasX + canvasBoxW - lineW - padding;
+            } else {
+                drawX = canvasX + padding;
+            }
+            layerCtx.fillText(line, drawX, lineY);
+            lineY += fontSize * 1.2;
+        });
+
+        layerCtx.restore(); // ← FIX: restore canvas state
+    }
+
+    box.remove();
+    activeTextBox = null;
+}
 
 function placeTextAt(pos) {
-    const text = prompt('Nhập nội dung chữ:');
-    if (!text) return;
-    const layerCtx = getActiveLayer().ctx;
-    layerCtx.globalAlpha = getOpacity();
-    layerCtx.fillStyle = getFgColor();
-    layerCtx.font = document.getElementById('textSize').value + 'px Arial';
-    layerCtx.textBaseline = 'top';
-    layerCtx.fillText(text, pos.x, pos.y);
-    layerCtx.globalAlpha = 1;
-    pushHistoryEntry('Chèn chữ: "' + text.substring(0, 20) + '"');
+    createTextBox(pos.x, pos.y);
 }
 
 // ---- Mouse events chính ----
@@ -352,7 +765,9 @@ document.querySelectorAll('.lt-btn[data-tool]').forEach(btn => {
         };
         document.getElementById('statusTool').textContent = 'Công cụ: ' + labels[currentTool];
         const isSelTool = currentTool === 'select' || currentTool === 'select-oval' || currentTool === 'select-free';
-        inputLayer.style.cursor = isSelTool ? 'cell' : (currentTool === 'text' ? 'text' : 'crosshair');
+        const darkCrosshair = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cline x1='10' y1='0' x2='10' y2='20' stroke='black' stroke-width='1.5'/%3E%3Cline x1='0' y1='10' x2='20' y2='10' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E\") 10 10, crosshair";
+        const textCursor = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='24' viewBox='0 0 20 24'%3E%3Ctext x='10' y='18' text-anchor='middle' font-size='20' fill='black'%3EI%3C/text%3E%3C/svg%3E\") 10 12, text";
+        inputLayer.style.cursor = isSelTool ? 'cell' : (currentTool === 'text' ? 'textCursor' : darkCrosshair);
 
         // Hiện/ẩn property phù hợp
         const isShape = ['line', 'rect', 'oval'].includes(currentTool);

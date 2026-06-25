@@ -57,8 +57,10 @@ public class AssistantController {
         model.addAttribute("waiting", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "finish"));
 
         model.addAttribute("done", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "pass"));
-
-        model.addAttribute("activeTab", "tab-home");
+        if (model.getAttribute("activeTab") == null) {
+            model.addAttribute("activeTab", "tab-home");
+        }
+        
 
         return "assistant";
     }
@@ -135,7 +137,7 @@ public class AssistantController {
 
     // ================= UPDATE STATUS =================
     @PostMapping("/submission/{id}/submit")
-    public String updateStatus(@PathVariable String id, @RequestParam String status) {
+    public String updateStatus(@PathVariable String id, @RequestParam String status, Model model, HttpSession session) {
 
         Submission submission = submissionRepository.findById(id).orElse(null);
 
@@ -143,7 +145,7 @@ public class AssistantController {
             submission.setStatus(status);
             submissionRepository.save(submission);
         }
-
-        return "redirect:/manga/assistant";
+        model.addAttribute("activeTab", "tab-project");
+        return "assistant";
     }
 }

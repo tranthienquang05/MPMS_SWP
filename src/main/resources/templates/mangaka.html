@@ -239,9 +239,14 @@
                             Mở file
                         </button>
                         <input type="file" id="inputLoadPage" accept="image/png" style="display:none;">
-                        <button type="button" class="btn-ai-support-top" id="btnAiSupport">
+                        <button type="button" class="btn-ai-support-top" id="btnAiSupport" style="margin-left:auto;">
                             <i class="fa-solid fa-brain"></i>
                             AI Support
+                        </button>
+                        <button type="button" class="btn-ai-support-top" id="btnDownload"
+                            style="background-color:#6f42c1; margin-left:8px;">
+                            <i class="fa-solid fa-download"></i>
+                            Download
                         </button>
 
                     </div>
@@ -307,7 +312,9 @@
                         <div class="history-list" id="historyList"></div>
                     </div>
                 </div>
+
             </div>
+
             <div id="aiModalOverlay" class="ai-modal-overlay">
                 <div class="ai-modal-box">
                     <div class="ai-modal-header">
@@ -409,7 +416,8 @@
                             <div class="ai-modal-footer">
                                 <button type="button" class="ai-btn-secondary" id="btnAiResultBack">Quay lại</button>
                                 <button type="button" class="ai-btn-run" id="btnApplyToCanvas"
-                                    style="display:none;">Apply to
+                                    style="display:none;">Apply
+                                    to
                                     canvas</button>
                             </div>
                         </div>

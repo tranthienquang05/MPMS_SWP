@@ -205,7 +205,9 @@
                         </div>
 
                         <button id="btnSubmitSubmission" th:if="${submission != null}"
-                            th:data-submission-id="${submission.id}" th:data-saved-path="${submission.filePath}" type="button" class="btn-ai-support-top" style="background-color:#28a745; margin-left:0;">
+                            th:data-submission-id="${submission.id}" 
+                            th:data-who="assistant"
+                            th:data-saved-path="${submission.filePath}" type="button" class="btn-ai-support-top" style="background-color:#28a745; margin-left:0;">
                             <i class="fa-solid fa-paper-plane"></i>
                             Lưu
                         </button>

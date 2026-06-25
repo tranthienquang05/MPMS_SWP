@@ -38,6 +38,9 @@ public class SubmissionController {
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy submission"));
 
             String base64 = body.get("imageBase64");
+            String who = body.get("who");
+            
+
 
             if (base64 == null || base64.isBlank()) {
                 return Map.of("status", "error", "message", "Không có dữ liệu ảnh");
@@ -61,11 +64,15 @@ public class SubmissionController {
 
             submission.setFilePath("/Submission/" + fileName);
 
-            submission.setStatus("unfinish");
+
 
             submissionRepository.save(submission);
-
-            return Map.of("status", "success", "redirectUrl", "/manga/assistant/submission/view");
+            if(who=="mangaka"){
+                return Map.of("status", "success", "redirectUrl", "/manga/mangaka/submission/view");
+            }else{
+                return Map.of("status", "success", "redirectUrl", "/manga/assistant/submission/view");
+            }
+            
 
         } catch (IllegalArgumentException e) {
 

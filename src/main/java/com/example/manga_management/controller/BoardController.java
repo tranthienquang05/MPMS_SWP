@@ -46,7 +46,8 @@ public class BoardController {
     public String boardReview(@RequestParam String id,
             @RequestParam String action,
             HttpSession session,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+        Model model) {
 
         // 1. Lấy đối tượng User từ session (key là "user")
         Object userObj = session.getAttribute("user");
@@ -88,7 +89,7 @@ public class BoardController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-
-        return "redirect:/manga/editor";
+        model.addAttribute("activeTab", "tab-proposal");
+        return "editor";
     }
 }

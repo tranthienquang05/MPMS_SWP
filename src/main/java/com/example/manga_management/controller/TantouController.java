@@ -52,6 +52,7 @@ public class TantouController {
     public String tantouReview(
             @RequestParam String id,
             @RequestParam String action,
+            Model model,
             @RequestParam(required = false) String comment) {
         Proposal p = proposalRepository.findById(id).orElse(null);
         if (p != null) {
@@ -75,7 +76,8 @@ public class TantouController {
             notificationController.send("board", null,
                     "Có dự án mới '" + p.getSeriesName() + "' cần bỏ phiếu!", "/manga/editor");
         }
-        return "redirect:/manga/tantou";
+        model.addAttribute("activeTab", "tab-proposal");
+        return "tantou";
     }
 
 }

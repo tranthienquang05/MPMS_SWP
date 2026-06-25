@@ -189,10 +189,5 @@ public class PageController {
     }
 
     // API 3: Lấy danh sách assistant của mangaka (để hiện dropdown giao việc)
-    @GetMapping("/api/mangaka/{mangakaId}/assistants")
-    @ResponseBody
-    public List<Map<String, String>> getAssistants(@PathVariable String mangakaId) {
-        return assistantRepository.findByMangakaId(mangakaId).stream()
-                .map(a -> Map.of("id", a.getId(), "name", a.getUser().getFullname())).collect(Collectors.toList());
-    }
+    
 }

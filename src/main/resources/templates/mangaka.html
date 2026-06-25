@@ -807,11 +807,10 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- ===== SUB-TAB: BỊ TỪ CHỐI ===== -->
+            <!-- SUB-TAB: BỊ TỪ CHỐI -->
             <div id="ptab-rejected" class="proposal-sub-tab" style="display:none;">
                 <p style="color:gray; font-size:13px; margin-bottom:12px;">
-                    Các bản thảo bị từ chối. Đọc nhận xét từ Tantou và nộp lại bản thảo mới.
+                    Đọc nhận xét từ Tantou và nộp lại bản thảo đã chỉnh sửa.
                 </p>
                 <table class="data-table" style="width:100%;">
                     <thead>
@@ -832,10 +831,9 @@
                             <td th:text="${p.id}"></td>
                             <td th:text="${p.seriesName}"></td>
                             <td>
-                                <!-- Nổi bật feedback hơn vì đây là lý do từ chối -->
                                 <div th:if="${p.comment != null and !#strings.isEmpty(p.comment)}" style="background:#fff3cd; border-left:4px solid #e67e22;
-                                    padding:8px 12px; border-radius:4px; font-style:italic;
-                                    color:#856404; max-width:300px;">
+                                    padding:8px 12px; border-radius:4px;
+                                    font-style:italic; color:#856404; max-width:300px;">
                                     <i class="fa-solid fa-comment" style="margin-right:6px;"></i>
                                     <span th:text="${p.comment}"></span>
                                 </div>
@@ -843,9 +841,8 @@
                                     style="color:#bbb;">Không có nhận xét</span>
                             </td>
                             <td>
-                                <!-- Nộp lại bản thảo mới với tên series cũ được điền sẵn -->
-                                <button type="button" th:data-series-name="${p.seriesName}"
-                                    onclick="openResubmitModal(this)" style="background:#e67e22; color:white; border:none;
+                                <button type="button" th:data-proposal-id="${p.id}"
+                                    th:data-series-name="${p.seriesName}" onclick="openResubmitModal(this)" style="background:#e67e22; color:white; border:none;
                                        padding:6px 14px; border-radius:6px; cursor:pointer;">
                                     Nộp lại
                                 </button>
@@ -860,8 +857,8 @@
                 + Nộp bản thảo mới
             </button>
 
-            <!-- Modal nộp bản thảo mới (giữ nguyên) -->
-            <div id="proposalModalOverlay" class="modal-overlay">
+            <!-- Modal nộp bản thảo MỚI -->
+            <div id="proposalModalOverlay" class="modal-overlay" style="display:none;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Đăng Ký Đề Xuất Dự Án Mới</h5>
@@ -871,11 +868,13 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label class="form-label fw-bold form-label-dark">Tên dự án:</label>
-                                <input type="text" id="newProposalName" name="txtSeriesName" class="form-control"
-                                    maxlength="30" required placeholder="Nhập tên bộ truyện...">
+                                <input type="text" name="txtSeriesName" class="form-control" maxlength="30" required
+                                    placeholder="Nhập tên bộ truyện...">
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-bold form-label-dark">Tệp bản thảo (PDF/ZIP):</label>
+                                <label class="form-label fw-bold form-label-dark">
+                                    Tệp bản thảo (PDF/ZIP):
+                                </label>
                                 <input type="file" name="fileManuscript" class="form-control" accept=".pdf,.zip,.rar"
                                     required>
                             </div>
@@ -888,7 +887,41 @@
                 </div>
             </div>
 
-            <!-- Modal khởi động series (giữ nguyên) -->
+            <!-- Modal NỘP LẠI bản thảo -->
+            <div id="resubmitModalOverlay" class="modal-overlay" style="display:none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5>Nộp Lại Bản Thảo</h5>
+                        <button type="button" onclick="closeResubmitModal()">X</button>
+                    </div>
+                    <form th:action="@{/manga/mangaka/resubmit-proposal}" method="POST" enctype="multipart/form-data">
+                        <div class="modal-body">
+                            <input type="hidden" id="resubmitProposalId" name="proposalId">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold form-label-dark">Tên dự án:</label>
+                                <input type="text" id="resubmitSeriesName" name="txtSeriesName" class="form-control"
+                                    maxlength="30" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold form-label-dark">
+                                    File bản thảo mới (PDF/ZIP):
+                                </label>
+                                <input type="file" name="fileManuscript" class="form-control" accept=".pdf,.zip,.rar"
+                                    required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" onclick="closeResubmitModal()">Hủy</button>
+                            <button type="submit" style="background:#e67e22; color:white; border:none;
+                                   padding:8px 20px; border-radius:6px; cursor:pointer;">
+                                Nộp lại
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal khởi động series -->
             <div class="modal-overlay" id="startSeriesModalOverlay" style="display:none;">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -923,7 +956,7 @@
                 </div>
             </div>
 
-            <!-- Modal thông báo (giữ nguyên) -->
+            <!-- Modal thông báo hệ thống -->
             <div id="notificationModalOverlay" class="modal-overlay" th:if="${message != null}" style="display:flex;">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -932,7 +965,8 @@
                     </div>
                     <div class="modal-body">
                         <p style="text-align:center; font-weight:bold; font-size:16px;" th:text="${message ?: error}"
-                            th:styleappend="${message != null} ? 'color:#28a745;' : 'color:#dc3545;'"></p>
+                            th:styleappend="${message != null} ? 'color:#28a745;' : 'color:#dc3545;'">
+                        </p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" id="btnOkNotification" class="btn-action approve"
@@ -1054,13 +1088,25 @@
         // ===== NỘP LẠI BẢN THẢO =====
         // Mở modal nộp bản thảo và điền sẵn tên series cũ
         function openResubmitModal(btn) {
-            var seriesName = btn.dataset.seriesName;
-            var nameInput = document.getElementById('newProposalName');
-            if (nameInput) {
-                nameInput.value = seriesName;
-            }
-            document.getElementById('proposalModalOverlay').style.display = 'flex';
+            document.getElementById('resubmitProposalId').value = btn.dataset.proposalId;
+            document.getElementById('resubmitSeriesName').value = btn.dataset.seriesName;
+            document.getElementById('resubmitModalOverlay').style.display = 'flex';
         }
+
+        function closeResubmitModal() {
+            document.getElementById('resubmitModalOverlay').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Đóng resubmit modal khi click ra ngoài
+            var resubmitOverlay = document.getElementById('resubmitModalOverlay');
+            if (resubmitOverlay) {
+                resubmitOverlay.addEventListener('click', function (e) {
+                    if (e.target === this) closeResubmitModal();
+                });
+            }
+        });
+
 
 
 

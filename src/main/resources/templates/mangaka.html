@@ -917,26 +917,24 @@
                         <h5 class="modal-title">Đăng Ký Đề Xuất Dự Án Mới</h5>
                         <button type="button" id="btnCloseTop">X</button>
                     </div>
-                    <form th:action="@{/manga/mangaka/submit-proposal}" method="POST" enctype="multipart/form-data">
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold form-label-dark">Tên dự án:</label>
-                                <input type="text" name="txtSeriesName" class="form-control" maxlength="30" required
-                                    placeholder="Nhập tên bộ truyện...">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-bold form-label-dark">
-                                    Tệp bản thảo (PDF/ZIP):
-                                </label>
-                                <input type="file" name="fileManuscript" class="form-control" accept=".pdf,.zip,.rar"
-                                    required>
-                            </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold form-label-dark">Tên dự án:</label>
+                            <input type="text" id="newSeriesName" class="form-control" maxlength="30" required
+                                placeholder="Nhập tên bộ truyện...">
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" id="btnCancel">Hủy</button>
-                            <button type="submit">Submit</button>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold form-label-dark">
+                                Tệp bản thảo (PDF/ZIP):
+                            </label>
+                            <input type="file" id="newManuscriptFile" class="form-control" accept=".pdf,.zip,.rar"
+                                required>
                         </div>
-                    </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="btnCancel">Hủy</button>
+                        <button type="button" onclick="submitNewProposal()">Submit</button>
+                    </div>
                 </div>
             </div>
 
@@ -947,30 +945,26 @@
                         <h5>Nộp Lại Bản Thảo</h5>
                         <button type="button" onclick="closeResubmitModal()">X</button>
                     </div>
-                    <form th:action="@{/manga/mangaka/resubmit-proposal}" method="POST" enctype="multipart/form-data">
-                        <div class="modal-body">
-                            <input type="hidden" id="resubmitProposalId" name="proposalId">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold form-label-dark">Tên dự án:</label>
-                                <input type="text" id="resubmitSeriesName" name="txtSeriesName" class="form-control"
-                                    maxlength="30" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-bold form-label-dark">
-                                    File bản thảo mới (PDF/ZIP):
-                                </label>
-                                <input type="file" name="fileManuscript" class="form-control" accept=".pdf,.zip,.rar"
-                                    required>
-                            </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="resubmitProposalId">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold form-label-dark">Tên dự án:</label>
+                            <input type="text" id="resubmitSeriesName" class="form-control" maxlength="30" required>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" onclick="closeResubmitModal()">Hủy</button>
-                            <button type="submit" style="background:#e67e22; color:white; border:none;
-                                   padding:8px 20px; border-radius:6px; cursor:pointer;">
-                                Nộp lại
-                            </button>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold form-label-dark">
+                                File bản thảo mới (PDF/ZIP):
+                            </label>
+                            <input type="file" id="resubmitFile" class="form-control" accept=".pdf,.zip,.rar" required>
                         </div>
-                    </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" onclick="closeResubmitModal()">Hủy</button>
+                        <button type="button" onclick="submitResubmitProposal()" style="background:#e67e22; color:white; border:none;
+                           padding:8px 20px; border-radius:6px; cursor:pointer;">
+                            Nộp lại
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -981,31 +975,26 @@
                         <h5>Khởi Động Tác Phẩm</h5>
                         <button type="button" class="btn-close" onclick="closeStartSeriesModal()">X</button>
                     </div>
-                    <form th:action="@{/manga/mangaka/start-series}" method="POST" enctype="multipart/form-data">
-                        <div class="modal-body">
-                            <input type="hidden" id="modalProposalId" name="proposalId">
-                            <div class="form-group-block">
-                                <label>Tên series:</label>
-                                <input type="text" id="modalSeriesName" name="txtSeriesName"
-                                    class="input-series-name-readonly" readonly>
-                            </div>
-                            <div class="form-group-block">
-                                <label>Mô tả:</label>
-                                <textarea name="txtDescription" placeholder="Nhập mô tả tác phẩm..." required
-                                    class="textarea-description"></textarea>
-                            </div>
-                            <div class="form-group-block">
-                                <label>Bìa sách (PDF):</label>
-                                <input type="file" name="fileBookJacket" accept=".pdf" required
-                                    class="input-file-jacket">
-                            </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="modalProposalId">
+                        <div class="form-group-block">
+                            <label>Tên series:</label>
+                            <input type="text" id="modalSeriesName" class="input-series-name-readonly" readonly>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" onclick="closeStartSeriesModal()"
-                                class="btn-modal-cancel">Hủy</button>
-                            <button type="submit" class="btn-modal-confirm">Xác nhận</button>
+                        <div class="form-group-block">
+                            <label>Mô tả:</label>
+                            <textarea id="modalDescription" placeholder="Nhập mô tả tác phẩm..." required
+                                class="textarea-description"></textarea>
                         </div>
-                    </form>
+                        <div class="form-group-block">
+                            <label>Bìa sách (PDF):</label>
+                            <input type="file" id="modalBookJacket" accept=".pdf" required class="input-file-jacket">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" onclick="closeStartSeriesModal()" class="btn-modal-cancel">Hủy</button>
+                        <button type="button" onclick="submitStartSeries()" class="btn-modal-confirm">Xác nhận</button>
+                    </div>
                 </div>
             </div>
 
@@ -1086,29 +1075,36 @@
                 });
         }
 
+        const mangakaId = '[[${mangaka != null ? mangaka.id : ""}]]';
         // Xử lý logic cho Modal nộp bản thảo
-        document.addEventListener("DOMContentLoaded", function () {
-            const modalOverlay = document.getElementById("proposalModalOverlay");
-            const btnOpen = document.getElementById("btnOpenModal");
-            const btnCloseTop = document.getElementById("btnCloseTop");
-            const btnCancel = document.getElementById("btnCancel");
-
-            function openModal() { modalOverlay.style.display = "flex"; }
-            function closeModal() { modalOverlay.style.display = "none"; }
-
-            var activeTabFromController = "[[${activeTab}]]";
-
-            if (btnOpen) btnOpen.addEventListener("click", openModal);
-            if (btnCloseTop) btnCloseTop.addEventListener("click", closeModal);
-            if (btnCancel) btnCancel.addEventListener("click", closeModal);
-            if (activeTabFromController && !activeTabFromController.startsWith("[[")) {
-                openTab(activeTabFromController);
+        function submitNewProposal() {
+            if (!mangakaId) {
+                alert('Không tìm thấy thông tin Mangaka. Vui lòng đăng nhập lại!');
+                return;
             }
-            modalOverlay.addEventListener("click", function (event) {
-                if (event.target === modalOverlay) closeModal();
-            });
+            const seriesName = document.getElementById('newSeriesName').value.trim();
+            const file = document.getElementById('newManuscriptFile').files[0];
+            if (!seriesName) { alert('Vui lòng nhập tên series!'); return; }
+            if (!file) { alert('Vui lòng chọn file bản thảo!'); return; }
 
-        });
+            const formData = new FormData();
+            formData.append('mangakaId', mangakaId);
+            formData.append('txtSeriesName', seriesName);
+            formData.append('fileManuscript', file);
+
+            fetch('/manga/mangaka/submit-proposal', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('✅ ' + data.message + '\nMã đề xuất: ' + data.proposalId);
+                        document.getElementById('proposalModalOverlay').style.display = 'none';
+                        location.reload();
+                    } else {
+                        alert('❌ ' + data.message);
+                    }
+                })
+                .catch(err => alert('❌ Lỗi: ' + err.message));
+        }
 
         // ===== SUB-TAB SWITCHING =====
         function openProposalTab(tabId) {
@@ -1139,7 +1135,6 @@
         }
 
         // ===== NỘP LẠI BẢN THẢO =====
-        // Mở modal nộp bản thảo và điền sẵn tên series cũ
         function openResubmitModal(btn) {
             document.getElementById('resubmitProposalId').value = btn.dataset.proposalId;
             document.getElementById('resubmitSeriesName').value = btn.dataset.seriesName;
@@ -1150,16 +1145,69 @@
             document.getElementById('resubmitModalOverlay').style.display = 'none';
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
-            // Đóng resubmit modal khi click ra ngoài
-            var resubmitOverlay = document.getElementById('resubmitModalOverlay');
-            if (resubmitOverlay) {
-                resubmitOverlay.addEventListener('click', function (e) {
-                    if (e.target === this) closeResubmitModal();
-                });
-            }
-        });
+        function submitResubmitProposal() {
+            const proposalId = document.getElementById('resubmitProposalId').value;
+            const seriesName = document.getElementById('resubmitSeriesName').value.trim();
+            const file = document.getElementById('resubmitFile').files[0];
+            if (!seriesName) { alert('Vui lòng nhập tên series!'); return; }
+            if (!file) { alert('Vui lòng chọn file bản thảo!'); return; }
 
+            const formData = new FormData();
+            formData.append('proposalId', proposalId);
+            formData.append('txtSeriesName', seriesName);
+            formData.append('fileManuscript', file);
+
+            fetch('/manga/mangaka/resubmit-proposal', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('✅ ' + data.message);
+                        closeResubmitModal();
+                        location.reload();
+                    } else {
+                        alert('❌ ' + data.message);
+                    }
+                })
+                .catch(err => alert('❌ Lỗi: ' + err.message));
+        }
+
+        function openStartSeriesModal(btn) {
+            document.getElementById('modalProposalId').value = btn.dataset.proposalId;
+            document.getElementById('modalSeriesName').value = btn.dataset.seriesName;
+            document.getElementById('startSeriesModalOverlay').style.display = 'flex';
+        }
+
+        function closeStartSeriesModal() {
+            document.getElementById('startSeriesModalOverlay').style.display = 'none';
+        }
+
+        function submitStartSeries() {
+            const proposalId = document.getElementById('modalProposalId').value;
+            const seriesName = document.getElementById('modalSeriesName').value.trim();
+            const description = document.getElementById('modalDescription').value.trim();
+            const file = document.getElementById('modalBookJacket').files[0];
+            if (!description) { alert('Vui lòng nhập mô tả!'); return; }
+            if (!file) { alert('Vui lòng chọn file bìa sách!'); return; }
+
+            const formData = new FormData();
+            formData.append('proposalId', proposalId);
+            formData.append('txtSeriesName', seriesName);
+            formData.append('txtDescription', description);
+            formData.append('fileBookJacket', file);
+
+            fetch('/manga/mangaka/start-series', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('✅ ' + data.message + '\nMã series: ' + data.seriesId);
+                        closeStartSeriesModal();
+                        location.reload();
+                    } else {
+                        alert('❌ ' + data.message);
+                    }
+                })
+                .catch(err => alert('❌ Lỗi: ' + err.message));
+        }
 
 
 
@@ -1169,7 +1217,6 @@
 
 
         // Modal thông báo
-        const mangakaId = document.getElementById('mangaka-meta').dataset.mangakaId;
         const notificationModal = document.getElementById("notificationModalOverlay");
         const btnCloseNotification = document.getElementById("btnCloseNotification");
         const btnOkNotification = document.getElementById("btnOkNotification");
@@ -1177,37 +1224,67 @@
         function closeNotificationModal() {
             if (notificationModal) notificationModal.style.display = "none";
         }
-
         if (btnCloseNotification) btnCloseNotification.addEventListener("click", closeNotificationModal);
         if (btnOkNotification) btnOkNotification.addEventListener("click", closeNotificationModal);
-
         if (notificationModal) {
             notificationModal.addEventListener("click", function (event) {
                 if (event.target === notificationModal) closeNotificationModal();
             });
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // Modal nộp bản thảo mới
+            const modalOverlay = document.getElementById("proposalModalOverlay");
+            const btnOpen = document.getElementById("btnOpenModal");
+            const btnCloseTop = document.getElementById("btnCloseTop");
+            const btnCancel = document.getElementById("btnCancel");
+            if (btnOpen) btnOpen.addEventListener("click", () => modalOverlay.style.display = "flex");
+            if (btnCloseTop) btnCloseTop.addEventListener("click", () => modalOverlay.style.display = "none");
+            if (btnCancel) btnCancel.addEventListener("click", () => modalOverlay.style.display = "none");
+            if (modalOverlay) {
+                modalOverlay.addEventListener("click", function (e) {
+                    if (e.target === modalOverlay) modalOverlay.style.display = "none";
+                });
+            }
+
+            // Đóng resubmit modal khi click ra ngoài
+            const resubmitOverlay = document.getElementById('resubmitModalOverlay');
+            if (resubmitOverlay) {
+                resubmitOverlay.addEventListener('click', function (e) {
+                    if (e.target === this) closeResubmitModal();
+                });
+            }
+
+            // Đóng start series modal khi click ra ngoài
+            const startModalOverlay = document.getElementById("startSeriesModalOverlay");
+            if (startModalOverlay) {
+                startModalOverlay.addEventListener("click", function (e) {
+                    if (e.target === startModalOverlay) closeStartSeriesModal();
+                });
+            }
+
+            // Active tab từ controller
+            var activeTabFromController = "[[${activeTab}]]";
+            if (activeTabFromController && !activeTabFromController.startsWith("[[")) {
+                openTab(activeTabFromController);
+            }
+
+            // Notification bell
             const btnNoti = document.getElementById('btnNoti');
             const dropdown = document.querySelector('.notification-dropdown');
-
-            if (btnNoti && dropdown) { // Kiểm tra điều kiện phòng vệ (Guard Clause)
+            if (btnNoti && dropdown) {
                 btnNoti.addEventListener('click', (e) => {
                     e.stopPropagation();
                     dropdown.classList.toggle('show');
                 });
             }
-
-            // Đóng khi click ra ngoài một cách an toàn
             document.addEventListener('click', () => {
                 if (dropdown && dropdown.classList.contains('show')) {
                     dropdown.classList.remove('show');
                 }
             });
         });
-        let _currentPageId = null;
-
-
 
         function openAssignModal(pageId) {
             _currentPageId = pageId;
@@ -1293,47 +1370,7 @@
                 });
         }
 
-        // Tránh xung đột biến bằng cách bọc block scope hoặc khai báo rõ ràng
 
-        function openStartSeriesModal(buttonElement) {
-            // Trích xuất dữ liệu lưu tại data-* của nút được nhấn
-            const proposalId = buttonElement.dataset.proposalId;
-            const seriesName = buttonElement.dataset.seriesName;
-
-            // Định vị các phần tử bên trong Form của Modal
-            const modalOverlay = document.getElementById("startSeriesModalOverlay");
-            const inputId = document.getElementById("modalProposalId");
-            const inputName = document.getElementById("modalSeriesName");
-
-            if (modalOverlay && inputId && inputName) {
-                // Điền dữ liệu tự động vào form mẫu
-                inputId.value = proposalId;
-                inputName.value = seriesName;
-
-                // Hiển thị modal lên màn hình bằng cơ chế flex
-                modalOverlay.style.display = "flex";
-            }
-        }
-
-        // Hàm đóng Modal Khởi động dự án
-        function closeStartSeriesModal() {
-            const modalOverlay = document.getElementById("startSeriesModalOverlay");
-            if (modalOverlay) {
-                modalOverlay.style.display = "none";
-            }
-        }
-
-        // Bổ sung sự kiện đóng modal an toàn khi người dùng nhấn trượt ra ngoài vùng xám đen
-        document.addEventListener("DOMContentLoaded", function () {
-            const startModalOverlay = document.getElementById("startSeriesModalOverlay");
-            if (startModalOverlay) {
-                startModalOverlay.addEventListener("click", function (event) {
-                    if (event.target === startModalOverlay) {
-                        closeStartSeriesModal();
-                    }
-                });
-            }
-        });
     </script>
 
 </body>

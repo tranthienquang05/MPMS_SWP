@@ -1,6 +1,8 @@
 package com.example.manga_management.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -8,12 +10,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.repository.ProposalRepository;
 import com.example.manga_management.service.ProposalService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
@@ -30,65 +34,78 @@ public class BoardController {
         this.notificationController = notificationController;
     }
 
+    @Operation(summary = "Xem danh sách bản thảo chờ bỏ phiếu")
     @GetMapping("")
-    public String boardPage(HttpSession session, Model model) {
-        // Kiểm tra đăng nhập theo cách đã chạy ổn ở Tantou
-        if (session.getAttribute("user") == null) {
+    public String editorPage(HttpSession session) {
+        if (session.getAttribute("user") == null)
             return "redirect:/login";
-        }
-
-        List<Proposal> list = proposalRepository.findByStatus("checked");
-        model.addAttribute("listProposals", list);
         return "editor";
     }
 
-    @PostMapping("/vote")
-    public String boardReview(@RequestParam String id,
-            @RequestParam String action,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
+    @Operation(summary = "Xem danh sách bản thảo chờ bỏ phiếu")
+    @GetMapping("/data")
+    @ResponseBody
+    public Map<String, Object> boardData(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
 
-        // 1. Lấy đối tượng User từ session (key là "user")
         Object userObj = session.getAttribute("user");
-
-        // 2. Kiểm tra nếu chưa đăng nhập
         if (userObj == null) {
-            return "redirect:/login";
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập!");
+            return result;
         }
 
-        // 3. Ép kiểu an toàn từ Object sang User
         com.example.manga_management.entity.User user = (com.example.manga_management.entity.User) userObj;
 
-        // 4. Lấy ID từ đối tượng user vừa ép kiểu
-        String userId = user.getId();
+        List<Proposal> list = proposalRepository.findByStatus("checked");
+        result.put("status", "success");
+        result.put("userId", user.getId());
+        result.put("total", list.size());
+        result.put("proposals", list);
+        return result;
+    }
 
-        try {
-            // Kiểm tra ID dự án
-            if (id == null || id.isEmpty()) {
-                throw new RuntimeException("Dữ liệu ID dự án không hợp lệ!");
-            }
+    @Operation(summary = "Bỏ phiếu cho bản thảo")
+    @PostMapping("/vote")
+    @ResponseBody
+    public Map<String, String> boardReview(
+            @RequestParam String id,
+            @RequestParam String action,
+            @RequestParam String userId) {
 
-            // Gọi service với userId (String) đã lấy được
-            proposalService.submitVote(id, action, userId);
-            Proposal p = proposalRepository.findById(id).orElse(null);
-            if (p != null) {
-                String result = "pass".equals(action) ? "Thông qua" : "Từ chối";
+        Map<String, String> result = new HashMap<>();
 
-                // 1. Thông báo cho Mangaka
-                notificationController.send(null, p.getMangaka().getUser().getId(),
-                        "Dự án '" + p.getSeriesName() + "'đã nhận được từ hội đồng một phiếu: " + result,
-                        "/manga/mangaka/my-projects");
-                // 2. Thông báo cho Tanto nếu dự án bị từ chối
-
-                notificationController.send("tantou", null,
-                        "Dự án '" + p.getSeriesName() + "' mà bạn duyệt đã nhận được từ hội đồng một phiếu:" + result,
-                        "/manga/tantou");
-            }
-            redirectAttributes.addFlashAttribute("message", "Đã ghi nhận phiếu bầu!");
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        if (id == null || id.isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "ID dự án không hợp lệ!");
+            return result;
         }
 
-        return "redirect:/manga/editor";
+        try {
+            proposalService.submitVote(id, action, userId);
+
+            Proposal p = proposalRepository.findById(id).orElse(null);
+            if (p != null) {
+                String voteResult = "pass".equals(action) ? "Thông qua" : "Từ chối";
+
+                notificationController.send(null, p.getMangaka().getUser().getId(),
+                        "Dự án '" + p.getSeriesName() + "' đã nhận phiếu: " + voteResult,
+                        "/manga/mangaka/my-projects");
+
+                notificationController.send("tantou", null,
+                        "Dự án '" + p.getSeriesName() + "' đã nhận phiếu: " + voteResult,
+                        "/manga/tantou");
+
+                result.put("status", "success");
+                result.put("proposalId", id);
+                result.put("currentStatus", p.getStatus());
+                result.put("message", "Đã ghi nhận phiếu bầu: " + voteResult);
+            }
+
+        } catch (RuntimeException e) {
+            result.put("status", "error");
+            result.put("message", e.getMessage());
+        }
+        return result;
     }
 }

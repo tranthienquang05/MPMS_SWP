@@ -139,13 +139,14 @@
 
         </div>
 
+        <!-- tab-project -->
+
         <div id="tab-project" class="tab-pane">
             <h1>Xin chào Tổng biên tập</h1>
             <hr>
-            <div th:if="${message}" class="notification success"><span th:text="${message}"></span></div>
-            <div th:if="${error}" class="notification error"><span th:text="${error}"></span></div>
-            <h3 class="text-warning">Danh sách dự án đang mở cổng Bình
-                chọn</h3>
+            <div id="voteMessage" style="display:none;" class="notification success"></div>
+            <div id="voteError" style="display:none;" class="notification error"></div>
+            <h3 class="text-warning">Danh sách dự án đang mở cổng Bình chọn</h3>
             <table class="data-table">
                 <thead>
                     <tr>
@@ -156,42 +157,12 @@
                         <th>Biểu Quyết</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr th:each="p : ${listProposals}">
-                        <td th:text="${p.id}">ID</td>
-                        <td th:text="${p.Mangaka.user.fullname}">Mangaka Name</td>
-                        <td th:text="${p.seriesName}">Series Name</td>
-                        <td>
-                            <a th:if="${p.filePath != null and !#strings.isEmpty(p.filePath)}"
-                                th:href="@{${p.filePath}}" class="btn-link" target="_blank">
-                                <i class="fa-solid fa-file-pdf"></i> Xem
-                                bản thảo
-                            </a>
-                        </td>
-                        <td>
-                            <div style="display: flex;">
-                                <form th:action="@{/manga/editor/vote}" method="post" style="margin-right: 5px;">
-                                    <input type="hidden" name="id" th:value="${p.id}">
-                                    <input type="hidden" name="action" value="pass">
-                                    <button type="submit" class="btn btn-sm btn-success">Chấp
-                                        Thuận</button>
-                                </form>
-                                <form th:action="@{/manga/editor/vote}" method="post">
-                                    <input type="hidden" name="id" th:value="${p.id}">
-                                    <input type="hidden" name="action" value="reject">
-                                    <button type="submit" class="btn btn-sm btn-danger">Bác
-                                        Bỏ</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(listProposals)}">
-                        <td colspan="5" class="text-center text-muted py-3">Hiện không
-                            có dự án nào chờ bình chọn.</td>
+                <tbody id="proposalVoteBody">
+                    <tr>
+                        <td colspan="5" style="text-align:center;">Đang tải...</td>
                     </tr>
                 </tbody>
             </table>
-
         </div>
 
         <div id="tab-assistant" class="tab-pane">
@@ -252,6 +223,81 @@
             document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
             document.getElementById(tabId).classList.add("active");
         }
+
+        let boardUserId = '';
+
+        function loadVoteProposals() {
+            fetch('/manga/editor/data')
+                .then(res => res.json())
+                .then(data => {
+                    // Lưu userId từ response
+                    if (data.userId) boardUserId = data.userId;
+
+                    const tbody = document.getElementById('proposalVoteBody');
+                    if (!data.proposals || data.proposals.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:gray;">'
+                            + 'Hiện không có dự án nào chờ bình chọn.</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = data.proposals.map(p => `
+                <tr>
+                    <td>${p.id}</td>
+                    <td>${p.mangaka?.user?.fullname ?? '—'}</td>
+                    <td>${p.seriesName}</td>
+                    <td>
+                        ${p.filePath
+                            ? `<a href="${p.filePath}" class="btn-link" target="_blank">
+                                   <i class="fa-solid fa-file-pdf"></i> Xem bản thảo
+                               </a>`
+                            : '—'}
+                    </td>
+                    <td>
+                        <div style="display:flex; gap:5px;">
+                            <button type="button" onclick="castVote('${p.id}', 'pass')"
+                                class="btn btn-sm btn-success">Chấp Thuận</button>
+                            <button type="button" onclick="castVote('${p.id}', 'reject')"
+                                class="btn btn-sm btn-danger">Bác Bỏ</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+                })
+                .catch(() => {
+                    document.getElementById('proposalVoteBody').innerHTML =
+                        '<tr><td colspan="5" style="text-align:center;color:red;">Lỗi tải dữ liệu</td></tr>';
+                });
+        }
+
+        function castVote(id, action) {
+            const params = new URLSearchParams();
+            params.append('id', id);
+            params.append('action', action);
+            params.append('userId', boardUserId);
+
+            fetch('/manga/editor/vote', { method: 'POST', body: params })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const msgEl = document.getElementById('voteMessage');
+                        msgEl.textContent = '✅ ' + data.message;
+                        msgEl.style.display = 'block';
+                        setTimeout(() => msgEl.style.display = 'none', 3000);
+                        loadVoteProposals();
+                    } else {
+                        const errEl = document.getElementById('voteError');
+                        errEl.textContent = 'Lỗi:' + data.message;
+                        errEl.style.display = 'block';
+                        setTimeout(() => errEl.style.display = 'none', 3000);
+                    }
+                })
+                .catch(err => alert('Lỗi: ' + err.message));
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadVoteProposals();
+        });
+
 
         function loadAll() {
             loadRanking();
@@ -422,28 +468,30 @@
                 });
         }
 
-        // Tải active sessions khi trang load
         document.addEventListener('DOMContentLoaded', function () {
+            loadVoteProposals();
             loadActiveSessions();
-        });
 
-        document.addEventListener('DOMContentLoaded', () => {
             const btnNoti = document.getElementById('btnNoti');
             const dropdown = document.querySelector('.notification-dropdown');
-
             if (btnNoti) {
                 btnNoti.addEventListener('click', (e) => {
                     e.stopPropagation();
                     dropdown.classList.toggle('show');
                 });
             }
-
-            // Đóng khi click ra ngoài
             document.addEventListener('click', () => {
-                if (dropdown.classList.contains('show')) {
+                if (dropdown && dropdown.classList.contains('show')) {
                     dropdown.classList.remove('show');
                 }
             });
+        });
+
+        // Đóng khi click ra ngoài
+        document.addEventListener('click', () => {
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            }
         });
     </script>
 </body>

@@ -69,37 +69,41 @@ public class MangakaController {
         this.notificationController = notificationController;
     }
 
-    @Operation(summary = "View the Mangaka dashboard", description = "Allows a Mangaka to view their dashboard with available actions and information. Requires the user to be logged in and have an associated Mangaka profile.")
+    @Operation(summary = "View the Mangaka dashboard")
     @GetMapping("")
     public String mangakaPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
-        if (user == null) {
+        if (user == null)
             return "redirect:/login";
-        }
 
         model.addAttribute("user", user);
 
         Mangaka mangaka = mangakaRepository.findByUser(user).orElse(null);
+        model.addAttribute("mangaka", mangaka); // ← move OUTSIDE the if block
+
         if (mangaka != null) {
-            List<Series> mySeriesList = seriesRepository.findByProposal_Mangaka_Id(mangaka.getId());
-            model.addAttribute("mySeriesList", mySeriesList);
-            model.addAttribute("allProposals", proposalRepository.findByMangaka_Id(mangaka.getId()));
+            model.addAttribute("mySeriesList",
+                    seriesRepository.findByProposal_Mangaka_Id(mangaka.getId()));
+            model.addAttribute("allProposals",
+                    proposalRepository.findByMangaka_Id(mangaka.getId()));
             model.addAttribute("approvedList",
-                    proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangaka.getId()));
+                    proposalRepository.findByStatusInAndMangaka_Id(
+                            List.of("checked", "pass"), mangaka.getId()));
             model.addAttribute("rejectedList",
-                    proposalRepository.findByStatusAndMangaka_Id("unfinish", mangaka.getId()));
+                    proposalRepository.findByStatusAndMangaka_Id(
+                            "unfinish", mangaka.getId()));
         }
+
         model.addAttribute("activeTab", "tab-home");
         return "mangaka";
     }
 
-    @Operation(summary = "View all approved projects for the logged-in Mangaka", description = "Allows a Mangaka to view a list of all their approved projects. Requires the user to be logged in and have an associated Mangaka profile.")
+    @Operation(summary = "View all proposals for the logged-in Mangaka")
     @GetMapping("/my-projects")
     public String myProjectsPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
-        if (user == null) {
+        if (user == null)
             return "redirect:/login";
-        }
 
         Mangaka mangaka = mangakaRepository.findByUser(user).orElse(null);
         if (mangaka == null) {
@@ -107,128 +111,84 @@ public class MangakaController {
             return "mangaka";
         }
 
-        // Tất cả proposals
-        List<Proposal> allProposals = proposalRepository.findByMangaka_Id(mangaka.getId());
-        // Đã duyệt bởi Tantou
-        List<Proposal> approvedList = proposalRepository.findByStatusInAndMangaka_Id(
-                List.of("checked", "pass"), mangaka.getId());
-        // Bị từ chối
-        List<Proposal> rejectedList = proposalRepository.findByStatusAndMangaka_Id(
-                "unfinish", mangaka.getId());
-
-        model.addAttribute("allProposals", allProposals);
-        model.addAttribute("approvedList", approvedList);
-        model.addAttribute("rejectedList", rejectedList);
+        model.addAttribute("mangaka", mangaka);
+        model.addAttribute("allProposals",
+                proposalRepository.findByMangaka_Id(mangaka.getId()));
+        model.addAttribute("approvedList",
+                proposalRepository.findByStatusInAndMangaka_Id(
+                        List.of("checked", "pass"), mangaka.getId()));
+        model.addAttribute("rejectedList",
+                proposalRepository.findByStatusAndMangaka_Id(
+                        "unfinish", mangaka.getId()));
         model.addAttribute("activeTab", "tab-proposal");
         return "mangaka";
     }
 
-    @Operation(summary = "Start a new series from an approved proposal", description = "Allows a Mangaka to start a new series based on an approved proposal. Requires the proposal ID, series name, description, and a book jacket file (PDF).")
-    @PostMapping("/submit-proposal")
-    public String handleSubmitting(@RequestParam String txtSeriesName,
-            @Parameter(description = "Manuscript file") @RequestPart MultipartFile fileManuscript, HttpSession session,
-            Model model, RedirectAttributes redirectAttributes) {
+    // ===================== SWAGGER / JSON ENDPOINTS =====================
 
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return "redirect:/login";
+    @Operation(summary = "[SWAGGER] Xem tất cả proposals của một Mangaka")
+    @GetMapping("/my-projects/data")
+    @ResponseBody
+    public Map<String, Object> myProjectsData(@RequestParam String mangakaId) {
+        Map<String, Object> result = new HashMap<>();
+
+        Mangaka mangaka = mangakaRepository.findById(mangakaId).orElse(null);
+        if (mangaka == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy Mangaka với ID: " + mangakaId);
+            return result;
         }
 
-        Mangaka currentMangaka = mangakaRepository.findByUser(user).orElse(null);
-        if (currentMangaka == null) {
-            model.addAttribute("message", "Lỗi: Tài khoản không có vai trò Mangaka phù hợp!");
-            return "mangaka";
-        }
-
-        if (fileManuscript.isEmpty()) {
-            model.addAttribute("message", "Vui lòng chọn một file bản thảo để nộp!");
-            return "mangaka";
-        }
-
-        if (txtSeriesName == null || txtSeriesName.trim().isEmpty()) {
-            model.addAttribute("message", "Vui lòng nhập tên series!");
-            return "mangaka";
-        }
-
-        try {
-            // Get the correct upload directory path based on working directory
-            String workingDir = System.getProperty("user.dir");
-            String uploadDir = workingDir + File.separator + "src" + File.separator + "main" + File.separator
-                    + "resources" + File.separator + "static" + File.separator + "proposal" + File.separator;
-
-            Path uploadPath = Paths.get(uploadDir);
-
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            // Tính toán ID trước để lấy tên đặt cho file
-            long currentCount = proposalRepository.count();
-            String nextId = String.format("PPS%03d", currentCount + 1);
-
-            // Đục đuôi file gốc (.pdf, .zip...)
-            String originalName = fileManuscript.getOriginalFilename();
-            String extension = ".pdf";
-            if (originalName != null && originalName.contains(".")) {
-                extension = originalName.substring(originalName.lastIndexOf("."));
-            }
-
-            // Đặt tên file theo ID để tối ưu độ dài chuỗi
-            String shortFileName = nextId + extension;
-            Path destinationPath = uploadPath.resolve(shortFileName);
-            fileManuscript.transferTo(destinationPath.toFile());
-
-            Proposal proposal = new Proposal();
-            proposal.setId(nextId);
-            proposal.setMangaka(currentMangaka);
-            proposal.setSeriesName(txtSeriesName.trim());
-            proposal.setFilePath("/proposal/" + shortFileName);
-            proposal.setStatus("finish");
-
-            proposalRepository.save(proposal);
-
-            // Thông báo cho Tantou (Xuyên Role)
-            notificationController.send("tantou", null, "Có đề xuất mới từ Mangaka đang chờ duyệt: " + txtSeriesName,
-                    "/manga/editor");
-
-            // Truyền thông báo sang trang sau khi redirect
-            redirectAttributes.addFlashAttribute("message", "Đã nộp dự án thành công!");
-            return "redirect:/manga/mangaka/my-projects";
-
-        } catch (IOException e) {
-            // Nếu lỗi, ở lại trang hiện tại dùng model
-            redirectAttributes.addFlashAttribute("message", "Lỗi hệ thống: " + e.getMessage());
-            return "redirect:/manga/mangaka";
-        }
+        result.put("status", "success");
+        result.put("allProposals",
+                proposalRepository.findByMangaka_Id(mangakaId));
+        result.put("approvedList",
+                proposalRepository.findByStatusInAndMangaka_Id(
+                        List.of("checked", "pass"), mangakaId));
+        result.put("rejectedList",
+                proposalRepository.findByStatusAndMangaka_Id(
+                        "unfinish", mangakaId));
+        return result;
     }
 
-    @PostMapping("/resubmit-proposal")
-    public String resubmitProposal(
-            @RequestParam String proposalId,
+    @Operation(summary = "[SWAGGER] Nộp bản thảo mới")
+    @PostMapping("/submit-proposal")
+    @ResponseBody
+    public Map<String, String> handleSubmitting(
+            @RequestParam(required = false) String mangakaId,
             @RequestParam String txtSeriesName,
-            @RequestPart MultipartFile fileManuscript,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
+            @Parameter(description = "Manuscript file") @RequestPart MultipartFile fileManuscript,
+            HttpSession session) {
 
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return "redirect:/login";
+        Map<String, String> result = new HashMap<>();
+
+        Mangaka currentMangaka = null;
+
+        if (mangakaId != null && !mangakaId.isEmpty()) {
+            currentMangaka = mangakaRepository.findById(mangakaId).orElse(null);
+        } else {
+            User user = (User) session.getAttribute("user");
+            if (user != null) {
+                currentMangaka = mangakaRepository.findByUser(user).orElse(null);
+            }
         }
 
-        Proposal proposal = proposalRepository.findById(proposalId).orElse(null);
-        if (proposal == null) {
-            redirectAttributes.addFlashAttribute("message", "Không tìm thấy đề xuất!");
-            return "redirect:/manga/mangaka/my-projects";
+        if (currentMangaka == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy Mangaka!");
+            return result;
         }
 
         if (fileManuscript.isEmpty()) {
-            redirectAttributes.addFlashAttribute("message", "Vui lòng chọn file bản thảo mới!");
-            return "redirect:/manga/mangaka/my-projects";
+            result.put("status", "error");
+            result.put("message", "Vui lòng chọn file bản thảo!");
+            return result;
         }
 
         if (txtSeriesName == null || txtSeriesName.trim().isEmpty()) {
-            redirectAttributes.addFlashAttribute("message", "Vui lòng nhập tên series!");
-            return "redirect:/manga/mangaka/my-projects";
+            result.put("status", "error");
+            result.put("message", "Vui lòng nhập tên series!");
+            return result;
         }
 
         try {
@@ -238,18 +198,90 @@ public class MangakaController {
                     + File.separator + "proposal" + File.separator;
 
             Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
+            if (!Files.exists(uploadPath))
                 Files.createDirectories(uploadPath);
+
+            long currentCount = proposalRepository.count();
+            String nextId = String.format("PPS%03d", currentCount + 1);
+
+            String originalName = fileManuscript.getOriginalFilename();
+            String extension = ".pdf";
+            if (originalName != null && originalName.contains(".")) {
+                extension = originalName.substring(originalName.lastIndexOf("."));
             }
 
-            // Xóa file cũ dựa theo filePath đã lưu trong DB
+            String shortFileName = nextId + extension;
+            fileManuscript.transferTo(uploadPath.resolve(shortFileName).toFile());
+
+            Proposal proposal = new Proposal();
+            proposal.setId(nextId);
+            proposal.setMangaka(currentMangaka);
+            proposal.setSeriesName(txtSeriesName.trim());
+            proposal.setFilePath("/proposal/" + shortFileName);
+            proposal.setStatus("finish");
+            proposalRepository.save(proposal);
+
+            notificationController.send("tantou", null,
+                    "Có đề xuất mới từ Mangaka đang chờ duyệt: " + txtSeriesName,
+                    "/manga/editor");
+
+            result.put("status", "success");
+            result.put("proposalId", nextId);
+            result.put("message", "Đã nộp bản thảo thành công!");
+
+        } catch (IOException e) {
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
+        }
+        return result;
+    }
+
+    @Operation(summary = "[SWAGGER] Nộp lại bản thảo bị từ chối")
+    @PostMapping("/resubmit-proposal")
+    @ResponseBody
+    public Map<String, String> resubmitProposal(
+            @RequestParam String proposalId,
+            @RequestParam String txtSeriesName,
+            @RequestPart MultipartFile fileManuscript) {
+
+        Map<String, String> result = new HashMap<>();
+
+        Proposal proposal = proposalRepository.findById(proposalId).orElse(null);
+        if (proposal == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy đề xuất: " + proposalId);
+            return result;
+        }
+
+        if (fileManuscript.isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng chọn file bản thảo mới!");
+            return result;
+        }
+
+        if (txtSeriesName == null || txtSeriesName.trim().isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng nhập tên series!");
+            return result;
+        }
+
+        try {
+            String workingDir = System.getProperty("user.dir");
+            String uploadDir = workingDir + File.separator + "src" + File.separator + "main"
+                    + File.separator + "resources" + File.separator + "static"
+                    + File.separator + "proposal" + File.separator;
+
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath))
+                Files.createDirectories(uploadPath);
+
+            // Xóa file cũ
             if (proposal.getFilePath() != null) {
                 Path oldFile = Paths.get(uploadDir
                         + Paths.get(proposal.getFilePath()).getFileName());
                 Files.deleteIfExists(oldFile);
             }
 
-            // Lưu file mới — tên giữ nguyên proposalId, extension theo file mới
             String originalName = fileManuscript.getOriginalFilename();
             String extension = ".pdf";
             if (originalName != null && originalName.contains(".")) {
@@ -259,64 +291,66 @@ public class MangakaController {
             String fileName = proposalId + extension;
             fileManuscript.transferTo(uploadPath.resolve(fileName).toFile());
 
-            // Chỉ cập nhật 4 trường, giữ nguyên mọi thứ khác
             proposal.setSeriesName(txtSeriesName.trim());
             proposal.setFilePath("/proposal/" + fileName);
             proposal.setStatus("finish");
             proposal.setComment(null);
-
             proposalRepository.save(proposal);
 
             notificationController.send("tantou", null,
                     "Mangaka đã nộp lại bản thảo: " + txtSeriesName,
                     "/manga/editor");
 
-            redirectAttributes.addFlashAttribute("message", "Đã nộp lại bản thảo thành công!");
+            result.put("status", "success");
+            result.put("proposalId", proposalId);
+            result.put("message", "Đã nộp lại bản thảo thành công!");
 
         } catch (IOException e) {
-            redirectAttributes.addFlashAttribute("message", "Lỗi hệ thống: " + e.getMessage());
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
         }
-
-        return "redirect:/manga/mangaka/my-projects";
+        return result;
     }
 
-    @Operation(summary = "Start a new series from an approved proposal", description = "Allows a Mangaka to start a new series based on an approved proposal. Requires the proposal ID, series name, description, and a book jacket file (PDF).")
+    @Operation(summary = "[SWAGGER] Khởi động series từ proposal đã được duyệt")
     @PostMapping("/start-series")
-    public String startSeries(@RequestParam String proposalId, @RequestParam String txtSeriesName,
-            @RequestParam String txtDescription, @RequestParam MultipartFile fileBookJacket, HttpSession session,
-            Model model, RedirectAttributes redirectAttributes) {
+    @ResponseBody
+    public Map<String, String> startSeries(
+            @RequestParam String proposalId,
+            @RequestParam String txtSeriesName,
+            @RequestParam String txtDescription,
+            @RequestPart MultipartFile fileBookJacket) {
 
-        // 1. Kiểm tra proposal
+        Map<String, String> result = new HashMap<>();
+
         Proposal proposal = proposalRepository.findById(proposalId).orElse(null);
         if (proposal == null) {
-            model.addAttribute("message", "Lỗi: Không tìm thấy đề xuất!");
-            return "mangaka";
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy đề xuất: " + proposalId);
+            return result;
         }
 
-        // 2. Xử lý lưu file
         if (fileBookJacket.isEmpty()) {
-            model.addAttribute("message", "Vui lòng chọn file bìa sách (PDF)!");
-            return "mangaka";
+            result.put("status", "error");
+            result.put("message", "Vui lòng chọn file bìa sách!");
+            return result;
         }
 
         try {
-            String uploadDir = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
-                    + File.separator + "resources" + File.separator + "static" + File.separator + "bookjackets"
+            String uploadDir = System.getProperty("user.dir") + File.separator + "src"
+                    + File.separator + "main" + File.separator + "resources"
+                    + File.separator + "static" + File.separator + "bookjackets"
                     + File.separator;
 
             Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
+            if (!Files.exists(uploadPath))
                 Files.createDirectories(uploadPath);
-            }
 
-            // Tạo ID mới cho Series
             long count = seriesRepository.count();
             String seriesId = String.format("SER%03d", count + 1);
-            String fileName = seriesId + ".pdf"; // Lưu cứng đuôi .pdf
-
+            String fileName = seriesId + ".pdf";
             fileBookJacket.transferTo(uploadPath.resolve(fileName).toFile());
 
-            // 3. Tạo Series
             Series series = new Series();
             series.setId(seriesId);
             series.setProposal(proposal);
@@ -324,26 +358,25 @@ public class MangakaController {
             series.setDescription(txtDescription);
             series.setBookJacket("/bookjackets/" + fileName);
             series.setStartDate(LocalDate.now());
-            series.setStatus("unfinish"); // Mặc định khi bắt đầu
-
+            series.setStatus("unfinish");
             seriesRepository.save(series);
 
-            // 4. Update Proposal để không bị trùng lặp
             proposal.setStatus("started");
             proposalRepository.save(proposal);
 
             notificationController.send("tantou", null,
-                    "Mangaka đã khởi động dự án mới: " + txtSeriesName, "/manga/editor");
+                    "Mangaka đã khởi động dự án mới: " + txtSeriesName,
+                    "/manga/editor");
 
-            // Chỉ 1 dòng message, dùng redirectAttributes
-            redirectAttributes.addFlashAttribute("message", "Khởi động tác phẩm thành công!");
+            result.put("status", "success");
+            result.put("seriesId", seriesId);
+            result.put("message", "Khởi động tác phẩm thành công!");
 
         } catch (IOException e) {
-            redirectAttributes.addFlashAttribute("message", "Lỗi hệ thống: " + e.getMessage());
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
         }
-
-        return "redirect:/manga/mangaka"; // mangakaPage() sẽ tự load đủ data
-
+        return result;
     }
 
     @Operation(summary = "View series details and chapters", description = "Allows a Mangaka to view the details of a specific series along with its chapters. Requires the series ID.")

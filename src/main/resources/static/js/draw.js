@@ -1026,3 +1026,17 @@ if (savedPath1 && savedPath1 !== 'null' && savedPath1 !== '') {
 
     img.src = savedPath1;
 }
+
+// ========================================
+// DOWNLOAD MỌI Layer thành 1 file ảnh
+// ========================================
+document.getElementById('btnDownload')?.addEventListener('click', () => {
+    // Gộp tất cả layer thành 1 ảnh
+    const flatCanvas = flattenAllLayers();
+
+    // Tạo link download tự động
+    const link = document.createElement('a');
+    link.download = 'manga-page-' + Date.now() + '.png';
+    link.href = flatCanvas.toDataURL('image/png');
+    link.click();
+});

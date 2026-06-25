@@ -60,7 +60,6 @@ public class AssistantController {
         if (model.getAttribute("activeTab") == null) {
             model.addAttribute("activeTab", "tab-home");
         }
-        
 
         return "assistant";
     }
@@ -141,10 +140,33 @@ public class AssistantController {
 
         Submission submission = submissionRepository.findById(id).orElse(null);
 
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        Assistant assistant = assistantRepository.findByUserId(user.getId()).orElse(null);
+        if (assistant == null) {
+            return "redirect:/manga/assistant";
+        }
+
         if (submission != null) {
             submission.setStatus(status);
             submissionRepository.save(submission);
         }
+        List<Submission> todo = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "unfinish");
+
+        List<Submission> waiting = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "finish");
+
+        List<Submission> done = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "pass");
+
+        if (submission == null) {
+            return "redirect:/manga/assistant";
+        }
+        model.addAttribute("todo", todo);
+        model.addAttribute("waiting", waiting);
+        model.addAttribute("done", done);
+
         model.addAttribute("activeTab", "tab-project");
         return "assistant";
     }

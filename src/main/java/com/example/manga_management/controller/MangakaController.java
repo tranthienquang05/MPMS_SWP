@@ -474,7 +474,7 @@ public class MangakaController {
             // Đã sửa redirect cho đúng với cấu trúc route hiển thị của hệ thống
             return "mangaka";
         }
-
+        model.addAttribute("typeDraw","page");
         model.addAttribute("page", page);
         model.addAttribute("activeTab", "tab-draw");
         return "mangaka";
@@ -504,4 +504,43 @@ public class MangakaController {
         return "redirect:/manga/mangaka/myseries/" + seriesId + "/" + chapterId + "/" + pageId + "/edit";
     }
 
+    @GetMapping("/submission/{id}/edit")
+    public String editSubmission(@PathVariable String id, Model model, HttpSession session) {
+
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        Submission submission = submissionRepository.findById(id).orElse(null);
+        if (submission == null) {
+            model.addAttribute("message", "Submission không tồn tại!");
+            return "redirect:/manga/mangaka";
+        }
+
+        model.addAttribute("submission", submission);
+        model.addAttribute("typeDraw", "submission");
+        model.addAttribute("activeTab", "tab-draw");
+
+        return "mangaka";
+    }
+
+    @PostMapping("/submission/{id}/submit")
+    public String updateStatus(@PathVariable String id, @RequestParam String status, 
+        @RequestParam String comment,
+        Model model,
+            HttpSession session) {
+
+        Submission submission = submissionRepository.findById(id).orElse(null);
+        String ChapterID = submission.getPageId().getChapter().getId();
+        String SeriesID = submission.getPageId().getChapter().getSeries().getId();
+        if (submission != null) {
+            submission.setStatus(status);
+            submission.setComment(comment);
+            submissionRepository.save(submission);
+        }
+
+        return "redirect:/manga/mangaka/myseries/" + SeriesID + "/" + ChapterID;
+    }
 }
+ 

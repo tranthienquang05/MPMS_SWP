@@ -214,6 +214,7 @@
                                     id="penSizeValue">6</span>
                             </div>
                             <div class="prop-divider"></div>
+
                             <div class="prop-group">
                                 <span class="prop-label">Độ mờ</span>
                                 <input type="range" id="penOpacity" min="10"
@@ -223,7 +224,6 @@
                             </div>
                             <div class="prop-divider"></div>
 
-                            <!-- Tuỳ chọn riêng cho shape: fill hay outline -->
                             <div class="prop-group" id="shapeFillGroup"
                                 style="display:none;">
                                 <span class="prop-label">Kiểu</span>
@@ -236,7 +236,6 @@
                                 </div>
                             </div>
 
-                            <!-- Tuỳ chọn riêng cho text -->
                             <div class="prop-group" id="textSizeGroup"
                                 style="display:none;">
                                 <span class="prop-label">Cỡ chữ</span>
@@ -251,76 +250,62 @@
                                 th:data-submission-id="${submission.id}"
                                 th:data-who="assistant"
                                 th:data-saved-path="${submission.filePath}"
-                                type="button" class="btn-ai-support-top"
-                                style="background-color:#28a745; margin-left:0;">
+                                type="button"
+                                class="btn-ai-support-top approve">
                                 <i class="fa-solid fa-paper-plane"></i>
                                 Lưu
                             </button>
-                            <button type="button" class="btn-ai-support-top"
-                                id="btnLoadPage" th:if="${page != null}"
-                                style="background-color:#007bff; margin-left:0;">
+
+                            <button type="button"
+                                class="btn-ai-support-top primary"
+                                id="btnLoadPage" th:if="${page != null}">
                                 <i class="fa-solid fa-folder-open"></i>
                                 Mở file
                             </button>
+
                             <input type="file" id="inputLoadPage"
-                                accept="image/png" style="display:none;">
+                                accept="image/png">
+
                             <button type="button" class="btn-ai-support-top"
                                 id="btnAiSupport">
                                 <i class="fa-solid fa-brain"></i>
                                 AI Support
                             </button>
-
                         </div>
 
                         <div class="color-palette-bar">
                             <span class="palette-label">Palette</span>
                             <div class="palette-swatch"
-                                style="background:#000000"
                                 data-color="#000000"></div>
                             <div class="palette-swatch"
-                                style="background:#ffffff"
                                 data-color="#ffffff"></div>
                             <div class="palette-swatch"
-                                style="background:#7f7f7f"
                                 data-color="#7f7f7f"></div>
                             <div class="palette-swatch"
-                                style="background:#c3c3c3"
                                 data-color="#c3c3c3"></div>
                             <div class="palette-swatch"
-                                style="background:#ff0000"
                                 data-color="#ff0000"></div>
                             <div class="palette-swatch"
-                                style="background:#ff7f00"
                                 data-color="#ff7f00"></div>
                             <div class="palette-swatch"
-                                style="background:#ffff00"
                                 data-color="#ffff00"></div>
                             <div class="palette-swatch"
-                                style="background:#00ff00"
                                 data-color="#00ff00"></div>
                             <div class="palette-swatch"
-                                style="background:#00ffff"
                                 data-color="#00ffff"></div>
                             <div class="palette-swatch"
-                                style="background:#0078ff"
                                 data-color="#0078ff"></div>
                             <div class="palette-swatch"
-                                style="background:#7f00ff"
                                 data-color="#7f00ff"></div>
                             <div class="palette-swatch"
-                                style="background:#ff00ff"
                                 data-color="#ff00ff"></div>
                             <div class="palette-swatch"
-                                style="background:#8b4513"
                                 data-color="#8b4513"></div>
                             <div class="palette-swatch"
-                                style="background:#ffc0cb"
                                 data-color="#ffc0cb"></div>
                             <div class="palette-swatch"
-                                style="background:#ffd700"
                                 data-color="#ffd700"></div>
                             <div class="palette-swatch"
-                                style="background:#2e8b57"
                                 data-color="#2e8b57"></div>
                         </div>
 
@@ -524,118 +509,74 @@
 
             <div id="tab-project" class="tab-pane">
 
-                <h2>Công việc được giao</h2>
+  <h2>Công việc được giao</h2>
 
-                <div style="
-        display:grid;
-        grid-template-columns:repeat(3,1fr);
-        gap:20px;
-        margin-top:20px;">
+  <div class="kanban-grid">
 
-                    <!-- Đang làm -->
-                    <div>
-                        <h3>🟠 Đang làm</h3>
+    <div>
+      <h3>🟠 Đang làm</h3>
 
-                        <div th:each="s : ${todo}" style="
-                    border:1px solid #ddd;
-                    border-radius:8px;
-                    padding:10px;
-                    margin-bottom:10px;
-                    background:rgb(255, 201, 119);">
+      <div th:each="s : ${todo}" class="kanban-card todo-bg">
 
-                            <b th:text="${s.pageId.chapter.series.seriesName}">
-                            </b>
+        <b th:text="${s.pageId.chapter.series.seriesName}"></b>
 
-                            <p>
-                                Chapter
-                                <span
-                                    th:text="${s.pageId.chapter.chapterNumber}"></span>
-                                -
-                                Trang
-                                <span th:text="${s.pageId.pageNumber}"></span>
-                            </p>
+        <p>
+          Chapter <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
+          Trang <span th:text="${s.pageId.pageNumber}"></span>
+        </p>
 
-                            <p>
-                                Deadline:
-                                <span th:text="${s.deadline}"></span>
-                            </p>
+        <p>
+          Deadline: <span th:text="${s.deadline}"></span>
+        </p>
 
-                            <p th:text="${s.comment}"></p>
+        <p th:text="${s.comment}"></p>
 
-                            <a
-                                th:href="@{/manga/assistant/submission/{id}/edit(id=${s.id})}">
-                                <button>Mở</button>
-                            </a>
-                            <form
-                                th:action="@{'/manga/assistant/submission/' + ${s.id} + '/submit'}"
-                                method="post">
-                                <input type="hidden" name="status"
-                                    value="finish" />
-                                <button type="submit">Nộp Bài</button>
-                            </form>
-                        </div>
-                    </div>
+        <div class="kanban-actions-row">
+          <a th:href="@{/manga/assistant/submission/{id}/edit(id=${s.id})}">
+            <button type="button">Mở</button>
+          </a>
+          <form th:action="@{'/manga/assistant/submission/' + ${s.id} + '/submit'}" method="post">
+            <input type="hidden" name="status" value="finish" />
+            <button type="submit">Nộp Bài</button>
+          </form>
+        </div>
+      </div>
+    </div>
 
-                    <!-- Chờ duyệt -->
-                    <div>
-                        <h3>🔵 Chờ duyệt</h3>
+    <div>
+      <h3>🔵 Chờ duyệt</h3>
 
-                        <div th:each="s : ${waiting}" style="
-                    border:1px solid #ddd;
-                    border-radius:8px;
-                    padding:10px;
-                    margin-bottom:10px;
-                    background:rgb(133, 206, 255);">
+      <div th:each="s : ${waiting}" class="kanban-card waiting-bg">
 
-                            <b th:text="${s.pageId.chapter.series.seriesName}">
-                            </b>
+        <b th:text="${s.pageId.chapter.series.seriesName}"></b>
 
-                            <p>
-                                Chapter
-                                <span
-                                    th:text="${s.pageId.chapter.chapterNumber}"></span>
-                                -
-                                Trang
-                                <span th:text="${s.pageId.pageNumber}"></span>
-                            </p>
+        <p>
+          Chapter <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
+          Trang <span th:text="${s.pageId.pageNumber}"></span>
+        </p>
 
-                            <p>
-                                Deadline:
-                                <span th:text="${s.deadline}"></span>
-                            </p>
+        <p>
+          Deadline: <span th:text="${s.deadline}"></span>
+        </p>
+      </div>
+    </div>
 
-                        </div>
-                    </div>
+    <div>
+      <h3>🟢 Hoàn thành</h3>
 
-                    <!-- Hoàn thành -->
-                    <div>
-                        <h3>🟢 Hoàn thành</h3>
+      <div th:each="s : ${done}" class="kanban-card done-bg">
 
-                        <div th:each="s : ${done}" style="
-                    border:1px solid #ddd;
-                    border-radius:8px;
-                    padding:10px;
-                    margin-bottom:10px;
-                    background:rgb(121, 255, 139);">
+        <b th:text="${s.pageId.chapter.series.seriesName}"></b>
 
-                            <b th:text="${s.pageId.chapter.series.seriesName}">
-                            </b>
+        <p>
+          Chapter <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
+          Trang <span th:text="${s.pageId.pageNumber}"></span>
+        </p>
+      </div>
+    </div>
 
-                            <p>
-                                Chapter
-                                <span
-                                    th:text="${s.pageId.chapter.chapterNumber}"></span>
-                                -
-                                Trang
-                                <span th:text="${s.pageId.pageNumber}"></span>
-                            </p>
-
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
+  </div>
+</div>
 
             <div id="tab-assistant" class="tab-pane">
                 <h2>Tác giả đang hỗ trợ</h2>

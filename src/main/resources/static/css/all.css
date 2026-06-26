@@ -1124,3 +1124,46 @@ select {
 #notificationModalOverlay .btn-ok {
     padding: 8px 20px;
 }
+/* ==========================================================================
+   12. BỔ SUNG KHUNG KANBAN CÔNG VIỆC CHO TRỢ LÝ
+   ========================================================================== */
+/* Khung chứa 3 cột Kanban dạng lưới */
+.kanban-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Thẻ nhiệm vụ chung */
+.kanban-card {
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+/* Đổi màu chữ chữ và tiêu đề của thẻ để hiển thị rõ trên các nền màu sắc */
+.kanban-card h3, .kanban-card p, .kanban-card b {
+    color: #121212 !important;
+}
+
+/* Các lớp màu nền đặc thù cho từng trạng thái */
+.kanban-card.todo-bg {
+    background: rgb(255, 201, 119);
+}
+
+.kanban-card.waiting-bg {
+    background: rgb(133, 206, 255);
+}
+
+.kanban-card.done-bg {
+    background: rgb(121, 255, 139);
+}
+
+/* Cấu trúc dòng chứa nút bấm hành động */
+.kanban-actions-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}

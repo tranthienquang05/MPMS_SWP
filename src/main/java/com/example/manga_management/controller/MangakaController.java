@@ -11,7 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
+import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -82,16 +83,12 @@ public class MangakaController {
         model.addAttribute("mangaka", mangaka); // ← move OUTSIDE the if block
 
         if (mangaka != null) {
-            model.addAttribute("mySeriesList",
-                    seriesRepository.findByProposal_Mangaka_Id(mangaka.getId()));
-            model.addAttribute("allProposals",
-                    proposalRepository.findByMangaka_Id(mangaka.getId()));
+            model.addAttribute("mySeriesList", seriesRepository.findByProposal_Mangaka_Id(mangaka.getId()));
+            model.addAttribute("allProposals", proposalRepository.findByMangaka_Id(mangaka.getId()));
             model.addAttribute("approvedList",
-                    proposalRepository.findByStatusInAndMangaka_Id(
-                            List.of("checked", "pass"), mangaka.getId()));
+                    proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangaka.getId()));
             model.addAttribute("rejectedList",
-                    proposalRepository.findByStatusAndMangaka_Id(
-                            "unfinish", mangaka.getId()));
+                    proposalRepository.findByStatusAndMangaka_Id("unfinish", mangaka.getId()));
         }
 
         model.addAttribute("activeTab", "tab-home");
@@ -112,14 +109,10 @@ public class MangakaController {
         }
 
         model.addAttribute("mangaka", mangaka);
-        model.addAttribute("allProposals",
-                proposalRepository.findByMangaka_Id(mangaka.getId()));
+        model.addAttribute("allProposals", proposalRepository.findByMangaka_Id(mangaka.getId()));
         model.addAttribute("approvedList",
-                proposalRepository.findByStatusInAndMangaka_Id(
-                        List.of("checked", "pass"), mangaka.getId()));
-        model.addAttribute("rejectedList",
-                proposalRepository.findByStatusAndMangaka_Id(
-                        "unfinish", mangaka.getId()));
+                proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangaka.getId()));
+        model.addAttribute("rejectedList", proposalRepository.findByStatusAndMangaka_Id("unfinish", mangaka.getId()));
         model.addAttribute("activeTab", "tab-proposal");
         return "mangaka";
     }
@@ -140,22 +133,17 @@ public class MangakaController {
         }
 
         result.put("status", "success");
-        result.put("allProposals",
-                proposalRepository.findByMangaka_Id(mangakaId));
+        result.put("allProposals", proposalRepository.findByMangaka_Id(mangakaId));
         result.put("approvedList",
-                proposalRepository.findByStatusInAndMangaka_Id(
-                        List.of("checked", "pass"), mangakaId));
-        result.put("rejectedList",
-                proposalRepository.findByStatusAndMangaka_Id(
-                        "unfinish", mangakaId));
+                proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangakaId));
+        result.put("rejectedList", proposalRepository.findByStatusAndMangaka_Id("unfinish", mangakaId));
         return result;
     }
 
     @Operation(summary = "[SWAGGER] Nộp bản thảo mới")
     @PostMapping("/submit-proposal")
     @ResponseBody
-    public Map<String, String> handleSubmitting(
-            @RequestParam(required = false) String mangakaId,
+    public Map<String, String> handleSubmitting(@RequestParam(required = false) String mangakaId, Model model,
             @RequestParam String txtSeriesName,
             @Parameter(description = "Manuscript file") @RequestPart MultipartFile fileManuscript,
             HttpSession session) {
@@ -193,9 +181,8 @@ public class MangakaController {
 
         try {
             String workingDir = System.getProperty("user.dir");
-            String uploadDir = workingDir + File.separator + "src" + File.separator + "main"
-                    + File.separator + "resources" + File.separator + "static"
-                    + File.separator + "proposal" + File.separator;
+            String uploadDir = workingDir + File.separator + "src" + File.separator + "main" + File.separator
+                    + "resources" + File.separator + "static" + File.separator + "proposal" + File.separator;
 
             Path uploadPath = Paths.get(uploadDir);
             if (!Files.exists(uploadPath))
@@ -221,8 +208,7 @@ public class MangakaController {
             proposal.setStatus("finish");
             proposalRepository.save(proposal);
 
-            notificationController.send("tantou", null,
-                    "Có đề xuất mới từ Mangaka đang chờ duyệt: " + txtSeriesName,
+            notificationController.send("tantou", null, "Có đề xuất mới từ Mangaka đang chờ duyệt: " + txtSeriesName,
                     "/manga/editor");
 
             result.put("status", "success");
@@ -233,16 +219,15 @@ public class MangakaController {
             result.put("status", "error");
             result.put("message", "Lỗi hệ thống: " + e.getMessage());
         }
+        model.addAttribute("activeTab", "tab-proposal");
         return result;
     }
 
-    @Operation(summary = "[SWAGGER] Nộp lại bản thảo bị từ chối")
-    @PostMapping("/resubmit-proposal")
+    @PostMapping(value = "/resubmit-proposal", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
-    public Map<String, String> resubmitProposal(
-            @RequestParam String proposalId,
-            @RequestParam String txtSeriesName,
-            @RequestPart MultipartFile fileManuscript) {
+    public Map<String, String> resubmitProposal(@RequestParam("proposalId") String proposalId,
+            @RequestParam("txtSeriesName") String txtSeriesName,
+            @RequestPart("fileManuscript") MultipartFile fileManuscript) {
 
         Map<String, String> result = new HashMap<>();
 
@@ -267,9 +252,8 @@ public class MangakaController {
 
         try {
             String workingDir = System.getProperty("user.dir");
-            String uploadDir = workingDir + File.separator + "src" + File.separator + "main"
-                    + File.separator + "resources" + File.separator + "static"
-                    + File.separator + "proposal" + File.separator;
+            String uploadDir = workingDir + File.separator + "src" + File.separator + "main" + File.separator
+                    + "resources" + File.separator + "static" + File.separator + "proposal" + File.separator;
 
             Path uploadPath = Paths.get(uploadDir);
             if (!Files.exists(uploadPath))
@@ -277,8 +261,7 @@ public class MangakaController {
 
             // Xóa file cũ
             if (proposal.getFilePath() != null) {
-                Path oldFile = Paths.get(uploadDir
-                        + Paths.get(proposal.getFilePath()).getFileName());
+                Path oldFile = Paths.get(uploadDir + Paths.get(proposal.getFilePath()).getFileName());
                 Files.deleteIfExists(oldFile);
             }
 
@@ -297,8 +280,7 @@ public class MangakaController {
             proposal.setComment(null);
             proposalRepository.save(proposal);
 
-            notificationController.send("tantou", null,
-                    "Mangaka đã nộp lại bản thảo: " + txtSeriesName,
+            notificationController.send("tantou", null, "Mangaka đã nộp lại bản thảo: " + txtSeriesName,
                     "/manga/editor");
 
             result.put("status", "success");
@@ -315,11 +297,8 @@ public class MangakaController {
     @Operation(summary = "[SWAGGER] Khởi động series từ proposal đã được duyệt")
     @PostMapping("/start-series")
     @ResponseBody
-    public Map<String, String> startSeries(
-            @RequestParam String proposalId,
-            @RequestParam String txtSeriesName,
-            @RequestParam String txtDescription,
-            @RequestPart MultipartFile fileBookJacket) {
+    public Map<String, String> startSeries(@RequestParam String proposalId, @RequestParam String txtSeriesName,
+            @RequestParam String txtDescription, @RequestPart MultipartFile fileBookJacket) {
 
         Map<String, String> result = new HashMap<>();
 
@@ -337,9 +316,8 @@ public class MangakaController {
         }
 
         try {
-            String uploadDir = System.getProperty("user.dir") + File.separator + "src"
-                    + File.separator + "main" + File.separator + "resources"
-                    + File.separator + "static" + File.separator + "bookjackets"
+            String uploadDir = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
+                    + File.separator + "resources" + File.separator + "static" + File.separator + "bookjackets"
                     + File.separator;
 
             Path uploadPath = Paths.get(uploadDir);
@@ -364,8 +342,7 @@ public class MangakaController {
             proposal.setStatus("started");
             proposalRepository.save(proposal);
 
-            notificationController.send("tantou", null,
-                    "Mangaka đã khởi động dự án mới: " + txtSeriesName,
+            notificationController.send("tantou", null, "Mangaka đã khởi động dự án mới: " + txtSeriesName,
                     "/manga/editor");
 
             result.put("status", "success");
@@ -474,7 +451,7 @@ public class MangakaController {
             // Đã sửa redirect cho đúng với cấu trúc route hiển thị của hệ thống
             return "mangaka";
         }
-        model.addAttribute("typeDraw","page");
+        model.addAttribute("typeDraw", "page");
         model.addAttribute("page", page);
         model.addAttribute("activeTab", "tab-draw");
         return "mangaka";
@@ -526,10 +503,8 @@ public class MangakaController {
     }
 
     @PostMapping("/submission/{id}/submit")
-    public String updateStatus(@PathVariable String id, @RequestParam String status, 
-        @RequestParam String comment,
-        Model model,
-            HttpSession session) {
+    public String updateStatus(@PathVariable String id, @RequestParam String status, @RequestParam String comment,
+            Model model, HttpSession session) {
 
         Submission submission = submissionRepository.findById(id).orElse(null);
         String ChapterID = submission.getPageId().getChapter().getId();
@@ -543,4 +518,3 @@ public class MangakaController {
         return "redirect:/manga/mangaka/myseries/" + SeriesID + "/" + ChapterID;
     }
 }
- 

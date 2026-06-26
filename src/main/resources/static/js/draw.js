@@ -1,4 +1,4 @@
-const CANVAS_W = 800, CANVAS_H = 600;
+const CANVAS_W = 400, CANVAS_H = 600;
 const canvasStack = document.getElementById('canvasStack');
 
 // Cấu trúc layer: { id, name, canvas, ctx, visible, opacity }

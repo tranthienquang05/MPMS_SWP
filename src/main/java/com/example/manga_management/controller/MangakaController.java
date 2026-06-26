@@ -434,7 +434,7 @@ public class MangakaController {
 
         model.addAttribute("message", "Tạo Chapter thành công!");
         model.addAttribute("activeTab", "tab-project");
-        return "mangaka";
+        return "redirect:/manga/mangaka/myseries/" + seriesId;
     }
 
     @GetMapping("/myseries/{sid}/{cid}")

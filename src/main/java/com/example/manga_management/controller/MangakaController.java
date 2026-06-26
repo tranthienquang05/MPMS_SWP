@@ -141,7 +141,7 @@ public class MangakaController {
     }
 
     @Operation(summary = "[SWAGGER] Nộp bản thảo mới")
-    @PostMapping("/submit-proposal")
+    @PostMapping(value = "/submit-proposal", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public Map<String, String> handleSubmitting(@RequestParam(required = false) String mangakaId, Model model,
             @RequestParam String txtSeriesName,
@@ -227,7 +227,7 @@ public class MangakaController {
     @ResponseBody
     public Map<String, String> resubmitProposal(@RequestParam("proposalId") String proposalId,
             @RequestParam("txtSeriesName") String txtSeriesName,
-            @RequestPart("fileManuscript") MultipartFile fileManuscript) {
+            @RequestParam("fileManuscript") MultipartFile fileManuscript) {
 
         Map<String, String> result = new HashMap<>();
 
@@ -295,7 +295,7 @@ public class MangakaController {
     }
 
     @Operation(summary = "[SWAGGER] Khởi động series từ proposal đã được duyệt")
-    @PostMapping("/start-series")
+    @PostMapping(value = "/start-series",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public Map<String, String> startSeries(@RequestParam String proposalId, @RequestParam String txtSeriesName,
             @RequestParam String txtDescription, @RequestPart MultipartFile fileBookJacket) {

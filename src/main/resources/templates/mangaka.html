@@ -1125,6 +1125,7 @@
                     + Nộp bản thảo mới
                 </button>
 
+                <!-- Modal nộp bản thảo MỚI -->
                 <div id="proposalModalOverlay" class="modal-overlay"
                     style="display:none;">
                     <div class="modal-content">
@@ -1157,26 +1158,6 @@
                             <button type="button"
                                 onclick="submitNewProposal()">Submit</button>
                         </div>
-                    </div>
-                </div>
-
-                <div id="successToastOverlay" class="modal-overlay"
-                    style="display:none; background: rgba(0,0,0,0.4); z-index: 10000;">
-                    <div class="modal-content"
-                        style="max-width: 350px; text-align: center; padding: 20px;">
-                        <div
-                            style="font-size: 40px; color: #28a745; margin-bottom: 10px;">
-                            <i class="fa-solid fa-circle-check"></i>
-                        </div>
-                        <h4 style="margin-bottom: 10px; color: #000000;">Thành
-                            công!</h4>
-                        <p
-                            style="color: #666; font-size: 14px; margin-bottom: 20px;">Bản
-                            thảo của anh đã được nộp thành công.</p>
-                        <button type="button" onclick="closeSuccessToast()"
-                            style="background: #28a745; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; width: 100%;">
-                            Đóng
-                        </button>
                     </div>
                 </div>
 
@@ -1264,7 +1245,7 @@
 
                 <!-- Modal thông báo hệ thống -->
                 <div id="notificationModalOverlay" class="modal-overlay"
-                    th:if="${message != null}" style="display:flex;">
+                    style="display:none;">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Thông báo hệ thống</h5>
@@ -1273,10 +1254,7 @@
                         </div>
                         <div class="modal-body">
                             <p
-                                style="text-align:center; font-weight:bold; font-size:16px;"
-                                th:text="${message ?: error}"
-                                th:styleappend="${message != null} ? 'color:#28a745;' : 'color:#dc3545;'">
-                            </p>
+                                style="text-align:center; font-weight:bold; font-size:16px;"></p>
                         </div>
                         <div class="modal-footer">
                             <button type="button" id="btnOkNotification"
@@ -1347,45 +1325,71 @@
         const mangakaId = '[[${mangaka != null ? mangaka.id : ""}]]';
         // Xử lý logic cho Modal nộp bản thảo
         function submitNewProposal() {
-        const nameInput = document.getElementById('newSeriesName').value.trim();
-        const fileInput = document.getElementById('newManuscriptFile').files[0];
+    if (!mangakaId) {
+        showSystemNotification('Không tìm thấy thông tin Mangaka. Vui lòng đăng nhập lại!', false);
+        return;
+    }
+    const seriesName = document.getElementById('newSeriesName').value.trim();
+    const file = document.getElementById('newManuscriptFile').files[0];
+    if (!seriesName) { showSystemNotification('Vui lòng nhập tên series!', false); return; }
+    if (!file) { showSystemNotification('Vui lòng chọn file bản thảo!', false); return; }
 
-        if (!nameInput || !fileInput) {
-            alert('Vui lòng điền đầy đủ thông tin và chọn tệp!');
-            return;
-        }
+    const formData = new FormData();
+    formData.append('mangakaId', mangakaId);
+    formData.append('txtSeriesName', seriesName);
+    formData.append('fileManuscript', file);
 
-        // Tạo FormData để chuẩn bị gửi sang API của Controller
-        let formData = new FormData();
-        formData.append("name", nameInput);
-        formData.append("file", fileInput);
-
-        // Gọi API xử lý lưu bản thảo (Giữ nguyên cấu trúc API hiện tại của hệ thống)
-        fetch('/api/proposal/submit', { 
-            method: 'POST',
-            body: formData
+    fetch('/manga/mangaka/submit-proposal', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Ẩn modal nhập liệu trước khi hiển thị modal thông báo
+                document.getElementById('proposalModalOverlay').style.display = 'none';
+                
+                // Hiển thị thông báo thành công bằng cửa sổ nổi
+                const successMsg = '✅ ' + data.message + '\nMã đề xuất: ' + data.proposalId;
+                showSystemNotification(successMsg, true);
+            } else {
+                // Hiển thị thông báo thất bại từ phía Server
+                showSystemNotification('❌ ' + data.message, false);
+            }
         })
-        .then(response => {
-            // Đóng modal nhập liệu ngay khi có phản hồi
-            proposalModalOverlay.style.display = 'none';
-            
-            // Hiển thị cửa sổ nổi thông báo thành công
-            document.getElementById('successToastOverlay').style.display = 'flex';
-            
-            // Reset form nhập liệu
-            document.getElementById('newSeriesName').value = '';
-            document.getElementById('newManuscriptFile').value = '';
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Có lỗi xảy ra trong quá trình nộp bản thảo!');
+        .catch(err => {
+            // Hiển thị lỗi kết nối hoặc lỗi logic hệ thống
+            showSystemNotification('❌ Lỗi hệ thống: ' + err.message, false);
         });
-    }
-    function closeSuccessToast() {
-        document.getElementById('successToastOverlay').style.display = 'none';
-        location.reload(); 
+}
+
+        function showSystemNotification(message, isSuccess) {
+    const modal = document.getElementById("notificationModalOverlay");
+    if (!modal) return;
+
+    // Tìm thẻ p chứa nội dung thông báo bên trong modal body
+    const pTag = modal.querySelector(".modal-body p");
+    if (pTag) {
+        pTag.innerText = message;
+        // Thay đổi màu sắc chữ tùy thuộc vào trạng thái thành công hay thất bại
+        if (isSuccess) {
+            pTag.style.color = "#28a745"; // Màu xanh lá cho thành công
+        } else {
+            pTag.style.color = "#dc3545"; // Màu đỏ cho thất bại
+        }
     }
 
+    // Hiển thị modal bằng cách đặt display thành flex để căn giữa màn hình
+    modal.style.display = "flex";
+
+    // Cấu hình nút OK để tải lại trang nếu hành động thành công
+    const btnOk = document.getElementById("btnOkNotification");
+    if (btnOk) {
+        btnOk.onclick = function() {
+            modal.style.display = "none";
+            if (isSuccess) {
+                location.reload(); // Tải lại trang để cập nhật danh sách
+            }
+        };
+    }
+}
         // ===== SUB-TAB SWITCHING =====
         function openProposalTab(tabId) {
             // Ẩn tất cả sub-tab
@@ -1492,20 +1496,7 @@
 
 
 
-        const btnOpenModal = document.getElementById('btnOpenModal');
-    const proposalModalOverlay = document.getElementById('proposalModalOverlay');
-    const btnCloseTop = document.getElementById('btnCloseTop');
-    const btnCancel = document.getElementById('btnCancel');
 
-    if(btnOpenModal) {
-        btnOpenModal.onclick = () => proposalModalOverlay.style.display = 'flex';
-    }
-    if(btnCloseTop) {
-        btnCloseTop.onclick = () => proposalModalOverlay.style.display = 'none';
-    }
-    if(btnCancel) {
-        btnCancel.onclick = () => proposalModalOverlay.style.display = 'none';
-    }
 
 
 

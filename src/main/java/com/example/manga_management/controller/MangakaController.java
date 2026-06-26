@@ -433,7 +433,7 @@ public class MangakaController {
         chapterRepository.save(chapter);
 
         model.addAttribute("message", "Tạo Chapter thành công!");
-
+        model.addAttribute("activeTab", "tab-project");
         return "mangaka";
     }
 

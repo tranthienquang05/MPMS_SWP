@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.manga_management.entity.MangaPage;
 import com.example.manga_management.entity.Submission;
+import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.SubmissionRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class SubmissionController {
 
     private final SubmissionRepository submissionRepository;
+    private final MangaPageRepository mangaPageRepository;
 
     @PostMapping("/{submissionId}/savefile")
     public Map<String, String> saveSubmissionFile(@PathVariable String submissionId,
@@ -83,6 +86,8 @@ public class SubmissionController {
             // 1. Tìm kiếm submission từ database
             Submission submission = submissionRepository.findById(submissionId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy submission"));
+            MangaPage mangaPage = mangaPageRepository.findById(submission.getPageId().getId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy trang manga"));
 
             // 2. Lấy các tham số từ request body
             String base64 = body.get("imageBase64");
@@ -97,27 +102,42 @@ public class SubmissionController {
                 submission.setComment(comment);
             }
 
-            // 4. Xử lý và lưu đè file hình ảnh cũ (Giữ nguyên tên file)
+            // 4. Xử lý và lưu file hình ảnh
+            byte[] imageBytes = null;
             if (base64 != null && !base64.isBlank()) {
                 if (base64.contains(",")) {
                     base64 = base64.split(",")[1];
                 }
 
-                byte[] imageBytes = Base64.getDecoder().decode(base64);
+                imageBytes = Base64.getDecoder().decode(base64);
 
                 String uploadDir = "src/main/resources/static/Submission/";
                 Files.createDirectories(Paths.get(uploadDir));
 
-                // GIỮ NGUYÊN TÊN FILE CŨ ĐỂ GHI ĐÈ
                 String fileName = submissionId + ".png";
                 Path filePath = Paths.get(uploadDir + fileName);
                 Files.write(filePath, imageBytes);
 
-                // Cập nhật lại đường dẫn (vẫn là đường dẫn cũ)
                 submission.setFilePath("/Submission/" + fileName);
             }
 
-            // 5. Lưu vào database
+            // 5. Xử lý khi status là "pass"
+            if ("pass".equals(status)) {
+                mangaPage.setStatus("pass");
+
+                if (imageBytes != null) {
+                    String pageDir = "src/main/resources/static/MangaPage/";
+                    Files.createDirectories(Paths.get(pageDir));
+
+                    Path pageFilePath = Paths.get(pageDir + mangaPage.getId() + ".png");
+                    Files.write(pageFilePath, imageBytes);
+                    mangaPage.setFilePath("/MangaPage/" + mangaPage.getId() + ".png");
+                }
+
+                mangaPageRepository.save(mangaPage);
+            }
+
+            // 6. Lưu submission vào database
             submissionRepository.save(submission);
 
             String seriesId = submission.getPageId().getChapter().getSeries().getId();
@@ -133,5 +153,4 @@ public class SubmissionController {
             return Map.of("status", "error", "message", e.getMessage());
         }
     }
-
 }

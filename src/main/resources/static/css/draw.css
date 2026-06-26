@@ -261,6 +261,8 @@
     position: relative;
     box-shadow: 0 0 0 1px #000, 0 8px 32px rgba(0, 0, 0, 0.6);
     flex-shrink: 0;
+    width: 400px;
+    height: 600px;
 }
 
 .canvas-stack canvas {

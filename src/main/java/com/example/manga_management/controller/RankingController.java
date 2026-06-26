@@ -311,7 +311,7 @@ public class RankingController {
         return response;
     }
 
-    // ===== 6. Reset toàn bộ vote để demo =====
+    // ===== 6. Reset toàn bộ vote để demo(http://localhost:8080/manga/ranking/reset-vote) =====
     @GetMapping("/reset-vote")
     public void resetVote(HttpServletResponse httpResp) throws IOException {
         // Xóa SeriesVote trước, sau đó VoteSession để tránh lỗi FK

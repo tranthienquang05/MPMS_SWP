@@ -444,9 +444,28 @@
             var voteType = document.getElementById('newVoteType').value;
             if (!seriesId) { alert('Vui lòng chọn series!'); return; }
 
-            var typeLabel = voteType === 'stop' ? 'Dừng' : 'Khen Thưởng';
-            if (!confirm('Tạo phiên Vote ' + typeLabel + ' cho series này?')) return;
+            // Vote dừng: kiểm tra series có nằm trong top 5 cả năm hiện tại không
+            if (voteType === 'stop') {
+                var year = new Date().getFullYear();
+                fetch('/manga/ranking?month=0&year=' + year)
+                    .then(res => res.json())
+                    .then(data => {
+                        var top5 = data.slice(0, 5);
+                        var inTop5 = top5.find(function (s) { return s.seriesId === seriesId; });
+                        var confirmMsg = inTop5
+                            ? '⚠️ Series "' + inTop5.seriesName + '" đang nằm trong TOP 5 có lượt yêu thích cao. Bạn có chắc muốn tạo vote dừng cho series này không?'
+                            : 'Tạo phiên Vote Dừng cho series này?';
+                        if (!confirm(confirmMsg)) return;
+                        doCreateSession(seriesId, voteType);
+                    });
+                return;
+            }
 
+            if (!confirm('Tạo phiên Vote Khen Thưởng cho series này?')) return;
+            doCreateSession(seriesId, voteType);
+        }
+
+        function doCreateSession(seriesId, voteType) {
             fetch('/manga/ranking/create-session?seriesId=' + seriesId + '&voteType=' + voteType, { method: 'POST' })
                 .then(res => res.json())
                 .then(data => {

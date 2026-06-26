@@ -83,7 +83,9 @@ public class MangakaController {
         model.addAttribute("mangaka", mangaka); // ← move OUTSIDE the if block
 
         if (mangaka != null) {
-            model.addAttribute("mySeriesList", seriesRepository.findByProposal_Mangaka_Id(mangaka.getId()));
+            model.addAttribute("mySeriesList", seriesRepository.findByProposal_Mangaka_IdAndStatusIn(
+                    mangaka.getId(),
+                    List.of("unfinish", "finish")));
             model.addAttribute("allProposals", proposalRepository.findByMangaka_Id(mangaka.getId()));
             model.addAttribute("approvedList",
                     proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangaka.getId()));
@@ -295,7 +297,7 @@ public class MangakaController {
     }
 
     @Operation(summary = "[SWAGGER] Khởi động series từ proposal đã được duyệt")
-    @PostMapping(value = "/start-series",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/start-series", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public Map<String, String> startSeries(@RequestParam String proposalId, @RequestParam String txtSeriesName,
             @RequestParam String txtDescription, @RequestPart MultipartFile fileBookJacket) {

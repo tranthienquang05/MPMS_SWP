@@ -9,7 +9,8 @@
     <script src="/js/draw.js" defer></script>
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
   </head>
 
   <body>
@@ -26,12 +27,15 @@
             type="button"
             class="btn-icon"
             id="btnNoti"
-            style="position: relative">
+            style="position: relative"
+          >
             <i class="fa-solid fa-bell"></i>
             <span
               class="badge"
               th:if="${unreadCount > 0}"
-              th:text="${unreadCount}">0</span>
+              th:text="${unreadCount}"
+              >0</span
+            >
           </button>
 
           <div class="notification-dropdown">
@@ -39,13 +43,16 @@
             <div
               th:each="note : ${myNotifications}"
               class="notification-item"
-              th:classappend="${!note.isRead} ? 'unread' : ''">
+              th:classappend="${!note.isRead} ? 'unread' : ''"
+            >
               <a
                 th:href="@{'/notification/read/' + ${note.id}}"
-                th:text="${note.content}"></a>
+                th:text="${note.content}"
+              ></a>
               <span
                 class="time"
-                th:text="${#temporals.format(note.createdAt, 'HH:mm dd/MM')}"></span>
+                th:text="${#temporals.format(note.createdAt, 'HH:mm dd/MM')}"
+              ></span>
             </div>
             <div th:if="${#lists.isEmpty(myNotifications)}" class="no-notify">
               Không có thông báo
@@ -82,7 +89,8 @@
         <button
           type="button"
           class="btn-icon"
-          onclick="openTab('tab-proposal')">
+          onclick="openTab('tab-proposal')"
+        >
           <i class="fa-solid fa-folder-plus"></i>
         </button>
       </li>
@@ -90,7 +98,8 @@
         <button
           type="button"
           class="btn-icon"
-          onclick="openTab('tab-assistant')">
+          onclick="openTab('tab-assistant')"
+        >
           <i class="fa-solid fa-user"></i>
         </button>
       </li>
@@ -108,7 +117,8 @@
         <h2>Trang chủ</h2>
 
         <div class="filter-row filter-group-inline">
-          <label>Tháng:
+          <label
+            >Tháng:
             <select id="rankMonth">
               <option value="0">-- Cả năm --</option>
               <option value="1">Tháng 1</option>
@@ -126,7 +136,8 @@
             </select>
           </label>
 
-          <label class="filter-label-spacing">Năm:
+          <label class="filter-label-spacing"
+            >Năm:
             <select id="rankYear">
               <option value="2026">2026</option>
               <option value="2025">2025</option>
@@ -163,28 +174,32 @@
               type="button"
               class="lt-btn active"
               data-tool="pencil"
-              title="Bút vẽ (B)">
+              title="Bút vẽ (B)"
+            >
               <i class="fa-solid fa-pencil"></i>
             </button>
             <button
               type="button"
               class="lt-btn"
               data-tool="brush"
-              title="Cọ mềm (cạnh mờ)">
+              title="Cọ mềm (cạnh mờ)"
+            >
               <i class="fa-solid fa-paintbrush"></i>
             </button>
             <button
               type="button"
               class="lt-btn"
               data-tool="eraser"
-              title="Tẩy (E)">
+              title="Tẩy (E)"
+            >
               <i class="fa-solid fa-eraser"></i>
             </button>
             <button
               type="button"
               class="lt-btn"
               data-tool="bucket"
-              title="Đổ màu (Bucket fill)">
+              title="Đổ màu (Bucket fill)"
+            >
               <i class="fa-solid fa-fill-drip"></i>
             </button>
 
@@ -194,28 +209,32 @@
               type="button"
               class="lt-btn"
               data-tool="line"
-              title="Đường thẳng">
+              title="Đường thẳng"
+            >
               <i class="fa-solid fa-slash"></i>
             </button>
             <button
               type="button"
               class="lt-btn"
               data-tool="rect"
-              title="Hình chữ nhật">
+              title="Hình chữ nhật"
+            >
               <i class="fa-regular fa-square"></i>
             </button>
             <button
               type="button"
               class="lt-btn"
               data-tool="oval"
-              title="Hình tròn / Oval (balloon)">
+              title="Hình tròn / Oval (balloon)"
+            >
               <i class="fa-regular fa-circle"></i>
             </button>
             <button
               type="button"
               class="lt-btn"
               data-tool="text"
-              title="Chèn chữ (Lettering)">
+              title="Chèn chữ (Lettering)"
+            >
               <i class="fa-solid fa-font"></i>
             </button>
 
@@ -225,28 +244,32 @@
               type="button"
               class="lt-btn"
               data-tool="select"
-              title="Chọn vùng chữ nhật (M)">
+              title="Chọn vùng chữ nhật (M)"
+            >
               <i class="fa-solid fa-vector-square"></i>
             </button>
             <button
               type="button"
               class="lt-btn"
               data-tool="select-oval"
-              title="Chọn vùng oval">
+              title="Chọn vùng oval"
+            >
               <i class="fa-regular fa-circle"></i>
             </button>
             <button
               type="button"
               class="lt-btn"
               data-tool="select-free"
-              title="Chọn vùng tự do (Lasso)">
+              title="Chọn vùng tự do (Lasso)"
+            >
               <i class="fa-solid fa-draw-polygon"></i>
             </button>
             <button
               type="button"
               class="lt-btn"
               id="toolEyedrop"
-              title="Lấy màu từ canvas">
+              title="Lấy màu từ canvas"
+            >
               <i class="fa-solid fa-eye-dropper"></i>
             </button>
 
@@ -256,14 +279,16 @@
               type="button"
               class="lt-btn"
               id="toolUndo"
-              title="Hoàn tác (Ctrl+Z)">
+              title="Hoàn tác (Ctrl+Z)"
+            >
               <i class="fa-solid fa-rotate-left"></i>
             </button>
             <button
               type="button"
               class="lt-btn"
               id="toolClear"
-              title="Xóa toàn bộ layer hiện tại">
+              title="Xóa toàn bộ layer hiện tại"
+            >
               <i class="fa-solid fa-trash"></i>
             </button>
 
@@ -275,7 +300,8 @@
                 class="lt-color-fg"
                 id="penColor"
                 value="#1a1a1a"
-                title="Màu nét vẽ" />
+                title="Màu nét vẽ"
+              />
               <div class="lt-color-bg"></div>
             </div>
           </div>
@@ -296,7 +322,8 @@
                   id="penOpacity"
                   min="10"
                   max="100"
-                  value="100" />
+                  value="100"
+                />
                 <span class="prop-value" id="penOpacityValue">100%</span>
               </div>
               <div class="prop-divider"></div>
@@ -308,13 +335,15 @@
                   <button
                     type="button"
                     class="shape-fill-btn active"
-                    data-fillmode="outline">
+                    data-fillmode="outline"
+                  >
                     Viền
                   </button>
                   <button
                     type="button"
                     class="shape-fill-btn"
-                    data-fillmode="filled">
+                    data-fillmode="filled"
+                  >
                     Tô đầy
                   </button>
                 </div>
@@ -328,7 +357,8 @@
                   id="textSize"
                   min="10"
                   max="72"
-                  value="24" />
+                  value="24"
+                />
                 <span class="prop-value" id="textSizeValue">24</span>
               </div>
 
@@ -338,7 +368,8 @@
                 class="btn-ai-support-top approve"
                 id="btnSavePage"
                 th:data-page-id="${page.id}"
-                th:data-saved-path="${page.filePath}">
+                th:data-saved-path="${page.filePath}"
+              >
                 <i class="fa-solid fa-floppy-disk"></i>
                 Lưu trang
               </button>
@@ -349,7 +380,8 @@
                 class="btn-ai-support-top primary"
                 id="btnEditSubmission"
                 th:data-submission-id="${submission.id}"
-                th:data-saved-path="${submission.filePath}">
+                th:data-saved-path="${submission.filePath}"
+              >
                 <i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật
               </button>
 
@@ -376,14 +408,16 @@
                     <button
                       type="button"
                       onclick="closeEditSubmissionModal()"
-                      class="btn-cancel">
+                      class="btn-cancel"
+                    >
                       Hủy
                     </button>
 
                     <button
                       type="button"
                       id="btnConfirmEdit"
-                      class="btn-confirm">
+                      class="btn-confirm"
+                    >
                       Xác nhận Lưu
                     </button>
                   </div>
@@ -393,7 +427,8 @@
                 type="button"
                 class="btn-ai-support-top primary"
                 id="btnLoadPage"
-                th:if="${page != null}">
+                th:if="${page != null}"
+              >
                 <i class="fa-solid fa-folder-open"></i>
                 Mở file
               </button>
@@ -403,7 +438,8 @@
               <button
                 type="button"
                 class="btn-ai-support-top"
-                id="btnAiSupport">
+                id="btnAiSupport"
+              >
                 <i class="fa-solid fa-brain"></i>
                 AI Support
               </button>
@@ -438,7 +474,8 @@
               <div
                 class="canvas-stack"
                 id="canvasStack"
-                style="width: 400px; height: 600px">
+                style="width: 400px; height: 600px"
+              >
                 <canvas id="bgCanvas" width="400" height="600"></canvas>
                 <canvas id="layer2Canvas" width="400" height="600"></canvas>
                 <canvas id="drawCanvas" width="400" height="600"></canvas>
@@ -473,7 +510,8 @@
                   type="button"
                   class="header-btn"
                   id="btnAddLayer"
-                  title="Thêm layer">
+                  title="Thêm layer"
+                >
                   <i class="fa-solid fa-plus"></i>
                 </button>
               </div>
@@ -486,7 +524,8 @@
                 display: flex;
                 flex-direction: column;
                 min-height: 0;
-              ">
+              "
+            >
               <div class="panel-section-header">Lịch sử thao tác</div>
               <div class="history-list" id="historyList"></div>
             </div>
@@ -510,7 +549,8 @@
                     class="ai-feature-card"
                     data-feature="color"
                     data-name="Tô màu"
-                    data-type="image">
+                    data-type="image"
+                  >
                     <i class="fa-solid fa-palette"></i>
                     <div class="ai-feature-name">Tô màu</div>
                     <div class="ai-feature-desc">
@@ -522,7 +562,8 @@
                     class="ai-feature-card"
                     data-feature="shadow"
                     data-name="Đổ bóng"
-                    data-type="image">
+                    data-type="image"
+                  >
                     <i class="fa-solid fa-circle-half-stroke"></i>
                     <div class="ai-feature-name">Đổ bóng</div>
                     <div class="ai-feature-desc">
@@ -534,7 +575,8 @@
                     class="ai-feature-card"
                     data-feature="clean_line"
                     data-name="Clean lineart"
-                    data-type="image">
+                    data-type="image"
+                  >
                     <i class="fa-solid fa-pen-nib"></i>
                     <div class="ai-feature-name">Clean lineart</div>
                     <div class="ai-feature-desc">
@@ -546,7 +588,8 @@
                     class="ai-feature-card"
                     data-feature="background"
                     data-name="Background"
-                    data-type="image">
+                    data-type="image"
+                  >
                     <i class="fa-solid fa-mountain-sun"></i>
                     <div class="ai-feature-name">Background</div>
                     <div class="ai-feature-desc">
@@ -558,7 +601,8 @@
                     class="ai-feature-card"
                     data-feature="lettering"
                     data-name="Lettering"
-                    data-type="vision">
+                    data-type="vision"
+                  >
                     <i class="fa-solid fa-comment-dots"></i>
                     <div class="ai-feature-name">Lettering</div>
                     <div class="ai-feature-desc">
@@ -570,7 +614,8 @@
                     class="ai-feature-card"
                     data-feature="expression"
                     data-name="Biểu cảm"
-                    data-type="vision">
+                    data-type="vision"
+                  >
                     <i class="fa-solid fa-face-smile"></i>
                     <div class="ai-feature-name">Biểu cảm</div>
                     <div class="ai-feature-desc">
@@ -584,7 +629,8 @@
                 <button
                   type="button"
                   class="ai-detail-back"
-                  id="btnBackToFeatureList">
+                  id="btnBackToFeatureList"
+                >
                   <i class="fa-solid fa-arrow-left"></i> Quay lại
                 </button>
                 <div class="ai-detail-title" id="aiDetailTitle"></div>
@@ -594,23 +640,27 @@
                   <button
                     type="button"
                     class="ai-region-btn active"
-                    data-region="full">
+                    data-region="full"
+                  >
                     Toàn canvas
                   </button>
                   <button
                     type="button"
                     class="ai-region-btn"
-                    data-region="select">
+                    data-region="select"
+                  >
                     Chọn vùng
                   </button>
                 </div>
-                <span class="ai-region-status" id="aiRegionStatus">Sẽ áp dụng
-                  cho toàn bộ canvas</span>
+                <span class="ai-region-status" id="aiRegionStatus"
+                  >Sẽ áp dụng cho toàn bộ canvas</span
+                >
 
                 <textarea
                   class="ai-prompt-input"
                   id="aiPromptInput"
-                  placeholder="Mô tả thêm yêu cầu (không bắt buộc)..."></textarea>
+                  placeholder="Mô tả thêm yêu cầu (không bắt buộc)..."
+                ></textarea>
 
                 <div class="ai-modal-footer">
                   <button type="button" class="ai-btn-run" id="btnRunAi">
@@ -631,27 +681,32 @@
                 <img
                   id="aiResultImage"
                   class="ai-result-image"
-                  style="display: none" />
+                  style="display: none"
+                />
                 <div
                   id="aiResultText"
                   class="ai-result-text"
-                  style="display: none"></div>
+                  style="display: none"
+                ></div>
                 <div
                   id="aiErrorText"
                   class="ai-error-text"
-                  style="display: none"></div>
+                  style="display: none"
+                ></div>
                 <div class="ai-modal-footer">
                   <button
                     type="button"
                     class="ai-btn-secondary"
-                    id="btnAiResultBack">
+                    id="btnAiResultBack"
+                  >
                     Quay lại
                   </button>
                   <button
                     type="button"
                     class="ai-btn-run"
                     id="btnApplyToCanvas"
-                    style="display: none">
+                    style="display: none"
+                  >
                     Apply to canvas
                   </button>
                 </div>
@@ -685,7 +740,8 @@
                 <td>
                   <a
                     th:href="@{/manga/mangaka/myseries/{id}(id=${s.id})}"
-                    class="btn-link">
+                    class="btn-link"
+                  >
                     Xem chapter
                   </a>
                 </td>
@@ -695,7 +751,8 @@
           <!-- Thông báo khi chưa có series nào -->
           <p
             th:if="${mySeriesList == null or mySeriesList.isEmpty()}"
-            class="ptab-sub-desc">
+            class="ptab-sub-desc"
+          >
             Bạn chưa có series nào đang hoạt động. Khởi động 1 đề xuất ở tab "Đề
             xuất" để bắt đầu.
           </p>
@@ -712,7 +769,8 @@
             <button
               type="button"
               class="btn-icon"
-              onclick="openTab('tab-project')">
+              onclick="openTab('tab-project')"
+            >
               Quay lại
             </button>
           </a>
@@ -721,12 +779,14 @@
           <form
             th:action="@{/manga/mangaka/myseries/{id}/createchapter(id=${series.id})}"
             method="POST"
-            style="margin: 12px 0">
+            style="margin: 12px 0"
+          >
             <input
               type="text"
               name="txtChapterName"
               placeholder="Tên chapter mới"
-              required />
+              required
+            />
             <button type="submit">Tạo Chapter</button>
           </form>
 
@@ -736,6 +796,7 @@
                 <th>Số chương</th>
                 <th>Tên Chapter</th>
                 <th>Trạng thái</th>
+                <th>Nhận xét từ Tantou</th>
                 <th>Hành động</th>
               </tr>
             </thead>
@@ -746,11 +807,56 @@
                 <td th:text="${c.chapterName}"></td>
                 <td th:text="${c.status}"></td>
                 <td>
+                  <span
+                    th:if="${c.tantouComment != null and !#strings.isEmpty(c.tantouComment)}"
+                    th:text="${c.tantouComment}"
+                    class="tantou-comment-text"
+                  >
+                  </span>
+                  <span
+                    th:unless="${c.tantouComment != null and !#strings.isEmpty(c.tantouComment)}"
+                    class="tantou-comment-empty"
+                    >—</span
+                  >
+                </td>
+                <td>
                   <a
                     th:href="@{/manga/mangaka/myseries/{sid}/{cid}(sid=${series.id}, cid=${c.id})}"
-                    class="btn-link">
+                    class="btn-link"
+                  >
                     Xem trang
                   </a>
+
+                  <!-- ==========================================================================
+                    ===========   MỚI THÊM VÀO  ================================================= -->
+
+                  <!-- Badge trạng thái chapter -->
+                  <span
+                    th:if="${c.status == 'ready_to_review'}"
+                    class="badge-status-approved"
+                    style="margin-left: 6px"
+                  >
+                    Chờ BTV duyệt
+                  </span>
+
+                  <span
+                    th:if="${c.status == 'reject_in_review'}"
+                    class="badge-status-rejected"
+                    style="margin-left: 6px"
+                  >
+                    BTV yêu cầu sửa
+                  </span>
+
+                  <span
+                    th:if="${c.status == 'published'}"
+                    class="badge-status-passed"
+                    style="margin-left: 6px"
+                  >
+                    ✅ Đã xuất bản
+                  </span>
+
+                  <!-- ==========================================================================
+   ========================================================================== -->
                 </td>
               </tr>
             </tbody>
@@ -758,14 +864,16 @@
           <!-- Thông báo khi series chưa có chapter nào -->
           <p
             th:if="${chapters == null or chapters.isEmpty()}"
-            class="ptab-sub-desc">
+            class="ptab-sub-desc"
+          >
             Series này chưa có chapter nào. Tạo chapter mới ở form trên.
           </p>
         </div>
         <div
           id="mangaka-meta"
           th:data-mangaka-id="${mangakaId}"
-          style="display: none"></div>
+          style="display: none"
+        ></div>
         <!-- KHỐI 3: Danh sách Page (trang) của 1 Chapter đã chọn -->
         <div th:if="${chapter != null}">
           <h3>
@@ -775,21 +883,44 @@
 
           <a
             th:href="@{/manga/mangaka/myseries/{id}(id=${chapter.series.id})}"
-            class="btn-link">
+            class="btn-link"
+          >
             &larr; Quay lại danh sách chapter
           </a>
           <!-- mangaka-meta để JS lấy mangakaId -->
           <div
             id="mangaka-meta"
             th:data-mangaka-id="${mangakaId}"
-            style="display: none"></div>
-          <form
-            th:action="@{/manga/mangaka/myseries/{sid}/{cid}/addpage(sid=${chapter.series.id}, cid=${chapter.id})}"
-            method="POST"
-            style="margin: 12px 0">
-            <button type="submit">+ Thêm trang mới</button>
-          </form>
+            style="display: none"
+          ></div>
 
+          <!--===================  MỚI SỬA LẠI ===================-->
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin: 12px 0;
+            "
+          >
+            <form
+              th:action="@{/manga/mangaka/myseries/{sid}/{cid}/addpage(sid=${chapter.series.id}, cid=${chapter.id})}"
+              method="POST"
+            >
+              <button type="submit">+ Thêm trang mới</button>
+            </form>
+
+            <button
+              th:if="${chapter.status == 'unfinish' or chapter.status == 'reject_in_review'}"
+              type="button"
+              class="btn-action primary"
+              style="font-size: 13px; padding: 6px 14px"
+              th:attr="onclick=|submitChapter('${chapter.id}')|"
+            >
+              📤 Submit lên BTV
+            </button>
+          </div>
+          <!--===================================================-->
           <div class="pages-grid-container">
             <div th:each="p : ${pages}" class="page-grid-item">
               <div class="page-preview-box">
@@ -797,7 +928,8 @@
 
                 <i
                   th:unless="${p.filePath != null}"
-                  class="fa-solid fa-image"></i>
+                  class="fa-solid fa-image"
+                ></i>
               </div>
 
               <p th:text="'Trang ' + ${p.pageNumber}"></p>
@@ -808,18 +940,21 @@
                 th:href="@{/manga/mangaka/myseries/{sid}/{cid}/{pid}/edit(
                                 sid=${chapter.series.id},
                                 cid=${chapter.id},
-                                pid=${p.id})}">
+                                pid=${p.id})}"
+              >
                 Mở để vẽ
               </a>
 
               <div class="chapter-create-inline-form">
                 <div
                   th:if="${submissionMap[p.id] != null}"
-                  class="assistant-assignment-badge">
+                  class="assistant-assignment-badge"
+                >
                   <div>
                     👤
                     <b
-                      th:text="${submissionMap[p.id].assistant.user.fullname}"></b>
+                      th:text="${submissionMap[p.id].assistant.user.fullname}"
+                    ></b>
                   </div>
 
                   <div>
@@ -834,10 +969,12 @@
 
                   <div
                     th:if="${submissionMap[p.id].status == 'FINISHED' || submissionMap[p.id].status == 'finish'}"
-                    class="form-item">
+                    class="form-item"
+                  >
                     <a
                       th:href="@{/manga/mangaka/submission/{id}/edit(id=${submissionMap[p.id].id})}"
-                      class="btn-edit-sub">
+                      class="btn-edit-sub"
+                    >
                       <i class="fa-solid fa-pen-to-square"></i>
                       Sửa bài nộp
                     </a>
@@ -848,7 +985,8 @@
                   th:if="${submissionMap[p.id] == null}"
                   type="button"
                   th:attr="onclick=|openAssignModal('${p.id}')|"
-                  class="btn-assign-task">
+                  class="btn-assign-task"
+                >
                   <i class="fa-solid fa-user-plus"></i>
                   Giao việc
                 </button>
@@ -859,7 +997,8 @@
           <p
             th:if="${pages == null or pages.isEmpty()}"
             class="ptab-sub-desc"
-            style="margin-top: 14px">
+            style="margin-top: 14px"
+          >
             Chapter này chưa có trang nào.
           </p>
         </div>
@@ -873,8 +1012,11 @@
             <select id="assignSelect"></select>
 
             <label>Yêu cầu / Ghi chú:</label>
-            <textarea id="assignComment" rows="4"
-              placeholder="Nhập yêu cầu chỉnh sửa..."></textarea>
+            <textarea
+              id="assignComment"
+              rows="4"
+              placeholder="Nhập yêu cầu chỉnh sửa..."
+            ></textarea>
 
             <label class="deadline-lbl"> Deadline: </label>
 
@@ -882,7 +1024,11 @@
 
             <div class="footer-actions">
               <button
-                onclick="document.getElementById('assignModalOverlay').style.display = 'none'">
+                onclick="
+                  document.getElementById('assignModalOverlay').style.display =
+                    'none'
+                "
+              >
                 Hủy
               </button>
 
@@ -904,7 +1050,8 @@
             type="button"
             onclick="openProposalTab('ptab-all')"
             id="pbtn-all"
-            class="proposal-tab-btn active">
+            class="proposal-tab-btn active"
+          >
             Tất cả
           </button>
 
@@ -912,7 +1059,8 @@
             type="button"
             onclick="openProposalTab('ptab-approved')"
             id="pbtn-approved"
-            class="proposal-tab-btn">
+            class="proposal-tab-btn"
+          >
             Đã duyệt
           </button>
 
@@ -920,7 +1068,8 @@
             type="button"
             onclick="openProposalTab('ptab-rejected')"
             id="pbtn-rejected"
-            class="proposal-tab-btn">
+            class="proposal-tab-btn"
+          >
             Bị từ chối
           </button>
         </div>
@@ -963,8 +1112,11 @@
                       Hội đồng thông qua
                     </span>
 
-                    <span th:case="*" class="badge-status-default"
-                      th:text="${p.status}">
+                    <span
+                      th:case="*"
+                      class="badge-status-default"
+                      th:text="${p.status}"
+                    >
                     </span>
                   </span>
                 </td>
@@ -972,12 +1124,15 @@
                   <span
                     th:if="${p.comment != null and !#strings.isEmpty(p.comment)}"
                     th:text="${p.comment}"
-                    class="tantou-comment-text">
+                    class="tantou-comment-text"
+                  >
                   </span>
 
                   <span
                     th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
-                    class="tantou-comment-empty">—</span>
+                    class="tantou-comment-empty"
+                    >—</span
+                  >
                 </td>
               </tr>
             </tbody>
@@ -1011,12 +1166,16 @@
                 <td th:text="${p.id}"></td>
                 <td th:text="${p.seriesName}"></td>
                 <td>
-                  <span th:if="${p.status == 'checked'}"
-                    class="badge-status-approved">
+                  <span
+                    th:if="${p.status == 'checked'}"
+                    class="badge-status-approved"
+                  >
                     Tantou đã duyệt
                   </span>
-                  <span th:if="${p.status == 'pass'}"
-                    class="badge-status-passed">
+                  <span
+                    th:if="${p.status == 'pass'}"
+                    class="badge-status-passed"
+                  >
                     Hội đồng thông qua
                   </span>
                 </td>
@@ -1024,11 +1183,14 @@
                   <span
                     th:if="${p.comment != null and !#strings.isEmpty(p.comment)}"
                     th:text="${p.comment}"
-                    class="tantou-comment-text">
+                    class="tantou-comment-text"
+                  >
                   </span>
                   <span
                     th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
-                    class="tantou-comment-empty">—</span>
+                    class="tantou-comment-empty"
+                    >—</span
+                  >
                 </td>
                 <td>
                   <button
@@ -1037,13 +1199,15 @@
                     th:data-proposal-id="${p.id}"
                     th:data-series-name="${p.seriesName}"
                     onclick="openStartSeriesModal(this)"
-                    class="btn-start-project">
+                    class="btn-start-project"
+                  >
                     Khởi động dự án
                   </button>
 
                   <span
                     th:if="${p.status == 'checked'}"
-                    class="status-waiting-council">
+                    class="status-waiting-council"
+                  >
                     Chờ hội đồng bỏ phiếu
                   </span>
                 </td>
@@ -1078,14 +1242,17 @@
                 <td>
                   <div
                     th:if="${p.comment != null and !#strings.isEmpty(p.comment)}"
-                    class="rejected-comment-box">
+                    class="rejected-comment-box"
+                  >
                     <i class="fa-solid fa-comment"></i>
                     <span th:text="${p.comment}"></span>
                   </div>
 
                   <span
                     th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
-                    class="tantou-comment-empty">Không có nhận xét</span>
+                    class="tantou-comment-empty"
+                    >Không có nhận xét</span
+                  >
                 </td>
                 <td>
                   <button
@@ -1093,7 +1260,8 @@
                     th:data-proposal-id="${p.id}"
                     th:data-series-name="${p.seriesName}"
                     onclick="openResubmitModal(this)"
-                    class="btn-resubmit-proposal">
+                    class="btn-resubmit-proposal"
+                  >
                     Nộp lại
                   </button>
                 </td>
@@ -1106,7 +1274,8 @@
         <button
           id="btnOpenModal"
           class="margin-top-btn"
-          style="margin-top: 20px">
+          style="margin-top: 20px"
+        >
           + Nộp bản thảo mới
         </button>
 
@@ -1114,7 +1283,8 @@
         <div
           id="proposalModalOverlay"
           class="modal-overlay"
-          style="display: none">
+          style="display: none"
+        >
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">Đăng Ký Đề Xuất Dự Án Mới</h5>
@@ -1122,15 +1292,17 @@
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label fw-bold form-label-dark">Tên dự
-                  án:</label>
+                <label class="form-label fw-bold form-label-dark"
+                  >Tên dự án:</label
+                >
                 <input
                   type="text"
                   id="newSeriesName"
                   class="form-control"
                   maxlength="30"
                   required
-                  placeholder="Nhập tên bộ truyện..." />
+                  placeholder="Nhập tên bộ truyện..."
+                />
               </div>
               <div class="mb-3">
                 <label class="form-label fw-bold form-label-dark">
@@ -1141,7 +1313,8 @@
                   id="newManuscriptFile"
                   class="form-control"
                   accept=".pdf,.zip,.rar"
-                  required />
+                  required
+                />
               </div>
             </div>
             <div class="modal-footer">
@@ -1157,7 +1330,8 @@
         <div
           id="resubmitModalOverlay"
           class="modal-overlay"
-          style="display: none">
+          style="display: none"
+        >
           <div class="modal-content">
             <div class="modal-header">
               <h5>Nộp Lại Bản Thảo</h5>
@@ -1166,14 +1340,16 @@
             <div class="modal-body">
               <input type="hidden" id="resubmitProposalId" />
               <div class="mb-3">
-                <label class="form-label fw-bold form-label-dark">Tên dự
-                  án:</label>
+                <label class="form-label fw-bold form-label-dark"
+                  >Tên dự án:</label
+                >
                 <input
                   type="text"
                   id="resubmitSeriesName"
                   class="form-control"
                   maxlength="30"
-                  required />
+                  required
+                />
               </div>
               <div class="mb-3">
                 <label class="form-label fw-bold form-label-dark">
@@ -1184,7 +1360,8 @@
                   id="resubmitFile"
                   class="form-control"
                   accept=".pdf,.zip,.rar"
-                  required />
+                  required
+                />
               </div>
             </div>
             <div class="modal-footer">
@@ -1193,7 +1370,8 @@
               <button
                 type="button"
                 onclick="submitResubmitProposal()"
-                class="btn-modal-resubmit-confirm">
+                class="btn-modal-resubmit-confirm"
+              >
                 Nộp lại
               </button>
             </div>
@@ -1204,14 +1382,16 @@
         <div
           class="modal-overlay"
           id="startSeriesModalOverlay"
-          style="display: none">
+          style="display: none"
+        >
           <div class="modal-content">
             <div class="modal-header">
               <h5>Khởi Động Tác Phẩm</h5>
               <button
                 type="button"
                 class="btn-close"
-                onclick="closeStartSeriesModal()">
+                onclick="closeStartSeriesModal()"
+              >
                 X
               </button>
             </div>
@@ -1223,7 +1403,8 @@
                   type="text"
                   id="modalSeriesName"
                   class="input-series-name-readonly"
-                  readonly />
+                  readonly
+                />
               </div>
               <div class="form-group-block">
                 <label>Mô tả:</label>
@@ -1231,7 +1412,8 @@
                   id="modalDescription"
                   placeholder="Nhập mô tả tác phẩm..."
                   required
-                  class="textarea-description"></textarea>
+                  class="textarea-description"
+                ></textarea>
               </div>
               <div class="form-group-block">
                 <label>Bìa sách (.pdf):</label>
@@ -1240,20 +1422,23 @@
                   id="modalBookJacket"
                   accept=".pdf"
                   required
-                  class="input-file-jacket" />
+                  class="input-file-jacket"
+                />
               </div>
             </div>
             <div class="modal-footer">
               <button
                 type="button"
                 onclick="closeStartSeriesModal()"
-                class="btn-modal-cancel">
+                class="btn-modal-cancel"
+              >
                 Hủy
               </button>
               <button
                 type="button"
                 onclick="submitStartSeries()"
-                class="btn-modal-confirm">
+                class="btn-modal-confirm"
+              >
                 Xác nhận
               </button>
             </div>
@@ -1264,7 +1449,8 @@
         <div
           id="notificationModalOverlay"
           class="modal-overlay"
-          style="display: none">
+          style="display: none"
+        >
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">Thông báo hệ thống</h5>
@@ -1274,14 +1460,16 @@
             </div>
             <div class="modal-body">
               <p
-                style="text-align: center; font-weight: bold; font-size: 16px"></p>
+                style="text-align: center; font-weight: bold; font-size: 16px"
+              ></p>
             </div>
             <div class="modal-footer">
               <button
                 type="button"
                 id="btnOkNotification"
                 class="btn-action approve"
-                style="padding: 8px 20px">
+                style="padding: 8px 20px"
+              >
                 OK
               </button>
             </div>
@@ -1747,5 +1935,30 @@
           });
       }
     </script>
+
+    <script>
+      /* ==========================MỚI THÊM VÀO================================================
+   ========================================================================== */
+      function submitChapter(chapterId) {
+        if (!confirm("Submit chapter này lên biên tập viên để duyệt?")) return;
+
+        fetch("/api/chapter-review/" + chapterId + "/submit", {
+          method: "POST",
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status === "success") {
+              showSystemNotification("✅ " + data.message, true);
+            } else {
+              showSystemNotification("❌ " + data.message, false);
+            }
+          })
+          .catch((err) =>
+            showSystemNotification("❌ Lỗi: " + err.message, false),
+          );
+      }
+    </script>
+    <!-- ==========================================================================
+   ==========================================================================-->
   </body>
 </html>

@@ -1,0 +1,179 @@
+package com.example.manga_management.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.manga_management.entity.Chapter;
+import com.example.manga_management.entity.User;
+import com.example.manga_management.repository.ChapterRepository;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpSession;
+
+@RestController
+@RequestMapping("/api/chapter-review")
+@Tag(name = "Chapter Review", description = "Giai đoạn D: Mangaka submit chapter → Tantou duyệt → Published / Reject")
+public class ChapterReviewController {
+
+    private final ChapterRepository chapterRepository;
+    private final NotificationController notificationController;
+
+    public ChapterReviewController(ChapterRepository chapterRepository,
+            NotificationController notificationController) {
+        this.chapterRepository = chapterRepository;
+        this.notificationController = notificationController;
+    }
+
+    // ── Mangaka bấm "Submit Chapter" ──────────────────────────────────────
+    @Operation(summary = "Mangaka submit chapter lên Tantou duyệt",
+            description = "Đổi status chapter từ 'unfinish' hoặc 'reject_in_review' sang 'ready_to_review', gửi thông báo cho Tantou")
+    @Transactional
+    @PostMapping("/{chapterId}/submit")
+    public Map<String, String> submitChapter(@PathVariable String chapterId,
+            HttpSession session) {
+        Map<String, String> result = new HashMap<>();
+
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập!");
+            return result;
+        }
+
+        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+        if (chapter == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy chapter!");
+            return result;
+        }
+
+        if (!chapter.getStatus().equals("unfinish") && !chapter.getStatus().equals("reject_in_review")) {
+            result.put("status", "error");
+            result.put("message", "Chapter này không thể submit lúc này (trạng thái: " + chapter.getStatus() + ")");
+            return result;
+        }
+
+        chapter.setStatus("ready_to_review");
+        chapterRepository.save(chapter);
+
+        String editorUserId = chapter.getSeries()
+                .getProposal().getMangaka().getEditor().getUser().getId();
+        String chapterName = chapter.getChapterName();
+        String seriesName = chapter.getSeries().getSeriesName();
+
+        notificationController.send(
+                null,
+                editorUserId,
+                "Chapter '" + chapterName + "' của series '" + seriesName + "' đang chờ bạn duyệt.",
+                "/manga/tantou"
+        );
+
+        result.put("status", "success");
+        result.put("message", "Đã submit chapter lên biên tập viên!");
+        return result;
+    }
+
+    // ── Tantou lấy danh sách chapter cần duyệt ────────────────────────────
+    @Operation(summary = "Tantou lấy danh sách chapter đang chờ duyệt",
+            description = "Trả về các chapter có status 'ready_to_review' thuộc Mangaka của Tantou này")
+    @Transactional
+    @GetMapping("/pending")
+    public Map<String, Object> getPendingChapters(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập!");
+            return result;
+        }
+
+        List<Chapter> pending = chapterRepository
+                .findByStatusAndSeries_Proposal_Mangaka_Editor_User_Id("ready_to_review", user.getId());
+
+        result.put("status", "success");
+        result.put("total", pending.size());
+        result.put("chapters", pending);
+        return result;
+    }
+
+    // ── Tantou duyệt hoặc reject chapter ──────────────────────────────────
+    @Operation(summary = "Tantou duyệt hoặc từ chối chapter",
+            description = "action=approve → status: published | action=reject → status: reject_in_review, gửi thông báo cho Mangaka")
+    @Transactional
+    @PostMapping("/{chapterId}/review")
+    public Map<String, String> reviewChapter(@PathVariable String chapterId,
+            @RequestParam String action,
+            @RequestParam(required = false) String comment,
+            HttpSession session) {
+        Map<String, String> result = new HashMap<>();
+
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập!");
+            return result;
+        }
+
+        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+        if (chapter == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy chapter!");
+            return result;
+        }
+
+        if (!chapter.getStatus().equals("ready_to_review")) {
+            result.put("status", "error");
+            result.put("message", "Chapter này không ở trạng thái chờ duyệt!");
+            return result;
+        }
+
+        String mangakaUserId = chapter.getSeries().getProposal().getMangaka().getUser().getId();
+        String seriesName = chapter.getSeries().getSeriesName();
+        String chapterName = chapter.getChapterName();
+
+        if ("approve".equals(action)) {
+            chapter.setStatus("published");
+            chapterRepository.save(chapter);
+
+            notificationController.send(
+                    null,
+                    mangakaUserId,
+                    "✅ Chapter '" + chapterName + "' của series '" + seriesName + "' đã được duyệt!",
+                    "/manga/mangaka"
+            );
+
+            result.put("status", "success");
+            result.put("message", "Đã duyệt và xuất bản chapter!");
+
+        } else if ("reject".equals(action)) {
+            chapter.setStatus("reject_in_review");
+            chapterRepository.save(chapter);
+
+            String notifMsg = "❌ Chapter '" + chapterName + "' của series '" + seriesName
+                    + "' bị yêu cầu chỉnh sửa."
+                    + (comment != null && !comment.isBlank() ? " Nhận xét: " + comment : "");
+
+            notificationController.send(null, mangakaUserId, notifMsg, "/manga/mangaka");
+
+            result.put("status", "success");
+            result.put("message", "Đã yêu cầu chỉnh sửa chapter!");
+
+        } else {
+            result.put("status", "error");
+            result.put("message", "Action không hợp lệ (approve hoặc reject)!");
+        }
+
+        return result;
+    }
+}

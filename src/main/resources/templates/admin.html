@@ -280,6 +280,11 @@
                 <i class="fa-solid fa-link"></i>
             </button>
         </li>
+        <li>
+            <button type="button" class="btn-icon" onclick="openTab('tab-vote')">
+                <i class="fa-solid fa-square-poll-vertical"></i>
+            </button>
+        </li>
     </ul>
 
     <div id="toast"></div>
@@ -402,6 +407,102 @@
                     <tbody id="rel-am-tbody">
                         <tr>
                             <td colspan="3" style="text-align:center;">Đang tải...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: QUẢN LÝ VOTE -->
+        <div id="tab-vote" class="tab-pane">
+
+            <!-- Bảng xếp hạng -->
+            <div class="section-card">
+                <h3><i class="fa-solid fa-trophy" style="color:#f59e0b;margin-right:6px"></i>
+                    Bảng xếp hạng series</h3>
+
+                <div class="form-inline">
+                    <div class="field">
+                        <label>Tháng</label>
+                        <select id="vote-rank-month">
+                            <option value="0">-- Cả năm --</option>
+                            <option value="1">Tháng 1</option>
+                            <option value="2">Tháng 2</option>
+                            <option value="3">Tháng 3</option>
+                            <option value="4">Tháng 4</option>
+                            <option value="5">Tháng 5</option>
+                            <option value="6">Tháng 6</option>
+                            <option value="7">Tháng 7</option>
+                            <option value="8">Tháng 8</option>
+                            <option value="9">Tháng 9</option>
+                            <option value="10">Tháng 10</option>
+                            <option value="11">Tháng 11</option>
+                            <option value="12">Tháng 12</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Năm</label>
+                        <select id="vote-rank-year">
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                        </select>
+                    </div>
+                    <div style="display:flex;align-items:flex-end;">
+                        <button class="btn-sm btn-primary" onclick="loadVoteRanking()">
+                            <i class="fa-solid fa-magnifying-glass"></i> Xem ranking
+                        </button>
+                    </div>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Hạng</th>
+                            <th>Mã Series</th>
+                            <th>Tên Series</th>
+                            <th>Tổng phiếu</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vote-ranking-tbody">
+                        <tr>
+                            <td colspan="4" style="text-align:center;color:#94a3b8;">
+                                Bấm "Xem ranking" để tải dữ liệu.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Quản lý phiên vote -->
+            <div class="section-card">
+                <h3><i class="fa-solid fa-square-poll-vertical" style="color:#3b82f6;margin-right:6px"></i>
+                    Phiên vote đang mở</h3>
+
+                <div class="form-inline" style="margin-bottom:10px;">
+                    <div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;">
+                        <button class="btn-sm btn-danger" onclick="createBottomVoteSessionsAdmin()">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Tạo Vote 3 Series Cuối Bảng
+                        </button>
+                        <button class="btn-sm btn-primary" onclick="openCreateVoteModalAdmin()">
+                            <i class="fa-solid fa-plus"></i> Tạo Vote Mới
+                        </button>
+                    </div>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Phiên</th>
+                            <th>Series</th>
+                            <th>Loại Vote</th>
+                            <th>Người Tạo</th>
+                            <th>Tiến Độ</th>
+                            <th>Kết Quả</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vote-sessions-tbody">
+                        <tr>
+                            <td colspan="6" style="text-align:center;color:#94a3b8;">Đang tải...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -565,6 +666,39 @@
         </div>
     </div>
 
+    <!-- MODAL: TẠO PHIÊN VOTE MỚI -->
+    <div id="modal-create-vote" class="modal-overlay">
+        <div class="modal-box">
+            <h3><i class="fa-solid fa-square-poll-vertical" style="color:#3b82f6;margin-right:6px"></i>
+                Tạo phiên vote mới</h3>
+
+            <div class="field">
+                <label>Loại vote <span style="color:red">*</span></label>
+                <select id="cv-voteType" onchange="updateVoteTypeHintAdmin()">
+                    <option value="stop">🚫 Vote Dừng Series</option>
+                    <option value="reward">🏆 Vote Khen Thưởng Series</option>
+                </select>
+                <p id="cv-voteType-hint" style="font-size:0.8rem;color:#e74c3c;margin-top:4px;">
+                    Nếu ≥ 60% board đồng ý → Series sẽ bị DỪNG phát hành.
+                </p>
+            </div>
+
+            <div class="field">
+                <label>Chọn series <span style="color:red">*</span></label>
+                <select id="cv-seriesId">
+                    <option value="">-- Đang tải... --</option>
+                </select>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-sm btn-cancel" onclick="closeModal('modal-create-vote')">Hủy</button>
+                <button class="btn-sm btn-primary" onclick="submitCreateVoteSessionAdmin()">
+                    <i class="fa-solid fa-save"></i> Tạo Vote
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ════════════════════════════════════════════
         //  UTILS
@@ -573,6 +707,7 @@
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             if (id === 'tab-relations') loadRelations();
+            if (id === 'tab-vote') loadVoteSessionsAdmin();
         }
 
         function showToast(msg, type = 'success') {
@@ -940,6 +1075,152 @@
                 renderRelAM();
             } else {
                 showToast(data.message, 'error');
+            }
+        }
+
+        // ════════════════════════════════════════════
+        //  QUẢN LÝ VOTE SERIES
+        // ════════════════════════════════════════════
+
+        function loadVoteRanking() {
+            const month = document.getElementById('vote-rank-month').value;
+            const year = document.getElementById('vote-rank-year').value;
+            fetch('/manga/ranking?month=' + month + '&year=' + year)
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.getElementById('vote-ranking-tbody');
+                    if (!data || data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">Không có dữ liệu</td></tr>';
+                        return;
+                    }
+                    const medals = ['🥇', '🥈', '🥉'];
+                    tbody.innerHTML = data.map(item => {
+                        const medal = item.rank <= 3 ? medals[item.rank - 1] + ' ' : '';
+                        return `<tr>
+                            <td style="text-align:center;">${medal}${item.rank}</td>
+                            <td style="text-align:center;">${item.seriesId}</td>
+                            <td>${item.seriesName}</td>
+                            <td style="text-align:center;">${item.totalVotes}</td>
+                        </tr>`;
+                    }).join('');
+                });
+        }
+
+        function loadVoteSessionsAdmin() {
+            fetch('/manga/ranking/active-sessions')
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.getElementById('vote-sessions-tbody');
+                    if (!data || data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">Chưa có phiên vote nào</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = data.map(s => {
+                        const typeLabel = s.voteType === 'stop'
+                            ? '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:99px;font-size:0.78rem;font-weight:700;">🚫 Dừng</span>'
+                            : '<span style="background:#fef3c7;color:#854d0e;padding:2px 8px;border-radius:99px;font-size:0.78rem;font-weight:700;">🏆 Khen Thưởng</span>';
+                        const progress = s.voted + '/' + s.totalBoards + ' đã vote';
+                        let result;
+                        if (s.sessionStatus === 'closed') {
+                            const pct = s.totalBoards > 0 ? Math.round(s.positiveVotes / s.totalBoards * 100) : 0;
+                            if (s.voteType === 'stop') {
+                                result = pct >= 60
+                                    ? '<span style="color:#dc2626;font-weight:700;">Đã DỪNG</span>'
+                                    : '<span style="color:#16a34a;font-weight:700;">Được Giữ</span>';
+                            } else {
+                                result = pct >= 60
+                                    ? '<span style="color:#f59e0b;font-weight:700;">Được Khen Thưởng</span>'
+                                    : '<span style="color:#64748b;font-weight:700;">Không Khen Thưởng</span>';
+                            }
+                        } else {
+                            result = '<span style="color:#64748b;font-style:italic;">Đang mở</span>';
+                        }
+                        return `<tr>
+                            <td style="text-align:center;font-size:0.82rem;">${s.sessionId}</td>
+                            <td>${s.seriesName}<br><small style="color:#94a3b8;">${s.seriesId}</small></td>
+                            <td style="text-align:center;">${typeLabel}</td>
+                            <td>${s.createdBy}</td>
+                            <td style="text-align:center;">${progress}</td>
+                            <td style="text-align:center;">${result}</td>
+                        </tr>`;
+                    }).join('');
+                });
+        }
+
+        function createBottomVoteSessionsAdmin() {
+            if (!confirm('Phiên vote cho 3 series cuối sẽ được khởi tạo.')) return;
+            const month = document.getElementById('vote-rank-month').value;
+            const year = document.getElementById('vote-rank-year').value;
+            fetch('/manga/system-admin/ranking/create-bottom-sessions?month=' + month + '&year=' + year, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    showToast(data.message, data.success ? 'success' : 'error');
+                    if (data.success) loadVoteSessionsAdmin();
+                })
+                .catch(() => showToast('Lỗi khi tạo phiên vote', 'error'));
+        }
+
+        function openCreateVoteModalAdmin() {
+            document.getElementById('cv-voteType').value = 'stop';
+            updateVoteTypeHintAdmin();
+            // Load series list
+            fetch('/manga/system-admin/ranking/all-series')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status !== 'success') { showToast(data.message, 'error'); return; }
+                    const sel = document.getElementById('cv-seriesId');
+                    const items = (data.series || []).sort((a, b) => a.id.localeCompare(b.id));
+                    sel.innerHTML = '<option value="">-- Chọn series --</option>'
+                        + items.map(s => {
+                            const tag = s.status !== 'unfinish' ? ' [' + s.status + ']' : '';
+                            return `<option value="${s.id}">${s.id} — ${s.name}${tag}</option>`;
+                        }).join('');
+                    openModal('modal-create-vote');
+                });
+        }
+
+        function updateVoteTypeHintAdmin() {
+            const type = document.getElementById('cv-voteType').value;
+            const hint = document.getElementById('cv-voteType-hint');
+            if (type === 'stop') {
+                hint.textContent = 'Nếu ≥ 60% board đồng ý → Series sẽ bị DỪNG phát hành.';
+                hint.style.color = '#e74c3c';
+            } else {
+                hint.textContent = 'Nếu ≥ 60% board đồng ý → Series sẽ được KHEN THƯỞNG.';
+                hint.style.color = '#f59e0b';
+            }
+        }
+
+        function submitCreateVoteSessionAdmin() {
+            const seriesId = document.getElementById('cv-seriesId').value;
+            const voteType = document.getElementById('cv-voteType').value;
+            if (!seriesId) { showToast('Vui lòng chọn series', 'error'); return; }
+
+            const doCreate = () => {
+                fetch('/manga/system-admin/ranking/create-session?seriesId=' + seriesId + '&voteType=' + voteType, { method: 'POST' })
+                    .then(r => r.json())
+                    .then(data => {
+                        showToast(data.message, data.success ? 'success' : 'error');
+                        if (data.success) {
+                            closeModal('modal-create-vote');
+                            loadVoteSessionsAdmin();
+                        }
+                    });
+            };
+
+            // Vote dừng: kiểm tra top 5 cảnh báo
+            if (voteType === 'stop') {
+                const year = new Date().getFullYear();
+                fetch('/manga/ranking?month=0&year=' + year)
+                    .then(r => r.json())
+                    .then(data => {
+                        const top5 = (data || []).slice(0, 5);
+                        const inTop5 = top5.find(s => s.seriesId === seriesId);
+                        if (inTop5 && !confirm('⚠️ Series "' + inTop5.seriesName + '" đang trong TOP 5 có lượt yêu thích cao. Bạn có chắc muốn tạo vote dừng?')) return;
+                        doCreate();
+                    });
+            } else {
+                doCreate();
             }
         }
 

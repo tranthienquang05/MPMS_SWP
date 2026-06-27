@@ -110,19 +110,8 @@
 
             <hr style="margin:20px 0;">
 
-            <!-- Phiên vote đang mở -->
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                <h3 style="margin:0;color:#4a90d9;">📋 Phiên Vote Đang
-                    Mở</h3>
-                <div class="action-buttons-row">
-                    <button type="button" class="btn-action reject large" onclick="createBottomSessions()">
-                        ⚠️ Tạo Vote 3 Series Cuối Bảng
-                    </button>
-                    <button type="button" class="btn-action primary large" onclick="openCreateVoteModal()">
-                        ＋ Tạo Vote Mới
-                    </button>
-                </div>
-            </div>
+            <!-- Phiên vote đang mở (Board cast vote) -->
+            <h3 style="margin:0 0 8px;color:#4a90d9;">📋 Phiên Vote Đang Mở</h3>
             <div id="activeSessionsSection">
                 <table id="activeSessionsTable" class="data-table" style="display:none;">
                     <thead>
@@ -176,49 +165,6 @@
         <div id="tab-other" class="tab-pane">
             <h2>Cài đặt khác</h2>
             <p>Tính năng đang phát triển...</p>
-        </div>
-    </div>
-
-    <!-- Modal tạo vote mới -->
-    <div id="createVoteModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-         background:rgba(0,0,0,0.5);z-index:2000;justify-content:center;align-items:center;">
-        <div style="background:white;padding:28px;border-radius:8px;width:480px;max-width:90%;">
-            <div style="display:flex;justify-content:space-between;align-items:center;
-                 border-bottom:1px solid #ddd;padding-bottom:10px;margin-bottom:18px;">
-                <h3 style="color:#333;margin:0;">＋ Tạo Phiên Vote Mới</h3>
-                <button onclick="document.getElementById('createVoteModal').style.display='none'"
-                    style="background:#dc3545;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">✕</button>
-            </div>
-            <div style="margin-bottom:16px;">
-                <label style="display:block;font-weight:bold;margin-bottom:6px;color:#333;">Loại
-                    Vote:</label>
-                <select id="newVoteType"
-                    style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:14px;"
-                    onchange="updateVoteTypeHint()">
-                    <option value="stop">🚫 Vote Dừng Series</option>
-                    <option value="reward">🏆 Vote Khen Thưởng
-                        Series</option>
-                </select>
-                <p id="voteTypeHint" style="color:gray;font-size:12px;margin-top:6px;">
-                    Nếu ≥ 60% board đồng ý → Series sẽ bị DỪNG phát hành.
-                </p>
-            </div>
-            <div style="margin-bottom:20px;">
-                <label style="display:block;font-weight:bold;margin-bottom:6px;color:#333;">Chọn
-                    Series:</label>
-                <select id="newVoteSeries"
-                    style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:14px;">
-                    <option value>-- Đang tải danh sách series...
-                        --</option>
-                </select>
-            </div>
-            <div style="display:flex;justify-content:flex-end;gap:10px;">
-                <button onclick="document.getElementById('createVoteModal').style.display='none'"
-                    style="background:#6c757d;color:white;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;">Hủy</button>
-                <button onclick="submitCreateVote()"
-                    style="background:#4a90d9;color:white;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-weight:bold;">Tạo
-                    Vote</button>
-            </div>
         </div>
     </div>
 
@@ -300,6 +246,7 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             loadVoteProposals();
+            loadActiveSessions();
         });
 
 
@@ -335,24 +282,7 @@
                 });
         }
 
-        function createBottomSessions() {
-            if (!confirm('Phiên vote cho 3 series cuối sẽ được khởi tạo.')) return;
-
-            var month = document.getElementById('rankMonth').value;
-            var year = document.getElementById('rankYear').value;
-            fetch('/manga/ranking/create-bottom-sessions?month=' + month + '&year=' + year, { method: 'POST' })
-                .then(function (res) { return res.json(); })
-                .then(function (data) {
-                    alert(data.message);
-                    loadActiveSessions();
-                })
-                .catch(function (err) {
-                    console.log('[createBottom error]', err);
-                    alert('Lỗi khi tạo phiên vote!');
-                });
-        }
-
-        // ===== Phiên vote thủ công =====
+        // ===== Phiên vote (Board chỉ cast vote, không tạo phiên) =====
 
         function loadActiveSessions() {
             fetch('/manga/ranking/active-sessions')
@@ -411,71 +341,6 @@
                             '<td style="text-align:center;">' + actionBtn + '</td>' +
                             '</tr>';
                     });
-                });
-        }
-
-        function openCreateVoteModal() {
-            document.getElementById('createVoteModal').style.display = 'flex';
-            updateVoteTypeHint();
-            // Tải danh sách series
-            fetch('/manga/ranking/all-series')
-                .then(res => res.json())
-                .then(data => {
-                    data.sort(function (a, b) { return a.id.localeCompare(b.id); });
-                    var sel = document.getElementById('newVoteSeries');
-                    sel.innerHTML = '<option value="">-- Chọn series --</option>';
-                    data.forEach(function (s) {
-                        var label = s.id + ' — ' + s.name + (s.status !== 'unfinish' ? ' [' + s.status + ']' : '');
-                        sel.innerHTML += '<option value="' + s.id + '">' + label + '</option>';
-                    });
-                });
-        }
-
-        function updateVoteTypeHint() {
-            var type = document.getElementById('newVoteType').value;
-            var hint = document.getElementById('voteTypeHint');
-            if (type === 'stop') {
-                hint.textContent = 'Nếu ≥ 60% board đồng ý → Series sẽ bị DỪNG phát hành.';
-                hint.style.color = '#e74c3c';
-            } else {
-                hint.textContent = 'Nếu ≥ 60% board đồng ý → Series sẽ được KHEN THƯỞNG (status: rewarded).';
-                hint.style.color = '#f39c12';
-            }
-        }
-
-        function submitCreateVote() {
-            var seriesId = document.getElementById('newVoteSeries').value;
-            var voteType = document.getElementById('newVoteType').value;
-            if (!seriesId) { alert('Vui lòng chọn series!'); return; }
-
-            // Vote dừng: kiểm tra series có nằm trong top 5 cả năm hiện tại không
-            if (voteType === 'stop') {
-                var year = new Date().getFullYear();
-                fetch('/manga/ranking?month=0&year=' + year)
-                    .then(res => res.json())
-                    .then(data => {
-                        var top5 = data.slice(0, 5);
-                        var inTop5 = top5.find(function (s) { return s.seriesId === seriesId; });
-                        var confirmMsg = inTop5
-                            ? '⚠️ Series "' + inTop5.seriesName + '" đang nằm trong TOP 5 có lượt yêu thích cao. Bạn có chắc muốn tạo vote dừng cho series này không?'
-                            : 'Tạo phiên Vote Dừng cho series này?';
-                        if (!confirm(confirmMsg)) return;
-                        doCreateSession(seriesId, voteType);
-                    });
-                return;
-            }
-
-            if (!confirm('Tạo phiên Vote Khen Thưởng cho series này?')) return;
-            doCreateSession(seriesId, voteType);
-        }
-
-        function doCreateSession(seriesId, voteType) {
-            fetch('/manga/ranking/create-session?seriesId=' + seriesId + '&voteType=' + voteType, { method: 'POST' })
-                .then(res => res.json())
-                .then(data => {
-                    alert(data.message);
-                    document.getElementById('createVoteModal').style.display = 'none';
-                    if (data.success) loadActiveSessions();
                 });
         }
 

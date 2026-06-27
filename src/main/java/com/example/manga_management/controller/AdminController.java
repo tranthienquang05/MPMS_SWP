@@ -5,6 +5,7 @@ import com.example.manga_management.repository.*;
 
 import jakarta.servlet.http.HttpSession;
 
+import java.time.LocalDate;
 import java.util.*;
 
 import org.springframework.stereotype.Controller;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
@@ -24,17 +26,26 @@ public class AdminController {
     private final AssistantRepository assistantRepository;
     private final TantoEditorRepository tantoEditorRepository;
     private final BoardRepository boardRepository;
+    private final SeriesRepository seriesRepository;
+    private final VoteSessionRepository voteSessionRepository;
+    private final RankingRepository rankingRepository;
 
     public AdminController(UserRepository userRepository,
             MangakaRepository mangakaRepository,
             AssistantRepository assistantRepository,
             TantoEditorRepository tantoEditorRepository,
-            BoardRepository boardRepository) {
+            BoardRepository boardRepository,
+            SeriesRepository seriesRepository,
+            VoteSessionRepository voteSessionRepository,
+            RankingRepository rankingRepository) {
         this.userRepository = userRepository;
         this.mangakaRepository = mangakaRepository;
         this.assistantRepository = assistantRepository;
         this.tantoEditorRepository = tantoEditorRepository;
         this.boardRepository = boardRepository;
+        this.seriesRepository = seriesRepository;
+        this.voteSessionRepository = voteSessionRepository;
+        this.rankingRepository = rankingRepository;
     }
 
     @GetMapping("")
@@ -355,6 +366,184 @@ public class AdminController {
             result.put("message", e.getMessage());
         }
         return result;
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  QUẢN LÝ VOTE SERIES (Admin tạo phiên, Board cast vote)
+    // ════════════════════════════════════════════════════════════
+
+    // Lấy danh sách series cho dropdown khi tạo phiên
+    @GetMapping("/ranking/all-series")
+    @ResponseBody
+    public Map<String, Object> getAllSeriesForVote(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"admin".equalsIgnoreCase(user.getRole())) {
+            result.put("status", "error");
+            result.put("message", "Không có quyền truy cập");
+            return result;
+        }
+
+        List<Object[]> rows = rankingRepository.findAllSeriesDistinct();
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (Object[] row : rows) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("id", row[0]);
+            map.put("name", row[1]);
+            map.put("status", row[2]);
+            list.add(map);
+        }
+        result.put("status", "success");
+        result.put("series", list);
+        return result;
+    }
+
+    // Tạo phiên vote thủ công (Admin chọn series + loại vote)
+    @PostMapping("/ranking/create-session")
+    @ResponseBody
+    public Map<String, Object> createVoteSession(
+            @RequestParam String seriesId,
+            @RequestParam String voteType,
+            HttpSession session) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"admin".equalsIgnoreCase(user.getRole())) {
+            response.put("success", false);
+            response.put("message", "Không có quyền truy cập");
+            return response;
+        }
+
+        if (!voteType.equals("stop") && !voteType.equals("reward")) {
+            response.put("success", false);
+            response.put("message", "Loại vote không hợp lệ (stop hoặc reward)!");
+            return response;
+        }
+
+        Optional<Series> seriesOpt = seriesRepository.findById(seriesId);
+        if (seriesOpt.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Không tìm thấy series!");
+            return response;
+        }
+
+        String seriesStatus = seriesOpt.get().getStatus();
+        if ("stopped".equals(seriesStatus) || "rewarded".equals(seriesStatus)) {
+            response.put("success", false);
+            response.put("message", "Series này đã có kết quả vote, không thể tạo phiên mới!");
+            return response;
+        }
+
+        if (voteSessionRepository.existsBySeriesIdAndStatus(seriesId, "active")) {
+            response.put("success", false);
+            response.put("message", "Series này đang có phiên vote đang mở rồi! Phải đóng phiên hiện tại trước.");
+            return response;
+        }
+
+        if (voteSessionRepository.existsBySeriesIdAndVoteType(seriesId, voteType)) {
+            response.put("success", false);
+            response.put("message", "Series này đã từng có phiên vote "
+                    + (voteType.equals("stop") ? "dừng" : "khen thưởng")
+                    + " rồi, không thể tạo lại!");
+            return response;
+        }
+
+        VoteSession vs = new VoteSession();
+        vs.setId(generateSessionId());
+        vs.setSeries(seriesOpt.get());
+        vs.setCreatedBy(null); // Admin tạo, không phải Board
+        vs.setVoteType(voteType);
+        vs.setStatus("active");
+        vs.setCreatedAt(LocalDate.now());
+        vs.setAutoCreated(false);
+        voteSessionRepository.save(vs);
+
+        response.put("success", true);
+        response.put("sessionId", vs.getId());
+        response.put("message", "Đã tạo phiên vote " + (voteType.equals("stop") ? "dừng" : "khen thưởng")
+                + " cho series \"" + seriesOpt.get().getSeriesName() + "\"!");
+        return response;
+    }
+
+    // Tạo phiên vote dừng cho 3 series cuối bảng
+    @PostMapping("/ranking/create-bottom-sessions")
+    @ResponseBody
+    public Map<String, Object> createBottomVoteSessions(
+            @RequestParam(defaultValue = "0") int month,
+            @RequestParam(defaultValue = "2026") int year,
+            HttpSession session) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"admin".equalsIgnoreCase(user.getRole())) {
+            response.put("success", false);
+            response.put("message", "Không có quyền truy cập");
+            return response;
+        }
+
+        try {
+            List<Object[]> rows = (month == 0)
+                    ? rankingRepository.findBottomByYear(year)
+                    : rankingRepository.findBottomByMonthAndYear(month, year);
+
+            int count = Math.min(3, rows.size());
+            List<String> createdNames = new ArrayList<>();
+            List<String> skippedNames = new ArrayList<>();
+
+            for (int i = 0; i < count; i++) {
+                String sid = (String) rows.get(i)[0];
+                String sname = (String) rows.get(i)[1];
+
+                Optional<Series> seriesOpt = seriesRepository.findById(sid);
+                if (seriesOpt.isEmpty()) continue;
+                String seriesStatus = seriesOpt.get().getStatus();
+
+                if ("stopped".equals(seriesStatus) || "rewarded".equals(seriesStatus)
+                        || voteSessionRepository.existsBySeriesIdAndVoteType(sid, "stop")) {
+                    skippedNames.add(sname);
+                    continue;
+                }
+
+                VoteSession vs = new VoteSession();
+                vs.setId(generateSessionId());
+                vs.setSeries(seriesOpt.get());
+                vs.setCreatedBy(null); // Admin tạo
+                vs.setVoteType("stop");
+                vs.setStatus("active");
+                vs.setCreatedAt(LocalDate.now());
+                vs.setAutoCreated(false);
+                voteSessionRepository.save(vs);
+                createdNames.add(sname);
+            }
+
+            String message;
+            if (skippedNames.isEmpty()) {
+                message = "Đã tạo phiên vote cho 3 series cuối bảng: "
+                        + String.join(", ", createdNames) + "!";
+            } else if (createdNames.isEmpty()) {
+                message = "Cả 3 series cuối bảng (" + String.join(", ", skippedNames)
+                        + ") đều đã có phiên vote trước đó, không tạo được phiên mới!";
+            } else {
+                message = "Series " + String.join(", ", skippedNames)
+                        + " đã có phiên vote trước đó. Chỉ tạo được phiên vote cho: "
+                        + String.join(", ", createdNames);
+            }
+
+            response.put("success", true);
+            response.put("message", message);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi tạo phiên: " + e.getMessage());
+        }
+        return response;
+    }
+
+    private String generateSessionId() {
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+        Random rand = new Random();
+        StringBuilder sb = new StringBuilder("VS");
+        for (int i = 0; i < 4; i++) sb.append(chars.charAt(rand.nextInt(chars.length())));
+        return sb.toString();
     }
 
     // ── Helper ────────────────────────────────────────────────────

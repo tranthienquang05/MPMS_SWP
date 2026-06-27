@@ -9,4 +9,6 @@ import com.example.manga_management.entity.User;
 
 public interface TantoEditorRepository extends JpaRepository<TantoEditor, String> {
     Optional<TantoEditor> findByUser(User user);
+
+    Optional<TantoEditor> findByUserId(String userId);
 }

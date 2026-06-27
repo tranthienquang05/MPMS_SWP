@@ -1,210 +1,172 @@
 <!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Biên tập viên</title>
-    <link rel="stylesheet" th:href="@{/css/all.css}" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-  </head>
 
-  <body>
-    <!-- Header -->
-    <div class="header">
-      <div class="logo">
-        SANKYUU
-        <p class="name">Biên tập viên</p>
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <title>Biên tập viên</title>
+  <link rel="stylesheet" th:href="@{/css/all.css}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
 
-      <div class="header-actions">
-        <div class="notification-container">
-          <button
-            type="button"
-            class="btn-icon"
-            id="btnNoti"
-            style="position: relative"
-          >
-            <i class="fa-solid fa-bell"></i>
-            <span
-              class="badge"
-              th:if="${unreadCount > 0}"
-              th:text="${unreadCount}"
-              >0</span
-            >
-          </button>
-
-          <div class="notification-dropdown">
-            <div class="dropdown-header">Thông báo mới</div>
-            <div
-              th:each="note : ${myNotifications}"
-              class="notification-item"
-              th:classappend="${!note.isRead} ? 'unread' : ''"
-            >
-              <a
-                th:href="@{'/notification/read/' + ${note.id}}"
-                th:text="${note.content}"
-              ></a>
-              <span
-                class="time"
-                th:text="${#temporals.format(note.createdAt, 'HH:mm dd/MM')}"
-              ></span>
-            </div>
-            <div th:if="${#lists.isEmpty(myNotifications)}" class="no-notify">
-              Không có thông báo
-            </div>
-          </div>
-        </div>
-
-        <a th:href="@{/login/logout}">
-          <button type="button" class="btn-icon" aria-label="Logout">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-          </button>
-        </a>
-      </div>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      SANKYUU
+      <p class="name">Biên tập viên</p>
     </div>
 
-    <!-- Thanh điều hướng -->
-    <ul class="topnav">
-      <!-- ============================MỚI THÊM VÀO==================
-                 ========================================================== -->
-      <li>
-        <button
-          type="button"
-          class="btn-icon"
-          onclick="openTab('tab-chapter-review')"
-          title="Duyệt Chapter"
-        >
-          <i class="fa-solid fa-book-open"></i>
-        </button>
-      </li>
-      <!-- ==========================================================
-                 ========================================================== -->
+    <div class="header-actions">
 
-      <li>
-        <button type="button" class="btn-icon" onclick="openTab('tab-home')">
-          <i class="fa-solid fa-house"></i>
-        </button>
-      </li>
-      <li>
-        <button type="button" class="btn-icon" onclick="openTab('tab-project')">
-          <i class="fa-solid fa-folder-open"></i>
-        </button>
-      </li>
-      <li>
-        <button
-          type="button"
-          class="btn-icon"
-          onclick="openTab('tab-proposal')"
-        >
-          <i class="fa-solid fa-file-alt"></i>
-        </button>
-      </li>
-      <li>
-        <button
-          type="button"
-          class="btn-icon"
-          onclick="openTab('tab-assistant')"
-        >
-          <i class="fa-solid fa-user"></i>
-        </button>
-      </li>
-      <li>
-        <button type="button" class="btn-icon" onclick="openTab('tab-other')">
-          <i class="fa-solid fa-hashtag"></i>
-        </button>
-      </li>
-    </ul>
 
-    <!-- Tab Content -->
-    <div class="flex-container">
-      <!-- Tab home content -->
-      <div
-        id="tab-home"
-        class="tab-pane"
-        th:classappend="${message == null} ? 'active' : ''"
-      >
-        <h2>Trang chủ</h2>
-        <p>Tính năng đang phát triển...</p>
-      </div>
+      <div style="position:relative;">
+        <button type="button" class="btn-icon" id="btnNoti" aria-label="Thông báo">
+          <i class="fa-solid fa-bell"></i>
+          <span th:if="${unreadCount > 0}" th:text="${unreadCount}" class="badge"></span>
+        </button>
 
-      <!-- Tab project content -->
-      <div id="tab-project" class="tab-pane">
-        <h2>Tất cả dự án</h2>
-        <p>Tính năng đang phát triển...</p>
-      </div>
+        <div class="notification-dropdown">
+          <div class="dropdown-header">Thông báo mới</div>
 
-      <!-- Tab Proposal content -->
-      <div id="tab-proposal" class="tab-pane">
-        <h2>Bản thảo chờ xét duyệt</h2>
-        <div id="sub-tab-new" class="sub-tab-pane">
-          <p id="proposalCount">Đang tải...</p>
+          <div th:each="note : ${myNotifications}" class="notification-item"
+            th:classappend="${!note.isRead} ? ' unread' : ''">
+            <span th:text="${note.content}"></span>
+            <span class="time" th:text="${#temporals.format(note.createdAt, 'HH:mm dd/MM')}"></span>
+          </div>
 
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Mã Đề Xuất</th>
-                <th>Tên Tác Giả</th>
-                <th>Tên Series</th>
-                <th>Trạng Thái</th>
-                <th>Tập tin bản thảo</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody id="proposalTableBody">
-              <tr>
-                <td colspan="6" style="text-align: center">Đang tải...</td>
-              </tr>
-            </tbody>
-          </table>
+          <div th:if="${#lists.isEmpty(myNotifications)}" class="no-notify">
+            Không có thông báo
+          </div>
         </div>
       </div>
-      <!-- Tab other content -->
-      <div id="tab-other" class="tab-pane">
-        <h2>Cài đặt khác</h2>
-        <p>Tính năng đang phát triển...</p>
-      </div>
 
-      <!-- ======================================MỚI THÊM VÀO======================================
-                 ============================================================================ -->
 
-      <div id="tab-chapter-review" class="tab-pane">
-        <h2>Duyệt Chapter</h2>
+      <a th:href="@{/login/logout}">
+        <button type="button" class="btn-icon" aria-label="Logout">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </button>
+      </a>
+    </div>
+  </div>
 
-        <p id="chapterReviewCount" style="color: #888; font-style: italic">
-          Đang tải...
-        </p>
+  <!-- Thanh điều hướng -->
+  <ul class="topnav">
+    <!-- ============================MỚI THÊM VÀO==================
+                 ========================================================== -->
+    <li>
+      <button type="button" class="btn-icon" onclick="openTab('tab-chapter-review')" title="Duyệt Chapter">
+        <i class="fa-solid fa-book-open"></i>
+      </button>
+    </li>
+    <!-- ==========================================================
+                 ========================================================== -->
 
-        <table class="data-table" id="chapterReviewTable" style="display: none">
+    <li>
+      <button type="button" class="btn-icon" onclick="openTab('tab-home')">
+        <i class="fa-solid fa-house"></i>
+      </button>
+    </li>
+    <li>
+      <button type="button" class="btn-icon" onclick="openTab('tab-project')">
+        <i class="fa-solid fa-folder-open"></i>
+      </button>
+    </li>
+    <li>
+      <button type="button" class="btn-icon" onclick="openTab('tab-proposal')">
+        <i class="fa-solid fa-file-alt"></i>
+      </button>
+    </li>
+    <li>
+      <button type="button" class="btn-icon" onclick="openTab('tab-assistant')">
+        <i class="fa-solid fa-user"></i>
+      </button>
+    </li>
+    <li>
+      <button type="button" class="btn-icon" onclick="openTab('tab-other')">
+        <i class="fa-solid fa-hashtag"></i>
+      </button>
+    </li>
+  </ul>
+
+  <!-- Tab Content -->
+  <div class="flex-container">
+    <!-- Tab home content -->
+    <div id="tab-home" class="tab-pane" th:classappend="${message == null} ? 'active' : ''">
+      <h2>Trang chủ</h2>
+      <p>Tính năng đang phát triển...</p>
+    </div>
+
+    <!-- Tab project content -->
+    <div id="tab-project" class="tab-pane">
+      <h2>Tất cả dự án</h2>
+      <p>Tính năng đang phát triển...</p>
+    </div>
+
+    <!-- Tab Proposal content -->
+    <div id="tab-proposal" class="tab-pane">
+      <h2>Bản thảo chờ xét duyệt</h2>
+      <div id="sub-tab-new" class="sub-tab-pane">
+        <p id="proposalCount">Đang tải...</p>
+
+        <table class="data-table">
           <thead>
             <tr>
-              <th>Series</th>
-              <th>Chapter</th>
-              <th>Xem trang</th>
-              <th>Nhận xét</th>
+              <th>Mã Đề Xuất</th>
+              <th>Tên Tác Giả</th>
+              <th>Tên Series</th>
+              <th>Trạng Thái</th>
+              <th>Tập tin bản thảo</th>
               <th>Hành động</th>
             </tr>
           </thead>
-          <tbody id="chapterReviewBody"></tbody>
+          <tbody id="proposalTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center">Đang tải...</td>
+            </tr>
+          </tbody>
         </table>
+      </div>
+    </div>
+    <!-- Tab other content -->
+    <div id="tab-other" class="tab-pane">
+      <h2>Cài đặt khác</h2>
+      <p>Tính năng đang phát triển...</p>
+    </div>
 
-        <p
-          id="chapterReviewEmpty"
-          style="
+    <!-- ======================================MỚI THÊM VÀO======================================
+                 ============================================================================ -->
+
+    <div id="tab-chapter-review" class="tab-pane">
+      <h2>Duyệt Chapter</h2>
+
+      <p id="chapterReviewCount" style="color: #888; font-style: italic">
+        Đang tải...
+      </p>
+
+      <table class="data-table" id="chapterReviewTable" style="display: none">
+        <thead>
+          <tr>
+            <th>Series</th>
+            <th>Chapter</th>
+            <th>Xem trang</th>
+            <th>Nhận xét</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="chapterReviewBody"></tbody>
+      </table>
+
+      <p id="chapterReviewEmpty" style="
             display: none;
             color: gray;
             font-style: italic;
             margin-top: 12px;
-          "
-        >
-          Không có chapter nào chờ duyệt.
-        </p>
+          ">
+        Không có chapter nào chờ duyệt.
+      </p>
 
-        <!-- Modal xem thumbnail các trang -->
-        <div
-          id="chapterPreviewModal"
-          style="
+      <!-- Modal xem thumbnail các trang -->
+      <div id="chapterPreviewModal" style="
             display: none;
             position: fixed;
             top: 0;
@@ -215,10 +177,8 @@
             z-index: 3000;
             justify-content: center;
             align-items: center;
-          "
-        >
-          <div
-            style="
+          ">
+        <div style="
               background: #262626;
               border-radius: 8px;
               padding: 24px;
@@ -226,332 +186,223 @@
               max-width: 95%;
               max-height: 85vh;
               overflow-y: auto;
-            "
-          >
-            <div
-              style="
+            ">
+          <div style="
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 16px;
-              "
-            >
-              <h3 id="previewTitle" style="margin: 0; color: #fff"></h3>
-              <button
-                onclick="closeChapterPreview()"
-                class="btn-action reject"
-                style="padding: 6px 12px"
-              >
-                ✕ Đóng
-              </button>
-            </div>
-            <div
-              id="previewPagesGrid"
-              style="
+              ">
+            <h3 id="previewTitle" style="margin: 0; color: #fff"></h3>
+            <button onclick="closeChapterPreview()" class="btn-action reject" style="padding: 6px 12px">
+              ✕ Đóng
+            </button>
+          </div>
+          <div id="previewPagesGrid" style="
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
                 gap: 12px;
-              "
-            ></div>
-          </div>
+              "></div>
         </div>
       </div>
-
-      <!-- ============================================================================
-     ============================================================================ -->
     </div>
-    <!-- JS -->
-    <script>
-      function openTab(tabId) {
-        document
-          .querySelectorAll(".tab-pane")
-          .forEach((p) => p.classList.remove("active"));
-        document.getElementById(tabId).classList.add("active");
-      }
 
-      document.addEventListener("DOMContentLoaded", () => {
-        const btnNoti = document.getElementById("btnNoti");
-        const dropdown = document.querySelector(".notification-dropdown");
+    <!-- ============================================================================
+     ============================================================================ -->
+  </div>
+  <!-- JS -->
+  <script>
+    function openTab(tabId) {
+      document.querySelectorAll(".tab-pane").forEach((p) => p.classList.remove("active"));
+      document.getElementById(tabId).classList.add("active");
+    }
 
-        if (btnNoti) {
-          btnNoti.addEventListener("click", (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle("show");
-          });
-        }
+    const tantouId = "[[${tantouId}]]";
 
-        // Đóng khi click ra ngoài
-        document.addEventListener("click", () => {
+    document.addEventListener("DOMContentLoaded", function () {
+      // Notification toggle
+      const btnNoti = document.getElementById("btnNoti");
+      const dropdown = document.querySelector(".notification-dropdown");
+
+      if (btnNoti && dropdown) {
+        btnNoti.addEventListener("click", (e) => {
+          e.stopPropagation();
+          dropdown.classList.toggle("show");
+
           if (dropdown.classList.contains("show")) {
-            dropdown.classList.remove("show");
+            const badge = btnNoti.querySelector(".badge");
+            if (badge) {
+              fetch("/notification/read-all", { method: "POST" })
+                .then(res => res.json())
+                .then(data => {
+                  if (data.status === "success") {
+                    badge.remove();
+                    document.querySelectorAll(".notification-item.unread")
+                      .forEach(el => el.classList.remove("unread"));
+                  }
+                });
+            }
           }
         });
-      });
 
-      const tantouId = "[[${tantouId}]]";
+        document.addEventListener("click", () => {
+          dropdown.classList.remove("show");
+        });
+      }
 
-      function loadProposals() {
-        fetch("/manga/tantou/proposals?tantouId=" + tantouId)
-          .then((res) => res.json())
-          .then((data) => {
-            const tbody = document.getElementById("proposalTableBody");
-            const countEl = document.getElementById("proposalCount");
+      loadProposals();
+      loadChapterReviews();
+    });
 
-            if (data.status === "error") {
-              tbody.innerHTML =
-                '<tr><td colspan="6" style="text-align:center;color:red;">' +
-                data.message +
-                "</td></tr>";
-              return;
-            }
-
-            countEl.textContent = "Tổng số bản thảo: " + data.total;
-
-            if (!data.proposals || data.proposals.length === 0) {
-              tbody.innerHTML =
-                '<tr><td colspan="6" style="text-align:center;">' +
-                "Không có dữ liệu bản thảo.</td></tr>";
-              return;
-            }
-
-            tbody.innerHTML = data.proposals
-              .map(
-                (p) => `
+    // ── Proposals ──────────────────────────────────────
+    function loadProposals() {
+      fetch("/manga/tantou/proposals?tantouId=" + tantouId)
+        .then((res) => res.json())
+        .then((data) => {
+          const tbody = document.getElementById("proposalTableBody");
+          const countEl = document.getElementById("proposalCount");
+          if (data.status === "error") {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;">${data.message}</td></tr>`;
+            return;
+          }
+          countEl.textContent = "Tổng số bản thảo: " + data.total;
+          if (!data.proposals || data.proposals.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Không có dữ liệu bản thảo.</td></tr>`;
+            return;
+          }
+          tbody.innerHTML = data.proposals.map((p) => `
                     <tr>
                         <td>${p.id}</td>
                         <td>${p.mangaka?.user?.fullname ?? "—"}</td>
                         <td>${p.seriesName}</td>
                         <td>${p.status}</td>
+                        <td>${p.filePath
+              ? `<a href="${p.filePath}" class="btn-link" target="_blank"><i class="fa-solid fa-file-pdf"></i> Xem bản thảo</a>`
+              : "Không có file"}</td>
                         <td>
-                            ${
-                              p.filePath
-                                ? `<a href="${p.filePath}" class="btn-link" target="_blank">
-                                       <i class="fa-solid fa-file-pdf"></i> Xem bản thảo
-                                   </a>`
-                                : "Không có file"
-                            }
-                        </td>
-                        <td>
-                            <textarea id="comment-${p.id}"
-                                    placeholder="Nhập nhận xét tại đây..."
-                                    style="width:100%; height:50px; font-size:12px; margin-bottom:5px;"></textarea>
-                            
-                            <div style="display:flex; gap:5px;">
-                                <button type="button"
-                                        onclick="reviewProposal('${p.id}', 'yes')"
-                                        class="btn-approve">Duyệt</button>
-                                <button type="button"
-                                        onclick="reviewProposal('${p.id}', 'no')"
-                                        class="btn-reject">Từ chối</button>
+                            <textarea id="comment-${p.id}" placeholder="Nhận xét..." style="width:100%;height:50px;font-size:12px;margin-bottom:5px;"></textarea>
+                            <div style="display:flex;gap:5px;">
+                                <button type="button" onclick="reviewProposal('${p.id}','yes')" class="btn-approve">Duyệt</button>
+                                <button type="button" onclick="reviewProposal('${p.id}','no')" class="btn-reject">Từ chối</button>
                             </div>
                         </td>
-                    </tr>
-                `,
-              )
-              .join("");
-          })
-          .catch(() => {
-            document.getElementById("proposalTableBody").innerHTML =
-              '<tr><td colspan="6" style="text-align:center;color:red;">Lỗi tải dữ liệu</td></tr>';
-          });
-      }
-
-      function reviewProposal(id, action) {
-        const comment = document.getElementById("comment-" + id).value;
-        const params = new URLSearchParams();
-        params.append("id", id);
-        params.append("action", action);
-        if (comment) params.append("comment", comment);
-
-        fetch("/manga/tantou/review", { method: "POST", body: params })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.status === "success") {
-              alert("✅ " + data.message);
-              loadProposals();
-            } else {
-              alert("❌ " + data.message);
-            }
-          })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
-      }
-
-      document.addEventListener("DOMContentLoaded", function () {
-        loadProposals();
-
-        const btnNoti = document.getElementById("btnNoti");
-        const dropdown = document.querySelector(".notification-dropdown");
-        if (btnNoti) {
-          btnNoti.addEventListener("click", (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle("show");
-          });
-        }
-        document.addEventListener("click", () => {
-          if (dropdown && dropdown.classList.contains("show")) {
-            dropdown.classList.remove("show");
-          }
-        });
-      });
-    </script>
-
-    <!-- ================================MỚI THÊM VÀO==========================================
-   ========================================================================== -->
-
-    <script>
-      function loadChapterReviews() {
-        fetch("/api/chapter-review/pending")
-          .then((r) => r.json())
-          .then((data) => {
-            const countEl = document.getElementById("chapterReviewCount");
-            const table = document.getElementById("chapterReviewTable");
-            const tbody = document.getElementById("chapterReviewBody");
-            const emptyEl = document.getElementById("chapterReviewEmpty");
-
-            if (data.status === "error") {
-              countEl.textContent = "❌ " + data.message;
-              return;
-            }
-
-            countEl.textContent =
-              "Có " + data.total + " chapter đang chờ duyệt.";
-
-            if (!data.chapters || data.chapters.length === 0) {
-              table.style.display = "none";
-              emptyEl.style.display = "block";
-              return;
-            }
-
-            table.style.display = "table";
-            emptyEl.style.display = "none";
-
-            tbody.innerHTML = data.chapters
-              .map(
-                (c) => `
-                <tr id="cr-row-${c.id}">
-                    <td>${c.series.seriesName}</td>
-                    <td>
-                        <b>Chapter ${c.chapterNumber}</b><br>
-                        <small style="color:#aaa;">${c.chapterName}</small>
-                    </td>
-                    <td>
-                        <button type="button"
-                            onclick="openChapterPreview('${c.id}', 'Chapter ${c.chapterNumber} — ${c.chapterName}')"
-                            class="btn-action primary"
-                            style="font-size:12px; padding:4px 10px;">
-                            🖼 Xem trang
-                        </button>
-                    </td>
-                    <td>
-                        <textarea id="cr-comment-${c.id}"
-                                  placeholder="Nhận xét nếu từ chối..."
-                                  style="width:100%; height:50px; font-size:12px;
-                                         background:#333; color:#fff; border:1px solid #555;
-                                         border-radius:4px; padding:4px;"></textarea>
-                    </td>
-                    <td>
-                        <div style="display:flex; gap:6px; justify-content:center;">
-                            <button type="button"
-                                    onclick="reviewChapter('${c.id}', 'approve')"
-                                    class="btn-action approve">✅ Duyệt</button>
-                            <button type="button"
-                                    onclick="reviewChapter('${c.id}', 'reject')"
-                                    class="btn-action reject">❌ Từ chối</button>
-                        </div>
-                    </td>
-                </tr>
-            `,
-              )
-              .join("");
-          })
-          .catch(() => {
-            document.getElementById("chapterReviewCount").textContent =
-              "❌ Lỗi tải dữ liệu";
-          });
-      }
-
-      function reviewChapter(chapterId, action) {
-        const comment =
-          document.getElementById("cr-comment-" + chapterId)?.value ?? "";
-        const label = action === "approve" ? "DUYỆT" : "TỪ CHỐI";
-        if (!confirm("Bạn chắc chắn muốn " + label + " chapter này?")) return;
-
-        const params = new URLSearchParams();
-        params.append("action", action);
-        if (comment) params.append("comment", comment);
-
-        fetch("/api/chapter-review/" + chapterId + "/review", {
-          method: "POST",
-          body: params,
+                    </tr>`).join("");
         })
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.status === "success") {
-              alert("✅ " + data.message);
-              const row = document.getElementById("cr-row-" + chapterId);
-              if (row) row.remove();
-              loadChapterReviews();
-            } else {
-              alert("❌ " + data.message);
-            }
-          })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
-      }
+        .catch(() => {
+          document.getElementById("proposalTableBody").innerHTML =
+            `<tr><td colspan="6" style="text-align:center;color:red;">Lỗi tải dữ liệu</td></tr>`;
+        });
+    }
 
-      function openChapterPreview(chapterId, title) {
-        document.getElementById("previewTitle").textContent = title;
-        document.getElementById("previewPagesGrid").innerHTML =
-          '<p style="color:#aaa; text-align:center; grid-column:1/-1;">Đang tải...</p>';
-        document.getElementById("chapterPreviewModal").style.display = "flex";
+    function reviewProposal(id, action) {
+      const comment = document.getElementById("comment-" + id).value;
+      const params = new URLSearchParams();
+      params.append("id", id);
+      params.append("action", action);
+      if (comment) params.append("comment", comment);
+      fetch("/manga/tantou/review", { method: "POST", body: params })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "success") { alert("✅ " + data.message); loadProposals(); }
+          else alert("❌ " + data.message);
+        })
+        .catch((err) => alert("❌ Lỗi: " + err.message));
+    }
 
-        fetch("/api/chapters/" + chapterId + "/pages")
-          .then((r) => r.json())
-          .then((pages) => {
-            const grid = document.getElementById("previewPagesGrid");
-            if (!pages || pages.length === 0) {
-              grid.innerHTML =
-                '<p style="color:#aaa; text-align:center; grid-column:1/-1;">Chưa có trang nào.</p>';
-              return;
-            }
-            grid.innerHTML = pages
-              .map(
-                (p) => `
-                <div style="text-align:center; border:1px solid #444;
-                            border-radius:4px; padding:8px; background:#1e1e1e;">
-                    ${
-                      p.filePath
-                        ? `<img src="${p.filePath}" style="width:100%; border-radius:3px;
-                                display:block; margin-bottom:4px;">`
-                        : `<div style="width:100%; height:120px; background:#333;
-                                       display:flex; align-items:center; justify-content:center;
-                                       color:#666; font-size:12px; border-radius:3px;
-                                       margin-bottom:4px;">Chưa có ảnh</div>`
-                    }
-                    <small style="color:#aaa;">Trang ${p.pageNumber}</small>
-                </div>
-            `,
-              )
-              .join("");
-          })
-          .catch(() => {
-            document.getElementById("previewPagesGrid").innerHTML =
-              '<p style="color:red; grid-column:1/-1;">Lỗi tải trang.</p>';
-          });
-      }
+    // ── Chapter Review ─────────────────────────────────
+    function loadChapterReviews() {
+      fetch("/api/chapter-review/pending")
+        .then((r) => r.json())
+        .then((data) => {
+          const countEl = document.getElementById("chapterReviewCount");
+          const table = document.getElementById("chapterReviewTable");
+          const tbody = document.getElementById("chapterReviewBody");
+          const emptyEl = document.getElementById("chapterReviewEmpty");
+          if (data.status === "error") { countEl.textContent = "❌ " + data.message; return; }
+          countEl.textContent = "Có " + data.total + " chapter đang chờ duyệt.";
+          if (!data.chapters || data.chapters.length === 0) {
+            table.style.display = "none"; emptyEl.style.display = "block"; return;
+          }
+          table.style.display = "table"; emptyEl.style.display = "none";
+          tbody.innerHTML = data.chapters.map((c) => `
+                    <tr id="cr-row-${c.id}">
+                        <td>${c.series.seriesName}</td>
+                        <td><b>Chapter ${c.chapterNumber}</b><br><small style="color:#aaa;">${c.chapterName}</small></td>
+                        <td>
+                            <button type="button" onclick="openChapterPreview('${c.id}','Chapter ${c.chapterNumber} — ${c.chapterName}')"
+                                class="btn-action primary" style="font-size:12px;padding:4px 10px;">🖼 Xem trang</button>
+                        </td>
+                        <td>
+                            <textarea id="cr-comment-${c.id}" placeholder="Nhận xét nếu từ chối..."
+                                style="width:100%;height:50px;font-size:12px;background:#333;color:#fff;
+                                       border:1px solid #555;border-radius:4px;padding:4px;"></textarea>
+                        </td>
+                        <td>
+                            <div style="display:flex;gap:6px;justify-content:center;">
+                                <button type="button" onclick="reviewChapter('${c.id}','approve')" class="btn-action approve">✅ Duyệt</button>
+                                <button type="button" onclick="reviewChapter('${c.id}','reject')" class="btn-action reject">❌ Từ chối</button>
+                            </div>
+                        </td>
+                    </tr>`).join("");
+        })
+        .catch(() => { document.getElementById("chapterReviewCount").textContent = "❌ Lỗi tải dữ liệu"; });
+    }
 
-      function closeChapterPreview() {
-        document.getElementById("chapterPreviewModal").style.display = "none";
-      }
+    function reviewChapter(chapterId, action) {
+      const comment = document.getElementById("cr-comment-" + chapterId)?.value ?? "";
+      if (!confirm("Bạn chắc chắn muốn " + (action === "approve" ? "DUYỆT" : "TỪ CHỐI") + " chapter này?")) return;
+      const params = new URLSearchParams();
+      params.append("action", action);
+      if (comment) params.append("comment", comment);
+      fetch("/api/chapter-review/" + chapterId + "/review", { method: "POST", body: params })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.status === "success") {
+            alert("✅ " + data.message);
+            document.getElementById("cr-row-" + chapterId)?.remove();
+            loadChapterReviews();
+          } else alert("❌ " + data.message);
+        })
+        .catch((err) => alert("❌ Lỗi: " + err.message));
+    }
 
-      // Thêm dòng này vào trong DOMContentLoaded đã có sẵn
-      document.addEventListener("DOMContentLoaded", function () {
-        loadChapterReviews();
-      });
-    </script>
+    function openChapterPreview(chapterId, title) {
+      document.getElementById("previewTitle").textContent = title;
+      document.getElementById("previewPagesGrid").innerHTML =
+        '<p style="color:#aaa;text-align:center;grid-column:1/-1;">Đang tải...</p>';
+      document.getElementById("chapterPreviewModal").style.display = "flex";
+      fetch("/api/chapters/" + chapterId + "/pages")
+        .then((r) => r.json())
+        .then((pages) => {
+          const grid = document.getElementById("previewPagesGrid");
+          if (!pages || pages.length === 0) {
+            grid.innerHTML = '<p style="color:#aaa;text-align:center;grid-column:1/-1;">Chưa có trang nào.</p>';
+            return;
+          }
+          grid.innerHTML = pages.map((p) => `
+                    <div style="text-align:center;border:1px solid #444;border-radius:4px;padding:8px;background:#1e1e1e;">
+                        ${p.filePath
+              ? `<img src="${p.filePath}" style="width:100%;border-radius:3px;display:block;margin-bottom:4px;">`
+              : `<div style="width:100%;height:120px;background:#333;display:flex;align-items:center;
+                                          justify-content:center;color:#666;font-size:12px;border-radius:3px;margin-bottom:4px;">Chưa có ảnh</div>`}
+                        <small style="color:#aaa;">Trang ${p.pageNumber}</small>
+                    </div>`).join("");
+        })
+        .catch(() => {
+          document.getElementById("previewPagesGrid").innerHTML =
+            '<p style="color:red;grid-column:1/-1;">Lỗi tải trang.</p>';
+        });
+    }
 
-    <!-- ==========================================================================
+    function closeChapterPreview() {
+      document.getElementById("chapterPreviewModal").style.display = "none";
+    }
+  </script>
+
+  <!-- ==========================================================================
      ============================================================================ -->
 
-     
-  </body>
+
+</body>
+
 </html>

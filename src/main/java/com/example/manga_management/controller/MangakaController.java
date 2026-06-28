@@ -504,9 +504,14 @@ public class MangakaController {
             return "redirect:/manga/mangaka";
         }
 
+        String seriesId = submission.getPageId().getChapter().getSeries().getId();
+        String chapterId = submission.getPageId().getChapter().getId();
+        String returnUrl = "/manga/mangaka/myseries/" + seriesId + "/" + chapterId;
+
         model.addAttribute("submission", submission);
         model.addAttribute("typeDraw", "submission");
         model.addAttribute("activeTab", "tab-draw");
+        model.addAttribute("returnUrl", returnUrl);
 
         return "mangaka";
     }

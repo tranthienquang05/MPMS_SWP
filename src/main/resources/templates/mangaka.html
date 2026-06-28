@@ -249,7 +249,7 @@
 
               <button th:if="${submission != null && typeDraw == 'submission'}" type="button"
                 class="btn-ai-support-top primary" id="btnEditSubmission" th:data-submission-id="${submission.id}"
-                th:data-saved-path="${submission.filePath}">
+                th:data-saved-path="${submission.filePath}" th:data-return-url="${returnUrl}">
                 <i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật
               </button>
 
@@ -615,6 +615,7 @@
               "
             >
               <form
+                th:if="${chapter.status == 'unfinish'}"
                 th:action="@{/manga/mangaka/myseries/{sid}/{cid}/addpage(sid=${chapter.series.id}, cid=${chapter.id})}"
                 method="POST"
               >
@@ -686,16 +687,14 @@
     <div>
       👤 <b th:text="${submissionMap[p.id].assistant.user.fullname}"></b>
     </div>
-    <div>
-      📌 <span th:text="${submissionMap[p.id].status}"></span>
-    </div>
+
     <div>
       📅 <span th:text="${submissionMap[p.id].deadline}"></span>
     </div>
 
     <!-- Khi assistant đã nộp (status = done): Mangaka duyệt hoặc giao lại -->
     <div
-      th:if="${submissionMap[p.id].status == 'done'}"
+      th:if="${p.status == 'done' and submissionMap[p.id] != null and submissionMap[p.id].status == 'done'}"
       style="margin-top: 6px; display: flex; flex-direction: column; gap: 6px;"
     >
       <a
@@ -1593,14 +1592,20 @@
       let _currentPageId = null;
 
     function finishPage(pageId) {
-      if (!confirm("Đánh dấu trang này là hoàn thành?")) return;
-      fetch("/api/page/" + pageId + "/finish", { method: "POST" })
-        .then(r => r.json())
-        .then(data => {
-          if (data.status === "success") showSystemNotification("✅ " + data.message, true);
-          else showSystemNotification("❌ " + data.message, false);
-        });
-    }
+  if (!confirm("Đánh dấu trang này là hoàn thành?")) return;
+  fetch("/api/page/" + pageId + "/finish", { method: "POST" })
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === "success") {
+        alert("✅ " + data.message);
+        location.reload();
+      } else {
+        // Hiện thông báo lỗi không reload
+        alert("⚠️ " + data.message);
+      }
+    })
+    .catch(err => alert("❌ Lỗi: " + err.message));
+}
 
     function approvePageDone(pageId) {
       if (!confirm("Duyệt trang này?")) return;
@@ -1608,9 +1613,11 @@
         .then(r => r.json())
         .then(data => {
           if (data.status === "success") {
-            showSystemNotification("✅ " + data.message, true);
-            setTimeout(() => location.reload(), 1000);
-          } else showSystemNotification("❌ " + data.message, false);
+            alert("✅ " + data.message);
+            location.reload();
+          } else {
+            alert("❌ " + data.message);
+          }
         });
     }
 
@@ -1648,9 +1655,11 @@
         .then(data => {
           if (data.status === "success") {
             document.getElementById("reassignModalOverlay").style.display = "none";
-            showSystemNotification("✅ " + data.message, true);
-            setTimeout(() => location.reload(), 1000);
-          } else alert("❌ " + data.message);
+            alert("✅ " + data.message);
+            location.reload();
+          } else {
+            alert("❌ " + data.message);
+          }
         })
         .catch(err => alert("❌ " + err.message));
     }

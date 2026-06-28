@@ -205,7 +205,15 @@ public class PageController {
             return Map.of("status", "error", "message", "Trang đã hoàn thành rồi!");
         }
         if ("intask".equals(page.getStatus())) {
-            return Map.of("status", "error", "message", "Trang đang được trợ lý làm, không thể hoàn thành!");
+            return Map.of("status", "error", "message", "Không thể hoàn thành vì trợ lý đang làm việc này!");
+        }
+        if ("done".equals(page.getStatus())) {
+            // Kiểm tra submission đã được duyệt chưa
+            Optional<Submission> subOpt = submissionRepository.findByPageIdId(pageId);
+            if (subOpt.isPresent() && "done".equals(subOpt.get().getStatus())) {
+                return Map.of("status", "error", "message", "Bạn phải ấn nút Duyệt trước khi hoàn thành!");
+            }
+            // Submission đã finish → cho phép hoàn thành
         }
         page.setStatus("finish");
         mangaPageRepository.save(page);
@@ -226,10 +234,8 @@ public class PageController {
             return Map.of("status", "error", "message", "Trợ lý chưa nộp bài!");
         }
 
-        page.setStatus("finish");
-        mangaPageRepository.save(page);
-
-        // Thêm dòng này: đổi submission sang finish
+        // Chỉ đổi submission status, KHÔNG đổi page status
+        // Page status chỉ đổi khi Mangaka bấm "Hoàn thành"
         Submission sub = subOpt.get();
         sub.setStatus("finish");
         submissionRepository.save(sub);

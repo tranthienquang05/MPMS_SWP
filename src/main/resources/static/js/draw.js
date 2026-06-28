@@ -1397,92 +1397,54 @@ if (btnSubmitSubmission) {
 // Đặt toàn bộ vào một khối IIFE độc lập để tránh xung đột biến hệ thống
 (() => {
     const btnToolbar = document.getElementById('btnEditSubmission');
-    const btnModalConfirm = document.getElementById('btnConfirmEdit');
-    const modalForm = document.getElementById('editSubmissionModal');
 
-    // HÀNH ĐỘNG 1: Nhấn nút ở ngoài thanh công cụ -> CHỈ HIỆN MODAL, không tự ý gửi dữ liệu
+    // Mangaka nhấn nút "Cập nhật" → lưu file trực tiếp rồi redirect về trang chapter
     if (btnToolbar) {
-        btnToolbar.addEventListener('click', (e) => {
+        btnToolbar.addEventListener('click', async (e) => {
             e.preventDefault();
-            e.stopPropagation(); // Ngăn chặn bong bóng sự kiện kích hoạt các hàm xử lý khác
+            e.stopPropagation();
 
-            if (modalForm) {
-                modalForm.style.display = 'flex'; // Hiện form lên cho người dùng nhập thông tin
-            } else {
-                alert("Không tìm thấy cấu trúc Modal 'editSubmissionModal' trên HTML!");
-            }
-        });
-    }
-
-    // HÀNH ĐỘNG 2: Chỉ khi người dùng điền xong và nhấn "Xác nhận Lưu" trong Modal -> Mới bắt đầu gom data gửi đi
-    if (btnModalConfirm && btnToolbar) {
-        btnModalConfirm.addEventListener('click', async (e) => {
-            e.preventDefault();
-
-            // Lấy dữ liệu ID từ dataset của nút bấm ngoài toolbar
             const submissionId = btnToolbar.dataset.submissionId;
             if (!submissionId) {
                 alert("Không tìm thấy mã số bài nộp (submissionId)!");
                 return;
             }
 
-            // Thu thập dữ liệu từ các input/select nằm bên trong cấu trúc Modal
-            const statusElement = document.getElementById('subStatus');
-            const commentElement = document.getElementById('subComment');
-
-            const statusValue = statusElement ? statusElement.value : '';
-            const commentValue = commentElement ? commentElement.value : '';
-
-            // Gộp các layer nét vẽ thành một chuỗi hình ảnh Base64 duy nhất
+            const returnUrl = btnToolbar.dataset.returnUrl;
             const base64 = flattenAllLayers().toDataURL('image/png');
 
-            // Tạo trạng thái Loading đóng băng nút bấm tránh việc người dùng nhấn liên tục (Double Click)
-            btnModalConfirm.disabled = true;
-            btnModalConfirm.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang cập nhật...';
+            btnToolbar.disabled = true;
+            btnToolbar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
 
             try {
-                // Gửi request dữ liệu bằng cấu trúc AJAX (fetch async/await) lên API backend
-                const res = await fetch(`/api/submission/${submissionId}/edit`, {
+                const res = await fetch(`/api/submission/${submissionId}/savefile`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        imageBase64: base64,
-                        status: statusValue,
-                        comment: commentValue,
-                        who: "mangaka" // Gửi kèm thông tin định danh vai trò để Backend điều hướng link chính xác
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imageBase64: base64 })
                 });
 
                 const data = await res.json();
 
-                // Xử lý phản hồi trả về từ máy chủ sau khi lưu file vật lý thành công
                 if (data.status === 'success') {
-                    btnModalConfirm.innerHTML = '<i class="fa-solid fa-check"></i> Đã cập nhật';
-
-                    // Ẩn modal ngay sau khi hệ thống xử lý hoàn tất thành công
-                    if (modalForm) modalForm.style.display = 'none';
-
-                    // Chờ 1 giây tạo hiệu ứng thị giác mượt mà rồi tiến hành điều hướng trang (Redirect)
+                    btnToolbar.innerHTML = '<i class="fa-solid fa-check"></i> Đã lưu!';
                     setTimeout(() => {
-                        if (data.redirectUrl) {
+                        if (returnUrl) {
+                            window.location.href = returnUrl;
+                        } else if (data.redirectUrl) {
                             window.location.href = data.redirectUrl;
                         } else {
                             window.location.href = '/manga/mangaka';
                         }
                     }, 1000);
-
                 } else {
-                    alert('❌ Lỗi xử lý: ' + data.message);
-                    btnModalConfirm.innerHTML = 'Xác nhận Lưu';
-                    btnModalConfirm.disabled = false;
+                    alert('❌ ' + data.message);
+                    btnToolbar.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật';
+                    btnToolbar.disabled = false;
                 }
-
             } catch (err) {
-                alert('❌ Lỗi đường truyền hệ thống: ' + err.message);
-                btnModalConfirm.innerHTML = 'Xác nhận Lưu';
-                btnModalConfirm.disabled = false;
+                alert('❌ Lỗi: ' + err.message);
+                btnToolbar.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật';
+                btnToolbar.disabled = false;
             }
         });
     }

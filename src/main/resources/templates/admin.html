@@ -10,6 +10,11 @@
     />
     <link
       rel="stylesheet"
+      href="../static/css/icon.css"
+      th:href="@{/css/icon.css}"
+    />
+    <link
+      rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
   </head>
@@ -23,7 +28,7 @@
       <div class="header-actions">
         <a th:href="@{/login/logout}">
           <button type="button" class="btn-icon" aria-label="Logout">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <i class="icon-logout"></i>
           </button>
         </a>
       </div>
@@ -36,7 +41,7 @@
           class="btn-icon"
           onclick="openTab('tab-accounts')"
         >
-          <i class="fa-solid fa-users"></i>
+          <i class="icon-3user"></i>
         </button>
       </li>
       <li>
@@ -45,24 +50,24 @@
           class="btn-icon"
           onclick="openTab('tab-relations')"
         >
-          <i class="fa-solid fa-link"></i>
+          <i class="icon-link"></i>
         </button>
       </li>
       <li>
         <button type="button" class="btn-icon" onclick="openTab('tab-vote')">
-          <i class="fa-solid fa-square-poll-vertical"></i>
+          <i class="icon-vote"></i>
         </button>
       </li>
     </ul>
 
     <div id="toast"></div>
-
+    <!-- Tab content -->
     <div class="flex-container">
+      <!-- Tab quản lý -->
       <div id="tab-accounts" class="tab-pane active">
+        <h2>Tài khoản</h2>
         <div class="section-card">
-          <h3>
-            <i class="fa-solid fa-users icon-blue-spacing"></i>Quản lý tài khoản
-          </h3>
+          <h3><i class="icon-3user"></i> Quản lý tài khoản</h3>
 
           <div class="form-inline mb-10">
             <div class="field">
@@ -78,7 +83,7 @@
             </div>
             <div class="flex-end-layout">
               <button class="btn-sm btn-primary" onclick="openCreateModal()">
-                <i class="fa-solid fa-plus"></i> Tạo tài khoản
+                <i class="icon-plus"></i> Tạo tài khoản
               </button>
             </div>
           </div>
@@ -104,11 +109,9 @@
       </div>
 
       <div id="tab-relations" class="tab-pane">
+        <h2>Phân công</h2>
         <div class="section-card">
-          <h3>
-            <i class="fa-solid fa-link icon-purple-spacing"></i>Tantou phụ trách
-            Mangaka
-          </h3>
+          <h3><i class="icon-link"></i> Tantou phụ trách Mangaka</h3>
 
           <div class="form-inline">
             <div class="field">
@@ -121,7 +124,7 @@
             </div>
             <div class="flex-end-layout">
               <button class="btn-sm btn-primary" onclick="assignMangakaTanto()">
-                <i class="fa-solid fa-check"></i> Gán
+                <i class="icon-check"></i> Phân công
               </button>
             </div>
           </div>
@@ -143,10 +146,7 @@
         </div>
 
         <div class="section-card">
-          <h3>
-            <i class="fa-solid fa-link icon-cyan-spacing"></i>Assistant làm việc
-            với Mangaka
-          </h3>
+          <h3><i class="icon-link"></i> Assistant làm việc với Mangaka</h3>
 
           <div class="form-inline">
             <div class="field">
@@ -162,7 +162,7 @@
                 class="btn-sm btn-primary"
                 onclick="assignAssistantMangaka()"
               >
-                <i class="fa-solid fa-check"></i> Gán
+                <i class="icon-check"></i> Phân công
               </button>
             </div>
           </div>
@@ -185,11 +185,9 @@
       </div>
 
       <div id="tab-vote" class="tab-pane">
+        <h2>Tạo vote</h2>
         <div class="section-card">
-          <h3>
-            <i class="fa-solid fa-trophy icon-orange-spacing"></i>Bảng xếp hạng
-            series
-          </h3>
+          <h3><i class="fa-solid fa-ranking-star"></i> Bảng xếp hạng series</h3>
 
           <div class="form-inline">
             <div class="field">
@@ -219,7 +217,7 @@
             </div>
             <div class="flex-end-layout">
               <button class="btn-sm btn-primary" onclick="loadVoteRanking()">
-                <i class="fa-solid fa-magnifying-glass"></i> Xem ranking
+                <i class="icon-glass"></i> Xem ranking
               </button>
             </div>
           </div>
@@ -245,8 +243,7 @@
 
         <div class="section-card">
           <h3>
-            <i class="fa-solid fa-square-poll-vertical icon-blue-spacing"></i
-            >Phiên vote đang mở
+            <i class="fa-solid fa-square-poll-vertical"></i> Phiên vote đang mở
           </h3>
 
           <div class="form-inline mb-10">
@@ -255,14 +252,13 @@
                 class="btn-sm btn-danger"
                 onclick="createBottomVoteSessionsAdmin()"
               >
-                <i class="fa-solid fa-triangle-exclamation"></i> Tạo Vote 3
-                Series Cuối Bảng
+                <i class="icon-danger"></i> Tạo vote hủy 3 series cuối bảng
               </button>
               <button
                 class="btn-sm btn-primary"
                 onclick="openCreateVoteModalAdmin()"
               >
-                <i class="fa-solid fa-plus"></i> Tạo Vote Mới
+                <i class="icon-plus"></i> Tự chọn tạo vote
               </button>
             </div>
           </div>

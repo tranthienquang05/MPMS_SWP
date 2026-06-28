@@ -15,6 +15,7 @@ import com.example.manga_management.entity.Assistant;
 import com.example.manga_management.entity.Submission;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.AssistantRepository;
+import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.SubmissionRepository;
 
 import jakarta.servlet.http.HttpSession;
@@ -26,11 +27,16 @@ public class AssistantController {
     @Autowired
     private final AssistantRepository assistantRepository;
 
+    private final MangaPageRepository mangaPageRepository;
+
     private final SubmissionRepository submissionRepository;
 
-    public AssistantController(AssistantRepository assistantRepository, SubmissionRepository submissionRepository) {
+    public AssistantController(AssistantRepository assistantRepository,
+            SubmissionRepository submissionRepository,
+            MangaPageRepository mangaPageRepository) {
         this.assistantRepository = assistantRepository;
         this.submissionRepository = submissionRepository;
+        this.mangaPageRepository = mangaPageRepository;
     }
 
     // ================= HOME =================
@@ -52,11 +58,11 @@ public class AssistantController {
             return "assistant";
         }
 
-        model.addAttribute("todo", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "unfinish"));
+        model.addAttribute("todo", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "intask"));
 
-        model.addAttribute("waiting", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "finish"));
+        model.addAttribute("waiting", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "done"));
 
-        model.addAttribute("done", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "pass"));
+        model.addAttribute("done", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "finish"));
         if (model.getAttribute("activeTab") == null) {
             model.addAttribute("activeTab", "tab-home");
         }
@@ -111,11 +117,11 @@ public class AssistantController {
             return "redirect:/manga/assistant";
         }
 
-        List<Submission> todo = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "unfinish");
+        List<Submission> todo = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "intask");
 
-        List<Submission> waiting = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "finish");
+        List<Submission> waiting = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "done");
 
-        List<Submission> done = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "pass");
+        List<Submission> done = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "finish");
 
         Submission submission = submissionRepository.findById(id).orElse(null);
 
@@ -151,14 +157,17 @@ public class AssistantController {
         }
 
         if (submission != null) {
-            submission.setStatus(status);
+            submission.setStatus("done");
             submissionRepository.save(submission);
+            // Đổi page sang done
+            submission.getPageId().setStatus("done");
+            mangaPageRepository.save(submission.getPageId());
         }
-        List<Submission> todo = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "unfinish");
+        List<Submission> todo = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "intask");
 
-        List<Submission> waiting = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "finish");
+        List<Submission> waiting = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "done");
 
-        List<Submission> done = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "pass");
+        List<Submission> done = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "finish");
 
         if (submission == null) {
             return "redirect:/manga/assistant";

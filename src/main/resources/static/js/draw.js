@@ -1553,7 +1553,7 @@ if (savedPath1 && savedPath1 !== 'null' && savedPath1 !== '') {
 
     img.src = savedPath1;
 }
-const savedPath2 = btnEditSubmission?.dataset.savedPath;
+const savedPath2 = document.getElementById('btnEditSubmission')?.dataset.savedPath;
 
 // giống hệt page save
 if (savedPath2 && savedPath2 !== 'null' && savedPath2 !== '') {

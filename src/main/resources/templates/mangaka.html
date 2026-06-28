@@ -832,27 +832,19 @@
 
                   <!-- Badge trạng thái chapter -->
                   <span
-                    th:if="${c.status == 'ready_to_review'}"
+                    th:if="${c.status == 'finish'}"
                     class="badge-status-approved"
                     style="margin-left: 6px"
                   >
-                    Chờ BTV duyệt
+                    ⏳ Chờ BTV duyệt
                   </span>
 
                   <span
-                    th:if="${c.status == 'reject_in_review'}"
-                    class="badge-status-rejected"
-                    style="margin-left: 6px"
-                  >
-                    BTV yêu cầu sửa
-                  </span>
-
-                  <span
-                    th:if="${c.status == 'published'}"
+                    th:if="${c.status == 'pass'}"
                     class="badge-status-passed"
                     style="margin-left: 6px"
                   >
-                    ✅ Đã xuất bản
+                    ✅ Đã duyệt
                   </span>
 
                   <!-- ==========================================================================
@@ -903,22 +895,41 @@
               margin: 12px 0;
             "
           >
+            <!-- Chỉ cho thêm trang khi chapter là unfinish -->
             <form
+              th:if="${chapter.status == 'unfinish'}"
               th:action="@{/manga/mangaka/myseries/{sid}/{cid}/addpage(sid=${chapter.series.id}, cid=${chapter.id})}"
               method="POST"
             >
               <button type="submit">+ Thêm trang mới</button>
             </form>
 
+            <!-- Nút Submit chỉ hiện khi unfinish -->
             <button
-              th:if="${chapter.status == 'unfinish' or chapter.status == 'reject_in_review'}"
+              th:if="${chapter.status == 'unfinish'}"
               type="button"
-              class="btn-action primary"
+              class="btn-action primary btn-submit-chapter"
               style="font-size: 13px; padding: 6px 14px"
-              th:attr="onclick=|submitChapter('${chapter.id}')|"
+              th:data-chapter-id="${chapter.id}"
             >
               📤 Submit lên BTV
             </button>
+
+            <span
+              th:if="${chapter.status == 'finish'}"
+              class="badge-status-approved"
+              style="padding: 6px 12px"
+            >
+              ⏳ Chờ BTV duyệt
+            </span>
+
+            <span
+              th:if="${chapter.status == 'pass'}"
+              class="badge-status-passed"
+              style="padding: 6px 12px"
+            >
+              ✅ Đã duyệt
+            </span>
           </div>
           <!--===================================================-->
           <div class="pages-grid-container">
@@ -936,7 +947,9 @@
 
               <p th:text="${p.status}"></p>
 
+              <!-- Chỉ cho mở vẽ khi chapter unfinish và page unfinish -->
               <a
+                th:if="${chapter.status == 'unfinish' and p.status == 'unfinish'}"
                 th:href="@{/manga/mangaka/myseries/{sid}/{cid}/{pid}/edit(
                                 sid=${chapter.series.id},
                                 cid=${chapter.id},
@@ -944,6 +957,38 @@
               >
                 Mở để vẽ
               </a>
+
+              <!-- Nút hoàn thành page: chỉ khi page là unfinish -->
+              <!-- Nút hoàn thành: hiện khi page không phải finish -->
+              <button
+                th:if="${p.status != 'finish'}"
+                type="button"
+                class="btn-action approve btn-finish-page"
+                style="font-size: 12px; padding: 4px 10px; margin-top: 4px"
+                th:data-page-id="${p.id}"
+              >
+                ✅ Hoàn thành
+              </button>
+
+              <!-- Badge trạng thái page -->
+              <span
+                th:if="${p.status == 'finish'}"
+                class="badge-status-passed"
+                style="font-size: 11px"
+                >✅ Finish</span
+              >
+              <span
+                th:if="${p.status == 'intask'}"
+                class="badge-status-approved"
+                style="font-size: 11px"
+                >🔄 Đang làm</span
+              >
+              <span
+                th:if="${p.status == 'done'}"
+                class="badge-status-waiting"
+                style="font-size: 11px"
+                >👁 Chờ duyệt</span
+              >
 
               <div class="chapter-create-inline-form">
                 <div
@@ -956,39 +1001,60 @@
                       th:text="${submissionMap[p.id].assistant.user.fullname}"
                     ></b>
                   </div>
-
                   <div>
-                    📌
-                    <span th:text="${submissionMap[p.id].status}"></span>
+                    📌 <span th:text="${submissionMap[p.id].status}"></span>
                   </div>
-
                   <div>
-                    📅
-                    <span th:text="${submissionMap[p.id].deadline}"></span>
+                    📅 <span th:text="${submissionMap[p.id].deadline}"></span>
                   </div>
-
                   <div
-                    th:if="${submissionMap[p.id].status == 'FINISHED' || submissionMap[p.id].status == 'finish'}"
-                    class="form-item"
+                    th:if="${submissionMap[p.id].status == 'done'}"
+                    style="
+                      margin-top: 6px;
+                      display: flex;
+                      flex-direction: column;
+                      gap: 6px;
+                    "
                   >
                     <a
                       th:href="@{/manga/mangaka/submission/{id}/edit(id=${submissionMap[p.id].id})}"
-                      class="btn-edit-sub"
+                      style="
+                        font-size: 12px;
+                        color: #4da6ff;
+                        display: block;
+                        margin-bottom: 4px;
+                      "
                     >
-                      <i class="fa-solid fa-pen-to-square"></i>
-                      Sửa bài nộp
+                      🖼 Mở bài nộp để chỉnh sửa
                     </a>
+                    <div style="display: flex; gap: 6px">
+                      <button
+                        type="button"
+                        class="btn-action approve btn-approve-page"
+                        style="font-size: 12px; padding: 4px 10px"
+                        th:data-page-id="${p.id}"
+                      >
+                        ✅ Duyệt
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-action reject btn-reassign-page"
+                        style="font-size: 12px; padding: 4px 10px"
+                        th:data-page-id="${p.id}"
+                        th:data-submission-id="${submissionMap[p.id].id}"
+                      >
+                        🔄 Giao lại
+                      </button>
+                    </div>
                   </div>
                 </div>
-
                 <button
                   th:if="${submissionMap[p.id] == null}"
                   type="button"
-                  th:attr="onclick=|openAssignModal('${p.id}')|"
-                  class="btn-assign-task"
+                  class="btn-assign-task btn-open-assign"
+                  th:data-page-id="${p.id}"
                 >
-                  <i class="fa-solid fa-user-plus"></i>
-                  Giao việc
+                  <i class="fa-solid fa-user-plus"></i> Giao việc
                 </button>
               </div>
             </div>
@@ -1004,35 +1070,59 @@
         </div>
 
         <!-- Modal giao việc — đặt ngoài vòng lặp -->
-        <div id="assignModalOverlay">
+         <!-- ✅ Modal giao việc lần đầu -->
+        <div id="assignModalOverlay" style="display:none;">
           <div class="modal-box">
             <h4>Giao việc cho trợ lý</h4>
+            <input type="hidden" id="assignPageId" />
 
             <label>Trợ lý:</label>
             <select id="assignSelect"></select>
 
             <label>Yêu cầu / Ghi chú:</label>
+            <textarea id="assignComment" rows="4" placeholder="Nhập yêu cầu..."></textarea>
+
+            <label>Deadline:</label>
+            <input type="date" id="assignDeadline" required />
+
+            <div class="footer-actions">
+              <button onclick="document.getElementById('assignModalOverlay').style.display='none'">Hủy</button>
+              <button onclick="submitAssign()" class="btn-submit">Xác nhận</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal giao lại việc -->
+        <div id="reassignModalOverlay" style="display: none">
+          <div class="modal-box">
+            <h4>Giao lại cho trợ lý</h4>
+            <input type="hidden" id="reassignSubmissionId" />
+            <input type="hidden" id="reassignPageId" />
+
+            <label>Trợ lý:</label>
+            <select id="reassignSelect"></select>
+
+            <label>Yêu cầu / Ghi chú:</label>
             <textarea
-              id="assignComment"
+              id="reassignComment"
               rows="4"
               placeholder="Nhập yêu cầu chỉnh sửa..."
             ></textarea>
 
-            <label class="deadline-lbl"> Deadline: </label>
-
-            <input type="date" id="assignDeadline" required />
+            <label class="deadline-lbl">Deadline:</label>
+            <input type="date" id="reassignDeadline" required />
 
             <div class="footer-actions">
               <button
                 onclick="
-                  document.getElementById('assignModalOverlay').style.display =
-                    'none'
+                  document.getElementById(
+                    'reassignModalOverlay',
+                  ).style.display = 'none'
                 "
               >
                 Hủy
               </button>
-
-              <button onclick="submitAssign()" class="btn-submit">
+              <button onclick="submitReassign()" class="btn-submit">
                 Xác nhận
               </button>
             </div>
@@ -1863,7 +1953,7 @@
           return;
         }
 
-        fetch(`/api/mangaka/${mangakaId}/assistants`)
+        fetch(`/manga/mangaka/${mangakaId}/assistants`)
           .then((r) => r.json())
           .then((assistants) => {
             if (!assistants || assistants.length === 0) {
@@ -1960,5 +2050,151 @@
     </script>
     <!-- ==========================================================================
    ==========================================================================-->
+
+    <script>
+      // Hoàn thành page (unfinish → finish)
+      function finishPage(pageId) {
+        if (!confirm("Đánh dấu trang này là hoàn thành?")) return;
+        fetch("/api/page/" + pageId + "/finish", { method: "POST" })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status === "success") {
+              showSystemNotification("✅ " + data.message, true);
+            } else {
+              showSystemNotification("❌ " + data.message, false);
+            }
+          })
+          .catch((err) =>
+            showSystemNotification("❌ Lỗi: " + err.message, false),
+          );
+      }
+
+      // Mangaka duyệt page done → finish
+      function approvePageDone(pageId) {
+        if (!confirm("Duyệt trang này?")) return;
+        fetch("/api/page/" + pageId + "/approve-done", { method: "POST" })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status === "success") {
+              showSystemNotification("✅ " + data.message, true);
+              setTimeout(() => location.reload(), 1000);
+            } else {
+              showSystemNotification("❌ " + data.message, false);
+            }
+          })
+          .catch((err) =>
+            showSystemNotification("❌ Lỗi: " + err.message, false),
+          );
+      }
+
+      // Xử lý tất cả nút dùng data-* thay vì onclick
+      document.addEventListener("click", function (e) {
+        const approveBtn = e.target.closest(".btn-approve-page");
+        if (approveBtn) {
+          approvePageDone(approveBtn.dataset.pageId);
+          return;
+        }
+
+        const rejectBtn = e.target.closest(".btn-reject-page");
+        if (rejectBtn) {
+          rejectPageDone(rejectBtn.dataset.pageId);
+          return;
+        }
+
+        const finishBtn = e.target.closest(".btn-finish-page");
+        if (finishBtn) {
+          finishPage(finishBtn.dataset.pageId);
+          return;
+        }
+
+        const assignBtn = e.target.closest(".btn-open-assign");
+        if (assignBtn) {
+          openAssignModal(assignBtn.dataset.pageId);
+          return;
+        }
+
+        const submitBtn = e.target.closest(".btn-submit-chapter");
+        if (submitBtn) {
+          submitChapter(submitBtn.dataset.chapterId);
+          return;
+        }
+
+        const reassignBtn = e.target.closest(".btn-reassign-page");
+        if (reassignBtn) {
+          openReassignModal(reassignBtn.dataset.pageId, reassignBtn.dataset.submissionId);
+          return;
+        }
+      });
+
+      //======================================
+      // NỘP LẠI CHO ASSISTANT
+      //======================================
+      function openReassignModal(pageId, submissionId) {
+        const mangakaId =
+          document.getElementById("mangaka-meta")?.dataset.mangakaId;
+        if (!mangakaId) {
+          alert("Không tìm thấy mangakaId!");
+          return;
+        }
+
+        document.getElementById("reassignPageId").value = pageId;
+        document.getElementById("reassignSubmissionId").value = submissionId;
+        document.getElementById("reassignComment").value = "";
+        document.getElementById("reassignDeadline").value = "";
+
+        fetch(`/manga/mangaka/${mangakaId}/assistants`)
+          .then((r) => r.json())
+          .then((assistants) => {
+            if (!assistants || assistants.length === 0) {
+              alert("Chưa có trợ lý nào!");
+              return;
+            }
+            document.getElementById("reassignSelect").innerHTML = assistants
+              .map((a) => `<option value="${a.id}">${a.user.fullname}</option>`)
+              .join("");
+            document.getElementById("reassignModalOverlay").style.display =
+              "flex";
+          })
+          .catch((err) => alert("❌ " + err.message));
+      }
+
+      function submitReassign() {
+        const pageId = document.getElementById("reassignPageId").value;
+        const submissionId = document.getElementById(
+          "reassignSubmissionId",
+        ).value;
+        const assistantId = document.getElementById("reassignSelect").value;
+        const comment = document.getElementById("reassignComment").value;
+        const deadline = document.getElementById("reassignDeadline").value;
+
+        if (!assistantId || !pageId) {
+          alert("Thiếu dữ liệu!");
+          return;
+        }
+
+        fetch(`/api/page/${pageId}/reassign`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            submissionId,
+            assistantId,
+            comment,
+            deadline,
+          }),
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status === "success") {
+              document.getElementById("reassignModalOverlay").style.display =
+                "none";
+              showSystemNotification("✅ " + data.message, true);
+              setTimeout(() => location.reload(), 1000);
+            } else {
+              alert("❌ " + data.message);
+            }
+          })
+          .catch((err) => alert("❌ " + err.message));
+      }
+    </script>
   </body>
 </html>

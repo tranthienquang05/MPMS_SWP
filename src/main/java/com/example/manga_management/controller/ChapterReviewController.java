@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.manga_management.entity.Chapter;
+import com.example.manga_management.entity.MangaPage;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.ChapterRepository;
+import com.example.manga_management.repository.MangaPageRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,12 +28,15 @@ import jakarta.servlet.http.HttpSession;
 public class ChapterReviewController {
 
     private final ChapterRepository chapterRepository;
+    private final MangaPageRepository mangaPageRepository;
     private final NotificationController notificationController;
 
     public ChapterReviewController(ChapterRepository chapterRepository,
-            NotificationController notificationController) {
+            NotificationController notificationController,
+            MangaPageRepository mangaPageRepository) {
         this.chapterRepository = chapterRepository;
         this.notificationController = notificationController;
+        this.mangaPageRepository = mangaPageRepository;
     }
 
     // ── Mangaka bấm "Submit Chapter" ──────────────────────────────────────
@@ -57,13 +62,29 @@ public class ChapterReviewController {
             return result;
         }
 
-        if (!chapter.getStatus().equals("unfinish") && !chapter.getStatus().equals("reject_in_review")) {
+        if (!chapter.getStatus().equals("unfinish")) {
             result.put("status", "error");
             result.put("message", "Chapter này không thể submit lúc này (trạng thái: " + chapter.getStatus() + ")");
             return result;
         }
 
-        chapter.setStatus("ready_to_review");
+// Kiểm tra chapter phải có trang
+        List<MangaPage> pages = mangaPageRepository.findByChapterId(chapterId);
+        if (pages.isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "Chapter chưa có trang nào, không thể submit!");
+            return result;
+        }
+
+// Kiểm tra tất cả page phải là finish
+        boolean allFinish = pages.stream().allMatch(p -> "finish".equals(p.getStatus()));
+        if (!allFinish) {
+            result.put("status", "error");
+            result.put("message", "Tất cả trang phải hoàn thành (finish) trước khi submit!");
+            return result;
+        }
+
+        chapter.setStatus("finish");
         chapterRepository.save(chapter);
 
         String editorUserId = chapter.getSeries()
@@ -99,8 +120,7 @@ public class ChapterReviewController {
         }
 
         List<Chapter> pending = chapterRepository
-                .findByStatusAndSeries_Proposal_Mangaka_Editor_User_Id("ready_to_review", user.getId());
-
+                .findByStatusAndSeries_Proposal_Mangaka_Editor_User_Id("finish", user.getId());
         result.put("status", "success");
         result.put("total", pending.size());
         result.put("chapters", pending);
@@ -132,7 +152,7 @@ public class ChapterReviewController {
             return result;
         }
 
-        if (!chapter.getStatus().equals("ready_to_review")) {
+        if (!chapter.getStatus().equals("finish")) {
             result.put("status", "error");
             result.put("message", "Chapter này không ở trạng thái chờ duyệt!");
             return result;
@@ -143,7 +163,7 @@ public class ChapterReviewController {
         String chapterName = chapter.getChapterName();
 
         if ("approve".equals(action)) {
-            chapter.setStatus("published");
+            chapter.setStatus("pass");
             chapterRepository.save(chapter);
 
             notificationController.send(
@@ -157,7 +177,18 @@ public class ChapterReviewController {
             result.put("message", "Đã duyệt và xuất bản chapter!");
 
         } else if ("reject".equals(action)) {
-            chapter.setStatus("reject_in_review");
+            chapter.setStatus("unfinish");
+            if (comment != null && !comment.isBlank()) {
+                chapter.setTantouComment(comment);
+            }
+
+            // Reset status tất cả page về unfinish
+            List<MangaPage> pages = mangaPageRepository.findByChapterId(chapterId);
+            for (MangaPage p : pages) {
+                p.setStatus("unfinish");
+            }
+            mangaPageRepository.saveAll(pages);
+
             chapterRepository.save(chapter);
 
             String notifMsg = "❌ Chapter '" + chapterName + "' của series '" + seriesName

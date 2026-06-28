@@ -6,19 +6,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import io.swagger.v3.oas.annotations.Parameter;
+
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -26,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.manga_management.entity.Assistant;
 import com.example.manga_management.entity.Chapter;
 import com.example.manga_management.entity.MangaPage;
 import com.example.manga_management.entity.Mangaka;
@@ -33,6 +32,7 @@ import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.Series;
 import com.example.manga_management.entity.Submission;
 import com.example.manga_management.entity.User;
+import com.example.manga_management.repository.AssistantRepository;
 import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.MangakaRepository;
@@ -41,6 +41,7 @@ import com.example.manga_management.repository.SeriesRepository;
 import com.example.manga_management.repository.SubmissionRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 
@@ -48,20 +49,23 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 @RequestMapping("/manga/mangaka")
 public class MangakaController {
+
     private final SubmissionRepository submissionRepository;
     private final ProposalRepository proposalRepository;
     private final MangakaRepository mangakaRepository;
     private final SeriesRepository seriesRepository;
     private final ChapterRepository chapterRepository;
     private final MangaPageRepository mangaPageRepository;
+    private final AssistantRepository assistantRepository;
     private NotificationController notificationController;
 
     public MangakaController(ProposalRepository proposalRepository, MangakaRepository mangakaRepository,
             SeriesRepository seriesRepository, ChapterRepository chapterRepository,
             MangaPageRepository mangaPageRepository, SubmissionRepository submissionRepository,
-            NotificationController notificationController) {
+            NotificationController notificationController, AssistantRepository assistantRepository) {
         this.proposalRepository = proposalRepository;
         this.mangakaRepository = mangakaRepository;
+        this.assistantRepository = assistantRepository;
         this.seriesRepository = seriesRepository;
         this.chapterRepository = chapterRepository;
         this.mangaPageRepository = mangaPageRepository;
@@ -73,8 +77,9 @@ public class MangakaController {
     @GetMapping("")
     public String mangakaPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
-        if (user == null)
+        if (user == null) {
             return "redirect:/login";
+        }
 
         model.addAttribute("user", user);
 
@@ -100,8 +105,9 @@ public class MangakaController {
     @GetMapping("/my-projects")
     public String myProjectsPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
-        if (user == null)
+        if (user == null) {
             return "redirect:/login";
+        }
 
         Mangaka mangaka = mangakaRepository.findByUser(user).orElse(null);
         if (mangaka == null) {
@@ -119,7 +125,6 @@ public class MangakaController {
     }
 
     // ===================== SWAGGER / JSON ENDPOINTS =====================
-
     @Operation(summary = "[SWAGGER] Xem tất cả proposals của một Mangaka")
     @GetMapping("/my-projects/data")
     @ResponseBody
@@ -186,8 +191,9 @@ public class MangakaController {
                     + "resources" + File.separator + "static" + File.separator + "proposal" + File.separator;
 
             Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath))
+            if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
+            }
 
             long currentCount = proposalRepository.count();
             String nextId = String.format("PPS%03d", currentCount + 1);
@@ -257,8 +263,9 @@ public class MangakaController {
                     + "resources" + File.separator + "static" + File.separator + "proposal" + File.separator;
 
             Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath))
+            if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
+            }
 
             // Xóa file cũ
             if (proposal.getFilePath() != null) {
@@ -322,8 +329,9 @@ public class MangakaController {
                     + File.separator;
 
             Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath))
+            if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
+            }
 
             long count = seriesRepository.count();
             String seriesId = String.format("SER%03d", count + 1);
@@ -517,5 +525,12 @@ public class MangakaController {
         }
 
         return "redirect:/manga/mangaka/myseries/" + SeriesID + "/" + ChapterID;
+    }
+
+    // Thêm vào trong MangakaController
+    @GetMapping("/{mangakaId}/assistants")
+    @ResponseBody
+    public List<Assistant> getAssistants(@PathVariable String mangakaId) {
+        return assistantRepository.findByMangakaId(mangakaId);
     }
 }

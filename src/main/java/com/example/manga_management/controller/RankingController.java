@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -58,95 +59,7 @@ public class RankingController {
         return result;
     }
 
-    // ===== 2. Lấy danh sách series cho dropdown tạo vote =====
-    @GetMapping("/all-series")
-    public List<Map<String, Object>> getAllSeries() {
-        List<Object[]> rows = rankingRepository.findAllSeriesDistinct();
-        List<Map<String, Object>> result = new ArrayList<>();
-        for (Object[] row : rows) {
-            Map<String, Object> map = new LinkedHashMap<>();
-            map.put("id", row[0]);
-            map.put("name", row[1]);
-            map.put("status", row[2]);
-            result.add(map);
-        }
-        return result;
-    }
-
-    // ===== 3. Tạo phiên vote thủ công =====
-    @PostMapping("/create-session")
-    public Map<String, Object> createSession(
-            @RequestParam String seriesId,
-            @RequestParam String voteType,
-            HttpSession session) {
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        User user = (User) session.getAttribute("user");
-
-        if (user == null) {
-            response.put("success", false);
-            response.put("message", "Bạn chưa đăng nhập!");
-            return response;
-        }
-
-        Optional<Board> boardOpt = boardRepository.findByUserId(user.getId());
-        if (boardOpt.isEmpty()) {
-            response.put("success", false);
-            response.put("message", "Bạn không phải thành viên Editorial Board!");
-            return response;
-        }
-
-        if (!voteType.equals("stop") && !voteType.equals("reward")) {
-            response.put("success", false);
-            response.put("message", "Loại vote không hợp lệ (stop hoặc reward)!");
-            return response;
-        }
-
-        Optional<Series> seriesOpt = seriesRepository.findById(seriesId);
-        if (seriesOpt.isEmpty()) {
-            response.put("success", false);
-            response.put("message", "Không tìm thấy series!");
-            return response;
-        }
-
-        String seriesStatus = seriesOpt.get().getStatus();
-        if ("stopped".equals(seriesStatus) || "rewarded".equals(seriesStatus)) {
-            response.put("success", false);
-            response.put("message", "Series này đã có kết quả vote, không thể tạo phiên mới!");
-            return response;
-        }
-
-        if (voteSessionRepository.existsBySeriesIdAndStatus(seriesId, "active")) {
-            response.put("success", false);
-            response.put("message", "Series này đang có phiên vote đang mở rồi! Phải đóng phiên hiện tại trước.");
-            return response;
-        }
-
-        if (voteSessionRepository.existsBySeriesIdAndVoteType(seriesId, voteType)) {
-            response.put("success", false);
-            response.put("message", "Series này đã từng có phiên vote "
-                    + (voteType.equals("stop") ? "dừng" : "khen thưởng")
-                    + " rồi, không thể tạo lại!");
-            return response;
-        }
-
-        VoteSession vs = new VoteSession();
-        vs.setId(generateSessionId());
-        vs.setSeries(seriesOpt.get());
-        vs.setCreatedBy(boardOpt.get());
-        vs.setVoteType(voteType);
-        vs.setStatus("active");
-        vs.setCreatedAt(LocalDate.now());
-        voteSessionRepository.save(vs);
-
-        response.put("success", true);
-        response.put("sessionId", vs.getId());
-        response.put("message", "Đã tạo phiên vote " + (voteType.equals("stop") ? "dừng" : "khen thưởng")
-                + " cho series \"" + seriesOpt.get().getSeriesName() + "\"!");
-        return response;
-    }
-
-    // ===== 4. Lấy danh sách phiên vote đang mở (tất cả board thấy) =====
+    // ===== 2. Lấy danh sách phiên vote đang mở (tất cả board thấy) =====
     @GetMapping("/active-sessions")
     public List<Map<String, Object>> getActiveSessions(HttpSession session) {
         User user = (User) session.getAttribute("user");
@@ -157,8 +70,8 @@ public class RankingController {
         }
 
         long totalBoards = boardRepository.count();
-        // Lấy tất cả phiên do board tạo thủ công (cả active lẫn closed)
-        List<VoteSession> sessions = voteSessionRepository.findByAutoCreatedOrderByCreatedAtDesc(false);
+        // Lấy tất cả phiên (do Admin tạo) - cả active và closed
+        List<VoteSession> sessions = voteSessionRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (VoteSession vs : sessions) {
@@ -182,7 +95,9 @@ public class RankingController {
             map.put("sessionStatus", vs.getStatus());
             map.put("createdAt", vs.getCreatedAt().toString());
             map.put("autoCreated", vs.isAutoCreated());
-            map.put("createdBy", vs.getCreatedBy().getUser().getFullname());
+            map.put("createdBy", vs.getCreatedBy() != null
+                    ? vs.getCreatedBy().getUser().getFullname()
+                    : "Quản trị viên");
             map.put("voted", voted);
             map.put("totalBoards", totalBoards);
             map.put("positiveVotes", positive);
@@ -322,97 +237,6 @@ public class RankingController {
         rankingRepository.resetSeriesStatus();
 
         httpResp.sendRedirect("/manga/editor");
-    }
-
-    // ===== 7. Board tạo phiên vote dừng cho 3 series cuối =====
-    @PostMapping("/create-bottom-sessions")
-    public Map<String, Object> createBottomSessions(
-            @RequestParam(defaultValue = "0") int month,
-            @RequestParam(defaultValue = "2026") int year,
-            HttpSession session) {
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        User user = (User) session.getAttribute("user");
-
-        if (user == null) {
-            response.put("success", false);
-            response.put("message", "Bạn chưa đăng nhập!");
-            return response;
-        }
-
-        Optional<Board> boardOpt = boardRepository.findByUserId(user.getId());
-        if (boardOpt.isEmpty()) {
-            response.put("success", false);
-            response.put("message", "Bạn không phải thành viên Editorial Board!");
-            return response;
-        }
-        Board board = boardOpt.get();
-
-        try {
-            List<Object[]> rows = (month == 0)
-                    ? rankingRepository.findBottomByYear(year)
-                    : rankingRepository.findBottomByMonthAndYear(month, year);
-
-            int count = Math.min(3, rows.size());
-            List<String> createdNames = new ArrayList<>();
-            List<String> skippedNames = new ArrayList<>();
-
-            for (int i = 0; i < count; i++) {
-                String sid = (String) rows.get(i)[0];
-                String sname = (String) rows.get(i)[1];
-
-                Optional<Series> seriesOpt = seriesRepository.findById(sid);
-                if (seriesOpt.isEmpty()) continue;
-                String seriesStatus = seriesOpt.get().getStatus();
-
-                // Skip nếu series đã có kết quả (stopped/rewarded) hoặc đã từng có phiên vote dừng
-                if ("stopped".equals(seriesStatus) || "rewarded".equals(seriesStatus)
-                        || voteSessionRepository.existsBySeriesIdAndVoteType(sid, "stop")) {
-                    skippedNames.add(sname);
-                    continue;
-                }
-
-                VoteSession vs = new VoteSession();
-                vs.setId(generateSessionId());
-                vs.setSeries(seriesOpt.get());
-                vs.setCreatedBy(board);
-                vs.setVoteType("stop");
-                vs.setStatus("active");
-                vs.setCreatedAt(LocalDate.now());
-                vs.setAutoCreated(false);
-                voteSessionRepository.save(vs);
-                createdNames.add(sname);
-            }
-
-            String message;
-            if (skippedNames.isEmpty()) {
-                message = "Đã tạo phiên vote cho 3 series cuối bảng: "
-                        + String.join(", ", createdNames) + "!";
-            } else if (createdNames.isEmpty()) {
-                message = "Cả 3 series cuối bảng (" + String.join(", ", skippedNames)
-                        + ") đều đã có phiên vote trước đó, không tạo được phiên mới!";
-            } else {
-                message = "Series " + String.join(", ", skippedNames)
-                        + " đã có phiên vote trước đó. Chỉ tạo được phiên vote cho: "
-                        + String.join(", ", createdNames);
-            }
-
-            response.put("success", true);
-            response.put("message", message);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("created", 0);
-            response.put("message", "Lỗi tạo phiên: " + e.getMessage());
-        }
-        return response;
-    }
-
-    private String generateSessionId() {
-        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
-        Random rand = new Random();
-        StringBuilder sb = new StringBuilder("VS");
-        for (int i = 0; i < 4; i++) sb.append(chars.charAt(rand.nextInt(chars.length())));
-        return sb.toString();
     }
 
     private String generateSvoteId() {

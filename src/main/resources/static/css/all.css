@@ -5,8 +5,13 @@
 
 /* Hiệu ứng hiển thị mờ dần (Fade In) */
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 /* ==========================================================================
@@ -19,13 +24,16 @@
     font-family: Arial, sans-serif;
 }
 
-body, html {
+body,
+html {
     height: 100%;
 }
 
 body {
-    background-color: #1e1e1e; /* Nền tối tổng thể cho chế độ Dark Mode */
-    color: #ffffff;           /* Màu chữ mặc định toàn trang */
+    background-color: #1e1e1e;
+    /* Nền tối tổng thể cho chế độ Dark Mode */
+    color: #ffffff;
+    /* Màu chữ mặc định toàn trang */
 }
 
 /* ==========================================================================
@@ -40,7 +48,8 @@ body {
     background-color: #262626;
     border-bottom: 1px solid #333333;
     height: 60px;
-    position: fixed; /* Cố định vị trí trên cùng màn hình */
+    position: fixed;
+    /* Cố định vị trí trên cùng màn hình */
     top: 0;
     left: 0;
     width: 100%;
@@ -71,6 +80,8 @@ body {
     align-items: center;
     gap: 10px;
 }
+
+
 
 /* ==========================================================================
    4. GIAO DIỆN TRANG CHỦ & TRANG ĐĂNG NHẬP (HERO / LOGIN BACKGROUND)
@@ -230,7 +241,9 @@ body {
    6. HỆ THỐNG CÁC NÚT (BUTTONS STYLES)
    ========================================================================== */
 /* Các nút tiêu chuẩn */
-button, button[type="submit"], .btn-custom {
+button,
+button[type="submit"],
+.btn-custom {
     background-color: #333333;
     color: #ffffff !important;
     border: 1px solid #444444;
@@ -244,7 +257,9 @@ button, button[type="submit"], .btn-custom {
     text-align: center;
 }
 
-button:hover, button[type="submit"]:hover, .btn-custom:hover {
+button:hover,
+button[type="submit"]:hover,
+.btn-custom:hover {
     background-color: #444444;
 }
 
@@ -299,9 +314,18 @@ button:hover, button[type="submit"]:hover, .btn-custom:hover {
     border-radius: 3px;
 }
 
-.btn-action.approve { background-color: #28a745; }
-.btn-action.reject { background-color: #dc3545; }
-.btn-action.primary { background-color: #4a90d9; }
+.btn-action.approve {
+    background-color: #28a745;
+}
+
+.btn-action.reject {
+    background-color: #dc3545;
+}
+
+.btn-action.primary {
+    background-color: #4a90d9;
+}
+
 .btn-action.large {
     padding: 8px 16px;
     font-size: 14px;
@@ -318,7 +342,9 @@ button:hover, button[type="submit"]:hover, .btn-custom:hover {
     cursor: pointer;
 }
 
-.btn-filter:hover { background: #3a7bc8; }
+.btn-filter:hover {
+    background: #3a7bc8;
+}
 
 .btn-back {
     padding: 8px 16px;
@@ -342,13 +368,28 @@ button:hover, button[type="submit"]:hover, .btn-custom:hover {
     border-radius: 4px;
 }
 
-.btn-start-project:hover { background-color: #444444; }
+.btn-start-project:hover {
+    background-color: #444444;
+}
 
 /* Các nút điều khiển riêng trong hộp thoại Modal */
-.btn-modal-cancel { background-color: #6c757d; color: #ffffff !important; }
-.btn-modal-cancel:hover { background-color: #5a6268; }
-.btn-modal-confirm { background-color: #ff7f00; color: #ffffff !important; }
-.btn-modal-confirm:hover { background-color: #e06f00; }
+.btn-modal-cancel {
+    background-color: #6c757d;
+    color: #ffffff !important;
+}
+
+.btn-modal-cancel:hover {
+    background-color: #5a6268;
+}
+
+.btn-modal-confirm {
+    background-color: #ff7f00;
+    color: #ffffff !important;
+}
+
+.btn-modal-confirm:hover {
+    background-color: #e06f00;
+}
 
 .btn-link {
     color: #007bff;
@@ -372,8 +413,10 @@ button:hover, button[type="submit"]:hover, .btn-custom:hover {
 div.flex-container {
     display: flex;
     flex-direction: column;
-    margin-left: 100px; /* Chừa khoảng trống cho sidebar bên trái */
-    margin-top: 60px;   /* Chừa khoảng trống cho header phía trên */
+    margin-left: 100px;
+    /* Chừa khoảng trống cho sidebar bên trái */
+    margin-top: 60px;
+    /* Chừa khoảng trống cho header phía trên */
     background-color: #1e1e1e;
     padding: 20px;
     min-height: calc(100vh - 60px);
@@ -381,11 +424,12 @@ div.flex-container {
     box-sizing: border-box;
 }
 
-div.flex-container h2, div.flex-container p {
+div.flex-container h2,
+div.flex-container p {
     color: #ffffff;
 }
 
-div.flex-container > div {
+div.flex-container>div {
     margin: 10px;
 }
 
@@ -460,7 +504,8 @@ ul.topnav li a:hover {
    8. HỆ THỐNG BẢNG DỮ LIỆU & BẢNG XẾP HẠNG (TABLES & RANKING)
    ========================================================================== */
 /* Cấu hình chung cho mọi bảng */
-table, .data-table {
+table,
+.data-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
@@ -507,25 +552,46 @@ td {
     color: #1e1e1e;
 }
 
-#rankingTable td, #bottomTable td {
+#rankingTable td,
+#bottomTable td {
     color: #ffffff !important;
     background-color: #1e1e1e !important;
     border-bottom: 1px solid #eee;
 }
 
-#rankingTable tr:nth-child(even) td, #bottomTable tr:nth-child(even) td,
-#rankingTable tr:hover td, #bottomTable tr:hover td {
+#rankingTable tr:nth-child(even) td,
+#bottomTable tr:nth-child(even) td,
+#rankingTable tr:hover td,
+#bottomTable tr:hover td {
     background-color: #1e1e1e !important;
 }
 
 /* Thứ tự xếp hạng đặc biệt (Huy chương Vàng, Bạc, Đồng) */
-.rank-1 { color: #f5a623; font-weight: bold; }
-.rank-2 { color: #9b9b9b; font-weight: bold; }
-.rank-3 { color: #cd7f32; font-weight: bold; }
+.rank-1 {
+    color: #f5a623;
+    font-weight: bold;
+}
+
+.rank-2 {
+    color: #9b9b9b;
+    font-weight: bold;
+}
+
+.rank-3 {
+    color: #cd7f32;
+    font-weight: bold;
+}
 
 /* Các cấu hình bổ trợ cho bảng */
-.text-center-align { text-align: center; }
-.empty-msg { text-align: center; color: #999; padding: 30px; }
+.text-center-align {
+    text-align: center;
+}
+
+.empty-msg {
+    text-align: center;
+    color: #999;
+    padding: 30px;
+}
 
 .ranking-container {
     max-width: 800px;
@@ -563,9 +629,16 @@ select {
     border: 1px solid #333;
 }
 
-.btn-toggle-library:hover { background-color: #b01e18; }
-.library-content { display: none; transition: all 0.3s ease; }
-#toggle-library-checkbox:checked + .library-content {
+.btn-toggle-library:hover {
+    background-color: #b01e18;
+}
+
+.library-content {
+    display: none;
+    transition: all 0.3s ease;
+}
+
+#toggle-library-checkbox:checked+.library-content {
     display: block;
     animation: fadeIn 0.5s;
 }
@@ -615,7 +688,9 @@ select {
     color: #333;
 }
 
-.btn-close:hover { color: #DA251D; }
+.btn-close:hover {
+    color: #DA251D;
+}
 
 .modal-footer {
     display: flex;
@@ -694,63 +769,116 @@ select {
     position: absolute;
     right: 0;
     top: 50px;
-    width: 280px;
-    background: #fff;
-    border: 1px solid #ccc;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 320px;
+    background: #1e1e1e;
+    border: 1px solid #3a3a3a;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     z-index: 9999;
-    border-radius: 4px;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .notification-dropdown.show {
     display: block;
+    animation: fadeIn 0.2s;
 }
 
 .dropdown-header {
-    padding: 10px;
+    padding: 12px 16px;
     font-weight: bold;
-    border-bottom: 1px solid #eee;
-    background: #f9f9f9;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    color: #DA251D;
+    background: #262626;
+    border-bottom: 1px solid #3a3a3a;
+    text-transform: uppercase;
 }
 
 .notification-item {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
+    padding: 12px 16px;
+    border-bottom: 1px solid #2d2d2d;
+    cursor: default;
+    transition: background 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item:hover {
+    background: #2d2d2d;
 }
 
 .notification-item.unread {
-    background-color: #eef7ff;
+    background: #1a2a3a;
+    border-left: 3px solid #DA251D;
 }
 
-.notification-item a {
-    text-decoration: none;
-    color: #333;
-    display: block;
+.notification-item.unread:hover {
+    background: #1e3045;
+}
+
+.notification-item span:first-child {
+    font-size: 13px;
+    color: #e0e0e0;
+    line-height: 1.4;
 }
 
 .time {
-    font-size: 10px;
-    color: #777;
+    font-size: 11px;
+    color: #666;
+}
+
+.no-notify {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+    font-style: italic;
+}
+
+#btnNoti {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    background: #2d2d2d;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+#btnNoti:hover {
+    background: #3a3a3a;
+    color: #DA251D;
 }
 
 .badge {
     position: absolute;
-    top: 0;
-    right: 0;
-    background: red;
+    top: -4px;
+    right: -4px;
+    background: #DA251D;
     color: white;
     border-radius: 50%;
-    padding: 2px 6px;
+    width: 18px;
+    height: 18px;
     font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #262626;
 }
 
 /* ==========================================================================
    11. BỔ SUNG CÁC LỚP CSS TỪ FILE HTML (MÃ INLINE ĐƯỢC CHUYỂN ĐỔI)
    ========================================================================== */
-/* Cố định nút Chuông thông báo */
-#btnNoti {
-    position: relative;
-}
 
 /* Bộ lọc trang chủ (Xem Ranking) */
 .filter-group-inline {
@@ -840,22 +968,69 @@ select {
 }
 
 /* Khung lưới hiển thị Palette màu */
-.color-palette-bar .palette-swatch[data-color="#000000"] { background: #000000; }
-.color-palette-bar .palette-swatch[data-color="#ffffff"] { background: #ffffff; }
-.color-palette-bar .palette-swatch[data-color="#7f7f7f"] { background: #7f7f7f; }
-.color-palette-bar .palette-swatch[data-color="#c3c3c3"] { background: #c3c3c3; }
-.color-palette-bar .palette-swatch[data-color="#ff0000"] { background: #ff0000; }
-.color-palette-bar .palette-swatch[data-color="#ff7f00"] { background: #ff7f00; }
-.color-palette-bar .palette-swatch[data-color="#ffff00"] { background: #ffff00; }
-.color-palette-bar .palette-swatch[data-color="#00ff00"] { background: #00ff00; }
-.color-palette-bar .palette-swatch[data-color="#00ffff"] { background: #00ffff; }
-.color-palette-bar .palette-swatch[data-color="#0078ff"] { background: #0078ff; }
-.color-palette-bar .palette-swatch[data-color="#7f00ff"] { background: #7f00ff; }
-.color-palette-bar .palette-swatch[data-color="#ff00ff"] { background: #ff00ff; }
-.color-palette-bar .palette-swatch[data-color="#8b4513"] { background: #8b4513; }
-.color-palette-bar .palette-swatch[data-color="#ffc0cb"] { background: #ffc0cb; }
-.color-palette-bar .palette-swatch[data-color="#ffd700"] { background: #ffd700; }
-.color-palette-bar .palette-swatch[data-color="#2e8b57"] { background: #2e8b57; }
+.color-palette-bar .palette-swatch[data-color="#000000"] {
+    background: #000000;
+}
+
+.color-palette-bar .palette-swatch[data-color="#ffffff"] {
+    background: #ffffff;
+}
+
+.color-palette-bar .palette-swatch[data-color="#7f7f7f"] {
+    background: #7f7f7f;
+}
+
+.color-palette-bar .palette-swatch[data-color="#c3c3c3"] {
+    background: #c3c3c3;
+}
+
+.color-palette-bar .palette-swatch[data-color="#ff0000"] {
+    background: #ff0000;
+}
+
+.color-palette-bar .palette-swatch[data-color="#ff7f00"] {
+    background: #ff7f00;
+}
+
+.color-palette-bar .palette-swatch[data-color="#ffff00"] {
+    background: #ffff00;
+}
+
+.color-palette-bar .palette-swatch[data-color="#00ff00"] {
+    background: #00ff00;
+}
+
+.color-palette-bar .palette-swatch[data-color="#00ffff"] {
+    background: #00ffff;
+}
+
+.color-palette-bar .palette-swatch[data-color="#0078ff"] {
+    background: #0078ff;
+}
+
+.color-palette-bar .palette-swatch[data-color="#7f00ff"] {
+    background: #7f00ff;
+}
+
+.color-palette-bar .palette-swatch[data-color="#ff00ff"] {
+    background: #ff00ff;
+}
+
+.color-palette-bar .palette-swatch[data-color="#8b4513"] {
+    background: #8b4513;
+}
+
+.color-palette-bar .palette-swatch[data-color="#ffc0cb"] {
+    background: #ffc0cb;
+}
+
+.color-palette-bar .palette-swatch[data-color="#ffd700"] {
+    background: #ffd700;
+}
+
+.color-palette-bar .palette-swatch[data-color="#2e8b57"] {
+    background: #2e8b57;
+}
 
 /* Kích thước khung Canvas Stack */
 #canvasStack {
@@ -878,7 +1053,11 @@ select {
 }
 
 /* Các thành phần ẩn nội bộ phục vụ JS điều khiển */
-#mangaka-meta, .ai-result-image, .ai-result-text, .ai-error-text, #btnApplyToCanvas {
+#mangaka-meta,
+.ai-result-image,
+.ai-result-text,
+.ai-error-text,
+#btnApplyToCanvas {
     display: none;
 }
 
@@ -1042,19 +1221,43 @@ select {
 
 /* Badge màu sắc các trạng thái Bản thảo */
 .badge-status-waiting {
-    background: #f0ad4e; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;
+    background: #f0ad4e;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
 }
+
 .badge-status-approved {
-    background: #5cb85c; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;
+    background: #5cb85c;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
 }
+
 .badge-status-rejected {
-    background: #d9534f; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;
+    background: #d9534f;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
 }
+
 .badge-status-passed {
-    background: #204fa6; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;
+    background: #204fa6;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
 }
+
 .badge-status-default {
-    background: #aaa; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;
+    background: #aaa;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
 }
 
 /* Khối nhận xét từ Tantou */
@@ -1124,6 +1327,7 @@ select {
 #notificationModalOverlay .btn-ok {
     padding: 8px 20px;
 }
+
 /* ==========================================================================
    12. BỔ SUNG KHUNG KANBAN CÔNG VIỆC CHO TRỢ LÝ
    ========================================================================== */
@@ -1144,7 +1348,9 @@ select {
 }
 
 /* Đổi màu chữ chữ và tiêu đề của thẻ để hiển thị rõ trên các nền màu sắc */
-.kanban-card h3, .kanban-card p, .kanban-card b {
+.kanban-card h3,
+.kanban-card p,
+.kanban-card b {
     color: #121212 !important;
 }
 

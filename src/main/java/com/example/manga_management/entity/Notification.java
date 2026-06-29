@@ -30,6 +30,12 @@ public class Notification {
     @Column(name = "Link", length = 255)
     private String link;
 
+    @Column(name = "Type", length = 40)
+    private String type;
+
+    @Column(name = "ReferenceKey", length = 120)
+    private String referenceKey;
+
     @Column(name = "IsRead", nullable = false)
     private boolean isRead = false;
 

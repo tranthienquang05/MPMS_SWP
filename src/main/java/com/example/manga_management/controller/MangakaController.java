@@ -33,7 +33,6 @@ import com.example.manga_management.entity.Series;
 import com.example.manga_management.entity.Submission;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.AssistantRepository;
-import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.ProposalRepository;
@@ -54,13 +53,13 @@ public class MangakaController {
     private final ProposalRepository proposalRepository;
     private final MangakaRepository mangakaRepository;
     private final SeriesRepository seriesRepository;
-    private final ChapterRepository chapterRepository;
+    private final com.example.manga_management.repository.ChapterRepository chapterRepository;
     private final MangaPageRepository mangaPageRepository;
     private final AssistantRepository assistantRepository;
     private NotificationController notificationController;
 
     public MangakaController(ProposalRepository proposalRepository, MangakaRepository mangakaRepository,
-            SeriesRepository seriesRepository, ChapterRepository chapterRepository,
+            SeriesRepository seriesRepository, com.example.manga_management.repository.ChapterRepository chapterRepository,
             MangaPageRepository mangaPageRepository, SubmissionRepository submissionRepository,
             NotificationController notificationController, AssistantRepository assistantRepository) {
         this.proposalRepository = proposalRepository;
@@ -525,13 +524,21 @@ public class MangakaController {
             Model model, HttpSession session) {
 
         Submission submission = submissionRepository.findById(id).orElse(null);
+        if (submission == null) {
+            return "redirect:/manga/mangaka";
+        }
+
+        String normalizedStatus = status == null ? "" : status.trim().toLowerCase();
+        if (!"pass".equals(normalizedStatus) && !"unfinish".equals(normalizedStatus)) {
+            return "redirect:/manga/mangaka/myseries/" + submission.getPageId().getChapter().getSeries().getId()
+                    + "/" + submission.getPageId().getChapter().getId();
+        }
+
         String ChapterID = submission.getPageId().getChapter().getId();
         String SeriesID = submission.getPageId().getChapter().getSeries().getId();
-        if (submission != null) {
-            submission.setStatus(status);
-            submission.setComment(comment);
-            submissionRepository.save(submission);
-        }
+        submission.setStatus(normalizedStatus);
+        submission.setComment(comment);
+        submissionRepository.save(submission);
 
         return "redirect:/manga/mangaka/myseries/" + SeriesID + "/" + ChapterID;
     }

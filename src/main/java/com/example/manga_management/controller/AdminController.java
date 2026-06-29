@@ -682,11 +682,18 @@ public class AdminController {
             if (mgkOpt.isPresent()) {
                 for (Proposal p : proposalRepository.findByMangaka_Id(mgkOpt.get().getId())) {
                     Map<String, Object> a = new LinkedHashMap<>();
-                    a.put("timestamp", ""); // Proposal không có createdAt
+                    a.put("timestamp", p.getCreatedAt() != null ? p.getCreatedAt().toString() : "");
                     a.put("type", "proposal");
                     a.put("icon", "fa-file-pen");
-                    a.put("description", "Bản thảo " + p.getSeriesName() + " (" + p.getId()
-                            + ") - trạng thái: " + p.getStatus());
+                    String statusLabel = switch (p.getStatus() != null ? p.getStatus().toLowerCase() : "") {
+                        case "pending" -> "⏳ Chờ duyệt";
+                        case "approved" -> "✅ Đã duyệt";
+                        case "rejected" -> "❌ Bị từ chối";
+                        case "resubmit" -> "🔄 Cần chỉnh sửa";
+                        default -> p.getStatus() != null ? p.getStatus() : "";
+                    };
+                    a.put("description", "Bản thảo \"" + p.getSeriesName() + "\" (" + p.getId()
+                            + ") — " + statusLabel);
                     activities.add(a);
                 }
             }
@@ -698,18 +705,51 @@ public class AdminController {
             if (astOpt.isPresent()) {
                 for (Submission s : submissionRepository.findByAssistant_Id(astOpt.get().getId())) {
                     Map<String, Object> a = new LinkedHashMap<>();
-                    a.put("timestamp", s.getDeadline() != null ? s.getDeadline().toString() : "");
+                    a.put("timestamp", s.getCreatedAt() != null ? s.getCreatedAt().toString() : "");
                     a.put("type", "submission");
                     a.put("icon", "fa-list-check");
-                    a.put("description", "Task " + s.getId() + " (deadline "
-                            + (s.getDeadline() != null ? s.getDeadline().toString() : "—") + ") - trạng thái: "
-                            + s.getStatus());
+                    String statusLabel = switch (s.getStatus() != null ? s.getStatus().toLowerCase() : "") {
+                        case "pending" -> "⏳ Chờ nộp";
+                        case "submitted" -> "📤 Đã nộp";
+                        case "approved" -> "✅ Đã duyệt";
+                        case "rejected" -> "❌ Bị từ chối";
+                        case "late" -> "🕐 Nộp trễ";
+                        default -> s.getStatus() != null ? s.getStatus() : "";
+                    };
+                    a.put("description", "Task " + s.getId()
+                            + " (deadline " + (s.getDeadline() != null ? s.getDeadline().toString() : "—")
+                            + ") — " + statusLabel);
                     activities.add(a);
                 }
             }
         }
 
-        // 4. Notification — áp dụng cho mọi role (đã có createdAt LocalDateTime)
+        // 4. TantoEditor: quản lý proposal của các mangaka trực thuộc
+        if ("tantou".equals(role)) {
+            Optional<TantoEditor> editorOpt = tantoEditorRepository.findByUserId(userId);
+            if (editorOpt.isPresent()) {
+                for (Proposal p : proposalRepository.findByMangaka_Editor_IdOrderByCreatedAtDesc(editorOpt.get().getId())) {
+                    Map<String, Object> a = new LinkedHashMap<>();
+                    a.put("timestamp", p.getCreatedAt() != null ? p.getCreatedAt().toString() : "");
+                    a.put("type", "manage-proposal");
+                    a.put("icon", "fa-file-circle-check");
+                    String statusLabel = switch (p.getStatus() != null ? p.getStatus().toLowerCase() : "") {
+                        case "pending" -> "⏳ Chờ duyệt";
+                        case "approved" -> "✅ Đã duyệt";
+                        case "rejected" -> "❌ Bị từ chối";
+                        case "resubmit" -> "🔄 Cần chỉnh sửa";
+                        default -> p.getStatus() != null ? p.getStatus() : "";
+                    };
+                    String mangakaName = p.getMangaka() != null && p.getMangaka().getUser() != null
+                            ? p.getMangaka().getUser().getFullname() : "—";
+                    a.put("description", "Bản thảo \"" + p.getSeriesName() + "\" (" + p.getId()
+                            + ") của " + mangakaName + " — " + statusLabel);
+                    activities.add(a);
+                }
+            }
+        }
+
+        // 5. Notification — áp dụng cho mọi role (đã có createdAt LocalDateTime)
         for (Notification n : notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)) {
             Map<String, Object> a = new LinkedHashMap<>();
             a.put("timestamp", n.getCreatedAt() != null ? n.getCreatedAt().toString() : "");

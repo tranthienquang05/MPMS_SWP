@@ -2,6 +2,8 @@ package com.example.manga_management.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "proposal") // Tên bảng trong DB
@@ -32,6 +34,10 @@ public class Proposal {
 
     @Column(name = "Comment", length = 1000)
     private String comment;
+
+    @CreationTimestamp
+    @Column(name = "CreatedAt", updatable = false)
+    private LocalDateTime createdAt;
 
     // Quan hệ OneToOne với Series
     // mappedBy trỏ tới tên biến 'proposal' trong entity Series

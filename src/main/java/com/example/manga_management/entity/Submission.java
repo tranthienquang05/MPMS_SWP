@@ -1,9 +1,11 @@
 package com.example.manga_management.entity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "submission")
@@ -37,6 +39,7 @@ public class Submission {
     @Column(name = "Status", nullable = false, length = 20)
     private String status;
 
-
-
+    @CreationTimestamp
+    @Column(name = "CreatedAt", updatable = false)
+    private LocalDateTime createdAt;
 }

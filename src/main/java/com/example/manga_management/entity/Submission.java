@@ -41,4 +41,7 @@ public class Submission {
     @CreationTimestamp
     @Column(name = "CreatedAt", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "ApprovedAt")
+    private LocalDateTime approvedAt;
 }

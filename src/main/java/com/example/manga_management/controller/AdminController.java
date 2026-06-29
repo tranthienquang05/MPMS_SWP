@@ -676,11 +676,14 @@ public class AdminController {
             }
         }
 
-        // 2. Mangaka: tạo / nộp proposal
+        // 2. Mangaka: tạo / nộp proposal + giao task + chấp nhận submit
         if ("mangaka".equals(role)) {
             Optional<Mangaka> mgkOpt = mangakaRepository.findByUserId(userId);
             if (mgkOpt.isPresent()) {
-                for (Proposal p : proposalRepository.findByMangaka_Id(mgkOpt.get().getId())) {
+                String mangakaId = mgkOpt.get().getId();
+
+                // 2a. Proposal (bản thảo)
+                for (Proposal p : proposalRepository.findByMangaka_Id(mangakaId)) {
                     Map<String, Object> a = new LinkedHashMap<>();
                     a.put("timestamp", p.getCreatedAt() != null ? p.getCreatedAt().toString() : "");
                     a.put("type", "proposal");
@@ -695,6 +698,40 @@ public class AdminController {
                     a.put("description", "Bản thảo \"" + p.getSeriesName() + "\" (" + p.getId()
                             + ") — " + statusLabel);
                     activities.add(a);
+                }
+
+                // 2b. Giao task + chấp nhận submit (qua Submission của các assistant)
+                for (Submission s : submissionRepository.findByAssistant_Mangaka_IdOrderByCreatedAtDesc(mangakaId)) {
+                    String assistantName = s.getAssistant() != null && s.getAssistant().getUser() != null
+                            ? s.getAssistant().getUser().getFullname() : "—";
+                    String pageInfo = "";
+                    if (s.getPageId() != null) {
+                        MangaPage pg = s.getPageId();
+                        String chapterName = pg.getChapter() != null ? pg.getChapter().getChapterName() : "—";
+                        pageInfo = "trang " + (pg.getPageNumber() != null ? pg.getPageNumber() : s.getId())
+                                + " (" + chapterName + ")";
+                    }
+
+                    // Giao task: dùng createdAt
+                    if (s.getCreatedAt() != null) {
+                        Map<String, Object> a = new LinkedHashMap<>();
+                        a.put("timestamp", s.getCreatedAt().toString());
+                        a.put("type", "assign-task");
+                        a.put("icon", "fa-list-check");
+                        a.put("description", "Giao " + pageInfo + " cho " + assistantName
+                                + " (deadline " + (s.getDeadline() != null ? s.getDeadline().toString() : "—") + ")");
+                        activities.add(a);
+                    }
+
+                    // Chấp nhận submit: dùng approvedAt
+                    if (s.getApprovedAt() != null) {
+                        Map<String, Object> a = new LinkedHashMap<>();
+                        a.put("timestamp", s.getApprovedAt().toString());
+                        a.put("type", "approve-task");
+                        a.put("icon", "fa-circle-check");
+                        a.put("description", "Duyệt bài " + pageInfo + " của " + assistantName);
+                        activities.add(a);
+                    }
                 }
             }
         }

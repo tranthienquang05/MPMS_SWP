@@ -58,6 +58,11 @@
           <i class="icon-vote"></i>
         </button>
       </li>
+      <li>
+        <button type="button" class="btn-icon" onclick="openTab('tab-history')">
+          <i class="icon-history"></i>
+        </button>
+      </li>
     </ul>
 
     <div id="toast"></div>
@@ -275,6 +280,48 @@
               </tr>
             </thead>
             <tbody id="vote-sessions-tbody">
+              <tr>
+                <td colspan="6" class="text-center-muted">Đang tải...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tab-history" class="tab-pane">
+        <h2>Lịch sử hoạt động</h2>
+        <div class="section-card">
+          <h3>
+            <i class="fa-solid fa-clock-rotate-left"></i> Tra cứu người dùng
+          </h3>
+
+          <div class="form-inline">
+            <div class="field">
+              <label>Lọc theo họ tên / username / email / ID</label>
+              <input
+                id="history-search-input"
+                placeholder="Gõ keyword để thu hẹp danh sách..."
+              />
+            </div>
+            <div class="flex-end-layout">
+              <button class="btn-sm btn-primary" onclick="searchUsersHistory()">
+                <i class="icon-glass"></i> Tải lại
+              </button>
+            </div>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Họ tên</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Vai trò</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="history-users-tbody">
               <tr>
                 <td colspan="6" class="text-center-muted">Đang tải...</td>
               </tr>
@@ -544,6 +591,40 @@
       </div>
     </div>
 
+    <div id="modal-activity" class="modal-overlay">
+      <div class="modal-box modal-box-wide">
+        <h3>
+          <i
+            class="fa-solid fa-clock-rotate-left"
+            style="color: #0ea5e9; margin-right: 6px"
+          ></i
+          >Lịch sử hoạt động: <span id="activity-user-name"></span>
+        </h3>
+        <p id="activity-user-info" class="text-muted-info"></p>
+
+        <div class="activity-list-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="col-time">Thời gian</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="activity-tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            class="btn-sm btn-cancel"
+            onclick="closeModal('modal-activity')"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script>
       // ════════════════════════════════════════════
       //  UTILS
@@ -555,6 +636,7 @@
         document.getElementById(id).classList.add("active");
         if (id === "tab-relations") loadRelations();
         if (id === "tab-vote") loadVoteSessionsAdmin();
+        if (id === "tab-history") initHistoryTab();
       }
 
       function showToast(msg, type = "success") {
@@ -1243,6 +1325,119 @@
         } else {
           doCreate();
         }
+      }
+
+      // ════════════════════════════════════════════
+      //  LỊCH SỬ HOẠT ĐỘNG NGƯỜI DÙNG
+      // ════════════════════════════════════════════
+      let historyTabInited = false;
+      let allUsersForHistory = [];
+
+      function initHistoryTab() {
+        // Mỗi lần mở tab đều reload (đảm bảo data mới nhất). Listener chỉ bind 1 lần.
+        if (!historyTabInited) {
+          historyTabInited = true;
+          const input = document.getElementById("history-search-input");
+          if (input) {
+            input.addEventListener("input", () => {
+              renderHistoryUsers(input.value);
+            });
+          }
+        }
+        loadAllUsersForHistory();
+      }
+
+      function loadAllUsersForHistory() {
+        fetch("/manga/system-admin/users/search?keyword=")
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status !== "success") {
+              showToast(data.message, "error");
+              return;
+            }
+            allUsersForHistory = data.users || [];
+            const kw = document.getElementById("history-search-input").value;
+            renderHistoryUsers(kw);
+          })
+          .catch(() => showToast("Lỗi khi tải danh sách user", "error"));
+      }
+
+      function renderHistoryUsers(keyword) {
+        const kw = (keyword || "").trim().toLowerCase();
+        const filtered = kw
+          ? allUsersForHistory.filter(
+              (u) =>
+                (u.id && u.id.toLowerCase().includes(kw)) ||
+                (u.fullname && u.fullname.toLowerCase().includes(kw)) ||
+                (u.username && u.username.toLowerCase().includes(kw)) ||
+                (u.email && u.email.toLowerCase().includes(kw)),
+            )
+          : allUsersForHistory;
+
+        const tbody = document.getElementById("history-users-tbody");
+        if (filtered.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="text-center-muted">Không tìm thấy user nào</td></tr>';
+          return;
+        }
+        tbody.innerHTML = filtered
+          .map(
+            (u) => `
+              <tr>
+                <td style="color:#94a3b8;font-size:0.82rem;">${u.id}</td>
+                <td>${u.fullname || ""}</td>
+                <td><code>${u.username || ""}</code></td>
+                <td>${u.email || ""}</td>
+                <td>${badgeHtml((u.role || "").toLowerCase())}</td>
+                <td>
+                  <button class="btn-sm btn-primary" onclick="viewUserActivity('${u.id}')">
+                    <i class="icon-history"></i> Xem lịch sử
+                  </button>
+                </td>
+              </tr>`,
+          )
+          .join("");
+      }
+
+      // Nút "Tìm" giờ chỉ là alias reload (nếu user muốn force refresh)
+      function searchUsersHistory() {
+        loadAllUsersForHistory();
+      }
+
+      function viewUserActivity(userId) {
+        fetch("/manga/system-admin/users/" + userId + "/activity")
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status !== "success") {
+              showToast(data.message, "error");
+              return;
+            }
+            const u = data.user;
+            document.getElementById("activity-user-name").textContent =
+              u.fullname || u.username;
+            document.getElementById("activity-user-info").innerHTML =
+              `<strong>${u.username}</strong> · ${u.role} · ID ${u.id}` +
+              (u.email ? ` · ${u.email}` : "");
+
+            const tbody = document.getElementById("activity-tbody");
+            const acts = data.activities || [];
+            if (acts.length === 0) {
+              tbody.innerHTML =
+                '<tr><td colspan="2" class="text-center-muted">Chưa có hoạt động nào</td></tr>';
+            } else {
+              tbody.innerHTML = acts
+                .map(
+                  (a) => `
+                    <tr>
+                      <td class="col-time">${a.timestamp || "—"}</td>
+                      <td><i class="fa-solid ${a.icon || "fa-clock"} activity-icon"></i>${a.description || ""}</td>
+                    </tr>`,
+                )
+                .join("");
+            }
+            openModal("modal-activity");
+          })
+          .catch(() => showToast("Lỗi khi tải lịch sử", "error"));
       }
 
       // ════════════════════════════════════════════

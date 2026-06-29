@@ -53,3 +53,7 @@
 .icon-home::before {
     content: "\f015";
 }
+
+.icon-history::before {
+    content: "\f1da";
+}

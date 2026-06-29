@@ -29,6 +29,11 @@ public class AdminController {
     private final SeriesRepository seriesRepository;
     private final VoteSessionRepository voteSessionRepository;
     private final RankingRepository rankingRepository;
+    private final EditorialVoteRepository editorialVoteRepository;
+    private final SeriesVoteRepository seriesVoteRepository;
+    private final SubmissionRepository submissionRepository;
+    private final NotificationRepository notificationRepository;
+    private final ProposalRepository proposalRepository;
 
     public AdminController(UserRepository userRepository,
             MangakaRepository mangakaRepository,
@@ -37,7 +42,12 @@ public class AdminController {
             BoardRepository boardRepository,
             SeriesRepository seriesRepository,
             VoteSessionRepository voteSessionRepository,
-            RankingRepository rankingRepository) {
+            RankingRepository rankingRepository,
+            EditorialVoteRepository editorialVoteRepository,
+            SeriesVoteRepository seriesVoteRepository,
+            SubmissionRepository submissionRepository,
+            NotificationRepository notificationRepository,
+            ProposalRepository proposalRepository) {
         this.userRepository = userRepository;
         this.mangakaRepository = mangakaRepository;
         this.assistantRepository = assistantRepository;
@@ -46,6 +56,11 @@ public class AdminController {
         this.seriesRepository = seriesRepository;
         this.voteSessionRepository = voteSessionRepository;
         this.rankingRepository = rankingRepository;
+        this.editorialVoteRepository = editorialVoteRepository;
+        this.seriesVoteRepository = seriesVoteRepository;
+        this.submissionRepository = submissionRepository;
+        this.notificationRepository = notificationRepository;
+        this.proposalRepository = proposalRepository;
     }
 
     @GetMapping("")
@@ -544,6 +559,189 @@ public class AdminController {
         StringBuilder sb = new StringBuilder("VS");
         for (int i = 0; i < 4; i++) sb.append(chars.charAt(rand.nextInt(chars.length())));
         return sb.toString();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  LỊCH SỬ HOẠT ĐỘNG USER (Admin xem)
+    // ════════════════════════════════════════════════════════════
+
+    // Search user theo keyword (fullname / username / email / id)
+    @GetMapping("/users/search")
+    @ResponseBody
+    public Map<String, Object> searchUsers(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "") String keyword,
+            HttpSession session) {
+
+        Map<String, Object> result = new HashMap<>();
+        User admin = (User) session.getAttribute("user");
+        if (admin == null || !"admin".equalsIgnoreCase(admin.getRole())) {
+            result.put("status", "error");
+            result.put("message", "Không có quyền truy cập");
+            return result;
+        }
+
+        String kw = keyword.trim().toLowerCase();
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (User u : userRepository.findAll()) {
+            boolean match = kw.isEmpty()
+                    || (u.getId() != null && u.getId().toLowerCase().contains(kw))
+                    || (u.getFullname() != null && u.getFullname().toLowerCase().contains(kw))
+                    || (u.getUsername() != null && u.getUsername().toLowerCase().contains(kw))
+                    || (u.getEmail() != null && u.getEmail().toLowerCase().contains(kw));
+            if (!match) continue;
+
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", u.getId());
+            m.put("fullname", u.getFullname());
+            m.put("username", u.getUsername());
+            m.put("email", u.getEmail());
+            m.put("role", u.getRole());
+            list.add(m);
+        }
+
+        result.put("status", "success");
+        result.put("users", list);
+        return result;
+    }
+
+    // Lấy lịch sử hoạt động của 1 user — tổng hợp từ nhiều bảng có sẵn
+    @GetMapping("/users/{userId}/activity")
+    @ResponseBody
+    public Map<String, Object> getUserActivity(
+            @org.springframework.web.bind.annotation.PathVariable String userId,
+            HttpSession session) {
+
+        Map<String, Object> result = new HashMap<>();
+        User admin = (User) session.getAttribute("user");
+        if (admin == null || !"admin".equalsIgnoreCase(admin.getRole())) {
+            result.put("status", "error");
+            result.put("message", "Không có quyền truy cập");
+            return result;
+        }
+
+        User target = userRepository.findById(userId).orElse(null);
+        if (target == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy user");
+            return result;
+        }
+
+        List<Map<String, Object>> activities = new ArrayList<>();
+        String role = target.getRole() != null ? target.getRole().toLowerCase() : "";
+
+        // 1. Board: vote proposal (EditorialVote)
+        if ("board".equals(role)) {
+            for (EditorialVote ev : editorialVoteRepository.findByBoard_User_IdOrderByVoteDateDesc(userId)) {
+                Map<String, Object> a = new LinkedHashMap<>();
+                a.put("timestamp", ev.getVoteDate() != null ? ev.getVoteDate().toString() : "");
+                a.put("type", "vote-proposal");
+                a.put("icon", "fa-file-circle-check");
+                String label = "pass".equalsIgnoreCase(ev.getVote()) ? "✅ Chấp thuận" : "❌ Bác bỏ";
+                a.put("description", "Bỏ phiếu " + label + " bản thảo "
+                        + (ev.getProposal() != null ? ev.getProposal().getSeriesName() : "") + " ("
+                        + (ev.getProposal() != null ? ev.getProposal().getId() : "") + ")");
+                activities.add(a);
+            }
+
+            // Board: vote series (SeriesVote)
+            for (SeriesVote sv : seriesVoteRepository.findByBoard_User_IdOrderByVoteDateDesc(userId)) {
+                Map<String, Object> a = new LinkedHashMap<>();
+                a.put("timestamp", sv.getVoteDate() != null ? sv.getVoteDate().toString() : "");
+                a.put("type", "vote-series");
+                a.put("icon", "fa-square-poll-vertical");
+                String choice = sv.getVote() == null ? "" : sv.getVote();
+                String label = switch (choice.toLowerCase()) {
+                    case "stop" -> "🚫 Dừng";
+                    case "keep" -> "✅ Giữ";
+                    case "reward" -> "🏆 Đồng ý khen thưởng";
+                    case "against" -> "❌ Không đồng ý";
+                    default -> choice;
+                };
+                a.put("description", "Vote " + label + " cho series "
+                        + (sv.getSeries() != null ? sv.getSeries().getSeriesName() : "") + " ("
+                        + (sv.getSeries() != null ? sv.getSeries().getId() : "") + ")");
+                activities.add(a);
+            }
+
+            // Board: tạo phiên vote (VoteSession.createdBy)
+            for (VoteSession vs : voteSessionRepository.findByCreatedBy_User_IdOrderByCreatedAtDesc(userId)) {
+                Map<String, Object> a = new LinkedHashMap<>();
+                a.put("timestamp", vs.getCreatedAt() != null ? vs.getCreatedAt().toString() : "");
+                a.put("type", "create-session");
+                a.put("icon", "fa-plus-square");
+                String t = "stop".equalsIgnoreCase(vs.getVoteType()) ? "dừng" : "khen thưởng";
+                a.put("description", "Tạo phiên vote " + t + " " + vs.getId() + " cho series "
+                        + (vs.getSeries() != null ? vs.getSeries().getSeriesName() : ""));
+                activities.add(a);
+            }
+        }
+
+        // 2. Mangaka: tạo / nộp proposal
+        if ("mangaka".equals(role)) {
+            Optional<Mangaka> mgkOpt = mangakaRepository.findByUserId(userId);
+            if (mgkOpt.isPresent()) {
+                for (Proposal p : proposalRepository.findByMangaka_Id(mgkOpt.get().getId())) {
+                    Map<String, Object> a = new LinkedHashMap<>();
+                    a.put("timestamp", ""); // Proposal không có createdAt
+                    a.put("type", "proposal");
+                    a.put("icon", "fa-file-pen");
+                    a.put("description", "Bản thảo " + p.getSeriesName() + " (" + p.getId()
+                            + ") - trạng thái: " + p.getStatus());
+                    activities.add(a);
+                }
+            }
+        }
+
+        // 3. Assistant: nhận / nộp task (Submission)
+        if ("assistant".equals(role)) {
+            Optional<Assistant> astOpt = assistantRepository.findByUserId(userId);
+            if (astOpt.isPresent()) {
+                for (Submission s : submissionRepository.findByAssistant_Id(astOpt.get().getId())) {
+                    Map<String, Object> a = new LinkedHashMap<>();
+                    a.put("timestamp", s.getDeadline() != null ? s.getDeadline().toString() : "");
+                    a.put("type", "submission");
+                    a.put("icon", "fa-list-check");
+                    a.put("description", "Task " + s.getId() + " (deadline "
+                            + (s.getDeadline() != null ? s.getDeadline().toString() : "—") + ") - trạng thái: "
+                            + s.getStatus());
+                    activities.add(a);
+                }
+            }
+        }
+
+        // 4. Notification — áp dụng cho mọi role (đã có createdAt LocalDateTime)
+        for (Notification n : notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)) {
+            Map<String, Object> a = new LinkedHashMap<>();
+            a.put("timestamp", n.getCreatedAt() != null ? n.getCreatedAt().toString() : "");
+            a.put("type", "notification");
+            a.put("icon", "fa-bell");
+            a.put("description", n.getContent());
+            activities.add(a);
+        }
+
+        // Sort theo timestamp DESC (chuỗi rỗng đẩy xuống cuối)
+        activities.sort((a, b) -> {
+            String ta = (String) a.get("timestamp");
+            String tb = (String) b.get("timestamp");
+            if (ta == null) ta = "";
+            if (tb == null) tb = "";
+            if (ta.isEmpty() && tb.isEmpty()) return 0;
+            if (ta.isEmpty()) return 1;
+            if (tb.isEmpty()) return -1;
+            return tb.compareTo(ta);
+        });
+
+        Map<String, Object> userInfo = new LinkedHashMap<>();
+        userInfo.put("id", target.getId());
+        userInfo.put("fullname", target.getFullname());
+        userInfo.put("username", target.getUsername());
+        userInfo.put("email", target.getEmail());
+        userInfo.put("role", target.getRole());
+
+        result.put("status", "success");
+        result.put("user", userInfo);
+        result.put("activities", activities);
+        return result;
     }
 
     // ── Helper ────────────────────────────────────────────────────

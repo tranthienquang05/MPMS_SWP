@@ -28,4 +28,6 @@ public interface EditorialVoteRepository extends JpaRepository<EditorialVote, St
            "WHERE e.proposal.series.id = :seriesId AND e.board.id = :boardId")
     long countBySeriesIdAndBoardId(@Param("seriesId") String seriesId,
                                     @Param("boardId") String boardId);
+
+    List<EditorialVote> findByBoard_User_IdOrderByVoteDateDesc(String userId);
 }

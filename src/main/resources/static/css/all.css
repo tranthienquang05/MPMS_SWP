@@ -1728,3 +1728,32 @@ select {
   color: #e0e0e0;
   margin-bottom: 12px;
 }
+
+/* Modal & activity (Lịch sử hoạt động) */
+.modal-box-wide {
+  width: 720px;
+  max-width: 95vw;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.text-muted-info {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-bottom: 14px;
+}
+
+.activity-list-container {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.col-time {
+  white-space: nowrap;
+  width: 160px;
+}
+
+.activity-icon {
+  color: #64748b;
+  margin-right: 6px;
+}

@@ -45,4 +45,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             @Param("role") String role,
             @Param("type") String type,
             @Param("referenceKey") String referenceKey);
+
+    List<Notification> findByUserIdOrderByCreatedAtDesc(String userId);
+
+    List<Notification> findByUserIdOrRoleOrderByCreatedAtDesc(String userId, String role);
 }

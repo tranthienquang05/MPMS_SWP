@@ -7,7 +7,7 @@ import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.AssistantRepository;
 import com.example.manga_management.repository.NotificationRepository;
 import com.example.manga_management.repository.SubmissionRepository;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -113,8 +113,8 @@ public class NotificationService {
     @Transactional
     @Scheduled(fixedDelay = 3_600_000)
     public void scanDeadlineReminders() {
-        LocalDate today = LocalDate.now();
-        LocalDate soon = today.plusDays(1);
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime soon = today.plusDays(1);
 
         remindSubmissions(
                 submissionRepository.findByStatusAndDeadlineBetween("intask", today, soon),
@@ -133,7 +133,7 @@ public class NotificationService {
         );
     }
 
-    private void remindSubmissions(List<Submission> submissions, String type, String label, LocalDate today,
+    private void remindSubmissions(List<Submission> submissions, String type, String label, LocalDateTime today,
             boolean overdue) {
         for (Submission submission : submissions) {
             Assistant assistant = submission.getAssistant();
@@ -141,7 +141,7 @@ public class NotificationService {
                 continue;
             }
 
-            LocalDate deadline = submission.getDeadline();
+            LocalDateTime deadline = submission.getDeadline();
             if (deadline == null) {
                 continue;
             }

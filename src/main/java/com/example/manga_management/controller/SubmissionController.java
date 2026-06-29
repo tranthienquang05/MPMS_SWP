@@ -105,11 +105,14 @@ public class SubmissionController {
             String base64 = body.get("imageBase64");
             String status = body.get("status");
             String comment = body.get("comment");
+            String normalizedStatus = status == null ? "" : status.trim().toLowerCase();
+
+            if (!"pass".equals(normalizedStatus) && !"unfinish".equals(normalizedStatus)) {
+                return Map.of("status", "error", "message", "Trạng thái không hợp lệ");
+            }
 
             // 3. Cập nhật các thông tin text
-            if (status != null && !status.isBlank()) {
-                submission.setStatus(status);
-            }
+            submission.setStatus(normalizedStatus);
             if (comment != null) {
                 submission.setComment(comment);
             }
@@ -145,9 +148,7 @@ public class SubmissionController {
             }
 
             // Chỉ đổi status page khi status là "pass"
-            if ("pass".equals(status)) {
-                mangaPage.setStatus("pass");
-            }
+            mangaPage.setStatus(normalizedStatus);
 
             mangaPageRepository.save(mangaPage);
 

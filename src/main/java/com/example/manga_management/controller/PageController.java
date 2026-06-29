@@ -141,6 +141,8 @@ public class PageController {
                 if (!deadline.isAfter(LocalDateTime.now())) {
                     return Map.of("status", "error", "message", "Deadline phải sau ngày hiện tại");
                 }
+            } else {
+                return Map.of("status", "error", "message", "Deadline là bắt buộc");
             }
 
             String lastId = submissionRepository.findTopByOrderByIdDesc().map(Submission::getId).orElse("SUB0000");
@@ -284,6 +286,10 @@ public class PageController {
             Submission submission = submissionRepository.findById(submissionId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy submission"));
 
+            if (submission.getPageId() == null || !pageId.equals(submission.getPageId().getId())) {
+                return Map.of("status", "error", "message", "Submission không thuộc page này");
+            }
+
             Assistant assistant = assistantRepository.findById(assistantId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy assistant"));
 
@@ -293,6 +299,8 @@ public class PageController {
                 if (!deadline.isAfter(LocalDateTime.now())) {
                     return Map.of("status", "error", "message", "Deadline phải sau ngày hiện tại");
                 }
+            } else {
+                return Map.of("status", "error", "message", "Deadline là bắt buộc");
             }
 
             // Update submission cũ

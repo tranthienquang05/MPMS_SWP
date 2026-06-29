@@ -36,6 +36,10 @@
                     <div th:if="${#lists.isEmpty(myNotifications)}" class="no-notify">
                         Không có thông báo
                     </div>
+
+                    <div class="notification-actions" th:if="${not #lists.isEmpty(myNotifications)}">
+                        <button type="button" class="mark-read-all">Đánh dấu đã đọc</button>
+                    </div>
                 </div>
             </div>
 
@@ -431,7 +435,7 @@
                                 <button type="button">Mở</button>
                             </a>
                             <form th:action="@{'/manga/assistant/submission/' + ${s.id} + '/submit'}" method="post">
-                                <input type="hidden" name="status" value="finish" />
+                                <input type="hidden" name="status" value="done" />
                                 <button type="submit">Nộp Bài</button>
                             </form>
                         </div>
@@ -514,22 +518,24 @@
                 btnNoti.addEventListener("click", (e) => {
                     e.stopPropagation();
                     dropdown.classList.toggle("show");
-
-                    if (dropdown.classList.contains("show")) {
-                        const badge = btnNoti.querySelector(".badge");
-                        if (badge) {
-                            fetch("/notification/read-all", { method: "POST" })
-                                .then(res => res.json())
-                                .then(data => {
-                                    if (data.status === "success") {
-                                        badge.remove();
-                                        document.querySelectorAll(".notification-item.unread")
-                                            .forEach(el => el.classList.remove("unread"));
-                                    }
-                                });
-                        }
-                    }
                 });
+
+                const markReadAllBtn = dropdown.querySelector(".mark-read-all");
+                if (markReadAllBtn) {
+                    markReadAllBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        fetch("/notification/read-all", { method: "POST" })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.status === "success") {
+                                    const badge = btnNoti.querySelector(".badge");
+                                    if (badge) badge.remove();
+                                    document.querySelectorAll(".notification-item.unread")
+                                        .forEach(el => el.classList.remove("unread"));
+                                }
+                            });
+                    });
+                }
 
                 document.addEventListener("click", () => {
                     dropdown.classList.remove("show");

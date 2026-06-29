@@ -30,7 +30,7 @@ public class NotificationController {
         User user = (User) session.getAttribute("user");
         if (user != null) {
             List<Notification> notifications = noteRepo
-                    .findByUserIdOrRoleOrderByCreatedAtDesc(user.getId(), user.getRole())
+                    .findInbox(user.getId(), user.getRole())
                     .stream()
                     .filter(n -> n != null && n.getContent() != null)
                     .collect(java.util.stream.Collectors.toList());
@@ -48,7 +48,7 @@ public class NotificationController {
             result.put("status", "error");
             return result;
         }
-        List<Notification> list = noteRepo.findByUserIdOrRoleOrderByCreatedAtDesc(
+        List<Notification> list = noteRepo.findInbox(
                 user.getId(), user.getRole());
         list.forEach(n -> n.setRead(true));
         noteRepo.saveAll(list);

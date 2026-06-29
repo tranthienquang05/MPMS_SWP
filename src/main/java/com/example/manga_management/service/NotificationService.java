@@ -27,10 +27,16 @@ public class NotificationService {
     private final AssistantRepository assistantRepository;
 
     public List<Notification> getInbox(User user) {
+        if (user == null) {
+            return List.of();
+        }
         return notificationRepository.findInbox(user.getId(), user.getRole());
     }
 
     public long getUnreadCount(User user) {
+        if (user == null) {
+            return 0L;
+        }
         return notificationRepository.countUnread(user.getId(), user.getRole());
     }
 
@@ -85,6 +91,9 @@ public class NotificationService {
     }
 
     public void markAllRead(User user) {
+        if (user == null) {
+            return;
+        }
         List<Notification> list = notificationRepository.findInbox(user.getId(), user.getRole());
         list.forEach(n -> n.setRead(true));
         notificationRepository.saveAll(list);
@@ -137,7 +146,9 @@ public class NotificationService {
             boolean overdue) {
         for (Submission submission : submissions) {
             Assistant assistant = submission.getAssistant();
-            if (assistant == null || assistant.getUser() == null) {
+            if (assistant == null || assistant.getUser() == null || submission.getPageId() == null
+                    || submission.getPageId().getChapter() == null
+                    || submission.getPageId().getChapter().getSeries() == null) {
                 continue;
             }
 
@@ -151,7 +162,7 @@ public class NotificationService {
             String chapterLabel = "Chapter " + submission.getPageId().getChapter().getChapterNumber()
                     + ", Page " + submission.getPageId().getPageNumber();
             String content = label + " cho " + seriesName + " - " + chapterLabel
-                    + (overdue ? " (deadline " + deadline + ")" : " (deadline " + deadline + ")");
+                    + " (deadline " + deadline + ")";
             String link = "/manga/assistant/submission/" + submission.getId() + "/edit";
 
             sendToUser(assistant.getUser().getId(), content, link, type, referenceKey);

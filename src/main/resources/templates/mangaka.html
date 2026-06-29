@@ -45,11 +45,15 @@
                   th:text="${#temporals.format(note.createdAt, 'HH:mm dd/MM')}"></span>
               </div>
 
-              <div th:if="${#lists.isEmpty(myNotifications)}" class="no-notify">
-                Không có thông báo
-              </div>
-            </div>
-          </div>
+                    <div th:if="${#lists.isEmpty(myNotifications)}" class="no-notify">
+                      Không có thông báo
+                    </div>
+
+                    <div class="notification-actions" th:if="${not #lists.isEmpty(myNotifications)}">
+                      <button type="button" class="mark-read-all">Đánh dấu đã đọc</button>
+                    </div>
+                  </div>
+                </div>
 
           <a th:href="@{/login/logout}">
             <button type="button" class="btn-icon" aria-label="Logout">
@@ -1533,23 +1537,24 @@
           btnNoti.addEventListener("click", (e) => {
             e.stopPropagation();
             dropdown.classList.toggle("show");
-
-            if (dropdown.classList.contains("show")) {
-              const badge = btnNoti.querySelector(".badge");
-              if (badge) {
-                fetch("/notification/read-all", { method: "POST" })
-                  .then(res => res.json())
-                  .then(data => {
-                    if (data.status === "success") {
-                      badge.remove();
-                      document.querySelectorAll(".notification-item.unread")
-                        .forEach(el => el.classList.remove("unread"));
-                    }
-                  })
-                  .catch(err => console.error("read-all error:", err));
-              }
-            }
           });
+
+          const markReadAllBtn = dropdown.querySelector(".mark-read-all");
+          if (markReadAllBtn) {
+            markReadAllBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              fetch("/notification/read-all", { method: "POST" })
+                .then((res) => res.json())
+                .then((data) => {
+                  if (data.status === "success") {
+                    const badge = btnNoti.querySelector(".badge");
+                    if (badge) badge.remove();
+                    document.querySelectorAll(".notification-item.unread")
+                      .forEach(el => el.classList.remove("unread"));
+                  }
+                });
+            });
+          }
 
           document.addEventListener("click", () => {
             dropdown.classList.remove("show");

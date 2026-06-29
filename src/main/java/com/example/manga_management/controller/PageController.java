@@ -249,6 +249,7 @@ public class PageController {
 
         Submission sub = subOpt.get();
         sub.setStatus("finish");
+        sub.setApprovedAt(LocalDateTime.now());
         submissionRepository.save(sub);
 
         return Map.of("status", "success", "message", "Đã duyệt! Bấm Hoàn thành để kết thúc trang.");

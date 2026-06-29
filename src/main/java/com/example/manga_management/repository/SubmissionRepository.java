@@ -28,4 +28,6 @@ public interface SubmissionRepository extends JpaRepository<Submission, String> 
         String status);
 
     List<Submission> findByAssistant_Id(String id);
+
+    List<Submission> findByAssistant_Mangaka_IdOrderByCreatedAtDesc(String mangakaId);
 }

@@ -644,7 +644,8 @@
             <div class="pages-grid-container">
               <div th:each="p : ${pages}" class="page-grid-item">
                 <div class="page-preview-box">
-                  <img th:if="${p.filePath != null}" th:src="@{${p.filePath}}" />
+                  <img th:if="${p.filePath != null}" 
+                  th:src="${p.filePath + '?t=' + #dates.createNow().time}" />
 
                 <i th:unless="${p.filePath != null}" class="fa-solid fa-image"></i>
               </div>
@@ -684,11 +685,11 @@
     th:if="${submissionMap[p.id] != null}"
     class="assistant-assignment-badge"
   >
-    <div>
+    <div th:if="${p.status != 'finish'}">
       👤 <b th:text="${submissionMap[p.id].assistant.user.fullname}"></b>
     </div>
 
-    <div>
+    <div th:if="${p.status != 'finish'}">
       📅 <span th:text="${submissionMap[p.id].deadline}"></span>
     </div>
 
@@ -700,6 +701,7 @@
       <a
         th:href="@{/manga/mangaka/submission/{id}/edit(id=${submissionMap[p.id].id})}"
         style="font-size: 12px; color: #4da6ff; display: block; margin-bottom: 4px;"
+        
       >
         🖼 Mở bài nộp để chỉnh sửa
       </a>
@@ -724,6 +726,20 @@
       </div>
     </div>
   </div>
+    <!-- ✅ Sau khi duyệt (status = finish) vẫn cho mở chỉnh sửa -->
+  <div
+    th:if="${p.status == 'finish' and submissionMap[p.id] != null}"
+    style="margin-top: 6px;"
+  >
+    <a
+      th:href="@{/manga/mangaka/submission/{id}/edit(id=${submissionMap[p.id].id})}"
+      style="font-size: 12px; color: #4da6ff; display: block;"
+    >
+      🖼 Mở bài nộp để chỉnh sửa
+    </a>
+  </div>
+
+</div>
 
   <!-- Chưa giao: hiện nút Giao việc -->
   <button
@@ -1487,6 +1503,10 @@
             dropdown.classList.remove("show");
           });
         }
+        // ✅ Cache-bust tất cả ảnh thumbnail trong grid
+        document.querySelectorAll(".page-preview-box img").forEach(img => {
+        if (img.src) img.src = img.src + "?t=" + Date.now();
+        });
       });
 
       function openAssignModal(pageId) {
@@ -1594,6 +1614,13 @@ errSpan.style.display = "none"; // ẩn lỗi nếu hợp lệ
       /* ==========================MỚI THÊM VÀO================================================
   ========================================================================== */
       function submitChapter(chapterId) {
+        // ✅ THÊM VÀO: kiểm tra chapter có trang chưa
+        const pageItems = document.querySelectorAll(".page-grid-item");
+        if (pageItems.length === 0) {
+          showSystemNotification("❌ Không thể nộp! Chapter này chưa có trang nào.", false);
+          return;
+        }
+
         if (!confirm("Submit chapter này lên biên tập viên để duyệt?")) return;
 
         fetch("/api/chapter-review/" + chapterId + "/submit", {
@@ -1601,20 +1628,28 @@ errSpan.style.display = "none"; // ẩn lỗi nếu hợp lệ
         })
           .then((r) => r.json())
           .then((data) => {
-            if (data.status === "success") {
-              showSystemNotification("✅ " + data.message, true);
-            } else {
-              showSystemNotification("❌ " + data.message, false);
-            }
-          })
-          .catch((err) =>
-            showSystemNotification("❌ Lỗi: " + err.message, false),
-          );
+      if (data.status === "success") {
+        alert("✅ " + data.message);
+        location.reload();
+      } else {
+        alert("❌ " + data.message);
+      }
+     })
+    .catch((err) => alert("❌ Lỗi: " + err.message));
       }
 
       let _currentPageId = null;
 
     function finishPage(pageId) {
+      // ✅ THÊM: kiểm tra đã giao việc chưa bằng cách check nút "Giao việc" còn hiện không
+  const pageItem = document.querySelector(`.btn-finish-page[data-page-id="${pageId}"]`)
+                           ?.closest(".page-grid-item");
+  const hasAssign = pageItem?.querySelector(".btn-open-assign") != null;
+
+  if (hasAssign) {
+    alert("⚠️ Không thể hoàn thành! Vui lòng giao việc cho Assistant trước.");
+    return;
+  }
   if (!confirm("Đánh dấu trang này là hoàn thành?")) return;
   fetch("/api/page/" + pageId + "/finish", { method: "POST" })
     .then(r => r.json())

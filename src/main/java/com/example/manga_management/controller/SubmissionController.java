@@ -63,6 +63,18 @@ public class SubmissionController {
 
             submissionRepository.save(submission);
 
+            // ✅ THÊM: cập nhật luôn page.filePath
+            MangaPage mangaPage = mangaPageRepository.findById(submission.getPageId().getId())
+                    .orElse(null);
+            if (mangaPage != null) {
+                String pageDir = "src/main/resources/static/MangaPage/";
+                Files.createDirectories(Paths.get(pageDir));
+                Path pageFilePath = Paths.get(pageDir + mangaPage.getId() + ".png");
+                Files.write(pageFilePath, imageBytes);
+                mangaPage.setFilePath("/MangaPage/" + mangaPage.getId() + ".png");
+                mangaPageRepository.save(mangaPage);
+            }
+
             return Map.of("status", "success", "redirectUrl", "/manga/assistant");
 
         } catch (IllegalArgumentException e) {
@@ -122,20 +134,22 @@ public class SubmissionController {
             }
 
             // 5. Xử lý khi status là "pass"
+            // Luôn cập nhật ảnh page khi có ảnh mới
+            if (imageBytes != null) {
+                String pageDir = "src/main/resources/static/MangaPage/";
+                Files.createDirectories(Paths.get(pageDir));
+
+                Path pageFilePath = Paths.get(pageDir + mangaPage.getId() + ".png");
+                Files.write(pageFilePath, imageBytes);
+                mangaPage.setFilePath("/MangaPage/" + mangaPage.getId() + ".png");
+            }
+
+            // Chỉ đổi status page khi status là "pass"
             if ("pass".equals(status)) {
                 mangaPage.setStatus("pass");
-
-                if (imageBytes != null) {
-                    String pageDir = "src/main/resources/static/MangaPage/";
-                    Files.createDirectories(Paths.get(pageDir));
-
-                    Path pageFilePath = Paths.get(pageDir + mangaPage.getId() + ".png");
-                    Files.write(pageFilePath, imageBytes);
-                    mangaPage.setFilePath("/MangaPage/" + mangaPage.getId() + ".png");
-                }
-
-                mangaPageRepository.save(mangaPage);
             }
+
+            mangaPageRepository.save(mangaPage);
 
             // 6. Lưu submission vào database
             submissionRepository.save(submission);

@@ -1494,7 +1494,7 @@ if (savedPath && savedPath !== 'null' && savedPath !== '') {
         layers[1].ctx.drawImage(img, 0, 0);
         pushHistoryEntry('Load trang đã lưu');
     };
-    img.src = savedPath; // VD: /MangaPage/MGP001.png
+    img.src = savedPath + '?t=' + Date.now(); // VD: /MangaPage/MGP001.png
 }
 
 
@@ -1513,7 +1513,7 @@ if (savedPath1 && savedPath1 !== 'null' && savedPath1 !== '') {
         pushHistoryEntry('Load submission đã lưu');
     };
 
-    img.src = savedPath1;
+    img.src = savedPath1 + '?t=' + Date.now();
 }
 const savedPath2 = document.getElementById('btnEditSubmission')?.dataset.savedPath;
 
@@ -1530,7 +1530,7 @@ if (savedPath2 && savedPath2 !== 'null' && savedPath2 !== '') {
         pushHistoryEntry('Load submission đã lưu');
     };
 
-    img.src = savedPath2;
+    img.src = savedPath2 + '?t=' + Date.now();  // ✅ busted cache
 }
 
 // ========================================

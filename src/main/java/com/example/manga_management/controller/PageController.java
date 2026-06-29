@@ -5,7 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
@@ -132,13 +132,13 @@ public class PageController {
             Assistant assistant = assistantRepository.findById(assistantId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy assistant"));
 
-            LocalDate deadline = null;
+            LocalDateTime deadline = null;
 
             if (deadlineStr != null && !deadlineStr.isBlank()) {
 
-                deadline = LocalDate.parse(deadlineStr);
+                deadline = LocalDateTime.parse(deadlineStr);
 
-                if (!deadline.isAfter(LocalDate.now())) {
+                if (!deadline.isAfter(LocalDateTime.now())) {
                     return Map.of("status", "error", "message", "Deadline phải sau ngày hiện tại");
                 }
             } else {
@@ -293,10 +293,10 @@ public class PageController {
             Assistant assistant = assistantRepository.findById(assistantId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy assistant"));
 
-            LocalDate deadline = null;
+            LocalDateTime deadline = null;
             if (deadlineStr != null && !deadlineStr.isBlank()) {
-                deadline = LocalDate.parse(deadlineStr);
-                if (!deadline.isAfter(LocalDate.now())) {
+                deadline = LocalDateTime.parse(deadlineStr);
+                if (!deadline.isAfter(LocalDateTime.now())) {
                     return Map.of("status", "error", "message", "Deadline phải sau ngày hiện tại");
                 }
             } else {

@@ -708,7 +708,7 @@
 
 <!-- Nút hoàn thành: hiện khi page là unfinish và không có submission -->
 <button
-  th:if="${p.status != 'finish'}"
+  th:if="${p.status == 'unfinish' or (p.status == 'done' and submissionMap[p.id] != null and submissionMap[p.id].status == 'finish')}"
   type="button"
   class="btn-action approve btn-finish-page"
   style="font-size: 12px; padding: 4px 10px; margin-top: 4px"
@@ -723,12 +723,12 @@
                 <span th:if="${p.status == 'intask'}"
                   class="badge-status-approved" style="font-size: 11px">🔄 Đang
                   làm</span>
-                <span th:if="${p.status == 'done'}" class="badge-status-waiting"
-                  style="font-size: 11px">👁 Chờ duyệt</span>
+                <span th:if="${p.status == 'done' and (submissionMap[p.id] == null or submissionMap[p.id].status != 'finish')}"
+                  class="badge-status-waiting" style="font-size: 11px">👁 Chờ duyệt</span>
 
 <div class="chapter-create-inline-form">
   <div
-    th:if="${submissionMap[p.id] != null}"
+    th:if="${submissionMap[p.id] != null and p.status != 'finish'}"
     class="assistant-assignment-badge"
   >
     <div th:if="${p.status != 'finish'}">
@@ -774,26 +774,26 @@
   </div>
     <!-- ✅ Sau khi duyệt (status = finish) vẫn cho mở chỉnh sửa -->
   <div
-    th:if="${p.status == 'finish' and submissionMap[p.id] != null}"
-    style="margin-top: 6px;"
+  th:if="${p.status == 'done' and submissionMap[p.id] != null and submissionMap[p.id].status == 'finish'}"
+  style="margin-top: 6px;"
+>
+  <a
+    th:href="@{/manga/mangaka/submission/{id}/edit(id=${submissionMap[p.id].id})}"
+    style="font-size: 12px; color: #4da6ff; display: block;"
   >
-    <a
-      th:href="@{/manga/mangaka/submission/{id}/edit(id=${submissionMap[p.id].id})}"
-      style="font-size: 12px; color: #4da6ff; display: block;"
-    >
-      🖼 Mở bài nộp để chỉnh sửa
-    </a>
-  </div>
+    🖼 Mở bài nộp để chỉnh sửa
+  </a>
+</div>
 
 </div>
 
   <!-- Chưa giao: hiện nút Giao việc -->
   <button
-    th:if="${submissionMap[p.id] == null}"
-    type="button"
-    class="btn-assign-task btn-open-assign"
-    th:data-page-id="${p.id}"
-  >
+  th:if="${submissionMap[p.id] == null and p.status != 'finish'}"
+  type="button"
+  class="btn-assign-task btn-open-assign"
+  th:data-page-id="${p.id}"
+>
     <i class="fa-solid fa-user-plus"></i> Giao việc
   </button>
 </div>
@@ -817,6 +817,13 @@
 
                 <label class="deadline-lbl"> Deadline: </label>
                 <input type="date" id="assignDeadline" required />
+                <div style="display:grid; grid-template-columns:1fr auto 1fr auto 1fr; align-items:center; gap:4px; margin-top:6px;">
+                  <select id="assignHour"></select>
+                  <span style="text-align:center;">:</span>
+                  <select id="assignMinute"></select>
+                  <span style="text-align:center;">:</span>
+                  <select id="assignSecond"></select>
+                </div>
                 <span id="assignDeadlineError"
                   style="color:#dc3545; font-size:12px; display:none;">
                   ⚠️ Vui lòng chọn deadline sau ngày hôm nay!
@@ -843,6 +850,13 @@
                   placeholder="Nhập yêu cầu chỉnh sửa..."></textarea>
                 <label class="deadline-lbl">Deadline:</label>
                 <input type="date" id="reassignDeadline" required />
+                <div style="display:grid; grid-template-columns:1fr auto 1fr auto 1fr; align-items:center; gap:4px; margin-top:6px;">
+                  <select id="reassignHour"></select>
+                  <span style="text-align:center;">:</span>
+                  <select id="reassignMinute"></select>
+                  <span style="text-align:center;">:</span>
+                  <select id="reassignSecond"></select>
+                </div>
                 <span id="reassignDeadlineError"
                   style="color:#dc3545; font-size:12px; display:none;">
                   ⚠️ Vui lòng chọn deadline sau ngày hôm nay!
@@ -1442,6 +1456,39 @@
         });
       }
 
+      // Khởi tạo dropdown giờ/phút/giây
+      function initTimePicker(hourId, minuteId, secondId) {
+        function pad(n) { return n.toString().padStart(2, '0'); }
+        const h = document.getElementById(hourId);
+        const m = document.getElementById(minuteId);
+        const s = document.getElementById(secondId);
+        if (!h || !m || !s) return;
+        for (let i = 0; i < 24; i++) { 
+          const o = document.createElement('option'); 
+          o.value = pad(i); 
+          o.textContent = pad(i); 
+          h.appendChild(o); 
+        }
+        for (let i = 0; i < 60; i++) { 
+          const o = document.createElement('option'); 
+          o.value = pad(i); 
+          o.textContent = pad(i); 
+          m.appendChild(o); 
+        }
+        for (let i = 0; i < 60; i++) { 
+          const o = document.createElement('option'); 
+          o.value = pad(i); 
+          o.textContent = pad(i); 
+          s.appendChild(o); 
+        }
+        const now = new Date();
+        h.value = pad(now.getHours());
+        m.value = pad(now.getMinutes());
+        s.value = pad(now.getSeconds());
+      }
+      initTimePicker('assignHour', 'assignMinute', 'assignSecond');
+      initTimePicker('reassignHour', 'reassignMinute', 'reassignSecond');
+
       document.addEventListener("DOMContentLoaded", function () {
         // Modal nộp bản thảo mới
         const modalOverlay = document.getElementById("proposalModalOverlay");
@@ -1582,24 +1629,28 @@
 
         const comment = document.getElementById("assignComment").value;
 
-        const deadline = document.getElementById("assignDeadline").value;
+        const dateVal = document.getElementById("assignDeadline").value;
+        const hVal = document.getElementById("assignHour").value;
+        const mVal = document.getElementById("assignMinute").value;
+        const sVal = document.getElementById("assignSecond").value;
+        const deadline = dateVal ? `${dateVal}T${hVal}:${mVal}:${sVal}` : "";
 
         // Validate deadline bắt buộc
-const errSpan = document.getElementById("assignDeadlineError");
-if (!deadline || deadline.trim() === "") {
-    errSpan.textContent = "⚠️ Vui lòng chọn deadline trước khi giao việc!";
-    errSpan.style.display = "block";
-    return;
-}
-const selectedDate = new Date(deadline);
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-if (selectedDate <= today) {
-    errSpan.textContent = "⚠️ Deadline phải sau ngày hôm nay!";
-    errSpan.style.display = "block";
-    return;
-}
-errSpan.style.display = "none"; // ẩn lỗi nếu hợp lệ
+        const errSpan = document.getElementById("assignDeadlineError");
+        if (!deadline || deadline.trim() === "") {
+            errSpan.textContent = "⚠️ Vui lòng chọn deadline trước khi giao việc!";
+            errSpan.style.display = "block";
+            return;
+        }
+        const selectedDate = new Date(dateVal);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate <= today) {
+          errSpan.textContent = "⚠️ Deadline phải sau ngày hôm nay!";
+          errSpan.style.display = "block";
+          return;
+        }
+        errSpan.style.display = "none"; // ẩn lỗi nếu hợp lệ
         
         if (!assistantId || !_currentPageId) {
           alert("Thiếu dữ liệu!");
@@ -1710,24 +1761,28 @@ errSpan.style.display = "none"; // ẩn lỗi nếu hợp lệ
       const submissionId = document.getElementById("reassignSubmissionId").value;
       const assistantId = document.getElementById("reassignSelect").value;
       const comment = document.getElementById("reassignComment").value;
-      const deadline = document.getElementById("reassignDeadline").value;
+      const dateVal2 = document.getElementById("reassignDeadline").value;
+      const hVal2 = document.getElementById("reassignHour").value;
+      const mVal2 = document.getElementById("reassignMinute").value;
+      const sVal2 = document.getElementById("reassignSecond").value;
+      const deadline = dateVal2 ? `${dateVal2}T${hVal2}:${mVal2}:${sVal2}` : "";
 
       // Validate deadline bắt buộc
-const errSpan2 = document.getElementById("reassignDeadlineError");
-if (!deadline || deadline.trim() === "") {
-    errSpan2.textContent = "⚠️ Vui lòng chọn deadline trước khi giao lại!";
-    errSpan2.style.display = "block";
-    return;
-}
-const selectedDate2 = new Date(deadline);
-const today2 = new Date();
-today2.setHours(0, 0, 0, 0);
-if (selectedDate2 <= today2) {
-    errSpan2.textContent = "⚠️ Deadline phải sau ngày hôm nay!";
-    errSpan2.style.display = "block";
-    return;
-}
-errSpan2.style.display = "none";
+      const errSpan2 = document.getElementById("reassignDeadlineError");
+      if (!deadline || deadline.trim() === "") {
+          errSpan2.textContent = "⚠️ Vui lòng chọn deadline trước khi giao lại!";
+          errSpan2.style.display = "block";
+          return;
+      }
+      const selectedDate2 = new Date(dateVal2);
+      const today2 = new Date();
+      today2.setHours(0, 0, 0, 0);
+      if (selectedDate2 <= today2) {
+        errSpan2.textContent = "⚠️ Deadline phải sau ngày hôm nay!";
+        errSpan2.style.display = "block";
+        return;
+      }
+      errSpan2.style.display = "none";
 
       if (!assistantId || !pageId) { alert("Thiếu dữ liệu!"); return; }
       fetch(`/api/page/${pageId}/reassign`, {

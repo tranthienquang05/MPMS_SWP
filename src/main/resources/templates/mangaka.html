@@ -763,6 +763,9 @@
               <label class="deadline-lbl"> Deadline: </label>
 
               <input type="date" id="assignDeadline" required />
+              <span id="assignDeadlineError" style="color:#dc3545; font-size:12px; display:none;">
+                  ⚠️ Vui lòng chọn deadline sau ngày hôm nay!
+              </span>
 
               <div class="footer-actions">
                 <button
@@ -791,6 +794,9 @@
       <textarea id="reassignComment" rows="4" placeholder="Nhập yêu cầu chỉnh sửa..."></textarea>
       <label class="deadline-lbl">Deadline:</label>
       <input type="date" id="reassignDeadline" required />
+      <span id="reassignDeadlineError" style="color:#dc3545; font-size:12px; display:none;">
+        ⚠️ Vui lòng chọn deadline sau ngày hôm nay!
+      </span>
       <div class="footer-actions">
         <button onclick="document.getElementById('reassignModalOverlay').style.display='none'">Hủy</button>
         <button onclick="submitReassign()" class="btn-submit">Xác nhận</button>
@@ -1535,6 +1541,23 @@
 
         const deadline = document.getElementById("assignDeadline").value;
 
+        // Validate deadline bắt buộc
+const errSpan = document.getElementById("assignDeadlineError");
+if (!deadline || deadline.trim() === "") {
+    errSpan.textContent = "⚠️ Vui lòng chọn deadline trước khi giao việc!";
+    errSpan.style.display = "block";
+    return;
+}
+const selectedDate = new Date(deadline);
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+if (selectedDate <= today) {
+    errSpan.textContent = "⚠️ Deadline phải sau ngày hôm nay!";
+    errSpan.style.display = "block";
+    return;
+}
+errSpan.style.display = "none"; // ẩn lỗi nếu hợp lệ
+        
         if (!assistantId || !_currentPageId) {
           alert("Thiếu dữ liệu!");
           return;
@@ -1645,6 +1668,24 @@
       const assistantId = document.getElementById("reassignSelect").value;
       const comment = document.getElementById("reassignComment").value;
       const deadline = document.getElementById("reassignDeadline").value;
+
+      // Validate deadline bắt buộc
+const errSpan2 = document.getElementById("reassignDeadlineError");
+if (!deadline || deadline.trim() === "") {
+    errSpan2.textContent = "⚠️ Vui lòng chọn deadline trước khi giao lại!";
+    errSpan2.style.display = "block";
+    return;
+}
+const selectedDate2 = new Date(deadline);
+const today2 = new Date();
+today2.setHours(0, 0, 0, 0);
+if (selectedDate2 <= today2) {
+    errSpan2.textContent = "⚠️ Deadline phải sau ngày hôm nay!";
+    errSpan2.style.display = "block";
+    return;
+}
+errSpan2.style.display = "none";
+
       if (!assistantId || !pageId) { alert("Thiếu dữ liệu!"); return; }
       fetch(`/api/page/${pageId}/reassign`, {
         method: "POST",

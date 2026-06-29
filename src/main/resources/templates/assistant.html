@@ -421,7 +421,7 @@
                         </p>
 
                         <p>
-                            Deadline: <span th:text="${s.deadline}"></span>
+                            Deadline: <span th:text="${#temporals.format(s.deadline, 'dd/MM/yyyy HH:mm')}"></span>
                         </p>
 
                         <p th:text="${s.comment}"></p>
@@ -451,7 +451,7 @@
                         </p>
 
                         <p>
-                            Deadline: <span th:text="${s.deadline}"></span>
+                            Deadline: <span th:text="${#temporals.format(s.deadline, 'dd/MM/yyyy HH:mm')}"></span>
                         </p>
                     </div>
                 </div>

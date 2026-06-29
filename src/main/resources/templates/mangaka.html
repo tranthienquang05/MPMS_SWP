@@ -732,7 +732,7 @@
     </div>
 
     <div th:if="${p.status != 'finish'}">
-      📅 <span th:text="${submissionMap[p.id].deadline}"></span>
+      📅 <span th:text="${#temporals.format(submissionMap[p.id].deadline, 'dd/MM/yyyy HH:mm')}"></span>
     </div>
 
     <!-- Khi assistant đã nộp (status = done): Mangaka duyệt hoặc giao lại -->
@@ -813,12 +813,10 @@
 
                 <label class="deadline-lbl"> Deadline: </label>
                 <input type="date" id="assignDeadline" required />
-                <div style="display:grid; grid-template-columns:1fr auto 1fr auto 1fr; align-items:center; gap:4px; margin-top:6px;">
+                <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:4px; margin-top:6px;">
                   <select id="assignHour"></select>
                   <span style="text-align:center;">:</span>
                   <select id="assignMinute"></select>
-                  <span style="text-align:center;">:</span>
-                  <select id="assignSecond"></select>
                 </div>
                 <span id="assignDeadlineError"
                   style="color:#dc3545; font-size:12px; display:none;">
@@ -846,12 +844,10 @@
                   placeholder="Nhập yêu cầu chỉnh sửa..."></textarea>
                 <label class="deadline-lbl">Deadline:</label>
                 <input type="date" id="reassignDeadline" required />
-                <div style="display:grid; grid-template-columns:1fr auto 1fr auto 1fr; align-items:center; gap:4px; margin-top:6px;">
+                <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:4px; margin-top:6px;">
                   <select id="reassignHour"></select>
                   <span style="text-align:center;">:</span>
                   <select id="reassignMinute"></select>
-                  <span style="text-align:center;">:</span>
-                  <select id="reassignSecond"></select>
                 </div>
                 <span id="reassignDeadlineError"
                   style="color:#dc3545; font-size:12px; display:none;">
@@ -1452,38 +1448,29 @@
         });
       }
 
-      // Khởi tạo dropdown giờ/phút/giây
-      function initTimePicker(hourId, minuteId, secondId) {
+      // Khởi tạo dropdown giờ (0-23) và phút (0-59)
+      function initTimePicker(hourId, minuteId) {
         function pad(n) { return n.toString().padStart(2, '0'); }
         const h = document.getElementById(hourId);
         const m = document.getElementById(minuteId);
-        const s = document.getElementById(secondId);
-        if (!h || !m || !s) return;
-        for (let i = 0; i < 24; i++) { 
-          const o = document.createElement('option'); 
-          o.value = pad(i); 
-          o.textContent = pad(i); 
-          h.appendChild(o); 
+        if (!h || !m) return;
+        h.innerHTML = '';
+        m.innerHTML = '';
+        for (let i = 0; i < 24; i++) {
+          const o = document.createElement('option');
+          o.value = pad(i);
+          o.textContent = pad(i);
+          h.appendChild(o);
         }
-        for (let i = 0; i < 60; i++) { 
-          const o = document.createElement('option'); 
-          o.value = pad(i); 
-          o.textContent = pad(i); 
-          m.appendChild(o); 
+        for (let i = 0; i < 60; i++) {
+          const o = document.createElement('option');
+          o.value = pad(i);
+          o.textContent = pad(i);
+          m.appendChild(o);
         }
-        for (let i = 0; i < 60; i++) { 
-          const o = document.createElement('option'); 
-          o.value = pad(i); 
-          o.textContent = pad(i); 
-          s.appendChild(o); 
-        }
-        const now = new Date();
-        h.value = pad(now.getHours());
-        m.value = pad(now.getMinutes());
-        s.value = pad(now.getSeconds());
       }
-      initTimePicker('assignHour', 'assignMinute', 'assignSecond');
-      initTimePicker('reassignHour', 'reassignMinute', 'reassignSecond');
+      initTimePicker('assignHour', 'assignMinute');
+      initTimePicker('reassignHour', 'reassignMinute');
 
       document.addEventListener("DOMContentLoaded", function () {
         // Modal nộp bản thảo mới
@@ -1608,6 +1595,18 @@
               )
               .join("");
 
+            // Set default deadline: ngày mai lúc 23:59
+            const pad = (n) => n.toString().padStart(2, '0');
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const dlInput = document.getElementById("assignDeadline");
+            dlInput.value = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth()+1)}-${pad(tomorrow.getDate())}`;
+            // Set min date = hôm nay
+            const nowDt = new Date();
+            dlInput.min = `${nowDt.getFullYear()}-${pad(nowDt.getMonth()+1)}-${pad(nowDt.getDate())}`;
+            document.getElementById("assignHour").value = '23';
+            document.getElementById("assignMinute").value = '59';
+
             document.getElementById("assignModalOverlay").style.display =
               "flex";
           })
@@ -1627,8 +1626,7 @@
         const dateVal = document.getElementById("assignDeadline").value;
         const hVal = document.getElementById("assignHour").value;
         const mVal = document.getElementById("assignMinute").value;
-        const sVal = document.getElementById("assignSecond").value;
-        const deadline = dateVal ? `${dateVal}T${hVal}:${mVal}:${sVal}` : "";
+        const deadline = dateVal ? `${dateVal}T${hVal}:${mVal}:00` : "";
 
         // Validate deadline bắt buộc
         const errSpan = document.getElementById("assignDeadlineError");
@@ -1637,11 +1635,10 @@
             errSpan.style.display = "block";
             return;
         }
-        const selectedDate = new Date(dateVal);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (selectedDate <= today) {
-          errSpan.textContent = "⚠️ Deadline phải sau ngày hôm nay!";
+        const selectedDate = new Date(`${dateVal}T${hVal}:${mVal}:00`);
+        const now = new Date();
+        if (selectedDate <= now) {
+          errSpan.textContent = "⚠️ Deadline phải sau thời điểm hiện tại!";
           errSpan.style.display = "block";
           return;
         }
@@ -1739,7 +1736,17 @@
       document.getElementById("reassignPageId").value = pageId;
       document.getElementById("reassignSubmissionId").value = submissionId;
       document.getElementById("reassignComment").value = "";
-      document.getElementById("reassignDeadline").value = "";
+      // Set default deadline: ngày mai lúc 23:59
+      const pad2 = (n) => n.toString().padStart(2, '0');
+      const tomorrow2 = new Date();
+      tomorrow2.setDate(tomorrow2.getDate() + 1);
+      const dlInput2 = document.getElementById("reassignDeadline");
+      dlInput2.value = `${tomorrow2.getFullYear()}-${pad2(tomorrow2.getMonth()+1)}-${pad2(tomorrow2.getDate())}`;
+      // Set min date = hôm nay
+      const nowDt2 = new Date();
+      dlInput2.min = `${nowDt2.getFullYear()}-${pad2(nowDt2.getMonth()+1)}-${pad2(nowDt2.getDate())}`;
+      document.getElementById("reassignHour").value = '23';
+      document.getElementById("reassignMinute").value = '59';
       fetch(`/manga/mangaka/${mangakaId}/assistants`)
         .then(r => r.json())
         .then(assistants => {
@@ -1759,8 +1766,7 @@
       const dateVal2 = document.getElementById("reassignDeadline").value;
       const hVal2 = document.getElementById("reassignHour").value;
       const mVal2 = document.getElementById("reassignMinute").value;
-      const sVal2 = document.getElementById("reassignSecond").value;
-      const deadline = dateVal2 ? `${dateVal2}T${hVal2}:${mVal2}:${sVal2}` : "";
+      const deadline = dateVal2 ? `${dateVal2}T${hVal2}:${mVal2}:00` : "";
 
       // Validate deadline bắt buộc
       const errSpan2 = document.getElementById("reassignDeadlineError");
@@ -1769,11 +1775,10 @@
           errSpan2.style.display = "block";
           return;
       }
-      const selectedDate2 = new Date(dateVal2);
-      const today2 = new Date();
-      today2.setHours(0, 0, 0, 0);
-      if (selectedDate2 <= today2) {
-        errSpan2.textContent = "⚠️ Deadline phải sau ngày hôm nay!";
+      const selectedDate2 = new Date(`${dateVal2}T${hVal2}:${mVal2}:00`);
+      const now2 = new Date();
+      if (selectedDate2 <= now2) {
+        errSpan2.textContent = "⚠️ Deadline phải sau thời điểm hiện tại!";
         errSpan2.style.display = "block";
         return;
       }

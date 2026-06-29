@@ -26,7 +26,7 @@ public class Submission {
     @JoinColumn(name = "AssistantID", nullable = false)
     private Assistant assistant;
 
-    @Column(name = "Deadline", nullable = false)
+    @Column(name = "Deadline", nullable = false, columnDefinition = "DATETIME")
     private LocalDateTime deadline;
 
     @Column(name = "FilePath", length = 60)

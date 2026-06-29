@@ -234,13 +234,11 @@ public class PageController {
             return Map.of("status", "error", "message", "Trợ lý chưa nộp bài!");
         }
 
-        // Chỉ đổi submission status, KHÔNG đổi page status
-        // Page status chỉ đổi khi Mangaka bấm "Hoàn thành"
         Submission sub = subOpt.get();
         sub.setStatus("finish");
         submissionRepository.save(sub);
 
-        return Map.of("status", "success", "message", "Đã duyệt trang!");
+        return Map.of("status", "success", "message", "Đã duyệt! Bấm Hoàn thành để kết thúc trang.");
     }
 
 // Mangaka giao lại page done → intask

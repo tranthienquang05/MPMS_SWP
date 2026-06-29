@@ -460,6 +460,10 @@ public class MangakaController {
             // Đã sửa redirect cho đúng với cấu trúc route hiển thị của hệ thống
             return "mangaka";
         }
+        Chapter chapter = page.getChapter();
+        if ("pass".equals(chapter.getStatus()) || "finish".equals(chapter.getStatus())) {
+            return "redirect:/manga/mangaka/myseries/" + seriesId + "/" + chapterId;
+        }
         model.addAttribute("typeDraw", "page");
         model.addAttribute("page", page);
         model.addAttribute("activeTab", "tab-draw");

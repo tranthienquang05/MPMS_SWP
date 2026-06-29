@@ -666,7 +666,7 @@
 
 <!-- Nút hoàn thành: hiện khi page là unfinish và không có submission -->
 <button
-  th:if="${p.status != 'finish'}"
+  th:if="${p.status == 'unfinish' or (p.status == 'done' and submissionMap[p.id] != null and submissionMap[p.id].status == 'finish')}"
   type="button"
   class="btn-action approve btn-finish-page"
   style="font-size: 12px; padding: 4px 10px; margin-top: 4px"
@@ -682,7 +682,7 @@
 
 <div class="chapter-create-inline-form">
   <div
-    th:if="${submissionMap[p.id] != null}"
+    th:if="${submissionMap[p.id] != null and p.status != 'finish'}"
     class="assistant-assignment-badge"
   >
     <div th:if="${p.status != 'finish'}">
@@ -726,9 +726,9 @@
       </div>
     </div>
   </div>
-    <!-- ✅ Sau khi duyệt (status = finish) vẫn cho mở chỉnh sửa -->
+    <!-- Khi status = done và submission đã finish: cho mở chỉnh sửa -->
   <div
-    th:if="${p.status == 'finish' and submissionMap[p.id] != null}"
+    th:if="${p.status == 'done' and submissionMap[p.id] != null and submissionMap[p.id].status == 'finish'}"
     style="margin-top: 6px;"
   >
     <a
@@ -743,13 +743,13 @@
 
   <!-- Chưa giao: hiện nút Giao việc -->
   <button
-    th:if="${submissionMap[p.id] == null}"
-    type="button"
-    class="btn-assign-task btn-open-assign"
-    th:data-page-id="${p.id}"
-  >
-    <i class="fa-solid fa-user-plus"></i> Giao việc
-  </button>
+  th:if="${submissionMap[p.id] == null and p.status != 'finish'}"
+  type="button"
+  class="btn-assign-task btn-open-assign"
+  th:data-page-id="${p.id}"
+>
+  <i class="fa-solid fa-user-plus"></i> Giao việc
+</button>
 </div>
               </div>
             </div>
@@ -1617,7 +1617,7 @@ errSpan.style.display = "none"; // ẩn lỗi nếu hợp lệ
         // ✅ THÊM VÀO: kiểm tra chapter có trang chưa
         const pageItems = document.querySelectorAll(".page-grid-item");
         if (pageItems.length === 0) {
-          showSystemNotification("❌ Không thể nộp! Chapter này chưa có trang nào.", false);
+          alert("❌ Không thể nộp! Chapter này chưa có trang nào.");
           return;
         }
 
@@ -1641,15 +1641,6 @@ errSpan.style.display = "none"; // ẩn lỗi nếu hợp lệ
       let _currentPageId = null;
 
     function finishPage(pageId) {
-      // ✅ THÊM: kiểm tra đã giao việc chưa bằng cách check nút "Giao việc" còn hiện không
-  const pageItem = document.querySelector(`.btn-finish-page[data-page-id="${pageId}"]`)
-                           ?.closest(".page-grid-item");
-  const hasAssign = pageItem?.querySelector(".btn-open-assign") != null;
-
-  if (hasAssign) {
-    alert("⚠️ Không thể hoàn thành! Vui lòng giao việc cho Assistant trước.");
-    return;
-  }
   if (!confirm("Đánh dấu trang này là hoàn thành?")) return;
   fetch("/api/page/" + pageId + "/finish", { method: "POST" })
     .then(r => r.json())
@@ -1658,7 +1649,6 @@ errSpan.style.display = "none"; // ẩn lỗi nếu hợp lệ
         alert("✅ " + data.message);
         location.reload();
       } else {
-        // Hiện thông báo lỗi không reload
         alert("⚠️ " + data.message);
       }
     })

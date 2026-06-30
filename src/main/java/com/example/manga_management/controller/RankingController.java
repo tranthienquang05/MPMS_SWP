@@ -40,11 +40,17 @@ public class RankingController {
     @GetMapping
     public List<Map<String, Object>> getRanking(
             @RequestParam(defaultValue = "0") int month,
+            @RequestParam(defaultValue = "0") int quarter,
             @RequestParam(defaultValue = "2026") int year) {
 
-        List<Object[]> rows = (month == 0)
-                ? rankingRepository.findRankingByYear(year)
-                : rankingRepository.findRankingByMonthAndYear(month, year);
+        List<Object[]> rows;
+        if (quarter >= 1 && quarter <= 4) {
+            rows = rankingRepository.findRankingByQuarterAndYear(getMonthsForQuarter(quarter), year);
+        } else if (month > 0) {
+            rows = rankingRepository.findRankingByMonthAndYear(month, year);
+        } else {
+            rows = rankingRepository.findRankingByYear(year);
+        }
 
         List<Map<String, Object>> result = new ArrayList<>();
         for (int i = 0; i < rows.size(); i++) {
@@ -237,6 +243,11 @@ public class RankingController {
         rankingRepository.resetSeriesStatus();
 
         httpResp.sendRedirect("/manga/editor");
+    }
+
+    private List<Integer> getMonthsForQuarter(int quarter) {
+        int start = (quarter - 1) * 3 + 1;
+        return List.of(start, start + 1, start + 2);
     }
 
     private String generateSvoteId() {

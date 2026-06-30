@@ -507,7 +507,16 @@
             <tbody>
               <tr th:if="${mySeriesList != null}" th:each="s : ${mySeriesList}">
                 <td th:text="${s.seriesName}"></td>
-                <td th:text="${s.status}"></td>
+                <td>
+                  <span th:switch="${s.status}">
+                    <span th:case="'unfinish'" class="badge-status-approved">Đang thực hiện</span>
+                    <span th:case="'finish'" class="badge-status-waiting">Chờ BTV duyệt</span>
+                    <span th:case="'pass'" class="badge-status-passed">Đã duyệt</span>
+                    <span th:case="'stopped'" class="badge-status-rejected">Đã dừng</span>
+                    <span th:case="'rewarded'" class="badge-status-passed">Đã khen thưởng</span>
+                    <span th:case="*" th:text="${s.status}"></span>
+                  </span>
+                </td>
                 <td th:text="${s.startDate}"></td>
                 <td>
                   <a th:href="@{/manga/mangaka/myseries/{id}(id=${s.id})}" class="btn-link">

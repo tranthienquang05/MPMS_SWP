@@ -86,9 +86,8 @@ public class MangakaController {
         model.addAttribute("mangaka", mangaka); // ← move OUTSIDE the if block
 
         if (mangaka != null) {
-            model.addAttribute("mySeriesList", seriesRepository.findByProposal_Mangaka_IdAndStatusIn(
-                    mangaka.getId(),
-                    List.of("unfinish", "finish")));
+            // Hiển thị toàn bộ series thuộc về mangaka, không lọc theo trạng thái
+            model.addAttribute("mySeriesList", seriesRepository.findByProposal_Mangaka_Id(mangaka.getId()));
             model.addAttribute("allProposals", proposalRepository.findByMangaka_Id(mangaka.getId()));
             model.addAttribute("approvedList",
                     proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangaka.getId()));

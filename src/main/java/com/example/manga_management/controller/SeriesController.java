@@ -2,6 +2,9 @@ package com.example.manga_management.controller;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -133,10 +136,19 @@ public class SeriesController {
         chapter.setSeries(series);
         chapter.setChapterName(chapterName);
         chapter.setChapterNumber(nextChapterNumber);
+        chapter.setDeadline(resolveNextSaturday(series));
         chapter.setStatus("unfinish");
 
         Chapter saved = chapterRepository.save(chapter);
 
         return ResponseEntity.ok(saved);
+    }
+
+    private LocalDate resolveNextSaturday(Series series) {
+        Optional<Chapter> latest = chapterRepository.findTopBySeriesOrderByChapterNumberDesc(series);
+        if (latest.isPresent() && latest.get().getDeadline() != null) {
+            return latest.get().getDeadline().plusWeeks(1);
+        }
+        return LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY));
     }
 }

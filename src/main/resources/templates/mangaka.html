@@ -545,6 +545,9 @@
             style="margin: 12px 0">
             <input type="text" name="txtChapterName" placeholder="Tên chapter mới" required />
             <button type="submit">Tạo Chapter</button>
+            <span style="margin-left: 8px; font-size: 13px; color: #666;">
+              Deadline sẽ luôn là thứ 7.
+            </span>
           </form>
 
           <table class="data-table" style="width: 100%">
@@ -552,6 +555,7 @@
               <tr>
                 <th>Số chương</th>
                 <th>Tên Chapter</th>
+                <th>Deadline</th>
                 <th>Trạng thái</th>
                 <th>Nhận xét từ Tantou</th>
                 <th>Hành động</th>
@@ -561,6 +565,10 @@
               <tr th:if="${chapters != null}" th:each="c : ${chapters}">
                 <td th:text="${c.chapterNumber}"></td>
                 <td th:text="${c.chapterName}"></td>
+                <td>
+                  <span th:if="${c.deadline != null}" th:text="${c.deadline}"></span>
+                  <span th:unless="${c.deadline != null}">—</span>
+                </td>
                 <td th:text="${c.status}"></td>
                 <td>
                   <span th:if="${c.tantouComment != null and !#strings.isEmpty(c.tantouComment)}"
@@ -591,6 +599,12 @@
           <h3>
             Danh sách trang — Chapter: <span th:text="${chapter.chapterName}"></span>
           </h3>
+
+          <p class="ptab-sub-desc" style="margin: 6px 0 0 0">
+            Deadline:
+            <strong th:if="${chapter.deadline != null}" th:text="${chapter.deadline}"></strong>
+            <strong th:unless="${chapter.deadline != null}">Chưa đặt deadline</strong>
+          </p>
 
           <a th:href="@{/manga/mangaka/myseries/{id}(id=${chapter.series.id})}" class="btn-link">
             &larr; Quay lại danh sách chapter
@@ -928,918 +942,922 @@
         </div>
       </div>
 
-    <div id="tab-proposal" class="tab-pane">
-      <h2>Bản thảo</h2>
+      <div id="tab-proposal" class="tab-pane">
+        <h2>Bản thảo</h2>
 
-      <button id="btnOpenModal" class="margin-top-btn" style="margin: 12px 0 20px 0">+ Nộp bản thảo mới</button>
+        <button id="btnOpenModal" class="margin-top-btn" style="margin: 12px 0 20px 0">+ Nộp bản thảo mới</button>
 
-      <div class="proposal-tabs-nav">
-        <button type="button" onclick="openProposalTab('ptab-all')" id="pbtn-all" class="proposal-tab-btn active">Tất
-          cả</button>
-        <button type="button" onclick="openProposalTab('ptab-approved')" id="pbtn-approved" class="proposal-tab-btn">Đã
-          duyệt</button>
-        <button type="button" onclick="openProposalTab('ptab-rejected')" id="pbtn-rejected" class="proposal-tab-btn">Bị
-          từ chối</button>
-      </div>
+        <div class="proposal-tabs-nav">
+          <button type="button" onclick="openProposalTab('ptab-all')" id="pbtn-all" class="proposal-tab-btn active">Tất
+            cả</button>
+          <button type="button" onclick="openProposalTab('ptab-approved')" id="pbtn-approved"
+            class="proposal-tab-btn">Đã
+            duyệt</button>
+          <button type="button" onclick="openProposalTab('ptab-rejected')" id="pbtn-rejected"
+            class="proposal-tab-btn">Bị
+            từ chối</button>
+        </div>
 
-      <div id="ptab-all" class="proposal-sub-tab">
-        <table class="data-table" style="width: 100%">
-          <thead>
-            <tr>
-              <th>Mã</th>
-              <th>Tên Series</th>
-              <th>Trạng thái</th>
-              <th>Nhận xét từ Tantou</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr th:if="${allProposals == null or allProposals.isEmpty()}">
-              <td colspan="4" class="text-center-align ptab-sub-desc">Chưa
-                có bản thảo nào.</td>
-            </tr>
-            <tr th:if="${allProposals != null}" th:each="p : ${allProposals}">
-              <td th:text="${p.id}"></td>
-              <td th:text="${p.seriesName}"></td>
-              <td>
-                <span th:switch="${p.status}">
-                  <span th:case="'finish'" class="badge-status-waiting">Chờ
-                    duyệt</span>
-                  <span th:case="'checked'" class="badge-status-approved">Tantou đã duyệt</span>
-                  <span th:case="'unfinish'" class="badge-status-rejected">Bị từ chối</span>
-                  <span th:case="'pass'" class="badge-status-passed">Hội
-                    đồng thông qua</span>
-                  <span th:case="*" class="badge-status-default" th:text="${p.status}"></span>
-                </span>
-              </td>
-              <td>
-                <span th:if="${p.comment != null and !#strings.isEmpty(p.comment)}" th:text="${p.comment}"
-                  class="tantou-comment-text"></span>
-                <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
-                  class="tantou-comment-empty">—</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <div id="ptab-all" class="proposal-sub-tab">
+          <table class="data-table" style="width: 100%">
+            <thead>
+              <tr>
+                <th>Mã</th>
+                <th>Tên Series</th>
+                <th>Trạng thái</th>
+                <th>Nhận xét từ Tantou</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:if="${allProposals == null or allProposals.isEmpty()}">
+                <td colspan="4" class="text-center-align ptab-sub-desc">Chưa
+                  có bản thảo nào.</td>
+              </tr>
+              <tr th:if="${allProposals != null}" th:each="p : ${allProposals}">
+                <td th:text="${p.id}"></td>
+                <td th:text="${p.seriesName}"></td>
+                <td>
+                  <span th:switch="${p.status}">
+                    <span th:case="'finish'" class="badge-status-waiting">Chờ
+                      duyệt</span>
+                    <span th:case="'checked'" class="badge-status-approved">Tantou đã duyệt</span>
+                    <span th:case="'unfinish'" class="badge-status-rejected">Bị từ chối</span>
+                    <span th:case="'pass'" class="badge-status-passed">Hội
+                      đồng thông qua</span>
+                    <span th:case="*" class="badge-status-default" th:text="${p.status}"></span>
+                  </span>
+                </td>
+                <td>
+                  <span th:if="${p.comment != null and !#strings.isEmpty(p.comment)}" th:text="${p.comment}"
+                    class="tantou-comment-text"></span>
+                  <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
+                    class="tantou-comment-empty">—</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <div id="ptab-approved" class="proposal-sub-tab" style="display: none">
-        <p class="ptab-sub-desc">Các bản thảo đã được Tantou duyệt. Bạn có
-          thể khởi động dự án khi hội đồng thông qua.</p>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Mã</th>
-              <th>Tên Series</th>
-              <th>Trạng thái</th>
-              <th>Nhận xét từ Tantou</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr th:if="${approvedList == null or approvedList.isEmpty()}">
-              <td colspan="5" class="text-center-align ptab-sub-desc">Chưa
-                có bản thảo nào được duyệt.</td>
-            </tr>
-            <tr th:if="${approvedList != null}" th:each="p : ${approvedList}">
-              <td th:text="${p.id}"></td>
-              <td th:text="${p.seriesName}"></td>
-              <td>
-                <span th:if="${p.status == 'checked'}" class="badge-status-approved">Tantou đã duyệt</span>
-                <span th:if="${p.status == 'pass'}" class="badge-status-passed">Hội đồng thông qua</span>
-              </td>
-              <td>
-                <span th:if="${p.comment != null and !#strings.isEmpty(p.comment)}" th:text="${p.comment}"
-                  class="tantou-comment-text"></span>
-                <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
-                  class="tantou-comment-empty">—</span>
-              </td>
-              <td>
-                <button th:if="${p.status == 'pass'}" type="button" th:data-proposal-id="${p.id}"
-                  th:data-series-name="${p.seriesName}" onclick="openStartSeriesModal(this)" class="btn-start-project">
-                  Khởi động dự án
-                </button>
-                <span th:if="${p.status == 'checked'}" class="status-waiting-council">Chờ hội đồng bỏ
-                  phiếu</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <div id="ptab-approved" class="proposal-sub-tab" style="display: none">
+          <p class="ptab-sub-desc">Các bản thảo đã được Tantou duyệt. Bạn có
+            thể khởi động dự án khi hội đồng thông qua.</p>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã</th>
+                <th>Tên Series</th>
+                <th>Trạng thái</th>
+                <th>Nhận xét từ Tantou</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:if="${approvedList == null or approvedList.isEmpty()}">
+                <td colspan="5" class="text-center-align ptab-sub-desc">Chưa
+                  có bản thảo nào được duyệt.</td>
+              </tr>
+              <tr th:if="${approvedList != null}" th:each="p : ${approvedList}">
+                <td th:text="${p.id}"></td>
+                <td th:text="${p.seriesName}"></td>
+                <td>
+                  <span th:if="${p.status == 'checked'}" class="badge-status-approved">Tantou đã duyệt</span>
+                  <span th:if="${p.status == 'pass'}" class="badge-status-passed">Hội đồng thông qua</span>
+                </td>
+                <td>
+                  <span th:if="${p.comment != null and !#strings.isEmpty(p.comment)}" th:text="${p.comment}"
+                    class="tantou-comment-text"></span>
+                  <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
+                    class="tantou-comment-empty">—</span>
+                </td>
+                <td>
+                  <button th:if="${p.status == 'pass'}" type="button" th:data-proposal-id="${p.id}"
+                    th:data-series-name="${p.seriesName}" onclick="openStartSeriesModal(this)"
+                    class="btn-start-project">
+                    Khởi động dự án
+                  </button>
+                  <span th:if="${p.status == 'checked'}" class="status-waiting-council">Chờ hội đồng bỏ
+                    phiếu</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <div id="ptab-rejected" class="proposal-sub-tab" style="display: none">
-        <p class="ptab-sub-desc">Đọc nhận xét từ Tantou và nộp lại bản thảo
-          đã chỉnh sửa.</p>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Mã</th>
-              <th>Tên Series</th>
-              <th>Nhận xét từ Tantou</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr th:if="${rejectedList == null or rejectedList.isEmpty()}">
-              <td colspan="4" class="text-center-align ptab-sub-desc">Không
-                có bản thảo nào bị từ chối.</td>
-            </tr>
-            <tr th:if="${rejectedList != null}" th:each="p : ${rejectedList}">
-              <td th:text="${p.id}"></td>
-              <td th:text="${p.seriesName}"></td>
-              <td>
-                <div th:if="${p.comment != null and !#strings.isEmpty(p.comment)}" class="rejected-comment-box">
-                  <i class="fa-solid fa-comment"></i> <span th:text="${p.comment}"></span>
-                </div>
-                <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
-                  class="tantou-comment-empty">Không có nhận xét</span>
-              </td>
-              <td>
-                <button type="button" th:data-proposal-id="${p.id}" th:data-series-name="${p.seriesName}"
-                  onclick="openResubmitModal(this)" class="btn-resubmit-proposal">
-                  Nộp lại
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <div id="ptab-rejected" class="proposal-sub-tab" style="display: none">
+          <p class="ptab-sub-desc">Đọc nhận xét từ Tantou và nộp lại bản thảo
+            đã chỉnh sửa.</p>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã</th>
+                <th>Tên Series</th>
+                <th>Nhận xét từ Tantou</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:if="${rejectedList == null or rejectedList.isEmpty()}">
+                <td colspan="4" class="text-center-align ptab-sub-desc">Không
+                  có bản thảo nào bị từ chối.</td>
+              </tr>
+              <tr th:if="${rejectedList != null}" th:each="p : ${rejectedList}">
+                <td th:text="${p.id}"></td>
+                <td th:text="${p.seriesName}"></td>
+                <td>
+                  <div th:if="${p.comment != null and !#strings.isEmpty(p.comment)}" class="rejected-comment-box">
+                    <i class="fa-solid fa-comment"></i> <span th:text="${p.comment}"></span>
+                  </div>
+                  <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
+                    class="tantou-comment-empty">Không có nhận xét</span>
+                </td>
+                <td>
+                  <button type="button" th:data-proposal-id="${p.id}" th:data-series-name="${p.seriesName}"
+                    onclick="openResubmitModal(this)" class="btn-resubmit-proposal">
+                    Nộp lại
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <div id="proposalModalOverlay" class="modal-overlay" style="display: none">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Đăng Ký Đề Xuất Dự Án Mới</h5>
-            <button type="button" id="btnCloseTop">X</button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label class="form-label fw-bold form-label-dark">Tên dự
-                án:</label>
-              <input type="text" id="newSeriesName" class="form-control" maxlength="30" required
-                placeholder="Nhập tên bộ truyện..." />
+        <div id="proposalModalOverlay" class="modal-overlay" style="display: none">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Đăng Ký Đề Xuất Dự Án Mới</h5>
+              <button type="button" id="btnCloseTop">X</button>
             </div>
-            <div class="mb-3">
-              <label class="form-label fw-bold form-label-dark">Tệp bản thảo
-                (.pdf):</label>
-              <input type="file" id="newManuscriptFile" class="form-control" accept=".pdf,.zip,.rar" required />
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label fw-bold form-label-dark">Tên dự
+                  án:</label>
+                <input type="text" id="newSeriesName" class="form-control" maxlength="30" required
+                  placeholder="Nhập tên bộ truyện..." />
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold form-label-dark">Tệp bản thảo
+                  (.pdf):</label>
+                <input type="file" id="newManuscriptFile" class="form-control" accept=".pdf,.zip,.rar" required />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" id="btnCancel">Hủy</button>
+              <button type="button" onclick="submitNewProposal()">Submit</button>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" id="btnCancel">Hủy</button>
-            <button type="button" onclick="submitNewProposal()">Submit</button>
+        </div>
+
+        <div id="resubmitModalOverlay" class="modal-overlay" style="display: none">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5>Nộp Lại Bản Thảo</h5>
+              <button type="button" onclick="closeResubmitModal()">X</button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" id="resubmitProposalId" />
+              <div class="mb-3">
+                <label class="form-label fw-bold form-label-dark">Tên dự
+                  án:</label>
+                <input type="text" id="resubmitSeriesName" class="form-control" maxlength="30" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold form-label-dark">File bản
+                  thảo mới (.pdf):</label>
+                <input type="file" id="resubmitFile" class="form-control" accept=".pdf,.zip,.rar" required />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" onclick="closeResubmitModal()">Hủy</button>
+              <button type="button" onclick="submitResubmitProposal()" class="btn-modal-resubmit-confirm">Nộp
+                lại</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-overlay" id="startSeriesModalOverlay" style="display: none">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5>Khởi Động Tác Phẩm</h5>
+              <button type="button" class="btn-close" onclick="closeStartSeriesModal()">X</button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" id="modalProposalId" />
+              <div class="form-group-block">
+                <label>Tên series:</label>
+                <input type="text" id="modalSeriesName" class="input-series-name-readonly" readonly />
+              </div>
+              <div class="form-group-block">
+                <label>Mô tả:</label>
+                <textarea id="modalDescription" placeholder="Nhập mô tả tác phẩm..." required
+                  class="textarea-description"></textarea>
+              </div>
+              <div class="form-group-block">
+                <label>Bìa sách (.pdf):</label>
+                <input type="file" id="modalBookJacket" accept=".pdf" required class="input-file-jacket" />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" onclick="closeStartSeriesModal()" class="btn-modal-cancel">Hủy</button>
+              <button type="button" onclick="submitStartSeries()" class="btn-modal-confirm">Xác nhận</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="notificationModalOverlay" class="modal-overlay" style="display: none">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Thông báo hệ thống</h5>
+              <button type="button" class="btn-close" id="btnCloseNotification">X</button>
+            </div>
+            <div class="modal-body">
+              <p style="text-align: center; font-weight: bold; font-size: 16px"></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" id="btnOkNotification" class="btn-action approve"
+                style="padding: 8px 20px">OK</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div id="resubmitModalOverlay" class="modal-overlay" style="display: none">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5>Nộp Lại Bản Thảo</h5>
-            <button type="button" onclick="closeResubmitModal()">X</button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="resubmitProposalId" />
-            <div class="mb-3">
-              <label class="form-label fw-bold form-label-dark">Tên dự
-                án:</label>
-              <input type="text" id="resubmitSeriesName" class="form-control" maxlength="30" required />
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-bold form-label-dark">File bản
-                thảo mới (.pdf):</label>
-              <input type="file" id="resubmitFile" class="form-control" accept=".pdf,.zip,.rar" required />
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" onclick="closeResubmitModal()">Hủy</button>
-            <button type="button" onclick="submitResubmitProposal()" class="btn-modal-resubmit-confirm">Nộp lại</button>
-          </div>
-        </div>
+      <!-- Tab assistant content -->
+      <div id="tab-assistant" class="tab-pane">
+        <h2>Quản lý Trợ lý</h2>
+        <p>Tính năng đang phát triển...</p>
       </div>
 
-      <div class="modal-overlay" id="startSeriesModalOverlay" style="display: none">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5>Khởi Động Tác Phẩm</h5>
-            <button type="button" class="btn-close" onclick="closeStartSeriesModal()">X</button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="modalProposalId" />
-            <div class="form-group-block">
-              <label>Tên series:</label>
-              <input type="text" id="modalSeriesName" class="input-series-name-readonly" readonly />
-            </div>
-            <div class="form-group-block">
-              <label>Mô tả:</label>
-              <textarea id="modalDescription" placeholder="Nhập mô tả tác phẩm..." required
-                class="textarea-description"></textarea>
-            </div>
-            <div class="form-group-block">
-              <label>Bìa sách (.pdf):</label>
-              <input type="file" id="modalBookJacket" accept=".pdf" required class="input-file-jacket" />
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" onclick="closeStartSeriesModal()" class="btn-modal-cancel">Hủy</button>
-            <button type="button" onclick="submitStartSeries()" class="btn-modal-confirm">Xác nhận</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="notificationModalOverlay" class="modal-overlay" style="display: none">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Thông báo hệ thống</h5>
-            <button type="button" class="btn-close" id="btnCloseNotification">X</button>
-          </div>
-          <div class="modal-body">
-            <p style="text-align: center; font-weight: bold; font-size: 16px"></p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" id="btnOkNotification" class="btn-action approve"
-              style="padding: 8px 20px">OK</button>
-          </div>
-        </div>
+      <!-- Tab other content -->
+      <div id="tab-other" class="tab-pane">
+        <h2>Cài đặt khác</h2>
+        <p>Tính năng đang phát triển...</p>
       </div>
     </div>
-
-    <!-- Tab assistant content -->
-    <div id="tab-assistant" class="tab-pane">
-      <h2>Quản lý Trợ lý</h2>
-      <p>Tính năng đang phát triển...</p>
-    </div>
-
-    <!-- Tab other content -->
-    <div id="tab-other" class="tab-pane">
-      <h2>Cài đặt khác</h2>
-      <p>Tính năng đang phát triển...</p>
-    </div>
-  </div>
-  <script>
-    function openTab(tabId) {
-      var tabPanes = document.getElementsByClassName("tab-pane");
-      for (var i = 0; i < tabPanes.length; i++) {
-        tabPanes[i].classList.remove("active");
-      }
-      document.getElementById(tabId).classList.add("active");
-    }
-
-    //  THÊM: hàm loadRanking gọi API và hiển thị bảng ngay tại trang
-    function loadRanking() {
-      var month = document.getElementById("rankMonth").value;
-      var year = document.getElementById("rankYear").value;
-
-      fetch("/manga/ranking?month=" + month + "&year=" + year)
-        .then(function (res) {
-          return res.json();
-        })
-        .then(function (data) {
-          var tbody = document.getElementById("rankingBody");
-          var table = document.getElementById("rankingTable");
-          var msg = document.getElementById("rankingMsg");
-          tbody.innerHTML = "";
-
-          if (data.length === 0) {
-            table.style.display = "none";
-            msg.style.display = "block";
-            return;
-          }
-
-          table.style.display = "table";
-          msg.style.display = "none";
-
-          var medals = ["🥇", "🥈", "🥉"];
-          data.forEach(function (item) {
-            var medal = item.rank <= 3 ? medals[item.rank - 1] + " " : "";
-            tbody.innerHTML +=
-              "<tr>" +
-              '<td style="text-align:center">' +
-              medal +
-              item.rank +
-              "</td>" +
-              '<td style="text-align:center">' +
-              item.seriesId +
-              "</td>" +
-              "<td>" +
-              item.seriesName +
-              "</td>" +
-              '<td style="text-align:center">' +
-              item.totalVotes +
-              "</td>" +
-              "</tr>";
-          });
-        });
-    }
-
-    const mangakaId = '[[${mangaka != null ? mangaka.id : ""}]]';
-    // Xử lý logic cho Modal nộp bản thảo
-    function submitNewProposal() {
-      if (!mangakaId) {
-        showSystemNotification(
-          "Không tìm thấy thông tin Mangaka. Vui lòng đăng nhập lại!",
-          false,
-        );
-        return;
-      }
-      const seriesName = document
-        .getElementById("newSeriesName")
-        .value.trim();
-      const file = document.getElementById("newManuscriptFile").files[0];
-      if (!seriesName) {
-        showSystemNotification("Vui lòng nhập tên series!", false);
-        return;
-      }
-      if (!file) {
-        showSystemNotification("Vui lòng chọn file bản thảo!", false);
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("mangakaId", mangakaId);
-      formData.append("txtSeriesName", seriesName);
-      formData.append("fileManuscript", file);
-
-      fetch("/manga/mangaka/submit-proposal", {
-        method: "POST",
-        body: formData,
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.status === "success") {
-            // Ẩn modal nhập liệu trước khi hiển thị modal thông báo
-            document.getElementById("proposalModalOverlay").style.display =
-              "none";
-
-            // Hiển thị thông báo thành công bằng cửa sổ nổi
-            const successMsg =
-              "✅ " + data.message + "\nMã đề xuất: " + data.proposalId;
-            showSystemNotification(successMsg, true);
-          } else {
-            // Hiển thị thông báo thất bại từ phía Server
-            showSystemNotification("❌ " + data.message, false);
-          }
-        })
-        .catch((err) => {
-          // Hiển thị lỗi kết nối hoặc lỗi logic hệ thống
-          showSystemNotification("❌ Lỗi hệ thống: " + err.message, false);
-        });
-    }
-
-    function showSystemNotification(message, isSuccess) {
-      const modal = document.getElementById("notificationModalOverlay");
-      if (!modal) return;
-
-      // Tìm thẻ p chứa nội dung thông báo bên trong modal body
-      const pTag = modal.querySelector(".modal-body p");
-      if (pTag) {
-        pTag.innerText = message;
-        // Thay đổi màu sắc chữ tùy thuộc vào trạng thái thành công hay thất bại
-        if (isSuccess) {
-          pTag.style.color = "#28a745"; // Màu xanh lá cho thành công
-        } else {
-          pTag.style.color = "#dc3545"; // Màu đỏ cho thất bại
+    <script>
+      function openTab(tabId) {
+        var tabPanes = document.getElementsByClassName("tab-pane");
+        for (var i = 0; i < tabPanes.length; i++) {
+          tabPanes[i].classList.remove("active");
         }
+        document.getElementById(tabId).classList.add("active");
       }
 
-      // Hiển thị modal bằng cách đặt display thành flex để căn giữa màn hình
-      modal.style.display = "flex";
+      //  THÊM: hàm loadRanking gọi API và hiển thị bảng ngay tại trang
+      function loadRanking() {
+        var month = document.getElementById("rankMonth").value;
+        var year = document.getElementById("rankYear").value;
 
-      // Cấu hình nút OK để tải lại trang nếu hành động thành công
-      const btnOk = document.getElementById("btnOkNotification");
-      if (btnOk) {
-        btnOk.onclick = function () {
-          modal.style.display = "none";
+        fetch("/manga/ranking?month=" + month + "&year=" + year)
+          .then(function (res) {
+            return res.json();
+          })
+          .then(function (data) {
+            var tbody = document.getElementById("rankingBody");
+            var table = document.getElementById("rankingTable");
+            var msg = document.getElementById("rankingMsg");
+            tbody.innerHTML = "";
+
+            if (data.length === 0) {
+              table.style.display = "none";
+              msg.style.display = "block";
+              return;
+            }
+
+            table.style.display = "table";
+            msg.style.display = "none";
+
+            var medals = ["🥇", "🥈", "🥉"];
+            data.forEach(function (item) {
+              var medal = item.rank <= 3 ? medals[item.rank - 1] + " " : "";
+              tbody.innerHTML +=
+                "<tr>" +
+                '<td style="text-align:center">' +
+                medal +
+                item.rank +
+                "</td>" +
+                '<td style="text-align:center">' +
+                item.seriesId +
+                "</td>" +
+                "<td>" +
+                item.seriesName +
+                "</td>" +
+                '<td style="text-align:center">' +
+                item.totalVotes +
+                "</td>" +
+                "</tr>";
+            });
+          });
+      }
+
+      const mangakaId = '[[${mangaka != null ? mangaka.id : ""}]]';
+      // Xử lý logic cho Modal nộp bản thảo
+      function submitNewProposal() {
+        if (!mangakaId) {
+          showSystemNotification(
+            "Không tìm thấy thông tin Mangaka. Vui lòng đăng nhập lại!",
+            false,
+          );
+          return;
+        }
+        const seriesName = document
+          .getElementById("newSeriesName")
+          .value.trim();
+        const file = document.getElementById("newManuscriptFile").files[0];
+        if (!seriesName) {
+          showSystemNotification("Vui lòng nhập tên series!", false);
+          return;
+        }
+        if (!file) {
+          showSystemNotification("Vui lòng chọn file bản thảo!", false);
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("mangakaId", mangakaId);
+        formData.append("txtSeriesName", seriesName);
+        formData.append("fileManuscript", file);
+
+        fetch("/manga/mangaka/submit-proposal", {
+          method: "POST",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.status === "success") {
+              // Ẩn modal nhập liệu trước khi hiển thị modal thông báo
+              document.getElementById("proposalModalOverlay").style.display =
+                "none";
+
+              // Hiển thị thông báo thành công bằng cửa sổ nổi
+              const successMsg =
+                "✅ " + data.message + "\nMã đề xuất: " + data.proposalId;
+              showSystemNotification(successMsg, true);
+            } else {
+              // Hiển thị thông báo thất bại từ phía Server
+              showSystemNotification("❌ " + data.message, false);
+            }
+          })
+          .catch((err) => {
+            // Hiển thị lỗi kết nối hoặc lỗi logic hệ thống
+            showSystemNotification("❌ Lỗi hệ thống: " + err.message, false);
+          });
+      }
+
+      function showSystemNotification(message, isSuccess) {
+        const modal = document.getElementById("notificationModalOverlay");
+        if (!modal) return;
+
+        // Tìm thẻ p chứa nội dung thông báo bên trong modal body
+        const pTag = modal.querySelector(".modal-body p");
+        if (pTag) {
+          pTag.innerText = message;
+          // Thay đổi màu sắc chữ tùy thuộc vào trạng thái thành công hay thất bại
           if (isSuccess) {
-            location.reload(); // Tải lại trang để cập nhật danh sách
+            pTag.style.color = "#28a745"; // Màu xanh lá cho thành công
+          } else {
+            pTag.style.color = "#dc3545"; // Màu đỏ cho thất bại
           }
+        }
+
+        // Hiển thị modal bằng cách đặt display thành flex để căn giữa màn hình
+        modal.style.display = "flex";
+
+        // Cấu hình nút OK để tải lại trang nếu hành động thành công
+        const btnOk = document.getElementById("btnOkNotification");
+        if (btnOk) {
+          btnOk.onclick = function () {
+            modal.style.display = "none";
+            if (isSuccess) {
+              location.reload(); // Tải lại trang để cập nhật danh sách
+            }
+          };
+        }
+      }
+      // ===== SUB-TAB SWITCHING =====
+      function openProposalTab(tabId) {
+        // Ẩn tất cả sub-tab
+        document.querySelectorAll(".proposal-sub-tab").forEach(function (el) {
+          el.style.display = "none";
+        });
+        // Bỏ active tất cả buttons
+        document.querySelectorAll(".proposal-tab-btn").forEach(function (btn) {
+          btn.style.borderBottomColor = "transparent";
+          btn.style.color = "#888";
+        });
+
+        // Hiện sub-tab được chọn
+        document.getElementById(tabId).style.display = "block";
+
+        // Active button tương ứng
+        var btnMap = {
+          "ptab-all": "pbtn-all",
+          "ptab-approved": "pbtn-approved",
+          "ptab-rejected": "pbtn-rejected",
         };
-      }
-    }
-    // ===== SUB-TAB SWITCHING =====
-    function openProposalTab(tabId) {
-      // Ẩn tất cả sub-tab
-      document.querySelectorAll(".proposal-sub-tab").forEach(function (el) {
-        el.style.display = "none";
-      });
-      // Bỏ active tất cả buttons
-      document.querySelectorAll(".proposal-tab-btn").forEach(function (btn) {
-        btn.style.borderBottomColor = "transparent";
-        btn.style.color = "#888";
-      });
-
-      // Hiện sub-tab được chọn
-      document.getElementById(tabId).style.display = "block";
-
-      // Active button tương ứng
-      var btnMap = {
-        "ptab-all": "pbtn-all",
-        "ptab-approved": "pbtn-approved",
-        "ptab-rejected": "pbtn-rejected",
-      };
-      var activeBtn = document.getElementById(btnMap[tabId]);
-      if (activeBtn) {
-        activeBtn.style.borderBottomColor = "#204fa6";
-        activeBtn.style.color = "#204fa6";
-      }
-    }
-
-    // ===== NỘP LẠI BẢN THẢO =====
-    function openResubmitModal(btn) {
-      document.getElementById("resubmitProposalId").value =
-        btn.dataset.proposalId;
-      document.getElementById("resubmitSeriesName").value =
-        btn.dataset.seriesName;
-      document.getElementById("resubmitModalOverlay").style.display = "flex";
-    }
-
-    function closeResubmitModal() {
-      document.getElementById("resubmitModalOverlay").style.display = "none";
-    }
-
-    function submitResubmitProposal() {
-      const proposalId = document.getElementById("resubmitProposalId").value;
-      const seriesName = document
-        .getElementById("resubmitSeriesName")
-        .value.trim();
-      const file = document.getElementById("resubmitFile").files[0];
-      if (!seriesName) {
-        alert("Vui lòng nhập tên series!");
-        return;
-      }
-      if (!file) {
-        alert("Vui lòng chọn file bản thảo!");
-        return;
+        var activeBtn = document.getElementById(btnMap[tabId]);
+        if (activeBtn) {
+          activeBtn.style.borderBottomColor = "#204fa6";
+          activeBtn.style.color = "#204fa6";
+        }
       }
 
-      const formData = new FormData();
-      formData.append("proposalId", proposalId);
-      formData.append("txtSeriesName", seriesName);
-      formData.append("fileManuscript", file);
+      // ===== NỘP LẠI BẢN THẢO =====
+      function openResubmitModal(btn) {
+        document.getElementById("resubmitProposalId").value =
+          btn.dataset.proposalId;
+        document.getElementById("resubmitSeriesName").value =
+          btn.dataset.seriesName;
+        document.getElementById("resubmitModalOverlay").style.display = "flex";
+      }
 
-      fetch("/manga/mangaka/resubmit-proposal", {
-        method: "POST",
-        body: formData,
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.status === "success") {
-            alert("✅ " + data.message);
-            closeResubmitModal();
-            location.reload();
-          } else {
-            alert("❌ " + data.message);
-          }
+      function closeResubmitModal() {
+        document.getElementById("resubmitModalOverlay").style.display = "none";
+      }
+
+      function submitResubmitProposal() {
+        const proposalId = document.getElementById("resubmitProposalId").value;
+        const seriesName = document
+          .getElementById("resubmitSeriesName")
+          .value.trim();
+        const file = document.getElementById("resubmitFile").files[0];
+        if (!seriesName) {
+          alert("Vui lòng nhập tên series!");
+          return;
+        }
+        if (!file) {
+          alert("Vui lòng chọn file bản thảo!");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("proposalId", proposalId);
+        formData.append("txtSeriesName", seriesName);
+        formData.append("fileManuscript", file);
+
+        fetch("/manga/mangaka/resubmit-proposal", {
+          method: "POST",
+          body: formData,
         })
-        .catch((err) => alert("❌ Lỗi: " + err.message));
-    }
-
-    function openStartSeriesModal(btn) {
-      document.getElementById("modalProposalId").value =
-        btn.dataset.proposalId;
-      document.getElementById("modalSeriesName").value =
-        btn.dataset.seriesName;
-      document.getElementById("startSeriesModalOverlay").style.display =
-        "flex";
-    }
-
-    function closeStartSeriesModal() {
-      document.getElementById("startSeriesModalOverlay").style.display =
-        "none";
-    }
-
-    function submitStartSeries() {
-      const proposalId = document.getElementById("modalProposalId").value;
-      const seriesName = document
-        .getElementById("modalSeriesName")
-        .value.trim();
-      const description = document
-        .getElementById("modalDescription")
-        .value.trim();
-      const file = document.getElementById("modalBookJacket").files[0];
-      if (!description) {
-        alert("Vui lòng nhập mô tả!");
-        return;
-      }
-      if (!file) {
-        alert("Vui lòng chọn file bìa sách!");
-        return;
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.status === "success") {
+              alert("✅ " + data.message);
+              closeResubmitModal();
+              location.reload();
+            } else {
+              alert("❌ " + data.message);
+            }
+          })
+          .catch((err) => alert("❌ Lỗi: " + err.message));
       }
 
-      const formData = new FormData();
-      formData.append("proposalId", proposalId);
-      formData.append("txtSeriesName", seriesName);
-      formData.append("txtDescription", description);
-      formData.append("fileBookJacket", file);
-
-      fetch("/manga/mangaka/start-series", { method: "POST", body: formData })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.status === "success") {
-            alert("✅ " + data.message + "\nMã series: " + data.seriesId);
-            closeStartSeriesModal();
-            location.reload();
-          } else {
-            alert("❌ " + data.message);
-          }
-        })
-        .catch((err) => alert("❌ Lỗi: " + err.message));
-    }
-
-    // Modal thông báo
-    const notificationModal = document.getElementById(
-      "notificationModalOverlay",
-    );
-    const btnCloseNotification = document.getElementById(
-      "btnCloseNotification",
-    );
-    const btnOkNotification = document.getElementById("btnOkNotification");
-
-    function closeNotificationModal() {
-      if (notificationModal) notificationModal.style.display = "none";
-    }
-    if (btnCloseNotification)
-      btnCloseNotification.addEventListener("click", closeNotificationModal);
-    if (btnOkNotification)
-      btnOkNotification.addEventListener("click", closeNotificationModal);
-    if (notificationModal) {
-      notificationModal.addEventListener("click", function (event) {
-        if (event.target === notificationModal) closeNotificationModal();
-      });
-    }
-
-    function initTimePicker(hourId, minuteId) {
-      function pad(n) {
-        return n.toString().padStart(2, "0");
-      }
-      const h = document.getElementById(hourId);
-      const m = document.getElementById(minuteId);
-      if (!h || !m) return;
-      h.innerHTML = "";
-      m.innerHTML = "";
-      for (let i = 0; i < 24; i++) {
-        const o = document.createElement("option");
-        o.value = pad(i);
-        o.textContent = pad(i);
-        h.appendChild(o);
-      }
-      for (let i = 0; i < 60; i++) {
-        const o = document.createElement("option");
-        o.value = pad(i);
-        o.textContent = pad(i);
-        m.appendChild(o);
-      }
-    }
-    initTimePicker("assignHour", "assignMinute");
-    initTimePicker("reassignHour", "reassignMinute");
-
-    document.addEventListener("DOMContentLoaded", function () {
-      // Modal nộp bản thảo mới
-      const modalOverlay = document.getElementById("proposalModalOverlay");
-      const btnOpen = document.getElementById("btnOpenModal");
-      const btnCloseTop = document.getElementById("btnCloseTop");
-      const btnCancel = document.getElementById("btnCancel");
-      if (btnOpen)
-        btnOpen.addEventListener(
-          "click",
-          () => (modalOverlay.style.display = "flex"),
-        );
-      if (btnCloseTop)
-        btnCloseTop.addEventListener(
-          "click",
-          () => (modalOverlay.style.display = "none"),
-        );
-      if (btnCancel)
-        btnCancel.addEventListener(
-          "click",
-          () => (modalOverlay.style.display = "none"),
-        );
-      if (modalOverlay) {
-        modalOverlay.addEventListener("click", function (e) {
-          if (e.target === modalOverlay) modalOverlay.style.display = "none";
-        });
+      function openStartSeriesModal(btn) {
+        document.getElementById("modalProposalId").value =
+          btn.dataset.proposalId;
+        document.getElementById("modalSeriesName").value =
+          btn.dataset.seriesName;
+        document.getElementById("startSeriesModalOverlay").style.display =
+          "flex";
       }
 
-      // Đóng resubmit modal khi click ra ngoài
-      const resubmitOverlay = document.getElementById("resubmitModalOverlay");
-      if (resubmitOverlay) {
-        resubmitOverlay.addEventListener("click", function (e) {
-          if (e.target === this) closeResubmitModal();
-        });
+      function closeStartSeriesModal() {
+        document.getElementById("startSeriesModalOverlay").style.display =
+          "none";
       }
 
-      // Đóng start series modal khi click ra ngoài
-      const startModalOverlay = document.getElementById(
-        "startSeriesModalOverlay",
+      function submitStartSeries() {
+        const proposalId = document.getElementById("modalProposalId").value;
+        const seriesName = document
+          .getElementById("modalSeriesName")
+          .value.trim();
+        const description = document
+          .getElementById("modalDescription")
+          .value.trim();
+        const file = document.getElementById("modalBookJacket").files[0];
+        if (!description) {
+          alert("Vui lòng nhập mô tả!");
+          return;
+        }
+        if (!file) {
+          alert("Vui lòng chọn file bìa sách!");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("proposalId", proposalId);
+        formData.append("txtSeriesName", seriesName);
+        formData.append("txtDescription", description);
+        formData.append("fileBookJacket", file);
+
+        fetch("/manga/mangaka/start-series", { method: "POST", body: formData })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.status === "success") {
+              alert("✅ " + data.message + "\nMã series: " + data.seriesId);
+              closeStartSeriesModal();
+              location.reload();
+            } else {
+              alert("❌ " + data.message);
+            }
+          })
+          .catch((err) => alert("❌ Lỗi: " + err.message));
+      }
+
+      // Modal thông báo
+      const notificationModal = document.getElementById(
+        "notificationModalOverlay",
       );
-      if (startModalOverlay) {
-        startModalOverlay.addEventListener("click", function (e) {
-          if (e.target === startModalOverlay) closeStartSeriesModal();
+      const btnCloseNotification = document.getElementById(
+        "btnCloseNotification",
+      );
+      const btnOkNotification = document.getElementById("btnOkNotification");
+
+      function closeNotificationModal() {
+        if (notificationModal) notificationModal.style.display = "none";
+      }
+      if (btnCloseNotification)
+        btnCloseNotification.addEventListener("click", closeNotificationModal);
+      if (btnOkNotification)
+        btnOkNotification.addEventListener("click", closeNotificationModal);
+      if (notificationModal) {
+        notificationModal.addEventListener("click", function (event) {
+          if (event.target === notificationModal) closeNotificationModal();
         });
       }
 
-      // Active tab từ controller
-      var activeTabFromController = "[[${activeTab}]]";
-      if (
-        activeTabFromController &&
-        !activeTabFromController.startsWith("[[")
-      ) {
-        openTab(activeTabFromController);
+      function initTimePicker(hourId, minuteId) {
+        function pad(n) {
+          return n.toString().padStart(2, "0");
+        }
+        const h = document.getElementById(hourId);
+        const m = document.getElementById(minuteId);
+        if (!h || !m) return;
+        h.innerHTML = "";
+        m.innerHTML = "";
+        for (let i = 0; i < 24; i++) {
+          const o = document.createElement("option");
+          o.value = pad(i);
+          o.textContent = pad(i);
+          h.appendChild(o);
+        }
+        for (let i = 0; i < 60; i++) {
+          const o = document.createElement("option");
+          o.value = pad(i);
+          o.textContent = pad(i);
+          m.appendChild(o);
+        }
       }
+      initTimePicker("assignHour", "assignMinute");
+      initTimePicker("reassignHour", "reassignMinute");
 
-      // Notification bell
-      const btnNoti = document.getElementById("btnNoti");
-      const dropdown = document.querySelector(".notification-dropdown");
-      if (btnNoti && dropdown) {
-        btnNoti.addEventListener("click", (e) => {
-          e.stopPropagation();
-          dropdown.classList.toggle("show");
-        });
-
-        const markReadAllBtn = dropdown.querySelector(".mark-read-all");
-        if (markReadAllBtn) {
-          markReadAllBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            fetch("/notification/read-all", { method: "POST" })
-              .then((res) => res.json())
-              .then((data) => {
-                if (data.status === "success") {
-                  const badge = btnNoti.querySelector(".badge");
-                  if (badge) badge.remove();
-                  document.querySelectorAll(".notification-item.unread")
-                    .forEach(el => el.classList.remove("unread"));
-                }
-              });
+      document.addEventListener("DOMContentLoaded", function () {
+        // Modal nộp bản thảo mới
+        const modalOverlay = document.getElementById("proposalModalOverlay");
+        const btnOpen = document.getElementById("btnOpenModal");
+        const btnCloseTop = document.getElementById("btnCloseTop");
+        const btnCancel = document.getElementById("btnCancel");
+        if (btnOpen)
+          btnOpen.addEventListener(
+            "click",
+            () => (modalOverlay.style.display = "flex"),
+          );
+        if (btnCloseTop)
+          btnCloseTop.addEventListener(
+            "click",
+            () => (modalOverlay.style.display = "none"),
+          );
+        if (btnCancel)
+          btnCancel.addEventListener(
+            "click",
+            () => (modalOverlay.style.display = "none"),
+          );
+        if (modalOverlay) {
+          modalOverlay.addEventListener("click", function (e) {
+            if (e.target === modalOverlay) modalOverlay.style.display = "none";
           });
         }
 
-        document.addEventListener("click", () => {
-          dropdown.classList.remove("show");
-        });
-      }
-      // ✅ Cache-bust tất cả ảnh thumbnail trong grid
-      document.querySelectorAll(".page-preview-box img").forEach(img => {
-        if (img.src) img.src = img.src + "?t=" + Date.now();
-      });
-    });
+        // Đóng resubmit modal khi click ra ngoài
+        const resubmitOverlay = document.getElementById("resubmitModalOverlay");
+        if (resubmitOverlay) {
+          resubmitOverlay.addEventListener("click", function (e) {
+            if (e.target === this) closeResubmitModal();
+          });
+        }
 
-    function openAssignModal(pageId) {
-      _currentPageId = pageId;
+        // Đóng start series modal khi click ra ngoài
+        const startModalOverlay = document.getElementById(
+          "startSeriesModalOverlay",
+        );
+        if (startModalOverlay) {
+          startModalOverlay.addEventListener("click", function (e) {
+            if (e.target === startModalOverlay) closeStartSeriesModal();
+          });
+        }
 
-      const mangakaId =
-        document.getElementById("mangaka-meta")?.dataset.mangakaId;
+        // Active tab từ controller
+        var activeTabFromController = "[[${activeTab}]]";
+        if (
+          activeTabFromController &&
+          !activeTabFromController.startsWith("[[")
+        ) {
+          openTab(activeTabFromController);
+        }
 
-      if (!mangakaId) {
-        alert("Không tìm thấy mangakaId!");
-        return;
-      }
+        // Notification bell
+        const btnNoti = document.getElementById("btnNoti");
+        const dropdown = document.querySelector(".notification-dropdown");
+        if (btnNoti && dropdown) {
+          btnNoti.addEventListener("click", (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle("show");
+          });
 
-      fetch(`/manga/mangaka/${mangakaId}/assistants`)
-        .then((r) => r.json())
-        .then((assistants) => {
-          if (!assistants || assistants.length === 0) {
-            alert("Chưa có trợ lý nào!");
-            return;
+          const markReadAllBtn = dropdown.querySelector(".mark-read-all");
+          if (markReadAllBtn) {
+            markReadAllBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              fetch("/notification/read-all", { method: "POST" })
+                .then((res) => res.json())
+                .then((data) => {
+                  if (data.status === "success") {
+                    const badge = btnNoti.querySelector(".badge");
+                    if (badge) badge.remove();
+                    document.querySelectorAll(".notification-item.unread")
+                      .forEach(el => el.classList.remove("unread"));
+                  }
+                });
+            });
           }
 
-          const select = document.getElementById("assignSelect");
+          document.addEventListener("click", () => {
+            dropdown.classList.remove("show");
+          });
+        }
+        // ✅ Cache-bust tất cả ảnh thumbnail trong grid
+        document.querySelectorAll(".page-preview-box img").forEach(img => {
+          if (img.src) img.src = img.src + "?t=" + Date.now();
+        });
+      });
 
-          // Lưu danh sách assistant để submit dùng lại
-          select.dataset.assistants = JSON.stringify(assistants);
+      function openAssignModal(pageId) {
+        _currentPageId = pageId;
 
-          // Hiển thị fullname
-          select.innerHTML = assistants
-            .map(
-              (a) =>
-                `<option value="${a.id}">
+        const mangakaId =
+          document.getElementById("mangaka-meta")?.dataset.mangakaId;
+
+        if (!mangakaId) {
+          alert("Không tìm thấy mangakaId!");
+          return;
+        }
+
+        fetch(`/manga/mangaka/${mangakaId}/assistants`)
+          .then((r) => r.json())
+          .then((assistants) => {
+            if (!assistants || assistants.length === 0) {
+              alert("Chưa có trợ lý nào!");
+              return;
+            }
+
+            const select = document.getElementById("assignSelect");
+
+            // Lưu danh sách assistant để submit dùng lại
+            select.dataset.assistants = JSON.stringify(assistants);
+
+            // Hiển thị fullname
+            select.innerHTML = assistants
+              .map(
+                (a) =>
+                  `<option value="${a.id}">
                       ${a.user.fullname}
                   </option>`,
-            )
-            .join("");
+              )
+              .join("");
 
-          // Set default deadline: ngày mai lúc 23:59
-          const pad = (n) => n.toString().padStart(2, '0');
-          const tomorrow = new Date();
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          const dlInput = document.getElementById("assignDeadline");
-          dlInput.value = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}`;
-          document.getElementById("assignHour").value = "23";
-          document.getElementById("assignMinute").value = "59";
-          // Set min date = hôm nay
-          const nowDt = new Date();
-          dlInput.min = `${nowDt.getFullYear()}-${pad(nowDt.getMonth() + 1)}-${pad(nowDt.getDate())}`;
+            // Set default deadline: ngày mai lúc 23:59
+            const pad = (n) => n.toString().padStart(2, '0');
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const dlInput = document.getElementById("assignDeadline");
+            dlInput.value = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}`;
+            document.getElementById("assignHour").value = "23";
+            document.getElementById("assignMinute").value = "59";
+            // Set min date = hôm nay
+            const nowDt = new Date();
+            dlInput.min = `${nowDt.getFullYear()}-${pad(nowDt.getMonth() + 1)}-${pad(nowDt.getDate())}`;
 
-          document.getElementById("assignModalOverlay").style.display =
-            "flex";
-        })
-        .catch((err) => {
-          console.error(err);
-          alert("❌ Không tải được danh sách trợ lý");
-        });
-    }
-
-    function submitAssign() {
-      const select = document.getElementById("assignSelect");
-
-      const assistantId = select.value;
-
-      const comment = document.getElementById("assignComment").value;
-
-      const deadlineDate = document.getElementById("assignDeadline").value;
-      const deadlineHour = document.getElementById("assignHour").value;
-      const deadlineMinute = document.getElementById("assignMinute").value;
-      const deadline = deadlineDate && deadlineHour && deadlineMinute ? `${deadlineDate}T${deadlineHour}:${deadlineMinute}:00` : "";
-
-      // Validate deadline bắt buộc
-      const errSpan = document.getElementById("assignDeadlineError");
-      if (!deadline || deadline.trim() === "") {
-        errSpan.textContent = "⚠️ Vui lòng chọn deadline trước khi giao việc!";
-        errSpan.style.display = "block";
-        return;
-      }
-      const selectedDate = new Date(`${deadlineDate}T${deadlineHour}:${deadlineMinute}:00`);
-      const now = new Date();
-      if (selectedDate <= now) {
-        errSpan.textContent = "⚠️ Deadline phải sau thời điểm hiện tại!";
-        errSpan.style.display = "block";
-        return;
-      }
-      errSpan.style.display = "none"; // ẩn lỗi nếu hợp lệ
-
-      if (!assistantId || !_currentPageId) {
-        alert("Thiếu dữ liệu!");
-        return;
+            document.getElementById("assignModalOverlay").style.display =
+              "flex";
+          })
+          .catch((err) => {
+            console.error(err);
+            alert("❌ Không tải được danh sách trợ lý");
+          });
       }
 
-      fetch(`/api/page/${_currentPageId}/assign`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          assistantId: assistantId,
-          comment: comment,
-          deadline: deadline,
-        }),
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.status === "success") {
-            alert("✅ Đã giao việc");
-            location.reload();
-          } else {
-            alert("❌ " + data.message);
-          }
+      function submitAssign() {
+        const select = document.getElementById("assignSelect");
+
+        const assistantId = select.value;
+
+        const comment = document.getElementById("assignComment").value;
+
+        const deadlineDate = document.getElementById("assignDeadline").value;
+        const deadlineHour = document.getElementById("assignHour").value;
+        const deadlineMinute = document.getElementById("assignMinute").value;
+        const deadline = deadlineDate && deadlineHour && deadlineMinute ? `${deadlineDate}T${deadlineHour}:${deadlineMinute}:00` : "";
+
+        // Validate deadline bắt buộc
+        const errSpan = document.getElementById("assignDeadlineError");
+        if (!deadline || deadline.trim() === "") {
+          errSpan.textContent = "⚠️ Vui lòng chọn deadline trước khi giao việc!";
+          errSpan.style.display = "block";
+          return;
+        }
+        const selectedDate = new Date(`${deadlineDate}T${deadlineHour}:${deadlineMinute}:00`);
+        const now = new Date();
+        if (selectedDate <= now) {
+          errSpan.textContent = "⚠️ Deadline phải sau thời điểm hiện tại!";
+          errSpan.style.display = "block";
+          return;
+        }
+        errSpan.style.display = "none"; // ẩn lỗi nếu hợp lệ
+
+        if (!assistantId || !_currentPageId) {
+          alert("Thiếu dữ liệu!");
+          return;
+        }
+
+        fetch(`/api/page/${_currentPageId}/assign`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            assistantId: assistantId,
+            comment: comment,
+            deadline: deadline,
+          }),
         })
-        .catch((err) => {
-          console.error(err);
-          alert("❌ " + err.message);
-        });
-    }
-    function submitChapter(chapterId) {
-      // ✅ THÊM VÀO: kiểm tra chapter có trang chưa
-      const pageItems = document.querySelectorAll(".page-grid-item");
-      if (pageItems.length === 0) {
-        alert("Chapter này chưa có trang nào. Hãy thêm trang mới trước khi submit lên BTV.");
-        return;
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status === "success") {
+              alert("✅ Đã giao việc");
+              location.reload();
+            } else {
+              alert("❌ " + data.message);
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+            alert("❌ " + err.message);
+          });
+      }
+      function submitChapter(chapterId) {
+        // ✅ THÊM VÀO: kiểm tra chapter có trang chưa
+        const pageItems = document.querySelectorAll(".page-grid-item");
+        if (pageItems.length === 0) {
+          alert("Chapter này chưa có trang nào. Hãy thêm trang mới trước khi submit lên BTV.");
+          return;
+        }
+
+        if (!confirm("Submit chapter này lên biên tập viên để duyệt?")) return;
+
+        fetch("/api/chapter-review/" + chapterId + "/submit", {
+          method: "POST",
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status === "success") {
+              alert("✅ " + data.message);
+              location.reload();
+            } else {
+              alert("❌ " + data.message);
+            }
+          })
+          .catch((err) => alert("❌ Lỗi: " + err.message));
       }
 
-      if (!confirm("Submit chapter này lên biên tập viên để duyệt?")) return;
+      let _currentPageId = null;
 
-      fetch("/api/chapter-review/" + chapterId + "/submit", {
-        method: "POST",
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.status === "success") {
-            alert("✅ " + data.message);
-            location.reload();
-          } else {
-            alert("❌ " + data.message);
-          }
-        })
-        .catch((err) => alert("❌ Lỗi: " + err.message));
-    }
-
-    let _currentPageId = null;
-
-    function finishPage(pageId) {
-      if (!confirm("Đánh dấu trang này là hoàn thành?")) return;
-      fetch("/api/page/" + pageId + "/finish", { method: "POST" })
-        .then(r => r.json())
-        .then(data => {
-          if (data.status === "success") {
-            alert("✅ " + data.message);
-            location.reload();
-          } else {
-            alert("⚠️ " + data.message);
-          }
-        })
-        .catch(err => alert("❌ Lỗi: " + err.message));
-    }
-
-    function approvePageDone(pageId) {
-      if (!confirm("Duyệt trang này?")) return;
-      fetch("/api/page/" + pageId + "/approve-done", { method: "POST" })
-        .then(r => r.json())
-        .then(data => {
-          if (data.status === "success") {
-            alert("✅ " + data.message);
-            location.reload();
-          } else {
-            alert("❌ " + data.message);
-          }
-        });
-    }
-
-    function openReassignModal(pageId, submissionId) {
-      const mangakaId = document.getElementById("mangaka-meta")?.dataset.mangakaId;
-      if (!mangakaId) { alert("Không tìm thấy mangakaId!"); return; }
-      document.getElementById("reassignPageId").value = pageId;
-      document.getElementById("reassignSubmissionId").value = submissionId;
-      document.getElementById("reassignComment").value = "";
-      // Set default deadline: ngày mai lúc 23:59
-      const pad2 = (n) => n.toString().padStart(2, '0');
-      const tomorrow2 = new Date();
-      tomorrow2.setDate(tomorrow2.getDate() + 1);
-      const dlInput2 = document.getElementById("reassignDeadline");
-      dlInput2.value = `${tomorrow2.getFullYear()}-${pad2(tomorrow2.getMonth() + 1)}-${pad2(tomorrow2.getDate())}`;
-      document.getElementById("reassignHour").value = "23";
-      document.getElementById("reassignMinute").value = "59";
-      // Set min date = hôm nay
-      const nowDt2 = new Date();
-      dlInput2.min = `${nowDt2.getFullYear()}-${pad2(nowDt2.getMonth() + 1)}-${pad2(nowDt2.getDate())}`;
-      fetch(`/manga/mangaka/${mangakaId}/assistants`)
-        .then(r => r.json())
-        .then(assistants => {
-          if (!assistants || assistants.length === 0) { alert("Chưa có trợ lý nào!"); return; }
-          document.getElementById("reassignSelect").innerHTML = assistants
-            .map(a => `<option value="${a.id}">${a.user.fullname}</option>`).join("");
-          document.getElementById("reassignModalOverlay").style.display = "flex";
-        })
-        .catch(err => alert("❌ " + err.message));
-    }
-
-    function submitReassign() {
-      const pageId = document.getElementById("reassignPageId").value;
-      const submissionId = document.getElementById("reassignSubmissionId").value;
-      const assistantId = document.getElementById("reassignSelect").value;
-      const comment = document.getElementById("reassignComment").value;
-      const deadlineDate2 = document.getElementById("reassignDeadline").value;
-      const deadlineHour2 = document.getElementById("reassignHour").value;
-      const deadlineMinute2 = document.getElementById("reassignMinute").value;
-      const deadline = deadlineDate2 && deadlineHour2 && deadlineMinute2 ? `${deadlineDate2}T${deadlineHour2}:${deadlineMinute2}:00` : "";
-
-      // Validate deadline bắt buộc
-      const errSpan2 = document.getElementById("reassignDeadlineError");
-      if (!deadline || deadline.trim() === "") {
-        errSpan2.textContent = "⚠️ Vui lòng chọn deadline trước khi giao lại!";
-        errSpan2.style.display = "block";
-        return;
+      function finishPage(pageId) {
+        if (!confirm("Đánh dấu trang này là hoàn thành?")) return;
+        fetch("/api/page/" + pageId + "/finish", { method: "POST" })
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === "success") {
+              alert("✅ " + data.message);
+              location.reload();
+            } else {
+              alert("⚠️ " + data.message);
+            }
+          })
+          .catch(err => alert("❌ Lỗi: " + err.message));
       }
-      const selectedDate2 = new Date(`${deadlineDate2}T${deadlineHour2}:${deadlineMinute2}:00`);
-      const now2 = new Date();
-      if (selectedDate2 <= now2) {
-        errSpan2.textContent = "⚠️ Deadline phải sau thời điểm hiện tại!";
-        errSpan2.style.display = "block";
-        return;
+
+      function approvePageDone(pageId) {
+        if (!confirm("Duyệt trang này?")) return;
+        fetch("/api/page/" + pageId + "/approve-done", { method: "POST" })
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === "success") {
+              alert("✅ " + data.message);
+              location.reload();
+            } else {
+              alert("❌ " + data.message);
+            }
+          });
       }
-      errSpan2.style.display = "none";
 
-      if (!assistantId || !pageId) { alert("Thiếu dữ liệu!"); return; }
-      fetch(`/api/page/${pageId}/reassign`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submissionId, assistantId, comment, deadline })
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data.status === "success") {
-            document.getElementById("reassignModalOverlay").style.display = "none";
-            alert("✅ " + data.message);
-            location.reload();
-          } else {
-            alert("❌ " + data.message);
-          }
+      function openReassignModal(pageId, submissionId) {
+        const mangakaId = document.getElementById("mangaka-meta")?.dataset.mangakaId;
+        if (!mangakaId) { alert("Không tìm thấy mangakaId!"); return; }
+        document.getElementById("reassignPageId").value = pageId;
+        document.getElementById("reassignSubmissionId").value = submissionId;
+        document.getElementById("reassignComment").value = "";
+        // Set default deadline: ngày mai lúc 23:59
+        const pad2 = (n) => n.toString().padStart(2, '0');
+        const tomorrow2 = new Date();
+        tomorrow2.setDate(tomorrow2.getDate() + 1);
+        const dlInput2 = document.getElementById("reassignDeadline");
+        dlInput2.value = `${tomorrow2.getFullYear()}-${pad2(tomorrow2.getMonth() + 1)}-${pad2(tomorrow2.getDate())}`;
+        document.getElementById("reassignHour").value = "23";
+        document.getElementById("reassignMinute").value = "59";
+        // Set min date = hôm nay
+        const nowDt2 = new Date();
+        dlInput2.min = `${nowDt2.getFullYear()}-${pad2(nowDt2.getMonth() + 1)}-${pad2(nowDt2.getDate())}`;
+        fetch(`/manga/mangaka/${mangakaId}/assistants`)
+          .then(r => r.json())
+          .then(assistants => {
+            if (!assistants || assistants.length === 0) { alert("Chưa có trợ lý nào!"); return; }
+            document.getElementById("reassignSelect").innerHTML = assistants
+              .map(a => `<option value="${a.id}">${a.user.fullname}</option>`).join("");
+            document.getElementById("reassignModalOverlay").style.display = "flex";
+          })
+          .catch(err => alert("❌ " + err.message));
+      }
+
+      function submitReassign() {
+        const pageId = document.getElementById("reassignPageId").value;
+        const submissionId = document.getElementById("reassignSubmissionId").value;
+        const assistantId = document.getElementById("reassignSelect").value;
+        const comment = document.getElementById("reassignComment").value;
+        const deadlineDate2 = document.getElementById("reassignDeadline").value;
+        const deadlineHour2 = document.getElementById("reassignHour").value;
+        const deadlineMinute2 = document.getElementById("reassignMinute").value;
+        const deadline = deadlineDate2 && deadlineHour2 && deadlineMinute2 ? `${deadlineDate2}T${deadlineHour2}:${deadlineMinute2}:00` : "";
+
+        // Validate deadline bắt buộc
+        const errSpan2 = document.getElementById("reassignDeadlineError");
+        if (!deadline || deadline.trim() === "") {
+          errSpan2.textContent = "⚠️ Vui lòng chọn deadline trước khi giao lại!";
+          errSpan2.style.display = "block";
+          return;
+        }
+        const selectedDate2 = new Date(`${deadlineDate2}T${deadlineHour2}:${deadlineMinute2}:00`);
+        const now2 = new Date();
+        if (selectedDate2 <= now2) {
+          errSpan2.textContent = "⚠️ Deadline phải sau thời điểm hiện tại!";
+          errSpan2.style.display = "block";
+          return;
+        }
+        errSpan2.style.display = "none";
+
+        if (!assistantId || !pageId) { alert("Thiếu dữ liệu!"); return; }
+        fetch(`/api/page/${pageId}/reassign`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ submissionId, assistantId, comment, deadline })
         })
-        .catch(err => alert("❌ " + err.message));
-    }
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === "success") {
+              document.getElementById("reassignModalOverlay").style.display = "none";
+              alert("✅ " + data.message);
+              location.reload();
+            } else {
+              alert("❌ " + data.message);
+            }
+          })
+          .catch(err => alert("❌ " + err.message));
+      }
 
-    document.addEventListener("click", function (e) {
-      const approveBtn = e.target.closest(".btn-approve-page");
-      if (approveBtn) { approvePageDone(approveBtn.dataset.pageId); return; }
+      document.addEventListener("click", function (e) {
+        const approveBtn = e.target.closest(".btn-approve-page");
+        if (approveBtn) { approvePageDone(approveBtn.dataset.pageId); return; }
 
-      const finishBtn = e.target.closest(".btn-finish-page");
-      if (finishBtn) { finishPage(finishBtn.dataset.pageId); return; }
+        const finishBtn = e.target.closest(".btn-finish-page");
+        if (finishBtn) { finishPage(finishBtn.dataset.pageId); return; }
 
-      const assignBtn = e.target.closest(".btn-open-assign");
-      if (assignBtn) { openAssignModal(assignBtn.dataset.pageId); return; }
+        const assignBtn = e.target.closest(".btn-open-assign");
+        if (assignBtn) { openAssignModal(assignBtn.dataset.pageId); return; }
 
-      const submitBtn = e.target.closest(".btn-submit-chapter");
-      if (submitBtn) { submitChapter(submitBtn.dataset.chapterId); return; }
+        const submitBtn = e.target.closest(".btn-submit-chapter");
+        if (submitBtn) { submitChapter(submitBtn.dataset.chapterId); return; }
 
-      const reassignBtn = e.target.closest(".btn-reassign-page");
-      if (reassignBtn) { openReassignModal(reassignBtn.dataset.pageId, reassignBtn.dataset.submissionId); return; }
-    });
-  </script>
+        const reassignBtn = e.target.closest(".btn-reassign-page");
+        if (reassignBtn) { openReassignModal(reassignBtn.dataset.pageId, reassignBtn.dataset.submissionId); return; }
+      });
+    </script>
 
 </body>
 

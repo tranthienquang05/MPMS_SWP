@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.time.LocalDate;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Optional;
 
 import org.springframework.http.MediaType;
@@ -387,8 +389,8 @@ public class MangakaController {
     }
 
     @PostMapping("/myseries/{seriesId}/createchapter")
-    public String createChapter(@PathVariable String seriesId, @RequestParam String txtChapterName, HttpSession session,
-            Model model, RedirectAttributes redirectAttributes) {
+    public String createChapter(@PathVariable String seriesId, @RequestParam String txtChapterName,
+            HttpSession session, Model model, RedirectAttributes redirectAttributes) {
         Series series = seriesRepository.findById(seriesId).orElse(null);
 
         if (series == null) {
@@ -412,6 +414,7 @@ public class MangakaController {
         chapter.setSeries(series);
         chapter.setChapterName(txtChapterName);
         chapter.setChapterNumber(nextNumber);
+        chapter.setDeadline(resolveNextSaturday(series));
         chapter.setStatus("unfinish"); // Mặc định khi tạo mới
 
         chapterRepository.save(chapter);
@@ -419,6 +422,14 @@ public class MangakaController {
         model.addAttribute("message", "Tạo Chapter thành công!");
         model.addAttribute("activeTab", "tab-project");
         return "redirect:/manga/mangaka/myseries/" + seriesId;
+    }
+
+    private LocalDate resolveNextSaturday(Series series) {
+        Optional<Chapter> latest = chapterRepository.findTopBySeriesOrderByChapterNumberDesc(series);
+        if (latest.isPresent() && latest.get().getDeadline() != null) {
+            return latest.get().getDeadline().plusWeeks(1);
+        }
+        return LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY));
     }
 
     @GetMapping("/myseries/{sid}/{cid}")

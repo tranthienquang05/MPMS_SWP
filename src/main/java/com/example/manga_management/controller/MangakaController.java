@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.time.LocalDate;
-import java.time.DayOfWeek;
-import java.time.temporal.TemporalAdjusters;
 import java.util.Optional;
 
 import org.springframework.http.MediaType;
@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.manga_management.entity.Assistant;
 import com.example.manga_management.entity.Chapter;
@@ -74,53 +73,19 @@ public class MangakaController {
         this.notificationController = notificationController;
     }
 
-    @Operation(summary = "View the Mangaka dashboard")
-    @GetMapping("")
+    @GetMapping({"", "/myseries", "/myseries/**", "/submission/**"})
     public String mangakaPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if (user == null) {
             return "redirect:/login";
         }
-
-        model.addAttribute("user", user);
-
         Mangaka mangaka = mangakaRepository.findByUser(user).orElse(null);
-        model.addAttribute("mangaka", mangaka); // ← move OUTSIDE the if block
-
-        if (mangaka != null) {
-            // Hiển thị toàn bộ series thuộc về mangaka, không lọc theo trạng thái
-            model.addAttribute("mySeriesList", seriesRepository.findByProposal_Mangaka_Id(mangaka.getId()));
-            model.addAttribute("allProposals", proposalRepository.findByMangaka_Id(mangaka.getId()));
-            model.addAttribute("approvedList",
-                    proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangaka.getId()));
-            model.addAttribute("rejectedList",
-                    proposalRepository.findByStatusAndMangaka_Id("unfinish", mangaka.getId()));
-        }
-
-        model.addAttribute("activeTab", "tab-home");
-        return "mangaka";
-    }
-
-    @Operation(summary = "View all proposals for the logged-in Mangaka")
-    @GetMapping("/my-projects")
-    public String myProjectsPage(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return "redirect:/login";
-        }
-
-        Mangaka mangaka = mangakaRepository.findByUser(user).orElse(null);
-        if (mangaka == null) {
-            model.addAttribute("message", "Bạn chưa có thông tin Mangaka!");
-            return "mangaka";
-        }
-
         model.addAttribute("mangaka", mangaka);
-        model.addAttribute("allProposals", proposalRepository.findByMangaka_Id(mangaka.getId()));
-        model.addAttribute("approvedList",
-                proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangaka.getId()));
-        model.addAttribute("rejectedList", proposalRepository.findByStatusAndMangaka_Id("unfinish", mangaka.getId()));
-        model.addAttribute("activeTab", "tab-proposal");
+        if (mangaka != null) {
+            model.addAttribute("allProposals", proposalRepository.findByMangaka_Id(mangaka.getId()));
+            model.addAttribute("approvedList", proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangaka.getId()));
+            model.addAttribute("rejectedList", proposalRepository.findByStatusAndMangaka_Id("unfinish", mangaka.getId()));
+        }
         return "mangaka";
     }
 
@@ -365,65 +330,6 @@ public class MangakaController {
         return result;
     }
 
-    @Operation(summary = "View series details and chapters", description = "Allows a Mangaka to view the details of a specific series along with its chapters. Requires the series ID.")
-    @GetMapping("/myseries/{seriesId}")
-    public String viewSeries(@PathVariable String seriesId, HttpSession session, Model model) {
-
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return "redirect:/login";
-        }
-
-        Series series = seriesRepository.findById(seriesId).orElse(null);
-
-        if (series == null) {
-            model.addAttribute("message", "Series không tồn tại!");
-            return "redirect:/manga/mangaka/myseries";
-        }
-
-        model.addAttribute("series", series);
-        model.addAttribute("chapters", chapterRepository.findBySeries(series));
-        model.addAttribute("activeTab", "tab-project");
-
-        return "mangaka";
-    }
-
-    @PostMapping("/myseries/{seriesId}/createchapter")
-    public String createChapter(@PathVariable String seriesId, @RequestParam String txtChapterName,
-            HttpSession session, Model model, RedirectAttributes redirectAttributes) {
-        Series series = seriesRepository.findById(seriesId).orElse(null);
-
-        if (series == null) {
-            model.addAttribute("message", "Series không tồn tại!");
-            return "redirect:/manga/mangaka/myseries";
-        }
-        Optional<Chapter> lastChapter = chapterRepository.findTopByOrderByIdDesc();
-
-        int maxId = 0;
-
-        if (lastChapter.isPresent()) {
-            maxId = Integer.parseInt(lastChapter.get().getId().substring(3));
-        }
-        Optional<Chapter> lastChapternumber = chapterRepository.findTopBySeriesOrderByChapterNumberDesc(series);
-
-        int nextNumber = lastChapternumber.map(Chapter::getChapterNumber).orElse(0) + 1;
-
-        // Tạo chapter mới
-        Chapter chapter = new Chapter();
-        chapter.setId("CPT" + String.format("%04d", maxId + 1));
-        chapter.setSeries(series);
-        chapter.setChapterName(txtChapterName);
-        chapter.setChapterNumber(nextNumber);
-        chapter.setDeadline(resolveNextSaturday(series));
-        chapter.setStatus("unfinish"); // Mặc định khi tạo mới
-
-        chapterRepository.save(chapter);
-
-        model.addAttribute("message", "Tạo Chapter thành công!");
-        model.addAttribute("activeTab", "tab-project");
-        return "redirect:/manga/mangaka/myseries/" + seriesId;
-    }
-
     private LocalDate resolveNextSaturday(Series series) {
         Optional<Chapter> latest = chapterRepository.findTopBySeriesOrderByChapterNumberDesc(series);
         if (latest.isPresent() && latest.get().getDeadline() != null) {
@@ -432,125 +338,213 @@ public class MangakaController {
         return LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY));
     }
 
-    @GetMapping("/myseries/{sid}/{cid}")
-    public String viewChapter(@PathVariable String sid, @PathVariable String cid, Model model) {
-
-        Chapter chapter = chapterRepository.findById(cid).orElseThrow();
-
-        List<MangaPage> pages = mangaPageRepository.findByChapterId(cid);
-
-        Map<String, Submission> submissionMap = new HashMap<>();
-
-        for (MangaPage page : pages) {
-            submissionRepository.findByPageIdId(page.getId()).ifPresent(sub -> submissionMap.put(page.getId(), sub));
-        }
-        Mangaka mangaka = chapter.getSeries().getProposal().getMangaka();
-
-        model.addAttribute("chapter", chapter);
-        model.addAttribute("pages", pages);
-        model.addAttribute("submissionMap", submissionMap);
-        model.addAttribute("activeTab", "tab-project");
-        model.addAttribute("mangakaId", mangaka.getId());
-        return "mangaka";
-    }
-
-    @GetMapping("/myseries/{seriesId}/{chapterId}/{pageId}/edit")
-    public String editPage(@PathVariable String seriesId, @PathVariable String chapterId, @PathVariable String pageId,
-            Model model, HttpSession session) {
-
+    @Operation(summary = "[SWAGGER] Lấy dữ liệu dashboard của Mangaka")
+    @GetMapping("/data")
+    @ResponseBody
+    public Map<String, Object> getMangakaData(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
         User user = (User) session.getAttribute("user");
         if (user == null) {
-            return "redirect:/login";
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập");
+            return result;
         }
-
-        MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
-        if (page == null) {
-            model.addAttribute("message", "Trang không tồn tại!");
-            // Đã sửa redirect cho đúng với cấu trúc route hiển thị của hệ thống
-            return "mangaka";
+        Mangaka mangaka = mangakaRepository.findByUser(user).orElse(null);
+        if (mangaka == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy mangaka");
+            return result;
         }
-        Chapter chapter = page.getChapter();
-        if ("pass".equals(chapter.getStatus()) || "finish".equals(chapter.getStatus())) {
-            return "redirect:/manga/mangaka/myseries/" + seriesId + "/" + chapterId;
-        }
-        model.addAttribute("typeDraw", "page");
-        model.addAttribute("page", page);
-        model.addAttribute("activeTab", "tab-draw");
-        return "mangaka";
+        result.put("status", "success");
+        result.put("mangaka", mangaka);
+        result.put("mySeriesList", seriesRepository.findByProposal_Mangaka_Id(mangaka.getId()));
+        result.put("allProposals", proposalRepository.findByMangaka_Id(mangaka.getId()));
+        result.put("approvedList", proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangaka.getId()));
+        result.put("rejectedList", proposalRepository.findByStatusAndMangaka_Id("unfinish", mangaka.getId()));
+        return result;
     }
 
-    // Tạo trang mới
-    @PostMapping("/myseries/{seriesId}/{chapterId}/addpage")
-    public String addPage(@PathVariable String seriesId, @PathVariable String chapterId) {
+    @Operation(summary = "[SWAGGER] Lấy danh sách chapter của một series")
+    @GetMapping("/myseries/{seriesId}/data")
+    @ResponseBody
+    public Map<String, Object> getSeriesData(@PathVariable String seriesId) {
+        Map<String, Object> result = new HashMap<>();
+        Series series = seriesRepository.findById(seriesId).orElse(null);
+        if (series == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy series: " + seriesId);
+            return result;
+        }
+        result.put("status", "success");
+        result.put("series", series);
+        result.put("chapters", chapterRepository.findBySeries(series));
+        return result;
+    }
+
+    @Operation(summary = "[SWAGGER] Tạo chapter mới")
+    @PostMapping("/myseries/{seriesId}/createchapter/data")
+    @ResponseBody
+    public Map<String, Object> createChapterData(@PathVariable String seriesId,
+            @RequestParam String txtChapterName) {
+        Map<String, Object> result = new HashMap<>();
+        Series series = seriesRepository.findById(seriesId).orElse(null);
+        if (series == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy series: " + seriesId);
+            return result;
+        }
+        try {
+            Optional<Chapter> lastChapter = chapterRepository.findTopByOrderByIdDesc();
+            int maxId = 0;
+            if (lastChapter.isPresent()) {
+                maxId = Integer.parseInt(lastChapter.get().getId().substring(3));
+            }
+            Optional<Chapter> lastChapterNumber = chapterRepository.findTopBySeriesOrderByChapterNumberDesc(series);
+            int nextNumber = lastChapterNumber.map(Chapter::getChapterNumber).orElse(0) + 1;
+            Chapter chapter = new Chapter();
+            chapter.setId("CPT" + String.format("%04d", maxId + 1));
+            chapter.setSeries(series);
+            chapter.setChapterName(txtChapterName);
+            chapter.setChapterNumber(nextNumber);
+            chapter.setDeadline(resolveNextSaturday(series));
+            chapter.setStatus("unfinish");
+            chapterRepository.save(chapter);
+            result.put("status", "success");
+            result.put("chapterId", chapter.getId());
+            result.put("chapterNumber", nextNumber);
+            result.put("message", "Tạo chapter thành công!");
+        } catch (Exception e) {
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
+        }
+        return result;
+    }
+
+    @Operation(summary = "[SWAGGER] Lấy danh sách trang của một chapter")
+    @GetMapping("/myseries/{sid}/{cid}/data")
+    @ResponseBody
+    public Map<String, Object> getChapterData(@PathVariable String sid, @PathVariable String cid) {
+        Map<String, Object> result = new HashMap<>();
+        Chapter chapter = chapterRepository.findById(cid).orElse(null);
+        if (chapter == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy chapter: " + cid);
+            return result;
+        }
+        try {
+            List<MangaPage> pages = mangaPageRepository.findByChapterId(cid);
+            Map<String, Submission> submissionMap = new HashMap<>();
+            for (MangaPage page : pages) {
+                submissionRepository.findByPageIdId(page.getId())
+                        .ifPresent(sub -> submissionMap.put(page.getId(), sub));
+            }
+            Mangaka mangaka = chapter.getSeries().getProposal().getMangaka();
+            result.put("status", "success");
+            result.put("chapter", chapter);
+            result.put("pages", pages);
+            result.put("submissionMap", submissionMap);
+            result.put("mangakaId", mangaka.getId());
+        } catch (Exception e) {
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
+        }
+        return result;
+    }
+
+    @Operation(summary = "[SWAGGER] Thêm trang mới vào chapter")
+    @PostMapping("/myseries/{seriesId}/{chapterId}/addpage/data")
+    @ResponseBody
+    public Map<String, Object> addPageData(@PathVariable String seriesId,
+            @PathVariable String chapterId) {
+        Map<String, Object> result = new HashMap<>();
         Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
         if (chapter == null) {
-            return "redirect:/manga/mangaka/myseries/" + seriesId;
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy chapter: " + chapterId);
+            return result;
         }
+        try {
+            // ✅ Sinh ID dựa trên ID lớn nhất hiện có, không dùng count()
+            Optional<MangaPage> lastPage = mangaPageRepository.findTopByOrderByIdDesc();
+            int maxId = 0;
+            if (lastPage.isPresent()) {
+                maxId = Integer.parseInt(lastPage.get().getId().substring(2)); // bỏ tiền tố "PG"
+            }
+            String pageId = String.format("PG%05d", maxId + 1);
 
-        long count = mangaPageRepository.count();
-        String pageId = String.format("PG%05d", count + 1);
+            List<MangaPage> existing = mangaPageRepository.findByChapter(chapter);
+            int nextNum = existing.size() + 1;
 
-        List<MangaPage> existing = mangaPageRepository.findByChapter(chapter);
-        int nextNum = existing.size() + 1;
+            MangaPage page = new MangaPage();
+            page.setId(pageId);
+            page.setChapter(chapter);
+            page.setPageNumber(nextNum);
+            page.setStatus("unfinish");
+            mangaPageRepository.save(page);
 
-        MangaPage page = new MangaPage();
-        page.setId(pageId);
-        page.setChapter(chapter);
-        page.setPageNumber(nextNum);
-        page.setStatus("unfinish");
-        mangaPageRepository.save(page);
-
-        return "redirect:/manga/mangaka/myseries/" + seriesId + "/" + chapterId + "/" + pageId + "/edit";
+            result.put("status", "success");
+            result.put("pageId", pageId);
+            result.put("pageNumber", nextNum);
+            result.put("message", "Thêm trang thành công!");
+        } catch (Exception e) {
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
+        }
+        return result;
     }
 
-    @GetMapping("/submission/{id}/edit")
-    public String editSubmission(@PathVariable String id, Model model, HttpSession session) {
-
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return "redirect:/login";
-        }
-
+    @Operation(summary = "[SWAGGER] Lấy thông tin submission")
+    @GetMapping("/submission/{id}/data")
+    @ResponseBody
+    public Map<String, Object> getSubmissionData(@PathVariable String id) {
+        Map<String, Object> result = new HashMap<>();
         Submission submission = submissionRepository.findById(id).orElse(null);
         if (submission == null) {
-            model.addAttribute("message", "Submission không tồn tại!");
-            return "redirect:/manga/mangaka";
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy submission: " + id);
+            return result;
         }
-
         String seriesId = submission.getPageId().getChapter().getSeries().getId();
         String chapterId = submission.getPageId().getChapter().getId();
-        String returnUrl = "/manga/mangaka/myseries/" + seriesId + "/" + chapterId;
-
-        model.addAttribute("submission", submission);
-        model.addAttribute("typeDraw", "submission");
-        model.addAttribute("activeTab", "tab-draw");
-        model.addAttribute("returnUrl", returnUrl);
-
-        return "mangaka";
+        result.put("status", "success");
+        result.put("submission", submission);
+        result.put("seriesId", seriesId);
+        result.put("chapterId", chapterId);
+        result.put("returnUrl", "/manga/mangaka/myseries/" + seriesId + "/" + chapterId);
+        return result;
     }
 
-    @PostMapping("/submission/{id}/submit")
-    public String updateStatus(@PathVariable String id, @RequestParam String status, @RequestParam String comment,
-            Model model, HttpSession session) {
-
+    @Operation(summary = "[SWAGGER] Cập nhật trạng thái submission")
+    @PostMapping("/submission/{id}/submit/data")
+    @ResponseBody
+    public Map<String, Object> updateStatusData(@PathVariable String id,
+            @RequestParam String status, @RequestParam String comment) {
+        Map<String, Object> result = new HashMap<>();
         Submission submission = submissionRepository.findById(id).orElse(null);
         if (submission == null) {
-            return "redirect:/manga/mangaka";
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy submission: " + id);
+            return result;
         }
-
         String normalizedStatus = status == null ? "" : status.trim().toLowerCase();
         if (!"pass".equals(normalizedStatus) && !"unfinish".equals(normalizedStatus)) {
-            return "redirect:/manga/mangaka/myseries/" + submission.getPageId().getChapter().getSeries().getId()
-                    + "/" + submission.getPageId().getChapter().getId();
+            result.put("status", "error");
+            result.put("message", "Trạng thái không hợp lệ");
+            return result;
         }
-
-        String ChapterID = submission.getPageId().getChapter().getId();
-        String SeriesID = submission.getPageId().getChapter().getSeries().getId();
-        submission.setStatus(normalizedStatus);
-        submission.setComment(comment);
-        submissionRepository.save(submission);
-
-        return "redirect:/manga/mangaka/myseries/" + SeriesID + "/" + ChapterID;
+        try {
+            submission.setStatus(normalizedStatus);
+            submission.setComment(comment);
+            submissionRepository.save(submission);
+            result.put("status", "success");
+            result.put("message", "Cập nhật thành công!");
+            result.put("seriesId", submission.getPageId().getChapter().getSeries().getId());
+            result.put("chapterId", submission.getPageId().getChapter().getId());
+        } catch (Exception e) {
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
+        }
+        return result;
     }
 
     // Thêm vào trong MangakaController
@@ -558,5 +552,22 @@ public class MangakaController {
     @ResponseBody
     public List<Assistant> getAssistants(@PathVariable String mangakaId) {
         return assistantRepository.findByMangakaId(mangakaId);
+    }
+
+    @Operation(summary = "[SWAGGER] Lấy dữ liệu 1 trang để mở màn vẽ")
+    @GetMapping("/myseries/{sid}/{cid}/{pid}/edit/data")
+    @ResponseBody
+    public Map<String, Object> getPageEditData(@PathVariable String sid, @PathVariable String cid,
+            @PathVariable String pid) {
+        Map<String, Object> result = new HashMap<>();
+        MangaPage page = mangaPageRepository.findById(pid).orElse(null);
+        if (page == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy trang: " + pid);
+            return result;
+        }
+        result.put("status", "success");
+        result.put("page", page);
+        return result;
     }
 }

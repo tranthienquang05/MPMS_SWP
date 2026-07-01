@@ -1,10 +1,11 @@
 package com.example.manga_management.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.manga_management.entity.Chapter;
@@ -33,73 +35,126 @@ public class ChapterController {
     private MangaPageRepository mangaPageRepository;
 
     @GetMapping("/{chapterId}")
-    @Operation(summary = "Get chapter details")
-    public ResponseEntity<Chapter> getChapter(@PathVariable String chapterId) {
+    @Operation(summary = "[SWAGGER] Lấy thông tin chi tiết một chapter")
+    @ResponseBody
+    public Map<String, Object> getChapter(@PathVariable String chapterId) {
+        Map<String, Object> result = new HashMap<>();
 
-        return chapterRepository.findById(chapterId).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+        if (chapter == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy chapter: " + chapterId);
+            return result;
+        }
+
+        result.put("status", "success");
+        result.put("chapter", chapter);
+        return result;
     }
 
     @PutMapping("/{chapterId}")
-    @Operation(summary = "Update chapter")
-    public ResponseEntity<Chapter> updateChapter(@PathVariable String chapterId, @RequestParam String chapterName) {
+    @Operation(summary = "[SWAGGER] Cập nhật tên chapter")
+    @ResponseBody
+    public Map<String, Object> updateChapter(@PathVariable String chapterId, @RequestParam String chapterName) {
+        Map<String, Object> result = new HashMap<>();
 
-        return chapterRepository.findById(chapterId).map(chapter -> {
-            chapter.setChapterName(chapterName);
-            return ResponseEntity.ok(chapterRepository.save(chapter));
-        }).orElse(ResponseEntity.notFound().build());
+        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+        if (chapter == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy chapter: " + chapterId);
+            return result;
+        }
+
+        chapter.setChapterName(chapterName);
+        chapterRepository.save(chapter);
+
+        result.put("status", "success");
+        result.put("chapterId", chapterId);
+        result.put("message", "Cập nhật chapter thành công!");
+        return result;
     }
 
     @DeleteMapping("/{chapterId}")
-    @Operation(summary = "Delete chapter")
-    public ResponseEntity<Void> deleteChapter(@PathVariable String chapterId) {
+    @Operation(summary = "[SWAGGER] Xóa một chapter")
+    @ResponseBody
+    public Map<String, String> deleteChapter(@PathVariable String chapterId) {
+        Map<String, String> result = new HashMap<>();
 
         if (!chapterRepository.existsById(chapterId)) {
-            return ResponseEntity.notFound().build();
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy chapter: " + chapterId);
+            return result;
         }
 
         chapterRepository.deleteById(chapterId);
 
-        return ResponseEntity.noContent().build();
+        result.put("status", "success");
+        result.put("message", "Đã xóa chapter: " + chapterId);
+        return result;
     }
 
     @GetMapping("/{chapterId}/pages")
-    @Operation(summary = "Get all pages of a chapter")
-    public ResponseEntity<List<MangaPage>> getPagesByChapter(@PathVariable String chapterId) {
+    @Operation(summary = "[SWAGGER] Lấy danh sách trang của một chapter")
+    @ResponseBody
+    public Map<String, Object> getPagesByChapter(@PathVariable String chapterId) {
+        Map<String, Object> result = new HashMap<>();
 
-        return ResponseEntity.ok(mangaPageRepository.findByChapterId(chapterId));
+        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+        if (chapter == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy chapter: " + chapterId);
+            return result;
+        }
+
+        List<MangaPage> pages = mangaPageRepository.findByChapterId(chapterId);
+        result.put("status", "success");
+        result.put("chapterId", chapterId);
+        result.put("pages", pages);
+        return result;
     }
 
     @PostMapping("/{chapterId}/pages")
-    @Operation(summary = "Create new page")
-    public ResponseEntity<MangaPage> createPage(@PathVariable String chapterId, @RequestParam String filePath) {
+    @Operation(summary = "[SWAGGER] Tạo trang mới trong một chapter")
+    @ResponseBody
+    public Map<String, Object> createPage(@PathVariable String chapterId, @RequestParam String filePath) {
+        Map<String, Object> result = new HashMap<>();
 
-        Chapter chapter = chapterRepository.findById(chapterId)
-                .orElseThrow(() -> new RuntimeException("Chapter not found"));
-
-        // Sinh PageID
-        Optional<MangaPage> lastPage = mangaPageRepository.findTopByOrderByIdDesc();
-
-        int maxId = 0;
-
-        if (lastPage.isPresent()) {
-            maxId = Integer.parseInt(lastPage.get().getId().substring(3));
+        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+        if (chapter == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy chapter: " + chapterId);
+            return result;
         }
 
-        String newId = "MGP" + String.format("%03d", maxId + 1);
+        try {
+            Optional<MangaPage> lastPage = mangaPageRepository.findTopByOrderByIdDesc();
+            int maxId = 0;
+            if (lastPage.isPresent()) {
+                maxId = Integer.parseInt(lastPage.get().getId().substring(3));
+            }
+            String newId = "MGP" + String.format("%03d", maxId + 1);
 
-        // Sinh PageNumber
-        MangaPage lastChapterPage = mangaPageRepository.findTopByChapterIdOrderByPageNumberDesc(chapterId);
+            MangaPage lastChapterPage = mangaPageRepository.findTopByChapterIdOrderByPageNumberDesc(chapterId);
+            int nextPageNumber = (lastChapterPage == null) ? 1 : lastChapterPage.getPageNumber() + 1;
 
-        int nextPageNumber = (lastChapterPage == null) ? 1 : lastChapterPage.getPageNumber() + 1;
+            MangaPage page = new MangaPage();
+            page.setId(newId);
+            page.setChapter(chapter);
+            page.setPageNumber(nextPageNumber);
+            page.setFilePath(filePath);
+            page.setStatus("unfinish");
 
-        MangaPage page = new MangaPage();
-        page.setId(newId);
-        page.setChapter(chapter);
-        page.setPageNumber(nextPageNumber);
-        page.setFilePath(filePath);
-        page.setStatus("unfinish");
+            mangaPageRepository.save(page);
 
-        return ResponseEntity.ok(mangaPageRepository.save(page));
+            result.put("status", "success");
+            result.put("pageId", newId);
+            result.put("pageNumber", nextPageNumber);
+            result.put("message", "Tạo trang mới thành công!");
+        } catch (Exception e) {
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
+        }
+
+        return result;
     }
-
 }

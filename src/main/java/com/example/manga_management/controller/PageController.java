@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -35,7 +36,6 @@ public class PageController {
 
     @Autowired
     private final AssistantRepository assistantRepository;
-
     @Autowired
     private final SubmissionRepository submissionRepository;
     @Autowired
@@ -50,24 +50,29 @@ public class PageController {
 
     @PostMapping("/{pageId}/savefile")
     @ResponseBody
-    public Map<String, String> savePageFile(
-            @PathVariable String pageId,
+    public Map<String, String> savePageFile(@PathVariable String pageId,
             @RequestBody Map<String, String> body) {
+        Map<String, String> result = new HashMap<>();
 
         try {
-            MangaPage page = mangaPageRepository.findById(pageId)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy page: " + pageId));
+            MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
+            if (page == null) {
+                result.put("status", "error");
+                result.put("message", "Không tìm thấy page: " + pageId);
+                return result;
+            }
 
             String base64 = body.get("imageBase64");
             if (base64 != null && base64.contains(",")) {
                 base64 = base64.split(",")[1];
             }
             if (base64 == null || base64.isBlank()) {
-                return Map.of("status", "error", "message", "imageBase64 trống");
+                result.put("status", "error");
+                result.put("message", "imageBase64 trống");
+                return result;
             }
 
             byte[] imageBytes = Base64.getDecoder().decode(base64);
-
             String uploadDir = "src/main/resources/static/MangaPage/";
             Files.createDirectories(Paths.get(uploadDir));
 
@@ -82,84 +87,112 @@ public class PageController {
             String chapterId = page.getChapter().getId();
             String seriesId = page.getChapter().getSeries().getId();
 
-            return Map.of("status", "success", "redirectUrl", "/manga/mangaka/myseries/" + seriesId + "/" + chapterId);
-
+            result.put("status", "success");
+            result.put("message", "Lưu trang thành công!");
+            result.put("redirectUrl", "/manga/mangaka/myseries/" + seriesId + "/" + chapterId);
         } catch (IllegalArgumentException e) {
-            return Map.of("status", "error", "message", "Base64 không hợp lệ");
+            result.put("status", "error");
+            result.put("message", "Base64 không hợp lệ");
         } catch (IOException e) {
-            return Map.of("status", "error", "message", "Lỗi ghi file: " + e.getMessage());
+            result.put("status", "error");
+            result.put("message", "Lỗi ghi file: " + e.getMessage());
         } catch (Exception e) {
-            return Map.of("status", "error", "message", e.getMessage());
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
         }
+        return result;
     }
 
     @GetMapping("/{pageId}/submission")
     @ResponseBody
     public Map<String, Object> getPageSubmission(@PathVariable String pageId) {
+        Map<String, Object> result = new HashMap<>();
+
         Optional<Submission> optSubmission = submissionRepository.findByPageIdId(pageId);
         if (optSubmission.isEmpty()) {
-            return Map.of("hasSubmission", false);
+            result.put("status", "success");
+            result.put("hasSubmission", false);
+            return result;
         }
+
         Submission submission = optSubmission.get();
-        return Map.of("hasSubmission", true, "assistantName", submission.getAssistant().getUser().getFullname(),
-                "status", submission.getStatus());
+        result.put("status", "success");
+        result.put("hasSubmission", true);
+        result.put("assistantName", submission.getAssistant().getUser().getFullname());
+        result.put("submissionStatus", submission.getStatus());
+        return result;
     }
 
     @PostMapping("/{pageId}/assign")
     @ResponseBody
-    public Map<String, Object> assignPage(@PathVariable String pageId, @RequestBody Map<String, String> body,
+    public Map<String, Object> assignPage(@PathVariable String pageId,
+            @RequestBody Map<String, String> body,
             HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
 
         try {
-
             User user = (User) session.getAttribute("user");
-
             if (user == null) {
-                return Map.of("status", "error", "message", "Chua dang nhap");
+                result.put("status", "error");
+                result.put("message", "Chưa đăng nhập");
+                return result;
             }
 
-            MangaPage page = mangaPageRepository.findById(pageId)
-                    .orElseThrow(() -> new RuntimeException("Khong tim thay page"));
+            MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
+            if (page == null) {
+                result.put("status", "error");
+                result.put("message", "Không tìm thấy page: " + pageId);
+                return result;
+            }
 
             if (page.getChapter() == null || !"unfinish".equals(page.getChapter().getStatus())) {
-                return Map.of("status", "error", "message", "Chi co the giao viec khi chapter dang o trang thai unfinish");
+                result.put("status", "error");
+                result.put("message", "Chỉ có thể giao việc khi chapter đang ở trạng thái unfinish");
+                return result;
             }
 
             if ("finish".equals(page.getStatus())) {
-                return Map.of("status", "error", "message", "Trang nay da duoc danh dau hoan thanh");
+                result.put("status", "error");
+                result.put("message", "Trang này đã được đánh dấu hoàn thành");
+                return result;
             }
 
             Optional<Submission> existingSubmissionOpt = submissionRepository.findByPageIdId(pageId);
             if (existingSubmissionOpt.isPresent() && "intask".equals(existingSubmissionOpt.get().getStatus())) {
-                return Map.of("status", "error", "message", "Trang nay dang duoc giao");
+                result.put("status", "error");
+                result.put("message", "Trang này đang được giao");
+                return result;
             }
 
             String assistantId = body.get("assistantId");
             String comment = body.get("comment");
             String deadlineStr = body.get("deadline");
 
-            Assistant assistant = assistantRepository.findById(assistantId)
-                    .orElseThrow(() -> new RuntimeException("Khong tim thay assistant"));
+            Assistant assistant = assistantRepository.findById(assistantId).orElse(null);
+            if (assistant == null) {
+                result.put("status", "error");
+                result.put("message", "Không tìm thấy assistant: " + assistantId);
+                return result;
+            }
 
-            LocalDateTime deadline = null;
+            if (deadlineStr == null || deadlineStr.isBlank()) {
+                result.put("status", "error");
+                result.put("message", "Deadline là bắt buộc");
+                return result;
+            }
 
-            if (deadlineStr != null && !deadlineStr.isBlank()) {
-
-                deadline = LocalDateTime.parse(deadlineStr);
-
-                if (!deadline.isAfter(LocalDateTime.now())) {
-                    return Map.of("status", "error", "message", "Deadline phai sau ngay hien tai");
-                }
-            } else {
-                return Map.of("status", "error", "message", "Deadline la bat buoc");
+            LocalDateTime deadline = LocalDateTime.parse(deadlineStr);
+            if (!deadline.isAfter(LocalDateTime.now())) {
+                result.put("status", "error");
+                result.put("message", "Deadline phải sau ngày hiện tại");
+                return result;
             }
 
             Submission submission = existingSubmissionOpt.orElseGet(() -> {
-                String lastId = submissionRepository.findTopByOrderByIdDesc().map(Submission::getId)
-                        .orElse("SUB0000");
+                String lastId = submissionRepository.findTopByOrderByIdDesc()
+                        .map(Submission::getId).orElse("SUB0000");
                 int num = Integer.parseInt(lastId.replaceAll("[^0-9]", "")) + 1;
                 String newId = "SUB" + String.format("%04d", num);
-
                 Submission newSubmission = new Submission();
                 newSubmission.setId(newId);
                 return newSubmission;
@@ -172,79 +205,84 @@ public class PageController {
             submission.setStatus("intask");
 
             if (page.getFilePath() != null && !page.getFilePath().isBlank()) {
-
-                String oldPath = page.getFilePath();
-
                 String fileName = submission.getId() + ".png";
-
-                Path source = Paths.get("src/main/resources/static" + oldPath);
-
+                Path source = Paths.get("src/main/resources/static" + page.getFilePath());
                 Path targetDir = Paths.get("src/main/resources/static/Submission");
-
                 Files.createDirectories(targetDir);
-
-                Path target = targetDir.resolve(fileName);
-
-                Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-
+                Files.copy(source, targetDir.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
                 submission.setFilePath("/Submission/" + fileName);
             }
 
             submissionRepository.save(submission);
-
             page.setStatus("intask");
             mangaPageRepository.save(page);
 
-            return Map.of("status", "success", "message", "Giao viec thanh cong");
-
+            result.put("status", "success");
+            result.put("message", "Giao việc thành công!");
+            result.put("submissionId", submission.getId());
         } catch (Exception e) {
-
-            return Map.of("status", "error", "message", e.getMessage());
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
         }
+        return result;
     }
 
-    // API 3: Lay danh sach assistant cua mangaka (de hien dropdown giao viec)
-    // API 3: Lấy danh sách assistant của mangaka (để hiện dropdown giao việc)
-    // dòng comment trên không liên quan dưới này
-    // Hoàn thành page: unfinish → finish
     @PostMapping("/{pageId}/finish")
     @ResponseBody
     public Map<String, Object> finishPage(@PathVariable String pageId) {
+        Map<String, Object> result = new HashMap<>();
+
         MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
         if (page == null) {
-            return Map.of("status", "error", "message", "Không tìm thấy trang!");
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy trang!");
+            return result;
         }
         if ("finish".equals(page.getStatus())) {
-            return Map.of("status", "error", "message", "Trang đã hoàn thành rồi!");
+            result.put("status", "error");
+            result.put("message", "Trang đã hoàn thành rồi!");
+            return result;
         }
         if ("intask".equals(page.getStatus())) {
-            return Map.of("status", "error", "message", "Không thể hoàn thành vì trợ lý đang làm việc này!");
+            result.put("status", "error");
+            result.put("message", "Không thể hoàn thành vì trợ lý đang làm việc này!");
+            return result;
         }
         if ("done".equals(page.getStatus())) {
-            // Kiểm tra submission đã được duyệt chưa
             Optional<Submission> subOpt = submissionRepository.findByPageIdId(pageId);
             if (subOpt.isPresent() && "done".equals(subOpt.get().getStatus())) {
-                return Map.of("status", "error", "message", "Bạn phải ấn nút Duyệt trước khi hoàn thành!");
+                result.put("status", "error");
+                result.put("message", "Bạn phải ấn nút Duyệt trước khi hoàn thành!");
+                return result;
             }
-            // Submission đã finish → cho phép hoàn thành
         }
+
         page.setStatus("finish");
         mangaPageRepository.save(page);
-        return Map.of("status", "success", "message", "Đã hoàn thành trang!");
+
+        result.put("status", "success");
+        result.put("message", "Đã hoàn thành trang!");
+        result.put("pageId", pageId);
+        return result;
     }
 
-// Mangaka duyệt page done → finish
     @PostMapping("/{pageId}/approve-done")
     @ResponseBody
     public Map<String, Object> approvePageDone(@PathVariable String pageId) {
+        Map<String, Object> result = new HashMap<>();
+
         MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
         if (page == null) {
-            return Map.of("status", "error", "message", "Không tìm thấy trang!");
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy trang!");
+            return result;
         }
 
         Optional<Submission> subOpt = submissionRepository.findByPageIdId(pageId);
         if (subOpt.isEmpty() || !"done".equals(subOpt.get().getStatus())) {
-            return Map.of("status", "error", "message", "Trợ lý chưa nộp bài!");
+            result.put("status", "error");
+            result.put("message", "Trợ lý chưa nộp bài!");
+            return result;
         }
 
         Submission sub = subOpt.get();
@@ -252,32 +290,42 @@ public class PageController {
         sub.setApprovedAt(LocalDateTime.now());
         submissionRepository.save(sub);
 
-        return Map.of("status", "success", "message", "Đã duyệt! Bấm Hoàn thành để kết thúc trang.");
+        result.put("status", "success");
+        result.put("message", "Đã duyệt! Bấm Hoàn thành để kết thúc trang.");
+        result.put("pageId", pageId);
+        return result;
     }
 
-// Mangaka giao lại page done → intask
-    // Mangaka giao lai page done -> intask
     @PostMapping("/{pageId}/reject-done")
     @ResponseBody
     public Map<String, Object> rejectPageDone(@PathVariable String pageId) {
+        Map<String, Object> result = new HashMap<>();
+
         MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
         if (page == null) {
-            return Map.of("status", "error", "message", "Khong tim thay trang!");
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy trang!");
+            return result;
         }
 
         Optional<Submission> subOpt = submissionRepository.findByPageIdId(pageId);
         if (subOpt.isEmpty() || !"done".equals(subOpt.get().getStatus())) {
-            return Map.of("status", "error", "message", "Tro ly chua nop bai!");
+            result.put("status", "error");
+            result.put("message", "Trợ lý chưa nộp bài!");
+            return result;
         }
 
-        // Giao lai: doi ca submission va page ve intask
         Submission sub = subOpt.get();
         sub.setStatus("intask");
         submissionRepository.save(sub);
 
         page.setStatus("intask");
         mangaPageRepository.save(page);
-        return Map.of("status", "success", "message", "Da giao lai cho tro ly!");
+
+        result.put("status", "success");
+        result.put("message", "Đã giao lại cho trợ lý!");
+        result.put("pageId", pageId);
+        return result;
     }
 
     @PostMapping("/{pageId}/reassign")
@@ -285,10 +333,14 @@ public class PageController {
     public Map<String, Object> reassignPage(@PathVariable String pageId,
             @RequestBody Map<String, String> body,
             HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+
         try {
             User user = (User) session.getAttribute("user");
             if (user == null) {
-                return Map.of("status", "error", "message", "Chua dang nhap");
+                result.put("status", "error");
+                result.put("message", "Chưa đăng nhập");
+                return result;
             }
 
             String submissionId = body.get("submissionId");
@@ -296,33 +348,56 @@ public class PageController {
             String comment = body.get("comment");
             String deadlineStr = body.get("deadline");
 
-            Submission submission = submissionRepository.findById(submissionId)
-                    .orElseThrow(() -> new RuntimeException("Khong tim thay submission"));
+            Submission submission = submissionRepository.findById(submissionId).orElse(null);
+            if (submission == null) {
+                result.put("status", "error");
+                result.put("message", "Không tìm thấy submission: " + submissionId);
+                return result;
+            }
 
             if (submission.getPageId() == null || !pageId.equals(submission.getPageId().getId())) {
-                return Map.of("status", "error", "message", "Submission khong thuoc page nay");
+                result.put("status", "error");
+                result.put("message", "Submission không thuộc page này");
+                return result;
             }
 
-            MangaPage page = mangaPageRepository.findById(pageId)
-                    .orElseThrow(() -> new RuntimeException("Khong tim thay page"));
+            MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
+            if (page == null) {
+                result.put("status", "error");
+                result.put("message", "Không tìm thấy page: " + pageId);
+                return result;
+            }
+
             if (page.getChapter() == null || !"unfinish".equals(page.getChapter().getStatus())) {
-                return Map.of("status", "error", "message", "Chi co the giao lai khi chapter dang o trang thai unfinish");
+                result.put("status", "error");
+                result.put("message", "Chỉ có thể giao lại khi chapter đang ở trạng thái unfinish");
+                return result;
             }
+
             if ("finish".equals(page.getStatus())) {
-                return Map.of("status", "error", "message", "Trang nay da duoc danh dau hoan thanh");
+                result.put("status", "error");
+                result.put("message", "Trang này đã được đánh dấu hoàn thành");
+                return result;
             }
 
-            Assistant assistant = assistantRepository.findById(assistantId)
-                    .orElseThrow(() -> new RuntimeException("Khong tim thay assistant"));
+            Assistant assistant = assistantRepository.findById(assistantId).orElse(null);
+            if (assistant == null) {
+                result.put("status", "error");
+                result.put("message", "Không tìm thấy assistant: " + assistantId);
+                return result;
+            }
 
-            LocalDateTime deadline = null;
-            if (deadlineStr != null && !deadlineStr.isBlank()) {
-                deadline = LocalDateTime.parse(deadlineStr);
-                if (!deadline.isAfter(LocalDateTime.now())) {
-                    return Map.of("status", "error", "message", "Deadline phai sau ngay hien tai");
-                }
-            } else {
-                return Map.of("status", "error", "message", "Deadline la bat buoc");
+            if (deadlineStr == null || deadlineStr.isBlank()) {
+                result.put("status", "error");
+                result.put("message", "Deadline là bắt buộc");
+                return result;
+            }
+
+            LocalDateTime deadline = LocalDateTime.parse(deadlineStr);
+            if (!deadline.isAfter(LocalDateTime.now())) {
+                result.put("status", "error");
+                result.put("message", "Deadline phải sau ngày hiện tại");
+                return result;
             }
 
             submission.setAssistant(assistant);
@@ -334,9 +409,13 @@ public class PageController {
             page.setStatus("intask");
             mangaPageRepository.save(page);
 
-            return Map.of("status", "success", "message", "Da giao lai thanh cong!");
+            result.put("status", "success");
+            result.put("message", "Đã giao lại thành công!");
+            result.put("submissionId", submissionId);
         } catch (Exception e) {
-            return Map.of("status", "error", "message", e.getMessage());
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
         }
+        return result;
     }
 }

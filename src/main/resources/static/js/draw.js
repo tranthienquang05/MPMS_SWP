@@ -1276,11 +1276,16 @@ function renderAiResult(data) {
 // PHẦN 8: Lưu trang & Submission
 // ========================================================
 const btnSavePage = document.getElementById('btnSavePage');
-const pageId = btnSavePage?.dataset.pageId;
 
 // Lưu trang
 if (btnSavePage) {
     btnSavePage.addEventListener('click', async () => {
+        const pageId = btnSavePage.dataset.pageId;   // 👈 đọc tại thời điểm click, không đọc lúc load file
+        if (!pageId) {
+            alert('❌ Không tìm thấy pageId, vui lòng tải lại trang!');
+            return;
+        }
+
         const base64 = flattenAllLayers().toDataURL('image/png');
 
         btnSavePage.disabled = true;
@@ -1297,7 +1302,6 @@ if (btnSavePage) {
                 btnSavePage.innerHTML = '<i class="fa-solid fa-check"></i> Đã lưu!';
                 setTimeout(() => {
                     btnSavePage.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu trang';
-                    // Thêm dòng này để xử lý redirectUrl trả về từ backend
                     if (data.redirectUrl) {
                         window.location.href = data.redirectUrl;
                     }
@@ -1485,54 +1489,6 @@ if (btnLoadPage && inputLoadPage) {
 }
 // Khởi tạo layer list lần đầu
 renderLayerList();
-// Load ảnh đã lưu lên canvas khi mở trang edit
-const savedPath = btnSavePage ? btnSavePage.dataset.savedPath : null;
-if (savedPath && savedPath !== 'null' && savedPath !== '') {
-    const img = new Image();
-    img.onload = () => {
-        layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-        layers[1].ctx.drawImage(img, 0, 0);
-        pushHistoryEntry('Load trang đã lưu');
-    };
-    img.src = savedPath + '?t=' + Date.now(); // VD: /MangaPage/MGP001.png
-}
-
-
-const savedPath1 = btnSubmitSubmission?.dataset.savedPath;
-
-// giống hệt page save
-if (savedPath1 && savedPath1 !== 'null' && savedPath1 !== '') {
-
-    const img = new Image();
-
-    img.onload = () => {
-
-        layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-        layers[1].ctx.drawImage(img, 0, 0);
-
-        pushHistoryEntry('Load submission đã lưu');
-    };
-
-    img.src = savedPath1 + '?t=' + Date.now();
-}
-const savedPath2 = document.getElementById('btnEditSubmission')?.dataset.savedPath;
-
-// giống hệt page save
-if (savedPath2 && savedPath2 !== 'null' && savedPath2 !== '') {
-
-    const img = new Image();
-
-    img.onload = () => {
-
-        layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-        layers[1].ctx.drawImage(img, 0, 0);
-
-        pushHistoryEntry('Load submission đã lưu');
-    };
-
-    img.src = savedPath2 + '?t=' + Date.now();  // ✅ busted cache
-}
-
 // ========================================
 // DOWNLOAD MỌI Layer thành 1 file ảnh
 // ========================================

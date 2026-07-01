@@ -253,16 +253,11 @@
                 <span class="prop-value" id="textSizeValue">24</span>
               </div>
 
-              <button th:if="${page != null && (typeDraw == null || typeDraw == 'page')}" type="button"
-                class="btn-ai-support-top approve" id="btnSavePage" th:data-page-id="${page.id}"
-                th:data-saved-path="${page.filePath}">
-                <i class="fa-solid fa-floppy-disk"></i>
-                Lưu trang
+              <button type="button" class="btn-ai-support-top approve" id="btnSavePage" style="display:none">
+                <i class="fa-solid fa-floppy-disk"></i> Lưu trang
               </button>
 
-              <button th:if="${submission != null && typeDraw == 'submission'}" type="button"
-                class="btn-ai-support-top primary" id="btnEditSubmission" th:data-submission-id="${submission.id}"
-                th:data-saved-path="${submission.filePath}" th:data-return-url="${returnUrl}">
+              <button type="button" class="btn-ai-support-top primary" id="btnEditSubmission" style="display:none">
                 <i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật
               </button>
 
@@ -504,226 +499,9 @@
       <div id="tab-project" class="tab-pane">
         <h2>Series của tôi</h2>
 
-        <div th:if="${series == null and chapter == null}">
-          <table class="data-table" style="width: 100%">
-            <thead>
-              <tr>
-                <th>Tên Series</th>
-                <th>Trạng thái</th>
-                <th>Ngày bắt đầu</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr th:if="${mySeriesList != null}" th:each="s : ${mySeriesList}">
-                <td th:text="${s.seriesName}"></td>
-                <td>
-                  <span th:switch="${s.status}">
-                    <span th:case="'unfinish'" class="badge-status-approved">Đang thực hiện</span>
-                    <span th:case="'finish'" class="badge-status-waiting">Chờ BTV duyệt</span>
-                    <span th:case="'pass'" class="badge-status-passed">Đã duyệt</span>
-                    <span th:case="'stopped'" class="badge-status-rejected">Đã dừng</span>
-                    <span th:case="'rewarded'" class="badge-status-passed">Đã khen thưởng</span>
-                    <span th:case="*" th:text="${s.status}"></span>
-                  </span>
-                </td>
-                <td th:text="${s.startDate}"></td>
-                <td>
-                  <a th:href="@{/manga/mangaka/myseries/{id}(id=${s.id})}" class="btn-link">
-                    Xem chapter
-                  </a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <p th:if="${mySeriesList == null or mySeriesList.isEmpty()}" class="ptab-sub-desc">
-            Bạn chưa có series nào đang hoạt động. Khởi động 1 đề xuất ở tab
-            "Đề xuất" để bắt đầu.
-          </p>
-        </div>
-
-        <div th:if="${series != null and chapter == null}">
-          <h3>
-            Chapter của series: <span th:text="${series.seriesName}"></span>
-          </h3>
-
-          <a th:href="@{/manga/mangaka}" onclick="openTab('tab-project')">
-            <button type="button" class="btn-icon">Quay lại</button>
-          </a>
-
-          <form th:action="@{/manga/mangaka/myseries/{id}/createchapter(id=${series.id})}" method="POST"
-            style="margin: 12px 0">
-            <input type="text" name="txtChapterName" placeholder="Tên chapter mới" required />
-            <button type="submit">Tạo Chapter</button>
-            <span style="margin-left: 8px; font-size: 13px; color: #666;">
-              Deadline sẽ luôn là thứ 7.
-            </span>
-          </form>
-
-          <table class="data-table" style="width: 100%">
-            <thead>
-              <tr>
-                <th>Số chương</th>
-                <th>Tên Chapter</th>
-                <th>Deadline</th>
-                <th>Trạng thái</th>
-                <th>Nhận xét từ Tantou</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr th:if="${chapters != null}" th:each="c : ${chapters}">
-                <td th:text="${c.chapterNumber}"></td>
-                <td th:text="${c.chapterName}"></td>
-                <td>
-                  <span th:if="${c.deadline != null}" th:text="${c.deadline}"></span>
-                  <span th:unless="${c.deadline != null}">—</span>
-                </td>
-                <td th:text="${c.status}"></td>
-                <td>
-                  <span th:if="${c.tantouComment != null and !#strings.isEmpty(c.tantouComment)}"
-                    th:text="${c.tantouComment}" class="tantou-comment-text"></span>
-                  <span th:unless="${c.tantouComment != null and !#strings.isEmpty(c.tantouComment)}"
-                    class="tantou-comment-empty">—</span>
-                </td>
-                <td>
-                  <a th:href="@{/manga/mangaka/myseries/{sid}/{cid}(sid=${series.id}, cid=${c.id})}" class="btn-link">
-                    Xem trang
-                  </a>
-                  <span th:if="${c.status == 'finish'}" class="badge-status-approved" style="margin-left: 6px">⏳
-                    Chờ BTV duyệt</span>
-                  <span th:if="${c.status == 'pass'}" class="badge-status-passed" style="margin-left: 6px">✅ Đã
-                    duyệt</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <p th:if="${chapters == null or chapters.isEmpty()}" class="ptab-sub-desc">
-            Series này chưa có chapter nào. Tạo chapter mới ở form trên.
-          </p>
-        </div>
-
-        <div th:if="${chapter != null}">
-          <div id="mangaka-meta" th:data-mangaka-id="${mangakaId}" style="display: none"></div>
-
-          <h3>
-            Danh sách trang — Chapter: <span th:text="${chapter.chapterName}"></span>
-          </h3>
-
-          <p class="ptab-sub-desc" style="margin: 6px 0 0 0">
-            Deadline:
-            <strong th:if="${chapter.deadline != null}" th:text="${chapter.deadline}"></strong>
-            <strong th:unless="${chapter.deadline != null}">Chưa đặt deadline</strong>
-          </p>
-
-          <a th:href="@{/manga/mangaka/myseries/{id}(id=${chapter.series.id})}" class="btn-link">
-            &larr; Quay lại danh sách chapter
-          </a>
-
-          <div style="display: flex; align-items: center; gap: 10px; margin: 12px 0;">
-            <form th:if="${chapter.status == 'unfinish'}"
-              th:action="@{/manga/mangaka/myseries/{sid}/{cid}/addpage(sid=${chapter.series.id}, cid=${chapter.id})}"
-              method="POST">
-              <button type="submit">+ Thêm trang mới</button>
-            </form>
-
-            <button th:if="${chapter.status == 'unfinish' and pages != null and !pages.isEmpty()}" type="button"
-              class="btn-action primary btn-submit-chapter" style="font-size: 13px; padding: 6px 14px"
-              th:data-chapter-id="${chapter.id}">
-              📤 Submit lên BTV
-            </button>
-
-            <span th:if="${chapter.status == 'finish'}" class="badge-status-approved" style="padding: 6px 12px">⏳ Chờ
-              BTV duyệt</span>
-            <span th:if="${chapter.status == 'pass'}" class="badge-status-passed" style="padding: 6px 12px">✅ Đã
-              duyệt</span>
-          </div>
-
-          <div class="pages-grid-container">
-            <div th:if="${pages != null}" th:each="p : ${pages}" class="page-grid-item">
-              <div class="page-preview-box">
-                <img th:if="${p.filePath != null}" th:src="${p.filePath + '?t=' + #dates.createNow().time}" />
-                <i th:unless="${p.filePath != null}" class="fa-solid fa-image"></i>
-              </div>
-
-              <p th:text="'Trang ' + ${p.pageNumber}"></p>
-              <p th:text="${p.status}"></p>
-
-              <a th:if="${chapter.status == 'unfinish' and p.status == 'unfinish'}"
-                th:href="@{/manga/mangaka/myseries/{sid}/{cid}/{pid}/edit(sid=${chapter.series.id}, cid=${chapter.id}, pid=${p.id})}">
-                Mở để vẽ
-              </a>
-
-              <!-- Nút hoàn thành: hiện khi page là unfinish và không có submission -->
-              <button
-                th:if="${p.status == 'unfinish' or (p.status == 'done' and submissionMap[p.id] != null and submissionMap[p.id].status == 'finish')}"
-                type="button" class="btn-action approve btn-finish-page"
-                style="font-size: 12px; padding: 4px 10px; margin-top: 4px" th:data-page-id="${p.id}">
-                ✅ Hoàn thành
-              </button>
-
-              <span th:if="${p.status == 'finish'}" class="badge-status-passed" style="font-size: 11px">✅
-                Finish</span>
-              <span th:if="${p.status == 'intask'}" class="badge-status-approved" style="font-size: 11px">🔄 Đang
-                làm</span>
-              <span
-                th:if="${p.status == 'done' and (submissionMap[p.id] == null or submissionMap[p.id].status != 'finish')}"
-                class="badge-status-waiting" style="font-size: 11px">👁 Chờ duyệt</span>
-
-              <div class="chapter-create-inline-form">
-                <div th:if="${submissionMap[p.id] != null and p.status == 'intask'}" class="assistant-assignment-badge">
-                  <div>
-                    👤 <b th:text="${submissionMap[p.id].assistant.user.fullname}"></b>
-                  </div>
-
-                  <div>
-                    📅 <span th:text="${#temporals.format(submissionMap[p.id].deadline, 'dd/MM/yyyy HH:mm')}"></span>
-                  </div>
-                </div>
-
-                <!-- Khi assistant đã nộp (status = done): Mangaka duyệt hoặc giao lại -->
-                <div
-                  th:if="${p.status == 'done' and submissionMap[p.id] != null and submissionMap[p.id].status == 'done'}"
-                  style="margin-top: 6px; display: flex; flex-direction: column; gap: 6px;">
-                  <a th:href="@{/manga/mangaka/submission/{id}/edit(id=${submissionMap[p.id].id})}"
-                    style="font-size: 12px; color: #4da6ff; display: block; margin-bottom: 4px;">
-                    🖼 Mở bài nộp để chỉnh sửa
-                  </a>
-                  <div style="display: flex; gap: 6px">
-                    <button type="button" class="btn-action approve btn-approve-page"
-                      style="font-size: 12px; padding: 4px 10px" th:data-page-id="${p.id}">
-                      ✅ Duyệt
-                    </button>
-                    <button type="button" class="btn-action reject btn-reassign-page"
-                      style="font-size: 12px; padding: 4px 10px" th:data-page-id="${p.id}"
-                      th:data-submission-id="${submissionMap[p.id].id}">
-                      🔄 Giao lại
-                    </button>
-                  </div>
-                </div>
-
-                <!-- ✅ Sau khi duyệt (status = finish) vẫn cho mở chỉnh sửa -->
-                <div
-                  th:if="${p.status == 'done' and submissionMap[p.id] != null and submissionMap[p.id].status == 'finish'}"
-                  style="margin-top: 6px;">
-                  <a th:href="@{/manga/mangaka/submission/{id}/edit(id=${submissionMap[p.id].id})}"
-                    style="font-size: 12px; color: #4da6ff; display: block;">
-                    🖼 Mở bài nộp để chỉnh sửa
-                  </a>
-                </div>
-
-              </div>
-
-              <!-- Chưa giao: hiện nút Giao việc -->
-              <button
-                th:if="${chapter.status == 'unfinish' and p.status != 'finish' and (submissionMap[p.id] == null or submissionMap[p.id].status == 'finish')}"
-                type="button" class="btn-assign-task btn-open-assign" th:data-page-id="${p.id}">
-                <i class="fa-solid fa-user-plus"></i> Giao việc
-              </button>
-            </div>
-          </div>
-        </div>
-
+        <div id="project-view-series"></div>
+        <div id="project-view-chapter" style="display:none"></div>
+        <div id="project-view-page" style="display:none"></div>
         <div id="assignModalOverlay" style="display:none;">
           <div class="modal-box">
             <h4>Giao việc cho trợ lý</h4>
@@ -1573,6 +1351,7 @@
         ) {
           openTab(activeTabFromController);
         }
+        initProjectTab();
 
         // Notification bell
         const btnNoti = document.getElementById("btnNoti");
@@ -1868,6 +1647,332 @@
         const reassignBtn = e.target.closest(".btn-reassign-page");
         if (reassignBtn) { openReassignModal(reassignBtn.dataset.pageId, reassignBtn.dataset.submissionId); return; }
       });
+
+      function initProjectTab() {
+  const path = window.location.pathname;
+
+  const pageEditMatch = path.match(/\/myseries\/([^/]+)\/([^/]+)\/([^/]+)\/edit$/);
+  const submissionEditMatch = path.match(/\/submission\/([^/]+)\/edit$/);
+  const chapterMatch = path.match(/\/myseries\/([^/]+)\/([^/]+)$/);
+  const seriesMatch = path.match(/\/myseries\/([^/]+)$/);
+
+  if (pageEditMatch) {
+    const sid = pageEditMatch[1];
+    const cid = pageEditMatch[2];
+    const pid = pageEditMatch[3];
+
+    openTab('tab-draw');
+
+    fetch(`/manga/mangaka/myseries/${sid}/${cid}/${pid}/edit/data`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success' && data.page) {
+          const btn = document.getElementById('btnSavePage');
+          if (btn) {
+            btn.dataset.pageId = data.page.id;
+            btn.dataset.savedPath = data.page.filePath || '';
+            btn.style.display = '';
+
+            // 👇 THÊM: load ảnh đã lưu lên canvas
+            if (data.page.filePath) {
+              const img = new Image();
+              img.onload = () => {
+                layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+                layers[1].ctx.drawImage(img, 0, 0);
+                pushHistoryEntry('Load trang đã lưu');
+              };
+              img.src = data.page.filePath + '?t=' + Date.now();
+            }
+          }
+        }
+      });
+
+    loadChapterView(sid, cid);
+    return;
+  } else if (submissionEditMatch) {
+    const subId = submissionEditMatch[1];
+
+    openTab('tab-draw');
+
+    fetch(`/manga/mangaka/submission/${subId}/data`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          const btn = document.getElementById('btnEditSubmission');
+          if (btn) {
+            btn.dataset.submissionId = data.submission.id;
+            btn.dataset.savedPath = data.submission.filePath || '';
+            btn.dataset.returnUrl = data.returnUrl || '';
+            btn.style.display = '';
+
+            // 👇 THÊM: load ảnh đã lưu lên canvas
+            if (data.submission.filePath) {
+              const img = new Image();
+              img.onload = () => {
+                layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+                layers[1].ctx.drawImage(img, 0, 0);
+                pushHistoryEntry('Load submission đã lưu');
+              };
+              img.src = data.submission.filePath + '?t=' + Date.now();
+            }
+          }
+          if (data.seriesId && data.chapterId) {
+            loadChapterView(data.seriesId, data.chapterId);
+          }
+        }
+      });
+
+    return;
+  } else if (chapterMatch) {
+    const sid = chapterMatch[1];
+    const cid = chapterMatch[2];
+    openTab('tab-project');
+    loadChapterView(sid, cid);
+  } else if (seriesMatch) {
+    const sid = seriesMatch[1];
+    openTab('tab-project');
+    loadSeriesView(sid);
+  } else {
+    loadMySeriesList();
+  }
+}
+
+      function loadMySeriesList() {
+        fetch('/manga/mangaka/data')
+          .then(r => r.json())
+          .then(data => {
+            if (data.status !== 'success') return;
+            const list = data.mySeriesList || [];
+            let html = `
+              <table class="data-table" style="width:100%">
+                <thead><tr>
+                  <th>Tên Series</th><th>Trạng thái</th><th>Ngày bắt đầu</th><th>Hành động</th>
+                </tr></thead>
+                <tbody>`;
+            if (list.length === 0) {
+              html += `<tr><td colspan="4" class="ptab-sub-desc">Bạn chưa có series nào đang hoạt động.</td></tr>`;
+            } else {
+              list.forEach(s => {
+                const statusMap = {
+                  'unfinish': '<span class="badge-status-approved">Đang thực hiện</span>',
+                  'finish': '<span class="badge-status-waiting">Chờ BTV duyệt</span>',
+                  'pass': '<span class="badge-status-passed">Đã duyệt</span>',
+                  'stopped': '<span class="badge-status-rejected">Đã dừng</span>',
+                  'rewarded': '<span class="badge-status-passed">Đã khen thưởng</span>',
+                };
+                html += `<tr>
+                  <td>${s.seriesName}</td>
+                  <td>${statusMap[s.status] || s.status}</td>
+                  <td>${s.startDate || ''}</td>
+                  <td><a href="/manga/mangaka/myseries/${s.id}" class="btn-link">Xem chapter</a></td>
+                </tr>`;
+              });
+            }
+            html += `</tbody></table>`;
+            document.getElementById('project-view-series').innerHTML = html;
+            document.getElementById('project-view-series').style.display = '';
+          });
+      }
+
+      function loadSeriesView(sid) {
+        fetch(`/manga/mangaka/myseries/${sid}/data`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.status !== 'success') return;
+            const series = data.series;
+            const chapters = data.chapters || [];
+            let html = `
+              <h3>Chapter của series: ${series.seriesName}</h3>
+              <a href="/manga/mangaka"><button type="button" class="btn-icon">Quay lại</button></a>
+              <form id="formCreateChapter" style="margin:12px 0">
+                <input type="text" id="txtChapterName" placeholder="Tên chapter mới" required />
+                <button type="button" onclick="submitCreateChapter('${series.id}')">Tạo Chapter</button>
+                <span style="margin-left:8px;font-size:13px;color:#666;">Deadline sẽ luôn là thứ 7.</span>
+              </form>
+              <table class="data-table" style="width:100%">
+                <thead><tr>
+                  <th>Số chương</th><th>Tên Chapter</th><th>Deadline</th>
+                  <th>Trạng thái</th><th>Nhận xét từ Tantou</th><th>Hành động</th>
+                </tr></thead>
+                <tbody>`;
+            if (chapters.length === 0) {
+              html += `<tr><td colspan="6" class="ptab-sub-desc">Series này chưa có chapter nào.</td></tr>`;
+            } else {
+              chapters.forEach(c => {
+                const deadline = c.deadline || '—';
+                const comment = c.tantouComment
+                  ? `<span class="tantou-comment-text">${c.tantouComment}</span>`
+                  : `<span class="tantou-comment-empty">—</span>`;
+                const finishBadge = c.status === 'finish'
+                  ? `<span class="badge-status-approved" style="margin-left:6px">⏳ Chờ BTV duyệt</span>` : '';
+                const passBadge = c.status === 'pass'
+                  ? `<span class="badge-status-passed" style="margin-left:6px">✅ Đã duyệt</span>` : '';
+                html += `<tr>
+                  <td>${c.chapterNumber}</td>
+                  <td>${c.chapterName}</td>
+                  <td>${deadline}</td>
+                  <td>${c.status}</td>
+                  <td>${comment}</td>
+                  <td>
+                    <a href="/manga/mangaka/myseries/${sid}/${c.id}" class="btn-link">Xem trang</a>
+                    ${finishBadge}${passBadge}
+                  </td>
+                </tr>`;
+              });
+            }
+            html += `</tbody></table>`;
+            document.getElementById('project-view-chapter').innerHTML = html;
+            document.getElementById('project-view-chapter').style.display = '';
+          });
+      }
+
+      function submitCreateChapter(seriesId) {
+        const name = document.getElementById('txtChapterName').value.trim();
+        if (!name) { alert('Vui lòng nhập tên chapter!'); return; }
+        fetch(`/manga/mangaka/myseries/${seriesId}/createchapter/data`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `txtChapterName=${encodeURIComponent(name)}`
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === 'success') {
+              alert('✅ ' + data.message);
+              loadSeriesView(seriesId);
+            } else {
+              alert('❌ ' + data.message);
+            }
+          });
+      }
+
+      function loadChapterView(sid, cid) {
+        fetch(`/manga/mangaka/myseries/${sid}/${cid}/data`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.status !== 'success') return;
+            const chapter = data.chapter;
+            const pages = data.pages || [];
+            const subMap = data.submissionMap || {};
+            const mangakaId = data.mangakaId || '';
+
+            let html = `
+              <div id="mangaka-meta" data-mangaka-id="${mangakaId}" style="display:none"></div>
+              <h3>Danh sách trang — Chapter: ${chapter.chapterName}</h3>
+              <p class="ptab-sub-desc" style="margin:6px 0 0 0">
+                Deadline: <strong>${chapter.deadline || 'Chưa đặt deadline'}</strong>
+              </p>
+              <a href="/manga/mangaka/myseries/${sid}" class="btn-link">&larr; Quay lại danh sách chapter</a>
+              <div style="display:flex;align-items:center;gap:10px;margin:12px 0;">`;
+
+            if (chapter.status === 'unfinish') {
+              html += `<button type="button" onclick="submitAddPage('${sid}','${cid}')">+ Thêm trang mới</button>`;
+              if (pages.length > 0) {
+                html += `<button type="button" class="btn-action primary btn-submit-chapter" 
+                          style="font-size:13px;padding:6px 14px" data-chapter-id="${chapter.id}">
+                          📤 Submit lên BTV</button>`;
+              }
+            } else if (chapter.status === 'finish') {
+              html += `<span class="badge-status-approved" style="padding:6px 12px">⏳ Chờ BTV duyệt</span>`;
+            } else if (chapter.status === 'pass') {
+              html += `<span class="badge-status-passed" style="padding:6px 12px">✅ Đã duyệt</span>`;
+            }
+
+            html += `</div><div class="pages-grid-container">`;
+
+            if (pages.length === 0) {
+              html += `<p class="ptab-sub-desc">Chapter này chưa có trang nào.</p>`;
+            } else {
+              pages.forEach(p => {
+                const sub = subMap[p.id];
+                const imgHtml = p.filePath
+                  ? `<img src="${p.filePath}?t=${Date.now()}" />`
+                  : `<i class="fa-solid fa-image"></i>`;
+
+                let actions = '';
+
+                // Nút mở để vẽ
+                if (chapter.status === 'unfinish' && p.status === 'unfinish') {
+                  actions += `<a href="/manga/mangaka/myseries/${sid}/${cid}/${p.id}/edit">Mở để vẽ</a>`;
+                }
+
+                // Nút hoàn thành
+                if (p.status === 'unfinish' || (p.status === 'done' && sub && sub.status === 'finish')) {
+                  actions += `<button type="button" class="btn-action approve btn-finish-page"
+                                style="font-size:12px;padding:4px 10px;margin-top:4px"
+                                data-page-id="${p.id}">✅ Hoàn thành</button>`;
+                }
+
+                // Badge status
+                if (p.status === 'finish') {
+                  actions += `<span class="badge-status-passed" style="font-size:11px">✅ Finish</span>`;
+                } else if (p.status === 'intask') {
+                  actions += `<span class="badge-status-approved" style="font-size:11px">🔄 Đang làm</span>`;
+                } else if (p.status === 'done' && (!sub || sub.status !== 'finish')) {
+                  actions += `<span class="badge-status-waiting" style="font-size:11px">👁 Chờ duyệt</span>`;
+                }
+
+                // Assignment info
+                if (sub && p.status === 'intask') {
+                  actions += `<div class="assistant-assignment-badge">
+                    <div>👤 <b>${sub.assistant.user.fullname}</b></div>
+                    <div>📅 ${sub.deadline}</div>
+                  </div>`;
+                }
+
+                // Done: duyệt hoặc giao lại
+                if (p.status === 'done' && sub && sub.status === 'done') {
+                  actions += `<a href="/manga/mangaka/submission/${sub.id}/edit" 
+                                style="font-size:12px;color:#4da6ff;display:block;margin-bottom:4px">
+                                🖼 Mở bài nộp để chỉnh sửa</a>
+                              <div style="display:flex;gap:6px">
+                                <button type="button" class="btn-action approve btn-approve-page"
+                                  style="font-size:12px;padding:4px 10px" data-page-id="${p.id}">✅ Duyệt</button>
+                                <button type="button" class="btn-action reject btn-reassign-page"
+                                  style="font-size:12px;padding:4px 10px"
+                                  data-page-id="${p.id}" data-submission-id="${sub.id}">🔄 Giao lại</button>
+                              </div>`;
+                }
+
+                // Done + finish: vẫn cho mở chỉnh sửa
+                if (p.status === 'done' && sub && sub.status === 'finish') {
+                  actions += `<a href="/manga/mangaka/submission/${sub.id}/edit"
+                                style="font-size:12px;color:#4da6ff;display:block">
+                                🖼 Mở bài nộp để chỉnh sửa</a>`;
+                }
+
+                // Nút giao việc
+                if (chapter.status === 'unfinish' && p.status === 'unfinish') {
+                  actions += `<button type="button" class="btn-assign-task btn-open-assign"
+                                data-page-id="${p.id}">
+                                <i class="fa-solid fa-user-plus"></i> Giao việc</button>`;
+                }
+
+                html += `<div class="page-grid-item">
+                  <div class="page-preview-box">${imgHtml}</div>
+                  <p>Trang ${p.pageNumber}</p>
+                  <p>${p.status}</p>
+                  <div class="chapter-create-inline-form">${actions}</div>
+                </div>`;
+              });
+            }
+
+            html += `</div>`;
+            document.getElementById('project-view-page').innerHTML = html;
+            document.getElementById('project-view-page').style.display = '';
+          });
+      }
+
+      function submitAddPage(sid, cid) {
+        fetch(`/manga/mangaka/myseries/${sid}/${cid}/addpage/data`, { method: 'POST' })
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === 'success') {
+              window.location.href = `/manga/mangaka/myseries/${sid}/${cid}/${data.pageId}/edit`;
+            } else {
+              alert('❌ ' + data.message);
+            }
+          });
+      }
     </script>
 
 </body>

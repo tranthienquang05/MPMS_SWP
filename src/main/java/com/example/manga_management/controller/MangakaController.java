@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +40,7 @@ import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.ProposalRepository;
 import com.example.manga_management.repository.SeriesRepository;
 import com.example.manga_management.repository.SubmissionRepository;
+import com.example.manga_management.service.ProposalService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -57,12 +59,15 @@ public class MangakaController {
     private final com.example.manga_management.repository.ChapterRepository chapterRepository;
     private final MangaPageRepository mangaPageRepository;
     private final AssistantRepository assistantRepository;
+    private final ProposalService proposalService;
     private NotificationController notificationController;
 
     public MangakaController(ProposalRepository proposalRepository, MangakaRepository mangakaRepository,
-            SeriesRepository seriesRepository, com.example.manga_management.repository.ChapterRepository chapterRepository,
+            SeriesRepository seriesRepository,
+            com.example.manga_management.repository.ChapterRepository chapterRepository,
             MangaPageRepository mangaPageRepository, SubmissionRepository submissionRepository,
-            NotificationController notificationController, AssistantRepository assistantRepository) {
+            NotificationController notificationController, AssistantRepository assistantRepository,
+            ProposalService proposalService) {
         this.proposalRepository = proposalRepository;
         this.mangakaRepository = mangakaRepository;
         this.assistantRepository = assistantRepository;
@@ -71,9 +76,10 @@ public class MangakaController {
         this.mangaPageRepository = mangaPageRepository;
         this.submissionRepository = submissionRepository;
         this.notificationController = notificationController;
+        this.proposalService = proposalService;
     }
 
-    @GetMapping({"", "/myseries", "/myseries/**", "/submission/**"})
+    @GetMapping({ "" })
     public String mangakaPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if (user == null) {
@@ -83,8 +89,13 @@ public class MangakaController {
         model.addAttribute("mangaka", mangaka);
         if (mangaka != null) {
             model.addAttribute("allProposals", proposalRepository.findByMangaka_Id(mangaka.getId()));
-            model.addAttribute("approvedList", proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangaka.getId()));
-            model.addAttribute("rejectedList", proposalRepository.findByStatusAndMangaka_Id("unfinish", mangaka.getId()));
+            model.addAttribute("approvedList",
+                    proposalRepository.findByStatusInAndMangaka_Id(List.of("approved", "board_check", "passed"),
+                            mangaka.getId()));
+            model.addAttribute("revisionList",
+                    proposalRepository.findByStatusAndMangaka_Id("revision", mangaka.getId()));
+            model.addAttribute("lockedList",
+                    proposalRepository.findByStatusAndMangaka_Id("locked", mangaka.getId()));
         }
         return "mangaka";
     }
@@ -93,7 +104,7 @@ public class MangakaController {
     @Operation(summary = "[SWAGGER] Xem tất cả proposals của một Mangaka")
     @GetMapping("/my-projects/data")
     @ResponseBody
-    public Map<String, Object> myProjectsData(@RequestParam String mangakaId) {
+    public Map<String, Object> myProjectsData(@RequestParam String mangakaId, Model model) {
         Map<String, Object> result = new HashMap<>();
 
         Mangaka mangaka = mangakaRepository.findById(mangakaId).orElse(null);
@@ -103,11 +114,25 @@ public class MangakaController {
             return result;
         }
 
+        model.addAttribute("allProposals", proposalRepository.findByMangaka_Id(mangaka.getId()));
+        model.addAttribute("approvedList",
+                proposalRepository.findByStatusInAndMangaka_Id(List.of("approved", "board_check", "passed"),
+                        mangaka.getId()));
+        model.addAttribute("revisionList",
+                proposalRepository.findByStatusAndMangaka_Id("revision", mangaka.getId()));
+        model.addAttribute("lockedList",
+                proposalRepository.findByStatusAndMangaka_Id("locked", mangaka.getId()));
+
         result.put("status", "success");
-        result.put("allProposals", proposalRepository.findByMangaka_Id(mangakaId));
+        result.put("allProposals",
+                proposalRepository.findByMangaka_Id(mangaka.getId()));
         result.put("approvedList",
-                proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangakaId));
-        result.put("rejectedList", proposalRepository.findByStatusAndMangaka_Id("unfinish", mangakaId));
+                proposalRepository.findByStatusInAndMangaka_Id(List.of("approved", "board_check", "passed"),
+                        mangaka.getId()));
+        result.put("revisionList",
+                proposalRepository.findByStatusAndMangaka_Id("revision", mangaka.getId()));
+        result.put("lockedList",
+                proposalRepository.findByStatusAndMangaka_Id("locked", mangaka.getId()));
         return result;
     }
 
@@ -120,7 +145,6 @@ public class MangakaController {
             HttpSession session) {
 
         Map<String, String> result = new HashMap<>();
-
         Mangaka currentMangaka = null;
 
         if (mangakaId != null && !mangakaId.isEmpty()) {
@@ -137,13 +161,11 @@ public class MangakaController {
             result.put("message", "Không tìm thấy Mangaka!");
             return result;
         }
-
         if (fileManuscript.isEmpty()) {
             result.put("status", "error");
             result.put("message", "Vui lòng chọn file bản thảo!");
             return result;
         }
-
         if (txtSeriesName == null || txtSeriesName.trim().isEmpty()) {
             result.put("status", "error");
             result.put("message", "Vui lòng nhập tên series!");
@@ -177,7 +199,7 @@ public class MangakaController {
             proposal.setMangaka(currentMangaka);
             proposal.setSeriesName(txtSeriesName.trim());
             proposal.setFilePath("/proposal/" + shortFileName);
-            proposal.setStatus("finish");
+            proposal.setStatus("new");
             proposalRepository.save(proposal);
 
             notificationController.send("tantou", null, "Có đề xuất mới từ Mangaka đang chờ duyệt: " + txtSeriesName,
@@ -210,12 +232,23 @@ public class MangakaController {
             return result;
         }
 
+        if ("locked".equals(proposal.getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Đề xuất này không thể nộp lại.");
+            return result;
+        }
+
+        if (!"revision".equals(proposal.getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Đề xuất này hiện không ở trạng thái chờ sửa!");
+            return result;
+        }
+
         if (fileManuscript.isEmpty()) {
             result.put("status", "error");
             result.put("message", "Vui lòng chọn file bản thảo mới!");
             return result;
         }
-
         if (txtSeriesName == null || txtSeriesName.trim().isEmpty()) {
             result.put("status", "error");
             result.put("message", "Vui lòng nhập tên series!");
@@ -249,8 +282,10 @@ public class MangakaController {
 
             proposal.setSeriesName(txtSeriesName.trim());
             proposal.setFilePath("/proposal/" + fileName);
-            proposal.setStatus("finish");
+            proposal.setStatus("new");
             proposal.setComment(null);
+            proposal.setEditorScore(null);
+            proposal.setRevisionDeadline(null);
             proposalRepository.save(proposal);
 
             notificationController.send("tantou", null, "Mangaka đã nộp lại bản thảo: " + txtSeriesName,
@@ -264,6 +299,40 @@ public class MangakaController {
             result.put("status", "error");
             result.put("message", "Lỗi hệ thống: " + e.getMessage());
         }
+        return result;
+    }
+
+    @Operation(summary = "Xem chi tiết đề xuất: comment/điểm/deadline của Tantou + comment của hội đồng")
+    @GetMapping("/proposal-detail")
+    @ResponseBody
+    public Map<String, Object> proposalDetail(@RequestParam String proposalId) {
+        Map<String, Object> result = new HashMap<>();
+        Proposal p = proposalRepository.findById(proposalId).orElse(null);
+        if (p == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy đề xuất: " + proposalId);
+            return result;
+        }
+
+        result.put("status", "success");
+        result.put("proposalId", p.getId());
+        result.put("seriesName", p.getSeriesName());
+        result.put("proposalStatus", p.getStatus());
+        result.put("editorComment", p.getComment());
+        result.put("editorScore", p.getEditorScore());
+        result.put("revisionDeadline", p.getRevisionDeadline()); // FE tự so sánh với thời gian hiện tại nếu muốn hiển
+                                                                 // thị "còn X ngày"
+
+        List<Map<String, Object>> boardComments = proposalService
+                .getCommentsForProposal(p.getId())
+                .stream()
+                .map(c -> Map.<String, Object>of(
+                        "action", c.getAction(),
+                        "content", c.getContent() == null ? "" : c.getContent(),
+                        "createdAt", c.getCreatedAt()))
+                .toList();
+        result.put("boardComments", boardComments);
+
         return result;
     }
 
@@ -359,7 +428,8 @@ public class MangakaController {
         result.put("mangaka", mangaka);
         result.put("mySeriesList", seriesRepository.findByProposal_Mangaka_Id(mangaka.getId()));
         result.put("allProposals", proposalRepository.findByMangaka_Id(mangaka.getId()));
-        result.put("approvedList", proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangaka.getId()));
+        result.put("approvedList",
+                proposalRepository.findByStatusInAndMangaka_Id(List.of("checked", "pass"), mangaka.getId()));
         result.put("rejectedList", proposalRepository.findByStatusAndMangaka_Id("unfinish", mangaka.getId()));
         return result;
     }

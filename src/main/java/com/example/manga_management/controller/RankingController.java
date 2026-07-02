@@ -71,7 +71,7 @@ public class RankingController {
         User user = (User) session.getAttribute("user");
         String boardId = null;
         if (user != null) {
-            boardId = boardRepository.findByUserId(user.getId())
+            boardId = boardRepository.findByUser_Id(user.getId())
                     .map(Board::getId).orElse(null);
         }
 
@@ -134,7 +134,7 @@ public class RankingController {
             return response;
         }
 
-        Optional<Board> boardOpt = boardRepository.findByUserId(user.getId());
+        Optional<Board> boardOpt = boardRepository.findByUser_Id(user.getId());
         if (boardOpt.isEmpty()) {
             response.put("success", false);
             response.put("message", "Bạn không phải thành viên Editorial Board!");

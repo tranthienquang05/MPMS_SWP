@@ -1,79 +1,91 @@
 package com.example.manga_management.service;
 
 import com.example.manga_management.entity.Board;
-import com.example.manga_management.entity.EditorialVote;
+import com.example.manga_management.entity.BoardProposalComment;
 import com.example.manga_management.entity.Proposal;
+import com.example.manga_management.repository.BoardProposalCommentRepository;
 import com.example.manga_management.repository.BoardRepository;
-import com.example.manga_management.repository.EditorialVoteRepository;
 import com.example.manga_management.repository.ProposalRepository;
-
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class ProposalService {
 
     private final ProposalRepository proposalRepository;
+    private final BoardProposalCommentRepository boardCommentRepository;
     private final BoardRepository boardRepository;
-    private final EditorialVoteRepository voteRepository;
 
-    public ProposalService(EditorialVoteRepository voteRepository,
-            ProposalRepository proposalRepository,
+    public ProposalService(ProposalRepository proposalRepository,
+            BoardProposalCommentRepository boardCommentRepository,
             BoardRepository boardRepository) {
-        this.voteRepository = voteRepository;
         this.proposalRepository = proposalRepository;
+        this.boardCommentRepository = boardCommentRepository;
         this.boardRepository = boardRepository;
     }
 
-    @Transactional
-    public void submitVote(String proposalId, String action, String userId) {
-        // 1. Tìm Proposal
-        Proposal proposal = proposalRepository.findById(proposalId)
-                .orElseThrow(() -> new RuntimeException("Dự án không tồn tại!"));
-
-        // 2. TÌM BOARD THEO USER ID (Thay vì giả định ID User là ID Board)
-        // Giả sử bạn có phương thức này trong BoardRepository
-        Board board = boardRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Tài khoản này không có quyền biên tập!"));
-
-        // 3. Kiểm tra trùng lặp phiếu bầu
-        if (voteRepository.existsByProposalIdAndBoardId(proposalId, board.getId())) {
-            throw new RuntimeException("Bạn đã bỏ phiếu cho dự án này rồi!");
-        }
-
-        // 4. Lưu phiếu bầu
-        EditorialVote vote = new EditorialVote();
-        vote.setEvoteID(UUID.randomUUID().toString().substring(0, 6));
-        vote.setProposal(proposal);
-        vote.setBoard(board); // Dùng board tìm được
-        vote.setVote(action);
-        vote.setVoteDate(LocalDate.now());
-
-        voteRepository.save(vote);
-
-        checkAndFinalizeProposal(proposalId);
+    public String generateNextProposalId() {
+        long count = proposalRepository.count();
+        return String.format("PPS%03d", count + 1);
     }
 
-    private void checkAndFinalizeProposal(String proposalId) {
+    /**
+     * Board member vote + comment for a proposal in board_check status.
+     */
+    public Proposal submitBoardVote(String proposalId, String boardId, String action, String content) {
+        Proposal proposal = proposalRepository.findById(proposalId)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay de xuat: " + proposalId));
 
-        long totalBoardMembers = boardRepository.count();
-
-        long currentVotes = voteRepository.countByProposalId(proposalId);
-
-        if (currentVotes >= totalBoardMembers) {
-            List<EditorialVote> votes = voteRepository.findByProposalId(proposalId);
-            long passVotes = votes.stream().filter(v -> "pass".equals(v.getVote())).count();
-            double passRate = (double) passVotes / votes.size();
-
-            Proposal proposal = proposalRepository.findById(proposalId).orElse(null);
-            if (proposal != null) {
-                proposal.setStatus(passRate >= 0.6 ? "pass" : "reject");
-                proposalRepository.save(proposal);
-            }
+        if (!"board_check".equals(proposal.getStatus())) {
+            resultCheck(proposal);
         }
+
+        if (boardCommentRepository.existsByProposal_IdAndBoard_Id(proposalId, boardId)) {
+            throw new RuntimeException("Ban da vote cho du an nay roi!");
+        }
+
+        if (!"pass".equals(action) && !"reject".equals(action)) {
+            throw new RuntimeException("Hanh dong vote khong hop le!");
+        }
+
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay thanh vien hoi dong: " + boardId));
+
+        BoardProposalComment vote = BoardProposalComment.builder()
+                .proposal(proposal)
+                .board(board)
+                .action(action)
+                .content(content)
+                .build();
+        boardCommentRepository.save(vote);
+
+        evaluateProposalResult(proposal);
+        return proposal;
+    }
+
+    private void resultCheck(Proposal proposal) {
+        throw new RuntimeException("De xuat nay khong o trang thai cho hoi dong bo phieu!");
+    }
+
+    public void evaluateProposalResult(Proposal proposal) {
+        long passVotes = boardCommentRepository.countByProposal_IdAndAction(proposal.getId(), "pass");
+        long rejectVotes = boardCommentRepository.countByProposal_IdAndAction(proposal.getId(), "reject");
+        long totalBoards = boardRepository.count();
+
+        if (totalBoards <= 0) {
+            return;
+        }
+
+        if (passVotes + rejectVotes < totalBoards) {
+            return;
+        }
+
+        proposal.setStatus(passVotes > rejectVotes ? "passed" : "locked");
+        proposalRepository.save(proposal);
+    }
+
+    public List<BoardProposalComment> getCommentsForProposal(String proposalId) {
+        return boardCommentRepository.findByProposal_Id(proposalId);
     }
 }

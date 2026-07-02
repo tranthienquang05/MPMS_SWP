@@ -32,8 +32,17 @@ public class Proposal {
     @Column(name = "FilePath", length = 60)
     private String filePath;
 
+    @Column(name = "FileOfTantou", length = 60)
+    private String fileOfTantou;
+
     @Column(name = "Comment", length = 1000)
     private String comment;
+
+    @Column(name = "EditorScore")
+    private Integer editorScore;
+
+    @Column(name = "RevisionDeadline")
+    private LocalDateTime revisionDeadline;
 
     @CreationTimestamp
     @Column(name = "CreatedAt", updatable = false)

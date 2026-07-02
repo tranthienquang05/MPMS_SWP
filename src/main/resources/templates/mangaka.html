@@ -739,11 +739,11 @@
           <button type="button" onclick="openProposalTab('ptab-all')" id="pbtn-all" class="proposal-tab-btn active">Tất
             cả</button>
           <button type="button" onclick="openProposalTab('ptab-approved')" id="pbtn-approved"
-            class="proposal-tab-btn">Đã
-            duyệt</button>
-          <button type="button" onclick="openProposalTab('ptab-rejected')" id="pbtn-rejected"
-            class="proposal-tab-btn">Bị
-            từ chối</button>
+            class="proposal-tab-btn">Đã duyệt</button>
+          <button type="button" onclick="openProposalTab('ptab-revision')" id="pbtn-revision"
+            class="proposal-tab-btn">Cần sửa</button>
+          <button type="button" onclick="openProposalTab('ptab-locked')" id="pbtn-locked" class="proposal-tab-btn">Bị từ
+            chối</button>
         </div>
 
         <div id="ptab-all" class="proposal-sub-tab">
@@ -754,24 +754,25 @@
                 <th>Tên Series</th>
                 <th>Trạng thái</th>
                 <th>Nhận xét từ Tantou</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               <tr th:if="${allProposals == null or allProposals.isEmpty()}">
-                <td colspan="4" class="text-center-align ptab-sub-desc">Chưa
-                  có bản thảo nào.</td>
+                <td colspan="5" class="text-center-align ptab-sub-desc">Chưa có bản thảo nào.</td>
               </tr>
               <tr th:if="${allProposals != null}" th:each="p : ${allProposals}">
                 <td th:text="${p.id}"></td>
                 <td th:text="${p.seriesName}"></td>
                 <td>
                   <span th:switch="${p.status}">
-                    <span th:case="'finish'" class="badge-status-waiting">Chờ
-                      duyệt</span>
-                    <span th:case="'checked'" class="badge-status-approved">Tantou đã duyệt</span>
-                    <span th:case="'unfinish'" class="badge-status-rejected">Bị từ chối</span>
-                    <span th:case="'pass'" class="badge-status-passed">Hội
-                      đồng thông qua</span>
+                    <span th:case="'new'" class="badge-status-waiting">Chờ Tantou duyệt</span>
+                    <span th:case="'approved'" class="badge-status-approved">Tantou đã duyệt</span>
+                    <span th:case="'board_check'" class="badge-status-approved">Hội đồng đang xét</span>
+                    <span th:case="'passed'" class="badge-status-passed">Hội đồng thông qua</span>
+                    <span th:case="'revision'" class="badge-status-waiting">Cần sửa</span>
+                    <span th:case="'locked'" class="badge-status-rejected">Bị từ chối</span>
+                    <span th:case="'started'" class="badge-status-passed">Đã khởi động</span>
                     <span th:case="*" class="badge-status-default" th:text="${p.status}"></span>
                   </span>
                 </td>
@@ -781,1007 +782,1100 @@
                   <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
                     class="tantou-comment-empty">—</span>
                 </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div id="ptab-approved" class="proposal-sub-tab" style="display: none">
-          <p class="ptab-sub-desc">Các bản thảo đã được Tantou duyệt. Bạn có
-            thể khởi động dự án khi hội đồng thông qua.</p>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Mã</th>
-                <th>Tên Series</th>
-                <th>Trạng thái</th>
-                <th>Nhận xét từ Tantou</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr th:if="${approvedList == null or approvedList.isEmpty()}">
-                <td colspan="5" class="text-center-align ptab-sub-desc">Chưa
-                  có bản thảo nào được duyệt.</td>
-              </tr>
-              <tr th:if="${approvedList != null}" th:each="p : ${approvedList}">
-                <td th:text="${p.id}"></td>
-                <td th:text="${p.seriesName}"></td>
                 <td>
-                  <span th:if="${p.status == 'checked'}" class="badge-status-approved">Tantou đã duyệt</span>
-                  <span th:if="${p.status == 'pass'}" class="badge-status-passed">Hội đồng thông qua</span>
-                </td>
-                <td>
-                  <span th:if="${p.comment != null and !#strings.isEmpty(p.comment)}" th:text="${p.comment}"
-                    class="tantou-comment-text"></span>
-                  <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
-                    class="tantou-comment-empty">—</span>
-                </td>
-                <td>
-                  <button th:if="${p.status == 'pass'}" type="button" th:data-proposal-id="${p.id}"
-                    th:data-series-name="${p.seriesName}" onclick="openStartSeriesModal(this)"
-                    class="btn-start-project">
-                    Khởi động dự án
-                  </button>
-                  <span th:if="${p.status == 'checked'}" class="status-waiting-council">Chờ hội đồng bỏ
-                    phiếu</span>
+                  <button type="button" th:data-proposal-id="${p.id}" onclick="openDetailModal(this)"
+                    class="btn-link">Xem chi tiết</button>
                 </td>
               </tr>
             </tbody>
           </table>
-        </div>
+      </div>
 
-        <div id="ptab-rejected" class="proposal-sub-tab" style="display: none">
-          <p class="ptab-sub-desc">Đọc nhận xét từ Tantou và nộp lại bản thảo
-            đã chỉnh sửa.</p>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Mã</th>
-                <th>Tên Series</th>
-                <th>Nhận xét từ Tantou</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr th:if="${rejectedList == null or rejectedList.isEmpty()}">
-                <td colspan="4" class="text-center-align ptab-sub-desc">Không
-                  có bản thảo nào bị từ chối.</td>
-              </tr>
-              <tr th:if="${rejectedList != null}" th:each="p : ${rejectedList}">
-                <td th:text="${p.id}"></td>
-                <td th:text="${p.seriesName}"></td>
-                <td>
-                  <div th:if="${p.comment != null and !#strings.isEmpty(p.comment)}" class="rejected-comment-box">
-                    <i class="fa-solid fa-comment"></i> <span th:text="${p.comment}"></span>
-                  </div>
-                  <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
-                    class="tantou-comment-empty">Không có nhận xét</span>
-                </td>
-                <td>
-                  <button type="button" th:data-proposal-id="${p.id}" th:data-series-name="${p.seriesName}"
-                    onclick="openResubmitModal(this)" class="btn-resubmit-proposal">
-                    Nộp lại
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div id="ptab-approved" class="proposal-sub-tab" style="display: none">
+        <p class="ptab-sub-desc">Các bản thảo đã được Tantou duyệt hoặc đang chờ hội đồng bỏ phiếu.</p>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Mã</th>
+              <th>Tên Series</th>
+              <th>Trạng thái</th>
+              <th>Nhận xét</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:if="${approvedList == null or approvedList.isEmpty()}">
+              <td colspan="5" class="text-center-align ptab-sub-desc">Chưa có bản thảo nào ở trạng thái này.</td>
+            </tr>
+            <tr th:if="${approvedList != null}" th:each="p : ${approvedList}">
+              <td th:text="${p.id}"></td>
+              <td th:text="${p.seriesName}"></td>
+              <td>
+                <span th:if="${p.status == 'approved'}" class="badge-status-approved">Tantou đã duyệt</span>
+                <span th:if="${p.status == 'board_check'}" class="badge-status-approved">Hội đồng đang xét</span>
+                <span th:if="${p.status == 'passed'}" class="badge-status-passed">Hội đồng thông qua</span>
+              </td>
+              <td>
+                <span th:if="${p.comment != null and !#strings.isEmpty(p.comment)}" th:text="${p.comment}"
+                  class="tantou-comment-text"></span>
+                <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
+                  class="tantou-comment-empty">—</span>
+              </td>
+              <td>
+                <button th:if="${p.status == 'passed'}" type="button" th:data-proposal-id="${p.id}"
+                  th:data-series-name="${p.seriesName}" onclick="openStartSeriesModal(this)" class="btn-start-project">
+                  Khởi động dự án
+                </button>
+                <span th:if="${p.status == 'approved'}" class="status-waiting-council">Chờ Tantou nộp lên hội
+                  đồng</span>
+                <span th:if="${p.status == 'board_check'}" class="status-waiting-council">Hội đồng đang bỏ phiếu</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-        <div id="proposalModalOverlay" class="modal-overlay" style="display: none">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Đăng Ký Đề Xuất Dự Án Mới</h5>
-              <button type="button" id="btnCloseTop">X</button>
-            </div>
-            <div class="modal-body">
-              <div class="mb-3">
-                <label class="form-label fw-bold form-label-dark">Tên dự
-                  án:</label>
-                <input type="text" id="newSeriesName" class="form-control" maxlength="30" required
-                  placeholder="Nhập tên bộ truyện..." />
-              </div>
-              <div class="mb-3">
-                <label class="form-label fw-bold form-label-dark">Tệp bản thảo
-                  (.pdf):</label>
-                <input type="file" id="newManuscriptFile" class="form-control" accept=".pdf,.zip,.rar" required />
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" id="btnCancel">Hủy</button>
-              <button type="button" onclick="submitNewProposal()">Submit</button>
-            </div>
+      <div id="ptab-revision" class="proposal-sub-tab" style="display: none">
+        <p class="ptab-sub-desc">Tantou yêu cầu sửa lại. Đọc nhận xét và nộp lại trước hạn.</p>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Mã</th>
+              <th>Tên Series</th>
+              <th>Nhận xét</th>
+              <th>Hạn sửa</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:if="${revisionList == null or revisionList.isEmpty()}">
+              <td colspan="5" class="text-center-align ptab-sub-desc">Không có bản thảo nào cần sửa.</td>
+            </tr>
+            <tr th:if="${revisionList != null}" th:each="p : ${revisionList}">
+              <td th:text="${p.id}"></td>
+              <td th:text="${p.seriesName}"></td>
+              <td>
+                <div th:if="${p.comment != null and !#strings.isEmpty(p.comment)}" class="rejected-comment-box">
+                  <i class="fa-solid fa-comment"></i> <span th:text="${p.comment}"></span>
+                </div>
+                <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
+                  class="tantou-comment-empty">Không có nhận xét</span>
+              </td>
+              <td
+                th:text="${p.revisionDeadline != null ? #temporals.format(p.revisionDeadline, 'HH:mm dd/MM/yyyy') : '—'}">
+              </td>
+              <td>
+                <button type="button" th:data-proposal-id="${p.id}" th:data-series-name="${p.seriesName}"
+                  onclick="openResubmitModal(this)" class="btn-resubmit-proposal">
+                  Nộp lại
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="ptab-locked" class="proposal-sub-tab" style="display: none">
+        <p class="ptab-sub-desc">Các bản thảo đã bị từ chối vĩnh viễn, không thể nộp lại (bạn có thể tạo đề xuất mới với
+          nội dung khác).</p>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Mã</th>
+              <th>Tên Series</th>
+              <th>Nhận xét</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:if="${lockedList == null or lockedList.isEmpty()}">
+              <td colspan="3" class="text-center-align ptab-sub-desc">Không có bản thảo nào bị từ chối.</td>
+            </tr>
+            <tr th:if="${lockedList != null}" th:each="p : ${lockedList}">
+              <td th:text="${p.id}"></td>
+              <td th:text="${p.seriesName}"></td>
+              <td>
+                <div th:if="${p.comment != null and !#strings.isEmpty(p.comment)}" class="rejected-comment-box">
+                  <i class="fa-solid fa-comment"></i> <span th:text="${p.comment}"></span>
+                </div>
+                <span th:unless="${p.comment != null and !#strings.isEmpty(p.comment)}"
+                  class="tantou-comment-empty">Không có nhận xét</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="proposalDetailModalOverlay" class="modal-overlay" style="display: none">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="detailModalTitle">Chi tiết đề xuất</h5>
+            <button type="button" onclick="closeDetailModal()">X</button>
           </div>
-        </div>
-
-        <div id="resubmitModalOverlay" class="modal-overlay" style="display: none">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5>Nộp Lại Bản Thảo</h5>
-              <button type="button" onclick="closeResubmitModal()">X</button>
-            </div>
-            <div class="modal-body">
-              <input type="hidden" id="resubmitProposalId" />
-              <div class="mb-3">
-                <label class="form-label fw-bold form-label-dark">Tên dự
-                  án:</label>
-                <input type="text" id="resubmitSeriesName" class="form-control" maxlength="30" required />
-              </div>
-              <div class="mb-3">
-                <label class="form-label fw-bold form-label-dark">File bản
-                  thảo mới (.pdf):</label>
-                <input type="file" id="resubmitFile" class="form-control" accept=".pdf,.zip,.rar" required />
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" onclick="closeResubmitModal()">Hủy</button>
-              <button type="button" onclick="submitResubmitProposal()" class="btn-modal-resubmit-confirm">Nộp
-                lại</button>
-            </div>
+          <div class="modal-body">
+            <p><strong>Trạng thái:</strong> <span id="detailModalStatus"></span></p>
+            <p><strong>Điểm:</strong> <span id="detailModalScore"></span></p>
+            <p><strong>Nhận xét Tantou:</strong> <span id="detailModalComment"></span></p>
+            <p id="detailModalDeadlineBlock" style="display:none">
+              <strong>Hạn sửa:</strong> <span id="detailModalDeadline"></span>
+            </p>
+            <hr>
+            <p><strong>Nhận xét của hội đồng:</strong></p>
+            <ul id="detailModalBoardComments"></ul>
           </div>
-        </div>
-
-        <div class="modal-overlay" id="startSeriesModalOverlay" style="display: none">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5>Khởi Động Tác Phẩm</h5>
-              <button type="button" class="btn-close" onclick="closeStartSeriesModal()">X</button>
-            </div>
-            <div class="modal-body">
-              <input type="hidden" id="modalProposalId" />
-              <div class="form-group-block">
-                <label>Tên series:</label>
-                <input type="text" id="modalSeriesName" class="input-series-name-readonly" readonly />
-              </div>
-              <div class="form-group-block">
-                <label>Mô tả:</label>
-                <textarea id="modalDescription" placeholder="Nhập mô tả tác phẩm..." required
-                  class="textarea-description"></textarea>
-              </div>
-              <div class="form-group-block">
-                <label>Bìa sách (.pdf):</label>
-                <input type="file" id="modalBookJacket" accept=".pdf" required class="input-file-jacket" />
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" onclick="closeStartSeriesModal()" class="btn-modal-cancel">Hủy</button>
-              <button type="button" onclick="submitStartSeries()" class="btn-modal-confirm">Xác nhận</button>
-            </div>
-          </div>
-        </div>
-
-        <div id="notificationModalOverlay" class="modal-overlay" style="display: none">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Thông báo hệ thống</h5>
-              <button type="button" class="btn-close" id="btnCloseNotification">X</button>
-            </div>
-            <div class="modal-body">
-              <p style="text-align: center; font-weight: bold; font-size: 16px"></p>
-            </div>
-            <div class="modal-footer">
-              <button type="button" id="btnOkNotification" class="btn-action approve"
-                style="padding: 8px 20px">OK</button>
-            </div>
+          <div class="modal-footer">
+            <button type="button" onclick="closeDetailModal()">Đóng</button>
           </div>
         </div>
       </div>
 
-      <!-- Tab assistant content -->
-      <div id="tab-assistant" class="tab-pane">
-        <h2>Quản lý Trợ lý</h2>
-        <p>Tính năng đang phát triển...</p>
+      <div id="proposalModalOverlay" class="modal-overlay" style="display: none">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Đăng Ký Đề Xuất Dự Án Mới</h5>
+            <button type="button" id="btnCloseTop">X</button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label fw-bold form-label-dark">Tên dự
+                án:</label>
+              <input type="text" id="newSeriesName" class="form-control" maxlength="30" required
+                placeholder="Nhập tên bộ truyện..." />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold form-label-dark">Tệp bản thảo
+                (.pdf):</label>
+              <input type="file" id="newManuscriptFile" class="form-control" accept=".pdf,.zip,.rar" required />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="btnCancel">Hủy</button>
+            <button type="button" onclick="submitNewProposal()">Submit</button>
+          </div>
+        </div>
       </div>
 
-      <!-- Tab other content -->
-      <div id="tab-other" class="tab-pane">
-        <h2>Cài đặt khác</h2>
-        <p>Tính năng đang phát triển...</p>
+      <div id="resubmitModalOverlay" class="modal-overlay" style="display: none">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5>Nộp Lại Bản Thảo</h5>
+            <button type="button" onclick="closeResubmitModal()">X</button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="resubmitProposalId" />
+            <div class="mb-3">
+              <label class="form-label fw-bold form-label-dark">Tên dự
+                án:</label>
+              <input type="text" id="resubmitSeriesName" class="form-control" maxlength="30" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold form-label-dark">File bản
+                thảo mới (.pdf):</label>
+              <input type="file" id="resubmitFile" class="form-control" accept=".pdf,.zip,.rar" required />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" onclick="closeResubmitModal()">Hủy</button>
+            <button type="button" onclick="submitResubmitProposal()" class="btn-modal-resubmit-confirm">Nộp
+              lại</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="startSeriesModalOverlay" style="display: none">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5>Khởi Động Tác Phẩm</h5>
+            <button type="button" class="btn-close" onclick="closeStartSeriesModal()">X</button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="modalProposalId" />
+            <div class="form-group-block">
+              <label>Tên series:</label>
+              <input type="text" id="modalSeriesName" class="input-series-name-readonly" readonly />
+            </div>
+            <div class="form-group-block">
+              <label>Mô tả:</label>
+              <textarea id="modalDescription" placeholder="Nhập mô tả tác phẩm..." required
+                class="textarea-description"></textarea>
+            </div>
+            <div class="form-group-block">
+              <label>Bìa sách (.pdf):</label>
+              <input type="file" id="modalBookJacket" accept=".pdf" required class="input-file-jacket" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" onclick="closeStartSeriesModal()" class="btn-modal-cancel">Hủy</button>
+            <button type="button" onclick="submitStartSeries()" class="btn-modal-confirm">Xác nhận</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="notificationModalOverlay" class="modal-overlay" style="display: none">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Thông báo hệ thống</h5>
+            <button type="button" class="btn-close" id="btnCloseNotification">X</button>
+          </div>
+          <div class="modal-body">
+            <p style="text-align: center; font-weight: bold; font-size: 16px"></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="btnOkNotification" class="btn-action approve"
+              style="padding: 8px 20px">OK</button>
+          </div>
+        </div>
       </div>
     </div>
-    <script>
-      function openTab(tabId) {
-        var tabPanes = document.getElementsByClassName("tab-pane");
-        for (var i = 0; i < tabPanes.length; i++) {
-          tabPanes[i].classList.remove("active");
-        }
-        document.getElementById(tabId).classList.add("active");
+
+    <!-- Tab assistant content -->
+    <div id="tab-assistant" class="tab-pane">
+      <h2>Quản lý Trợ lý</h2>
+      <p>Tính năng đang phát triển...</p>
+    </div>
+
+    <!-- Tab other content -->
+    <div id="tab-other" class="tab-pane">
+      <h2>Cài đặt khác</h2>
+      <p>Tính năng đang phát triển...</p>
+    </div>
+  </div>
+  <script>
+    function openTab(tabId) {
+      var tabPanes = document.getElementsByClassName("tab-pane");
+      for (var i = 0; i < tabPanes.length; i++) {
+        tabPanes[i].classList.remove("active");
       }
+      document.getElementById(tabId).classList.add("active");
+    }
 
-      //  THÊM: hàm loadRanking gọi API và hiển thị bảng ngay tại trang
-      function loadRanking() {
-        var month = document.getElementById("rankMonth").value;
-        var quarter = document.getElementById("rankQuarter").value;
-        var year = document.getElementById("rankYear").value;
+    //  THÊM: hàm loadRanking gọi API và hiển thị bảng ngay tại trang
+    function loadRanking() {
+      var month = document.getElementById("rankMonth").value;
+      var quarter = document.getElementById("rankQuarter").value;
+      var year = document.getElementById("rankYear").value;
 
-        fetch("/manga/ranking?month=" + month + "&quarter=" + quarter + "&year=" + year)
-          .then(function (res) {
-            return res.json();
-          })
-          .then(function (data) {
-            var tbody = document.getElementById("rankingBody");
-            var table = document.getElementById("rankingTable");
-            var msg = document.getElementById("rankingMsg");
-            tbody.innerHTML = "";
-
-            if (data.length === 0) {
-              table.style.display = "none";
-              msg.style.display = "block";
-              return;
-            }
-
-            table.style.display = "table";
-            msg.style.display = "none";
-
-            var medals = ["🥇", "🥈", "🥉"];
-            data.forEach(function (item) {
-              var medal = item.rank <= 3 ? medals[item.rank - 1] + " " : "";
-              tbody.innerHTML +=
-                "<tr>" +
-                '<td style="text-align:center">' +
-                medal +
-                item.rank +
-                "</td>" +
-                '<td style="text-align:center">' +
-                item.seriesId +
-                "</td>" +
-                "<td>" +
-                item.seriesName +
-                "</td>" +
-                '<td style="text-align:center">' +
-                item.totalVotes +
-                "</td>" +
-                "</tr>";
-            });
-          });
-      }
-
-      const mangakaId = '[[${mangaka != null ? mangaka.id : ""}]]';
-      // Xử lý logic cho Modal nộp bản thảo
-      function submitNewProposal() {
-        if (!mangakaId) {
-          showSystemNotification(
-            "Không tìm thấy thông tin Mangaka. Vui lòng đăng nhập lại!",
-            false,
-          );
-          return;
-        }
-        const seriesName = document
-          .getElementById("newSeriesName")
-          .value.trim();
-        const file = document.getElementById("newManuscriptFile").files[0];
-        if (!seriesName) {
-          showSystemNotification("Vui lòng nhập tên series!", false);
-          return;
-        }
-        if (!file) {
-          showSystemNotification("Vui lòng chọn file bản thảo!", false);
-          return;
-        }
-
-        const formData = new FormData();
-        formData.append("mangakaId", mangakaId);
-        formData.append("txtSeriesName", seriesName);
-        formData.append("fileManuscript", file);
-
-        fetch("/manga/mangaka/submit-proposal", {
-          method: "POST",
-          body: formData,
+      fetch("/manga/ranking?month=" + month + "&quarter=" + quarter + "&year=" + year)
+        .then(function (res) {
+          return res.json();
         })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.status === "success") {
-              // Ẩn modal nhập liệu trước khi hiển thị modal thông báo
-              document.getElementById("proposalModalOverlay").style.display =
-                "none";
+        .then(function (data) {
+          var tbody = document.getElementById("rankingBody");
+          var table = document.getElementById("rankingTable");
+          var msg = document.getElementById("rankingMsg");
+          tbody.innerHTML = "";
 
-              // Hiển thị thông báo thành công bằng cửa sổ nổi
-              const successMsg =
-                "✅ " + data.message + "\nMã đề xuất: " + data.proposalId;
-              showSystemNotification(successMsg, true);
-            } else {
-              // Hiển thị thông báo thất bại từ phía Server
-              showSystemNotification("❌ " + data.message, false);
-            }
-          })
-          .catch((err) => {
-            // Hiển thị lỗi kết nối hoặc lỗi logic hệ thống
-            showSystemNotification("❌ Lỗi hệ thống: " + err.message, false);
-          });
-      }
-
-      function showSystemNotification(message, isSuccess) {
-        const modal = document.getElementById("notificationModalOverlay");
-        if (!modal) return;
-
-        // Tìm thẻ p chứa nội dung thông báo bên trong modal body
-        const pTag = modal.querySelector(".modal-body p");
-        if (pTag) {
-          pTag.innerText = message;
-          // Thay đổi màu sắc chữ tùy thuộc vào trạng thái thành công hay thất bại
-          if (isSuccess) {
-            pTag.style.color = "#28a745"; // Màu xanh lá cho thành công
-          } else {
-            pTag.style.color = "#dc3545"; // Màu đỏ cho thất bại
+          if (data.length === 0) {
+            table.style.display = "none";
+            msg.style.display = "block";
+            return;
           }
-        }
 
-        // Hiển thị modal bằng cách đặt display thành flex để căn giữa màn hình
-        modal.style.display = "flex";
+          table.style.display = "table";
+          msg.style.display = "none";
 
-        // Cấu hình nút OK để tải lại trang nếu hành động thành công
-        const btnOk = document.getElementById("btnOkNotification");
-        if (btnOk) {
-          btnOk.onclick = function () {
-            modal.style.display = "none";
-            if (isSuccess) {
-              location.reload(); // Tải lại trang để cập nhật danh sách
-            }
-          };
-        }
-      }
-      // ===== SUB-TAB SWITCHING =====
-      function openProposalTab(tabId) {
-        // Ẩn tất cả sub-tab
-        document.querySelectorAll(".proposal-sub-tab").forEach(function (el) {
-          el.style.display = "none";
-        });
-        // Bỏ active tất cả buttons
-        document.querySelectorAll(".proposal-tab-btn").forEach(function (btn) {
-          btn.style.borderBottomColor = "transparent";
-          btn.style.color = "#888";
-        });
-
-        // Hiện sub-tab được chọn
-        document.getElementById(tabId).style.display = "block";
-
-        // Active button tương ứng
-        var btnMap = {
-          "ptab-all": "pbtn-all",
-          "ptab-approved": "pbtn-approved",
-          "ptab-rejected": "pbtn-rejected",
-        };
-        var activeBtn = document.getElementById(btnMap[tabId]);
-        if (activeBtn) {
-          activeBtn.style.borderBottomColor = "#204fa6";
-          activeBtn.style.color = "#204fa6";
-        }
-      }
-
-      // ===== NỘP LẠI BẢN THẢO =====
-      function openResubmitModal(btn) {
-        document.getElementById("resubmitProposalId").value =
-          btn.dataset.proposalId;
-        document.getElementById("resubmitSeriesName").value =
-          btn.dataset.seriesName;
-        document.getElementById("resubmitModalOverlay").style.display = "flex";
-      }
-
-      function closeResubmitModal() {
-        document.getElementById("resubmitModalOverlay").style.display = "none";
-      }
-
-      function submitResubmitProposal() {
-        const proposalId = document.getElementById("resubmitProposalId").value;
-        const seriesName = document
-          .getElementById("resubmitSeriesName")
-          .value.trim();
-        const file = document.getElementById("resubmitFile").files[0];
-        if (!seriesName) {
-          alert("Vui lòng nhập tên series!");
-          return;
-        }
-        if (!file) {
-          alert("Vui lòng chọn file bản thảo!");
-          return;
-        }
-
-        const formData = new FormData();
-        formData.append("proposalId", proposalId);
-        formData.append("txtSeriesName", seriesName);
-        formData.append("fileManuscript", file);
-
-        fetch("/manga/mangaka/resubmit-proposal", {
-          method: "POST",
-          body: formData,
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.status === "success") {
-              alert("✅ " + data.message);
-              closeResubmitModal();
-              location.reload();
-            } else {
-              alert("❌ " + data.message);
-            }
-          })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
-      }
-
-      function openStartSeriesModal(btn) {
-        document.getElementById("modalProposalId").value =
-          btn.dataset.proposalId;
-        document.getElementById("modalSeriesName").value =
-          btn.dataset.seriesName;
-        document.getElementById("startSeriesModalOverlay").style.display =
-          "flex";
-      }
-
-      function closeStartSeriesModal() {
-        document.getElementById("startSeriesModalOverlay").style.display =
-          "none";
-      }
-
-      function submitStartSeries() {
-        const proposalId = document.getElementById("modalProposalId").value;
-        const seriesName = document
-          .getElementById("modalSeriesName")
-          .value.trim();
-        const description = document
-          .getElementById("modalDescription")
-          .value.trim();
-        const file = document.getElementById("modalBookJacket").files[0];
-        if (!description) {
-          alert("Vui lòng nhập mô tả!");
-          return;
-        }
-        if (!file) {
-          alert("Vui lòng chọn file bìa sách!");
-          return;
-        }
-
-        const formData = new FormData();
-        formData.append("proposalId", proposalId);
-        formData.append("txtSeriesName", seriesName);
-        formData.append("txtDescription", description);
-        formData.append("fileBookJacket", file);
-
-        fetch("/manga/mangaka/start-series", { method: "POST", body: formData })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.status === "success") {
-              alert("✅ " + data.message + "\nMã series: " + data.seriesId);
-              closeStartSeriesModal();
-              location.reload();
-            } else {
-              alert("❌ " + data.message);
-            }
-          })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
-      }
-
-      // Modal thông báo
-      const notificationModal = document.getElementById(
-        "notificationModalOverlay",
-      );
-      const btnCloseNotification = document.getElementById(
-        "btnCloseNotification",
-      );
-      const btnOkNotification = document.getElementById("btnOkNotification");
-
-      function closeNotificationModal() {
-        if (notificationModal) notificationModal.style.display = "none";
-      }
-      if (btnCloseNotification)
-        btnCloseNotification.addEventListener("click", closeNotificationModal);
-      if (btnOkNotification)
-        btnOkNotification.addEventListener("click", closeNotificationModal);
-      if (notificationModal) {
-        notificationModal.addEventListener("click", function (event) {
-          if (event.target === notificationModal) closeNotificationModal();
-        });
-      }
-
-      function initTimePicker(hourId, minuteId) {
-        function pad(n) {
-          return n.toString().padStart(2, "0");
-        }
-        const h = document.getElementById(hourId);
-        const m = document.getElementById(minuteId);
-        if (!h || !m) return;
-        h.innerHTML = "";
-        m.innerHTML = "";
-        for (let i = 0; i < 24; i++) {
-          const o = document.createElement("option");
-          o.value = pad(i);
-          o.textContent = pad(i);
-          h.appendChild(o);
-        }
-        for (let i = 0; i < 60; i++) {
-          const o = document.createElement("option");
-          o.value = pad(i);
-          o.textContent = pad(i);
-          m.appendChild(o);
-        }
-      }
-      initTimePicker("assignHour", "assignMinute");
-      initTimePicker("reassignHour", "reassignMinute");
-
-      document.addEventListener("DOMContentLoaded", function () {
-        // Modal nộp bản thảo mới
-        const modalOverlay = document.getElementById("proposalModalOverlay");
-        const btnOpen = document.getElementById("btnOpenModal");
-        const btnCloseTop = document.getElementById("btnCloseTop");
-        const btnCancel = document.getElementById("btnCancel");
-        if (btnOpen)
-          btnOpen.addEventListener(
-            "click",
-            () => (modalOverlay.style.display = "flex"),
-          );
-        if (btnCloseTop)
-          btnCloseTop.addEventListener(
-            "click",
-            () => (modalOverlay.style.display = "none"),
-          );
-        if (btnCancel)
-          btnCancel.addEventListener(
-            "click",
-            () => (modalOverlay.style.display = "none"),
-          );
-        if (modalOverlay) {
-          modalOverlay.addEventListener("click", function (e) {
-            if (e.target === modalOverlay) modalOverlay.style.display = "none";
+          var medals = ["🥇", "🥈", "🥉"];
+          data.forEach(function (item) {
+            var medal = item.rank <= 3 ? medals[item.rank - 1] + " " : "";
+            tbody.innerHTML +=
+              "<tr>" +
+              '<td style="text-align:center">' +
+              medal +
+              item.rank +
+              "</td>" +
+              '<td style="text-align:center">' +
+              item.seriesId +
+              "</td>" +
+              "<td>" +
+              item.seriesName +
+              "</td>" +
+              '<td style="text-align:center">' +
+              item.totalVotes +
+              "</td>" +
+              "</tr>";
           });
-        }
+        });
+    }
 
-        // Đóng resubmit modal khi click ra ngoài
-        const resubmitOverlay = document.getElementById("resubmitModalOverlay");
-        if (resubmitOverlay) {
-          resubmitOverlay.addEventListener("click", function (e) {
-            if (e.target === this) closeResubmitModal();
-          });
-        }
-
-        // Đóng start series modal khi click ra ngoài
-        const startModalOverlay = document.getElementById(
-          "startSeriesModalOverlay",
+    const mangakaId = '[[${mangaka != null ? mangaka.id : ""}]]';
+    // Xử lý logic cho Modal nộp bản thảo
+    function submitNewProposal() {
+      if (!mangakaId) {
+        showSystemNotification(
+          "Không tìm thấy thông tin Mangaka. Vui lòng đăng nhập lại!",
+          false,
         );
-        if (startModalOverlay) {
-          startModalOverlay.addEventListener("click", function (e) {
-            if (e.target === startModalOverlay) closeStartSeriesModal();
-          });
-        }
+        return;
+      }
+      const seriesName = document
+        .getElementById("newSeriesName")
+        .value.trim();
+      const file = document.getElementById("newManuscriptFile").files[0];
+      if (!seriesName) {
+        showSystemNotification("Vui lòng nhập tên series!", false);
+        return;
+      }
+      if (!file) {
+        showSystemNotification("Vui lòng chọn file bản thảo!", false);
+        return;
+      }
 
-        // Active tab từ controller
-        var activeTabFromController = "[[${activeTab}]]";
-        if (
-          activeTabFromController &&
-          !activeTabFromController.startsWith("[[")
-        ) {
-          openTab(activeTabFromController);
-        }
-        initProjectTab();
+      const formData = new FormData();
+      formData.append("mangakaId", mangakaId);
+      formData.append("txtSeriesName", seriesName);
+      formData.append("fileManuscript", file);
 
-        // Notification bell
-        const btnNoti = document.getElementById("btnNoti");
-        const dropdown = document.querySelector(".notification-dropdown");
-        if (btnNoti && dropdown) {
-          btnNoti.addEventListener("click", (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle("show");
-          });
+      fetch("/manga/mangaka/submit-proposal", {
+        method: "POST",
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "success") {
+            // Ẩn modal nhập liệu trước khi hiển thị modal thông báo
+            document.getElementById("proposalModalOverlay").style.display =
+              "none";
 
-          const markReadAllBtn = dropdown.querySelector(".mark-read-all");
-          if (markReadAllBtn) {
-            markReadAllBtn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              fetch("/notification/read-all", { method: "POST" })
-                .then((res) => res.json())
-                .then((data) => {
-                  if (data.status === "success") {
-                    const badge = btnNoti.querySelector(".badge");
-                    if (badge) badge.remove();
-                    document.querySelectorAll(".notification-item.unread")
-                      .forEach(el => el.classList.remove("unread"));
-                  }
-                });
-            });
+            // Hiển thị thông báo thành công bằng cửa sổ nổi
+            const successMsg =
+              "✅ " + data.message + "\nMã đề xuất: " + data.proposalId;
+            showSystemNotification(successMsg, true);
+          } else {
+            // Hiển thị thông báo thất bại từ phía Server
+            showSystemNotification("❌ " + data.message, false);
           }
-
-          document.addEventListener("click", () => {
-            dropdown.classList.remove("show");
-          });
-        }
-        // ✅ Cache-bust tất cả ảnh thumbnail trong grid
-        document.querySelectorAll(".page-preview-box img").forEach(img => {
-          if (img.src) img.src = img.src + "?t=" + Date.now();
+        })
+        .catch((err) => {
+          // Hiển thị lỗi kết nối hoặc lỗi logic hệ thống
+          showSystemNotification("❌ Lỗi hệ thống: " + err.message, false);
         });
+    }
+
+    function showSystemNotification(message, isSuccess) {
+      const modal = document.getElementById("notificationModalOverlay");
+      if (!modal) return;
+
+      // Tìm thẻ p chứa nội dung thông báo bên trong modal body
+      const pTag = modal.querySelector(".modal-body p");
+      if (pTag) {
+        pTag.innerText = message;
+        // Thay đổi màu sắc chữ tùy thuộc vào trạng thái thành công hay thất bại
+        if (isSuccess) {
+          pTag.style.color = "#28a745"; // Màu xanh lá cho thành công
+        } else {
+          pTag.style.color = "#dc3545"; // Màu đỏ cho thất bại
+        }
+      }
+
+      // Hiển thị modal bằng cách đặt display thành flex để căn giữa màn hình
+      modal.style.display = "flex";
+
+      // Cấu hình nút OK để tải lại trang nếu hành động thành công
+      const btnOk = document.getElementById("btnOkNotification");
+      if (btnOk) {
+        btnOk.onclick = function () {
+          modal.style.display = "none";
+          if (isSuccess) {
+            location.reload(); // Tải lại trang để cập nhật danh sách
+          }
+        };
+      }
+    }
+    // ===== SUB-TAB SWITCHING =====
+    function openProposalTab(tabId) {
+      // Ẩn tất cả sub-tab
+      document.querySelectorAll(".proposal-sub-tab").forEach(function (el) {
+        el.style.display = "none";
+      });
+      // Bỏ active tất cả buttons
+      document.querySelectorAll(".proposal-tab-btn").forEach(function (btn) {
+        btn.style.borderBottomColor = "transparent";
+        btn.style.color = "#888";
       });
 
-      function openAssignModal(pageId) {
-        _currentPageId = pageId;
+      // Hiện sub-tab được chọn
+      document.getElementById(tabId).style.display = "block";
 
-        const mangakaId =
-          document.getElementById("mangaka-meta")?.dataset.mangakaId;
+      // Active button tương ứng
+      var btnMap = {
+        "ptab-all": "pbtn-all",
+        "ptab-approved": "pbtn-approved",
+        "ptab-revision": "pbtn-revision",
+        "ptab-locked": "pbtn-locked",
+      };
+      var activeBtn = document.getElementById(btnMap[tabId]);
+      if (activeBtn) {
+        activeBtn.style.borderBottomColor = "#204fa6";
+        activeBtn.style.color = "#204fa6";
+      }
+    }
 
-        if (!mangakaId) {
-          alert("Không tìm thấy mangakaId!");
-          return;
+    // ===== NỘP LẠI BẢN THẢO =====
+    function openResubmitModal(btn) {
+      document.getElementById("resubmitProposalId").value =
+        btn.dataset.proposalId;
+      document.getElementById("resubmitSeriesName").value =
+        btn.dataset.seriesName;
+      document.getElementById("resubmitModalOverlay").style.display = "flex";
+    }
+
+    function closeResubmitModal() {
+      document.getElementById("resubmitModalOverlay").style.display = "none";
+    }
+
+    function openDetailModal(btn) {
+      const proposalId = btn.dataset.proposalId;
+      fetch(`/manga/mangaka/proposal-detail?proposalId=${proposalId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status !== 'success') { alert('❌ ' + data.message); return; }
+
+          document.getElementById('detailModalTitle').textContent = data.seriesName + ' (' + data.proposalId + ')';
+          document.getElementById('detailModalStatus').textContent = data.proposalStatus;
+          document.getElementById('detailModalScore').textContent = data.editorScore ?? 'Chưa chấm';
+          document.getElementById('detailModalComment').textContent = data.editorComment || 'Chưa có nhận xét';
+
+          const deadlineBlock = document.getElementById('detailModalDeadlineBlock');
+          if (data.revisionDeadline) {
+            deadlineBlock.style.display = 'block';
+            document.getElementById('detailModalDeadline').textContent = new Date(data.revisionDeadline).toLocaleString('vi-VN');
+          } else {
+            deadlineBlock.style.display = 'none';
+          }
+
+          const list = document.getElementById('detailModalBoardComments');
+          list.innerHTML = (data.boardComments || []).map(c => `
+        <li>${c.action === 'pass' ? '✅ Thông qua' : '❌ Từ chối'}: ${c.content || '(không có nhận xét)'}</li>
+      `).join('') || '<li>Chưa có nhận xét nào.</li>';
+
+          document.getElementById('proposalDetailModalOverlay').style.display = 'flex';
+        })
+        .catch(err => alert('❌ Lỗi: ' + err.message));
+    }
+
+    function closeDetailModal() {
+      document.getElementById('proposalDetailModalOverlay').style.display = 'none';
+    }
+
+    function submitResubmitProposal() {
+      const proposalId = document.getElementById("resubmitProposalId").value;
+      const seriesName = document
+        .getElementById("resubmitSeriesName")
+        .value.trim();
+      const file = document.getElementById("resubmitFile").files[0];
+      if (!seriesName) {
+        alert("Vui lòng nhập tên series!");
+        return;
+      }
+      if (!file) {
+        alert("Vui lòng chọn file bản thảo!");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("proposalId", proposalId);
+      formData.append("txtSeriesName", seriesName);
+      formData.append("fileManuscript", file);
+
+      fetch("/manga/mangaka/resubmit-proposal", {
+        method: "POST",
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "success") {
+            alert("✅ " + data.message);
+            closeResubmitModal();
+            location.reload();
+          } else {
+            alert("❌ " + data.message);
+          }
+        })
+        .catch((err) => alert("❌ Lỗi: " + err.message));
+    }
+
+    function openStartSeriesModal(btn) {
+      document.getElementById("modalProposalId").value =
+        btn.dataset.proposalId;
+      document.getElementById("modalSeriesName").value =
+        btn.dataset.seriesName;
+      document.getElementById("startSeriesModalOverlay").style.display =
+        "flex";
+    }
+
+    function closeStartSeriesModal() {
+      document.getElementById("startSeriesModalOverlay").style.display =
+        "none";
+    }
+
+    function submitStartSeries() {
+      const proposalId = document.getElementById("modalProposalId").value;
+      const seriesName = document
+        .getElementById("modalSeriesName")
+        .value.trim();
+      const description = document
+        .getElementById("modalDescription")
+        .value.trim();
+      const file = document.getElementById("modalBookJacket").files[0];
+      if (!description) {
+        alert("Vui lòng nhập mô tả!");
+        return;
+      }
+      if (!file) {
+        alert("Vui lòng chọn file bìa sách!");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("proposalId", proposalId);
+      formData.append("txtSeriesName", seriesName);
+      formData.append("txtDescription", description);
+      formData.append("fileBookJacket", file);
+
+      fetch("/manga/mangaka/start-series", { method: "POST", body: formData })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "success") {
+            alert("✅ " + data.message + "\nMã series: " + data.seriesId);
+            closeStartSeriesModal();
+            location.reload();
+          } else {
+            alert("❌ " + data.message);
+          }
+        })
+        .catch((err) => alert("❌ Lỗi: " + err.message));
+    }
+
+    // Modal thông báo
+    const notificationModal = document.getElementById(
+      "notificationModalOverlay",
+    );
+    const btnCloseNotification = document.getElementById(
+      "btnCloseNotification",
+    );
+    const btnOkNotification = document.getElementById("btnOkNotification");
+
+    function closeNotificationModal() {
+      if (notificationModal) notificationModal.style.display = "none";
+    }
+    if (btnCloseNotification)
+      btnCloseNotification.addEventListener("click", closeNotificationModal);
+    if (btnOkNotification)
+      btnOkNotification.addEventListener("click", closeNotificationModal);
+    if (notificationModal) {
+      notificationModal.addEventListener("click", function (event) {
+        if (event.target === notificationModal) closeNotificationModal();
+      });
+    }
+
+    function initTimePicker(hourId, minuteId) {
+      function pad(n) {
+        return n.toString().padStart(2, "0");
+      }
+      const h = document.getElementById(hourId);
+      const m = document.getElementById(minuteId);
+      if (!h || !m) return;
+      h.innerHTML = "";
+      m.innerHTML = "";
+      for (let i = 0; i < 24; i++) {
+        const o = document.createElement("option");
+        o.value = pad(i);
+        o.textContent = pad(i);
+        h.appendChild(o);
+      }
+      for (let i = 0; i < 60; i++) {
+        const o = document.createElement("option");
+        o.value = pad(i);
+        o.textContent = pad(i);
+        m.appendChild(o);
+      }
+    }
+    initTimePicker("assignHour", "assignMinute");
+    initTimePicker("reassignHour", "reassignMinute");
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // Modal nộp bản thảo mới
+      const modalOverlay = document.getElementById("proposalModalOverlay");
+      const btnOpen = document.getElementById("btnOpenModal");
+      const btnCloseTop = document.getElementById("btnCloseTop");
+      const btnCancel = document.getElementById("btnCancel");
+      if (btnOpen)
+        btnOpen.addEventListener(
+          "click",
+          () => (modalOverlay.style.display = "flex"),
+        );
+      if (btnCloseTop)
+        btnCloseTop.addEventListener(
+          "click",
+          () => (modalOverlay.style.display = "none"),
+        );
+      if (btnCancel)
+        btnCancel.addEventListener(
+          "click",
+          () => (modalOverlay.style.display = "none"),
+        );
+      if (modalOverlay) {
+        modalOverlay.addEventListener("click", function (e) {
+          if (e.target === modalOverlay) modalOverlay.style.display = "none";
+        });
+      }
+
+      // Đóng resubmit modal khi click ra ngoài
+      const resubmitOverlay = document.getElementById("resubmitModalOverlay");
+      if (resubmitOverlay) {
+        resubmitOverlay.addEventListener("click", function (e) {
+          if (e.target === this) closeResubmitModal();
+        });
+      }
+
+      // Đóng start series modal khi click ra ngoài
+      const startModalOverlay = document.getElementById(
+        "startSeriesModalOverlay",
+      );
+      if (startModalOverlay) {
+        startModalOverlay.addEventListener("click", function (e) {
+          if (e.target === startModalOverlay) closeStartSeriesModal();
+        });
+      }
+
+      // Active tab từ controller
+      var activeTabFromController = "[[${activeTab}]]";
+      if (
+        activeTabFromController &&
+        !activeTabFromController.startsWith("[[")
+      ) {
+        openTab(activeTabFromController);
+      }
+      initProjectTab();
+
+      // Notification bell
+      const btnNoti = document.getElementById("btnNoti");
+      const dropdown = document.querySelector(".notification-dropdown");
+      if (btnNoti && dropdown) {
+        btnNoti.addEventListener("click", (e) => {
+          e.stopPropagation();
+          dropdown.classList.toggle("show");
+        });
+
+        const markReadAllBtn = dropdown.querySelector(".mark-read-all");
+        if (markReadAllBtn) {
+          markReadAllBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            fetch("/notification/read-all", { method: "POST" })
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.status === "success") {
+                  const badge = btnNoti.querySelector(".badge");
+                  if (badge) badge.remove();
+                  document.querySelectorAll(".notification-item.unread")
+                    .forEach(el => el.classList.remove("unread"));
+                }
+              });
+          });
         }
 
-        fetch(`/manga/mangaka/${mangakaId}/assistants`)
-          .then((r) => r.json())
-          .then((assistants) => {
-            if (!assistants || assistants.length === 0) {
-              alert("Chưa có trợ lý nào!");
-              return;
-            }
+        document.addEventListener("click", () => {
+          dropdown.classList.remove("show");
+        });
+      }
+      // ✅ Cache-bust tất cả ảnh thumbnail trong grid
+      document.querySelectorAll(".page-preview-box img").forEach(img => {
+        if (img.src) img.src = img.src + "?t=" + Date.now();
+      });
+    });
 
-            const select = document.getElementById("assignSelect");
+    function openAssignModal(pageId) {
+      _currentPageId = pageId;
 
-            // Lưu danh sách assistant để submit dùng lại
-            select.dataset.assistants = JSON.stringify(assistants);
+      const mangakaId =
+        document.getElementById("mangaka-meta")?.dataset.mangakaId;
 
-            // Hiển thị fullname
-            select.innerHTML = assistants
-              .map(
-                (a) =>
-                  `<option value="${a.id}">
+      if (!mangakaId) {
+        alert("Không tìm thấy mangakaId!");
+        return;
+      }
+
+      fetch(`/manga/mangaka/${mangakaId}/assistants`)
+        .then((r) => r.json())
+        .then((assistants) => {
+          if (!assistants || assistants.length === 0) {
+            alert("Chưa có trợ lý nào!");
+            return;
+          }
+
+          const select = document.getElementById("assignSelect");
+
+          // Lưu danh sách assistant để submit dùng lại
+          select.dataset.assistants = JSON.stringify(assistants);
+
+          // Hiển thị fullname
+          select.innerHTML = assistants
+            .map(
+              (a) =>
+                `<option value="${a.id}">
                       ${a.user.fullname}
                   </option>`,
-              )
-              .join("");
+            )
+            .join("");
 
-            // Set default deadline: ngày mai lúc 23:59
-            const pad = (n) => n.toString().padStart(2, '0');
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const dlInput = document.getElementById("assignDeadline");
-            dlInput.value = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}`;
-            document.getElementById("assignHour").value = "23";
-            document.getElementById("assignMinute").value = "59";
-            // Set min date = hôm nay
-            const nowDt = new Date();
-            dlInput.min = `${nowDt.getFullYear()}-${pad(nowDt.getMonth() + 1)}-${pad(nowDt.getDate())}`;
+          // Set default deadline: ngày mai lúc 23:59
+          const pad = (n) => n.toString().padStart(2, '0');
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const dlInput = document.getElementById("assignDeadline");
+          dlInput.value = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}`;
+          document.getElementById("assignHour").value = "23";
+          document.getElementById("assignMinute").value = "59";
+          // Set min date = hôm nay
+          const nowDt = new Date();
+          dlInput.min = `${nowDt.getFullYear()}-${pad(nowDt.getMonth() + 1)}-${pad(nowDt.getDate())}`;
 
-            document.getElementById("assignModalOverlay").style.display =
-              "flex";
-          })
-          .catch((err) => {
-            console.error(err);
-            alert("❌ Không tải được danh sách trợ lý");
-          });
-      }
-
-      function submitAssign() {
-        const select = document.getElementById("assignSelect");
-
-        const assistantId = select.value;
-
-        const comment = document.getElementById("assignComment").value;
-
-        const deadlineDate = document.getElementById("assignDeadline").value;
-        const deadlineHour = document.getElementById("assignHour").value;
-        const deadlineMinute = document.getElementById("assignMinute").value;
-        const deadline = deadlineDate && deadlineHour && deadlineMinute ? `${deadlineDate}T${deadlineHour}:${deadlineMinute}:00` : "";
-
-        // Validate deadline bắt buộc
-        const errSpan = document.getElementById("assignDeadlineError");
-        if (!deadline || deadline.trim() === "") {
-          errSpan.textContent = "⚠️ Vui lòng chọn deadline trước khi giao việc!";
-          errSpan.style.display = "block";
-          return;
-        }
-        const selectedDate = new Date(`${deadlineDate}T${deadlineHour}:${deadlineMinute}:00`);
-        const now = new Date();
-        if (selectedDate <= now) {
-          errSpan.textContent = "⚠️ Deadline phải sau thời điểm hiện tại!";
-          errSpan.style.display = "block";
-          return;
-        }
-        errSpan.style.display = "none"; // ẩn lỗi nếu hợp lệ
-
-        if (!assistantId || !_currentPageId) {
-          alert("Thiếu dữ liệu!");
-          return;
-        }
-
-        fetch(`/api/page/${_currentPageId}/assign`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            assistantId: assistantId,
-            comment: comment,
-            deadline: deadline,
-          }),
+          document.getElementById("assignModalOverlay").style.display =
+            "flex";
         })
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.status === "success") {
-              alert("✅ Đã giao việc");
-              location.reload();
-            } else {
-              alert("❌ " + data.message);
-            }
-          })
-          .catch((err) => {
-            console.error(err);
-            alert("❌ " + err.message);
-          });
+        .catch((err) => {
+          console.error(err);
+          alert("❌ Không tải được danh sách trợ lý");
+        });
+    }
+
+    function submitAssign() {
+      const select = document.getElementById("assignSelect");
+
+      const assistantId = select.value;
+
+      const comment = document.getElementById("assignComment").value;
+
+      const deadlineDate = document.getElementById("assignDeadline").value;
+      const deadlineHour = document.getElementById("assignHour").value;
+      const deadlineMinute = document.getElementById("assignMinute").value;
+      const deadline = deadlineDate && deadlineHour && deadlineMinute ? `${deadlineDate}T${deadlineHour}:${deadlineMinute}:00` : "";
+
+      // Validate deadline bắt buộc
+      const errSpan = document.getElementById("assignDeadlineError");
+      if (!deadline || deadline.trim() === "") {
+        errSpan.textContent = "⚠️ Vui lòng chọn deadline trước khi giao việc!";
+        errSpan.style.display = "block";
+        return;
       }
-      function submitChapter(chapterId) {
-        // ✅ THÊM VÀO: kiểm tra chapter có trang chưa
-        const pageItems = document.querySelectorAll(".page-grid-item");
-        if (pageItems.length === 0) {
-          alert("Chapter này chưa có trang nào. Hãy thêm trang mới trước khi submit lên BTV.");
-          return;
-        }
+      const selectedDate = new Date(`${deadlineDate}T${deadlineHour}:${deadlineMinute}:00`);
+      const now = new Date();
+      if (selectedDate <= now) {
+        errSpan.textContent = "⚠️ Deadline phải sau thời điểm hiện tại!";
+        errSpan.style.display = "block";
+        return;
+      }
+      errSpan.style.display = "none"; // ẩn lỗi nếu hợp lệ
 
-        if (!confirm("Submit chapter này lên biên tập viên để duyệt?")) return;
+      if (!assistantId || !_currentPageId) {
+        alert("Thiếu dữ liệu!");
+        return;
+      }
 
-        fetch("/api/chapter-review/" + chapterId + "/submit", {
-          method: "POST",
+      fetch(`/api/page/${_currentPageId}/assign`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          assistantId: assistantId,
+          comment: comment,
+          deadline: deadline,
+        }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.status === "success") {
+            alert("✅ Đã giao việc");
+            location.reload();
+          } else {
+            alert("❌ " + data.message);
+          }
         })
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.status === "success") {
-              alert("✅ " + data.message);
-              location.reload();
-            } else {
-              alert("❌ " + data.message);
-            }
-          })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
+        .catch((err) => {
+          console.error(err);
+          alert("❌ " + err.message);
+        });
+    }
+    function submitChapter(chapterId) {
+      // ✅ THÊM VÀO: kiểm tra chapter có trang chưa
+      const pageItems = document.querySelectorAll(".page-grid-item");
+      if (pageItems.length === 0) {
+        alert("Chapter này chưa có trang nào. Hãy thêm trang mới trước khi submit lên BTV.");
+        return;
       }
 
-      let _currentPageId = null;
+      if (!confirm("Submit chapter này lên biên tập viên để duyệt?")) return;
 
-      function finishPage(pageId) {
-        if (!confirm("Đánh dấu trang này là hoàn thành?")) return;
-        fetch("/api/page/" + pageId + "/finish", { method: "POST" })
-          .then(r => r.json())
-          .then(data => {
-            if (data.status === "success") {
-              alert("✅ " + data.message);
-              location.reload();
-            } else {
-              alert("⚠️ " + data.message);
-            }
-          })
-          .catch(err => alert("❌ Lỗi: " + err.message));
+      fetch("/api/chapter-review/" + chapterId + "/submit", {
+        method: "POST",
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.status === "success") {
+            alert("✅ " + data.message);
+            location.reload();
+          } else {
+            alert("❌ " + data.message);
+          }
+        })
+        .catch((err) => alert("❌ Lỗi: " + err.message));
+    }
+
+    let _currentPageId = null;
+
+    function finishPage(pageId) {
+      if (!confirm("Đánh dấu trang này là hoàn thành?")) return;
+      fetch("/api/page/" + pageId + "/finish", { method: "POST" })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === "success") {
+            alert("✅ " + data.message);
+            location.reload();
+          } else {
+            alert("⚠️ " + data.message);
+          }
+        })
+        .catch(err => alert("❌ Lỗi: " + err.message));
+    }
+
+    function approvePageDone(pageId) {
+      if (!confirm("Duyệt trang này?")) return;
+      fetch("/api/page/" + pageId + "/approve-done", { method: "POST" })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === "success") {
+            alert("✅ " + data.message);
+            location.reload();
+          } else {
+            alert("❌ " + data.message);
+          }
+        });
+    }
+
+    function openReassignModal(pageId, submissionId) {
+      const mangakaId = document.getElementById("mangaka-meta")?.dataset.mangakaId;
+      if (!mangakaId) { alert("Không tìm thấy mangakaId!"); return; }
+      document.getElementById("reassignPageId").value = pageId;
+      document.getElementById("reassignSubmissionId").value = submissionId;
+      document.getElementById("reassignComment").value = "";
+      // Set default deadline: ngày mai lúc 23:59
+      const pad2 = (n) => n.toString().padStart(2, '0');
+      const tomorrow2 = new Date();
+      tomorrow2.setDate(tomorrow2.getDate() + 1);
+      const dlInput2 = document.getElementById("reassignDeadline");
+      dlInput2.value = `${tomorrow2.getFullYear()}-${pad2(tomorrow2.getMonth() + 1)}-${pad2(tomorrow2.getDate())}`;
+      document.getElementById("reassignHour").value = "23";
+      document.getElementById("reassignMinute").value = "59";
+      // Set min date = hôm nay
+      const nowDt2 = new Date();
+      dlInput2.min = `${nowDt2.getFullYear()}-${pad2(nowDt2.getMonth() + 1)}-${pad2(nowDt2.getDate())}`;
+      fetch(`/manga/mangaka/${mangakaId}/assistants`)
+        .then(r => r.json())
+        .then(assistants => {
+          if (!assistants || assistants.length === 0) { alert("Chưa có trợ lý nào!"); return; }
+          document.getElementById("reassignSelect").innerHTML = assistants
+            .map(a => `<option value="${a.id}">${a.user.fullname}</option>`).join("");
+          document.getElementById("reassignModalOverlay").style.display = "flex";
+        })
+        .catch(err => alert("❌ " + err.message));
+    }
+
+    function submitReassign() {
+      const pageId = document.getElementById("reassignPageId").value;
+      const submissionId = document.getElementById("reassignSubmissionId").value;
+      const assistantId = document.getElementById("reassignSelect").value;
+      const comment = document.getElementById("reassignComment").value;
+      const deadlineDate2 = document.getElementById("reassignDeadline").value;
+      const deadlineHour2 = document.getElementById("reassignHour").value;
+      const deadlineMinute2 = document.getElementById("reassignMinute").value;
+      const deadline = deadlineDate2 && deadlineHour2 && deadlineMinute2 ? `${deadlineDate2}T${deadlineHour2}:${deadlineMinute2}:00` : "";
+
+      // Validate deadline bắt buộc
+      const errSpan2 = document.getElementById("reassignDeadlineError");
+      if (!deadline || deadline.trim() === "") {
+        errSpan2.textContent = "⚠️ Vui lòng chọn deadline trước khi giao lại!";
+        errSpan2.style.display = "block";
+        return;
       }
+      const selectedDate2 = new Date(`${deadlineDate2}T${deadlineHour2}:${deadlineMinute2}:00`);
+      const now2 = new Date();
+      if (selectedDate2 <= now2) {
+        errSpan2.textContent = "⚠️ Deadline phải sau thời điểm hiện tại!";
+        errSpan2.style.display = "block";
+        return;
+      }
+      errSpan2.style.display = "none";
 
-      function approvePageDone(pageId) {
-        if (!confirm("Duyệt trang này?")) return;
-        fetch("/api/page/" + pageId + "/approve-done", { method: "POST" })
+      if (!assistantId || !pageId) { alert("Thiếu dữ liệu!"); return; }
+      fetch(`/api/page/${pageId}/reassign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ submissionId, assistantId, comment, deadline })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === "success") {
+            document.getElementById("reassignModalOverlay").style.display = "none";
+            alert("✅ " + data.message);
+            location.reload();
+          } else {
+            alert("❌ " + data.message);
+          }
+        })
+        .catch(err => alert("❌ " + err.message));
+    }
+
+    document.addEventListener("click", function (e) {
+      const approveBtn = e.target.closest(".btn-approve-page");
+      if (approveBtn) { approvePageDone(approveBtn.dataset.pageId); return; }
+
+      const finishBtn = e.target.closest(".btn-finish-page");
+      if (finishBtn) { finishPage(finishBtn.dataset.pageId); return; }
+
+      const assignBtn = e.target.closest(".btn-open-assign");
+      if (assignBtn) { openAssignModal(assignBtn.dataset.pageId); return; }
+
+      const submitBtn = e.target.closest(".btn-submit-chapter");
+      if (submitBtn) { submitChapter(submitBtn.dataset.chapterId); return; }
+
+      const reassignBtn = e.target.closest(".btn-reassign-page");
+      if (reassignBtn) { openReassignModal(reassignBtn.dataset.pageId, reassignBtn.dataset.submissionId); return; }
+    });
+
+    function initProjectTab() {
+      const path = window.location.pathname;
+
+      const pageEditMatch = path.match(/\/myseries\/([^/]+)\/([^/]+)\/([^/]+)\/edit$/);
+      const submissionEditMatch = path.match(/\/submission\/([^/]+)\/edit$/);
+      const chapterMatch = path.match(/\/myseries\/([^/]+)\/([^/]+)$/);
+      const seriesMatch = path.match(/\/myseries\/([^/]+)$/);
+
+      if (pageEditMatch) {
+        const sid = pageEditMatch[1];
+        const cid = pageEditMatch[2];
+        const pid = pageEditMatch[3];
+
+        openTab('tab-draw');
+
+        fetch(`/manga/mangaka/myseries/${sid}/${cid}/${pid}/edit/data`)
           .then(r => r.json())
           .then(data => {
-            if (data.status === "success") {
-              alert("✅ " + data.message);
-              location.reload();
-            } else {
-              alert("❌ " + data.message);
+            if (data.status === 'success' && data.page) {
+              const btn = document.getElementById('btnSavePage');
+              if (btn) {
+                btn.dataset.pageId = data.page.id;
+                btn.dataset.savedPath = data.page.filePath || '';
+                btn.style.display = '';
+
+                // 👇 THÊM: load ảnh đã lưu lên canvas
+                if (data.page.filePath) {
+                  const img = new Image();
+                  img.onload = () => {
+                    layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+                    layers[1].ctx.drawImage(img, 0, 0);
+                    pushHistoryEntry('Load trang đã lưu');
+                  };
+                  img.src = data.page.filePath + '?t=' + Date.now();
+                }
+              }
             }
           });
-      }
 
-      function openReassignModal(pageId, submissionId) {
-        const mangakaId = document.getElementById("mangaka-meta")?.dataset.mangakaId;
-        if (!mangakaId) { alert("Không tìm thấy mangakaId!"); return; }
-        document.getElementById("reassignPageId").value = pageId;
-        document.getElementById("reassignSubmissionId").value = submissionId;
-        document.getElementById("reassignComment").value = "";
-        // Set default deadline: ngày mai lúc 23:59
-        const pad2 = (n) => n.toString().padStart(2, '0');
-        const tomorrow2 = new Date();
-        tomorrow2.setDate(tomorrow2.getDate() + 1);
-        const dlInput2 = document.getElementById("reassignDeadline");
-        dlInput2.value = `${tomorrow2.getFullYear()}-${pad2(tomorrow2.getMonth() + 1)}-${pad2(tomorrow2.getDate())}`;
-        document.getElementById("reassignHour").value = "23";
-        document.getElementById("reassignMinute").value = "59";
-        // Set min date = hôm nay
-        const nowDt2 = new Date();
-        dlInput2.min = `${nowDt2.getFullYear()}-${pad2(nowDt2.getMonth() + 1)}-${pad2(nowDt2.getDate())}`;
-        fetch(`/manga/mangaka/${mangakaId}/assistants`)
-          .then(r => r.json())
-          .then(assistants => {
-            if (!assistants || assistants.length === 0) { alert("Chưa có trợ lý nào!"); return; }
-            document.getElementById("reassignSelect").innerHTML = assistants
-              .map(a => `<option value="${a.id}">${a.user.fullname}</option>`).join("");
-            document.getElementById("reassignModalOverlay").style.display = "flex";
-          })
-          .catch(err => alert("❌ " + err.message));
-      }
+        loadChapterView(sid, cid);
+        return;
+      } else if (submissionEditMatch) {
+        const subId = submissionEditMatch[1];
 
-      function submitReassign() {
-        const pageId = document.getElementById("reassignPageId").value;
-        const submissionId = document.getElementById("reassignSubmissionId").value;
-        const assistantId = document.getElementById("reassignSelect").value;
-        const comment = document.getElementById("reassignComment").value;
-        const deadlineDate2 = document.getElementById("reassignDeadline").value;
-        const deadlineHour2 = document.getElementById("reassignHour").value;
-        const deadlineMinute2 = document.getElementById("reassignMinute").value;
-        const deadline = deadlineDate2 && deadlineHour2 && deadlineMinute2 ? `${deadlineDate2}T${deadlineHour2}:${deadlineMinute2}:00` : "";
+        openTab('tab-draw');
 
-        // Validate deadline bắt buộc
-        const errSpan2 = document.getElementById("reassignDeadlineError");
-        if (!deadline || deadline.trim() === "") {
-          errSpan2.textContent = "⚠️ Vui lòng chọn deadline trước khi giao lại!";
-          errSpan2.style.display = "block";
-          return;
-        }
-        const selectedDate2 = new Date(`${deadlineDate2}T${deadlineHour2}:${deadlineMinute2}:00`);
-        const now2 = new Date();
-        if (selectedDate2 <= now2) {
-          errSpan2.textContent = "⚠️ Deadline phải sau thời điểm hiện tại!";
-          errSpan2.style.display = "block";
-          return;
-        }
-        errSpan2.style.display = "none";
-
-        if (!assistantId || !pageId) { alert("Thiếu dữ liệu!"); return; }
-        fetch(`/api/page/${pageId}/reassign`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ submissionId, assistantId, comment, deadline })
-        })
+        fetch(`/manga/mangaka/submission/${subId}/data`)
           .then(r => r.json())
           .then(data => {
-            if (data.status === "success") {
-              document.getElementById("reassignModalOverlay").style.display = "none";
-              alert("✅ " + data.message);
-              location.reload();
-            } else {
-              alert("❌ " + data.message);
+            if (data.status === 'success') {
+              const btn = document.getElementById('btnEditSubmission');
+              if (btn) {
+                btn.dataset.submissionId = data.submission.id;
+                btn.dataset.savedPath = data.submission.filePath || '';
+                btn.dataset.returnUrl = data.returnUrl || '';
+                btn.style.display = '';
+
+                // 👇 THÊM: load ảnh đã lưu lên canvas
+                if (data.submission.filePath) {
+                  const img = new Image();
+                  img.onload = () => {
+                    layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+                    layers[1].ctx.drawImage(img, 0, 0);
+                    pushHistoryEntry('Load submission đã lưu');
+                  };
+                  img.src = data.submission.filePath + '?t=' + Date.now();
+                }
+              }
+              if (data.seriesId && data.chapterId) {
+                loadChapterView(data.seriesId, data.chapterId);
+              }
             }
-          })
-          .catch(err => alert("❌ " + err.message));
+          });
+
+        return;
+      } else if (chapterMatch) {
+        const sid = chapterMatch[1];
+        const cid = chapterMatch[2];
+        openTab('tab-project');
+        loadChapterView(sid, cid);
+      } else if (seriesMatch) {
+        const sid = seriesMatch[1];
+        openTab('tab-project');
+        loadSeriesView(sid);
+      } else {
+        loadMySeriesList();
       }
+    }
 
-      document.addEventListener("click", function (e) {
-        const approveBtn = e.target.closest(".btn-approve-page");
-        if (approveBtn) { approvePageDone(approveBtn.dataset.pageId); return; }
-
-        const finishBtn = e.target.closest(".btn-finish-page");
-        if (finishBtn) { finishPage(finishBtn.dataset.pageId); return; }
-
-        const assignBtn = e.target.closest(".btn-open-assign");
-        if (assignBtn) { openAssignModal(assignBtn.dataset.pageId); return; }
-
-        const submitBtn = e.target.closest(".btn-submit-chapter");
-        if (submitBtn) { submitChapter(submitBtn.dataset.chapterId); return; }
-
-        const reassignBtn = e.target.closest(".btn-reassign-page");
-        if (reassignBtn) { openReassignModal(reassignBtn.dataset.pageId, reassignBtn.dataset.submissionId); return; }
-      });
-
-      function initProjectTab() {
-  const path = window.location.pathname;
-
-  const pageEditMatch = path.match(/\/myseries\/([^/]+)\/([^/]+)\/([^/]+)\/edit$/);
-  const submissionEditMatch = path.match(/\/submission\/([^/]+)\/edit$/);
-  const chapterMatch = path.match(/\/myseries\/([^/]+)\/([^/]+)$/);
-  const seriesMatch = path.match(/\/myseries\/([^/]+)$/);
-
-  if (pageEditMatch) {
-    const sid = pageEditMatch[1];
-    const cid = pageEditMatch[2];
-    const pid = pageEditMatch[3];
-
-    openTab('tab-draw');
-
-    fetch(`/manga/mangaka/myseries/${sid}/${cid}/${pid}/edit/data`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.status === 'success' && data.page) {
-          const btn = document.getElementById('btnSavePage');
-          if (btn) {
-            btn.dataset.pageId = data.page.id;
-            btn.dataset.savedPath = data.page.filePath || '';
-            btn.style.display = '';
-
-            // 👇 THÊM: load ảnh đã lưu lên canvas
-            if (data.page.filePath) {
-              const img = new Image();
-              img.onload = () => {
-                layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-                layers[1].ctx.drawImage(img, 0, 0);
-                pushHistoryEntry('Load trang đã lưu');
-              };
-              img.src = data.page.filePath + '?t=' + Date.now();
-            }
-          }
-        }
-      });
-
-    loadChapterView(sid, cid);
-    return;
-  } else if (submissionEditMatch) {
-    const subId = submissionEditMatch[1];
-
-    openTab('tab-draw');
-
-    fetch(`/manga/mangaka/submission/${subId}/data`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.status === 'success') {
-          const btn = document.getElementById('btnEditSubmission');
-          if (btn) {
-            btn.dataset.submissionId = data.submission.id;
-            btn.dataset.savedPath = data.submission.filePath || '';
-            btn.dataset.returnUrl = data.returnUrl || '';
-            btn.style.display = '';
-
-            // 👇 THÊM: load ảnh đã lưu lên canvas
-            if (data.submission.filePath) {
-              const img = new Image();
-              img.onload = () => {
-                layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-                layers[1].ctx.drawImage(img, 0, 0);
-                pushHistoryEntry('Load submission đã lưu');
-              };
-              img.src = data.submission.filePath + '?t=' + Date.now();
-            }
-          }
-          if (data.seriesId && data.chapterId) {
-            loadChapterView(data.seriesId, data.chapterId);
-          }
-        }
-      });
-
-    return;
-  } else if (chapterMatch) {
-    const sid = chapterMatch[1];
-    const cid = chapterMatch[2];
-    openTab('tab-project');
-    loadChapterView(sid, cid);
-  } else if (seriesMatch) {
-    const sid = seriesMatch[1];
-    openTab('tab-project');
-    loadSeriesView(sid);
-  } else {
-    loadMySeriesList();
-  }
-}
-
-      function loadMySeriesList() {
-        fetch('/manga/mangaka/data')
-          .then(r => r.json())
-          .then(data => {
-            if (data.status !== 'success') return;
-            const list = data.mySeriesList || [];
-            let html = `
+    function loadMySeriesList() {
+      fetch('/manga/mangaka/data')
+        .then(r => r.json())
+        .then(data => {
+          if (data.status !== 'success') return;
+          const list = data.mySeriesList || [];
+          let html = `
               <table class="data-table" style="width:100%">
                 <thead><tr>
                   <th>Tên Series</th><th>Trạng thái</th><th>Ngày bắt đầu</th><th>Hành động</th>
                 </tr></thead>
                 <tbody>`;
-            if (list.length === 0) {
-              html += `<tr><td colspan="4" class="ptab-sub-desc">Bạn chưa có series nào đang hoạt động.</td></tr>`;
-            } else {
-              list.forEach(s => {
-                const statusMap = {
-                  'unfinish': '<span class="badge-status-approved">Đang thực hiện</span>',
-                  'finish': '<span class="badge-status-waiting">Chờ BTV duyệt</span>',
-                  'pass': '<span class="badge-status-passed">Đã duyệt</span>',
-                  'stopped': '<span class="badge-status-rejected">Đã dừng</span>',
-                  'rewarded': '<span class="badge-status-passed">Đã khen thưởng</span>',
-                };
-                html += `<tr>
+          if (list.length === 0) {
+            html += `<tr><td colspan="4" class="ptab-sub-desc">Bạn chưa có series nào đang hoạt động.</td></tr>`;
+          } else {
+            list.forEach(s => {
+              const statusMap = {
+                'unfinish': '<span class="badge-status-approved">Đang thực hiện</span>',
+                'finish': '<span class="badge-status-waiting">Chờ BTV duyệt</span>',
+                'pass': '<span class="badge-status-passed">Đã duyệt</span>',
+                'stopped': '<span class="badge-status-rejected">Đã dừng</span>',
+                'rewarded': '<span class="badge-status-passed">Đã khen thưởng</span>',
+              };
+              html += `<tr>
                   <td>${s.seriesName}</td>
                   <td>${statusMap[s.status] || s.status}</td>
                   <td>${s.startDate || ''}</td>
                   <td><a href="/manga/mangaka/myseries/${s.id}" class="btn-link">Xem chapter</a></td>
                 </tr>`;
-              });
-            }
-            html += `</tbody></table>`;
-            document.getElementById('project-view-series').innerHTML = html;
-            document.getElementById('project-view-series').style.display = '';
-          });
-      }
+            });
+          }
+          html += `</tbody></table>`;
+          document.getElementById('project-view-series').innerHTML = html;
+          document.getElementById('project-view-series').style.display = '';
+        });
+    }
 
-      function loadSeriesView(sid) {
-        fetch(`/manga/mangaka/myseries/${sid}/data`)
-          .then(r => r.json())
-          .then(data => {
-            if (data.status !== 'success') return;
-            const series = data.series;
-            const chapters = data.chapters || [];
-            let html = `
+    function loadSeriesView(sid) {
+      fetch(`/manga/mangaka/myseries/${sid}/data`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.status !== 'success') return;
+          const series = data.series;
+          const chapters = data.chapters || [];
+          let html = `
               <h3>Chapter của series: ${series.seriesName}</h3>
               <a href="/manga/mangaka"><button type="button" class="btn-icon">Quay lại</button></a>
               <form id="formCreateChapter" style="margin:12px 0">
@@ -1795,19 +1889,19 @@
                   <th>Trạng thái</th><th>Nhận xét từ Tantou</th><th>Hành động</th>
                 </tr></thead>
                 <tbody>`;
-            if (chapters.length === 0) {
-              html += `<tr><td colspan="6" class="ptab-sub-desc">Series này chưa có chapter nào.</td></tr>`;
-            } else {
-              chapters.forEach(c => {
-                const deadline = c.deadline || '—';
-                const comment = c.tantouComment
-                  ? `<span class="tantou-comment-text">${c.tantouComment}</span>`
-                  : `<span class="tantou-comment-empty">—</span>`;
-                const finishBadge = c.status === 'finish'
-                  ? `<span class="badge-status-approved" style="margin-left:6px">⏳ Chờ BTV duyệt</span>` : '';
-                const passBadge = c.status === 'pass'
-                  ? `<span class="badge-status-passed" style="margin-left:6px">✅ Đã duyệt</span>` : '';
-                html += `<tr>
+          if (chapters.length === 0) {
+            html += `<tr><td colspan="6" class="ptab-sub-desc">Series này chưa có chapter nào.</td></tr>`;
+          } else {
+            chapters.forEach(c => {
+              const deadline = c.deadline || '—';
+              const comment = c.tantouComment
+                ? `<span class="tantou-comment-text">${c.tantouComment}</span>`
+                : `<span class="tantou-comment-empty">—</span>`;
+              const finishBadge = c.status === 'finish'
+                ? `<span class="badge-status-approved" style="margin-left:6px">⏳ Chờ BTV duyệt</span>` : '';
+              const passBadge = c.status === 'pass'
+                ? `<span class="badge-status-passed" style="margin-left:6px">✅ Đã duyệt</span>` : '';
+              html += `<tr>
                   <td>${c.chapterNumber}</td>
                   <td>${c.chapterName}</td>
                   <td>${deadline}</td>
@@ -1818,44 +1912,44 @@
                     ${finishBadge}${passBadge}
                   </td>
                 </tr>`;
-              });
-            }
-            html += `</tbody></table>`;
-            document.getElementById('project-view-chapter').innerHTML = html;
-            document.getElementById('project-view-chapter').style.display = '';
-          });
-      }
+            });
+          }
+          html += `</tbody></table>`;
+          document.getElementById('project-view-chapter').innerHTML = html;
+          document.getElementById('project-view-chapter').style.display = '';
+        });
+    }
 
-      function submitCreateChapter(seriesId) {
-        const name = document.getElementById('txtChapterName').value.trim();
-        if (!name) { alert('Vui lòng nhập tên chapter!'); return; }
-        fetch(`/manga/mangaka/myseries/${seriesId}/createchapter/data`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `txtChapterName=${encodeURIComponent(name)}`
-        })
-          .then(r => r.json())
-          .then(data => {
-            if (data.status === 'success') {
-              alert('✅ ' + data.message);
-              loadSeriesView(seriesId);
-            } else {
-              alert('❌ ' + data.message);
-            }
-          });
-      }
+    function submitCreateChapter(seriesId) {
+      const name = document.getElementById('txtChapterName').value.trim();
+      if (!name) { alert('Vui lòng nhập tên chapter!'); return; }
+      fetch(`/manga/mangaka/myseries/${seriesId}/createchapter/data`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `txtChapterName=${encodeURIComponent(name)}`
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'success') {
+            alert('✅ ' + data.message);
+            loadSeriesView(seriesId);
+          } else {
+            alert('❌ ' + data.message);
+          }
+        });
+    }
 
-      function loadChapterView(sid, cid) {
-        fetch(`/manga/mangaka/myseries/${sid}/${cid}/data`)
-          .then(r => r.json())
-          .then(data => {
-            if (data.status !== 'success') return;
-            const chapter = data.chapter;
-            const pages = data.pages || [];
-            const subMap = data.submissionMap || {};
-            const mangakaId = data.mangakaId || '';
+    function loadChapterView(sid, cid) {
+      fetch(`/manga/mangaka/myseries/${sid}/${cid}/data`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.status !== 'success') return;
+          const chapter = data.chapter;
+          const pages = data.pages || [];
+          const subMap = data.submissionMap || {};
+          const mangakaId = data.mangakaId || '';
 
-            let html = `
+          let html = `
               <div id="mangaka-meta" data-mangaka-id="${mangakaId}" style="display:none"></div>
               <h3>Danh sách trang — Chapter: ${chapter.chapterName}</h3>
               <p class="ptab-sub-desc" style="margin:6px 0 0 0">
@@ -1864,64 +1958,64 @@
               <a href="/manga/mangaka/myseries/${sid}" class="btn-link">&larr; Quay lại danh sách chapter</a>
               <div style="display:flex;align-items:center;gap:10px;margin:12px 0;">`;
 
-            if (chapter.status === 'unfinish') {
-              html += `<button type="button" onclick="submitAddPage('${sid}','${cid}')">+ Thêm trang mới</button>`;
-              if (pages.length > 0) {
-                html += `<button type="button" class="btn-action primary btn-submit-chapter" 
+          if (chapter.status === 'unfinish') {
+            html += `<button type="button" onclick="submitAddPage('${sid}','${cid}')">+ Thêm trang mới</button>`;
+            if (pages.length > 0) {
+              html += `<button type="button" class="btn-action primary btn-submit-chapter" 
                           style="font-size:13px;padding:6px 14px" data-chapter-id="${chapter.id}">
                           📤 Submit lên BTV</button>`;
-              }
-            } else if (chapter.status === 'finish') {
-              html += `<span class="badge-status-approved" style="padding:6px 12px">⏳ Chờ BTV duyệt</span>`;
-            } else if (chapter.status === 'pass') {
-              html += `<span class="badge-status-passed" style="padding:6px 12px">✅ Đã duyệt</span>`;
             }
+          } else if (chapter.status === 'finish') {
+            html += `<span class="badge-status-approved" style="padding:6px 12px">⏳ Chờ BTV duyệt</span>`;
+          } else if (chapter.status === 'pass') {
+            html += `<span class="badge-status-passed" style="padding:6px 12px">✅ Đã duyệt</span>`;
+          }
 
-            html += `</div><div class="pages-grid-container">`;
+          html += `</div><div class="pages-grid-container">`;
 
-            if (pages.length === 0) {
-              html += `<p class="ptab-sub-desc">Chapter này chưa có trang nào.</p>`;
-            } else {
-              pages.forEach(p => {
-                const sub = subMap[p.id];
-                const imgHtml = p.filePath
-                  ? `<img src="${p.filePath}?t=${Date.now()}" />`
-                  : `<i class="fa-solid fa-image"></i>`;
+          if (pages.length === 0) {
+            html += `<p class="ptab-sub-desc">Chapter này chưa có trang nào.</p>`;
+          } else {
+            pages.forEach(p => {
+              const sub = subMap[p.id];
+              const imgHtml = p.filePath
+                ? `<img src="${p.filePath}?t=${Date.now()}" />`
+                : `<i class="fa-solid fa-image"></i>`;
 
-                let actions = '';
+              let actions = '';
 
-                // Nút mở để vẽ
-                if (chapter.status === 'unfinish' && p.status === 'unfinish') {
-                  actions += `<a href="/manga/mangaka/myseries/${sid}/${cid}/${p.id}/edit">Mở để vẽ</a>`;
-                }
+              // Nút mở để vẽ
+              if (chapter.status === 'unfinish' && p.status === 'unfinish') {
+                actions += `<a href="/manga/mangaka/myseries/${sid}/${cid}/${p.id}/edit">Mở để vẽ</a>`;
+              }
 
-                // Nút hoàn thành
-                if (p.status === 'unfinish' || (p.status === 'done' && sub && sub.status === 'finish')) {
-                  actions += `<button type="button" class="btn-action approve btn-finish-page"
+              // Nút hoàn thành
+              if (p.status === 'unfinish' || (p.status === 'done' && sub && sub.status === 'finish')) {
+                actions += `<button type="button" class="btn-action approve btn-finish-page"
                                 style="font-size:12px;padding:4px 10px;margin-top:4px"
                                 data-page-id="${p.id}">✅ Hoàn thành</button>`;
-                }
+              }
 
-                // Badge status
-                if (p.status === 'finish') {
-                  actions += `<span class="badge-status-passed" style="font-size:11px">✅ Finish</span>`;
-                } else if (p.status === 'intask') {
-                  actions += `<span class="badge-status-approved" style="font-size:11px">🔄 Đang làm</span>`;
-                } else if (p.status === 'done' && (!sub || sub.status !== 'finish')) {
-                  actions += `<span class="badge-status-waiting" style="font-size:11px">👁 Chờ duyệt</span>`;
-                }
+              // Badge status
+              if (p.status === 'finish') {
+                actions += `<span class="badge-status-passed" style="font-size:11px">✅ Finish</span>`;
+              } else if (p.status === 'intask') {
+                actions += `<span class="badge-status-approved" style="font-size:11px">🔄 Đang làm</span>`;
+              } else if (p.status === 'done' && (!sub || sub.status !== 'finish')) {
+                actions += `<span class="badge-status-waiting" style="font-size:11px">👁 Chờ duyệt</span>`;
+              }
 
-                // Assignment info
-                if (sub && p.status === 'intask') {
-                  actions += `<div class="assistant-assignment-badge">
+              // Assignment info
+              if (sub && p.status === 'intask') {
+                actions += `<div class="assistant-assignment-badge">
                     <div>👤 <b>${sub.assistant.user.fullname}</b></div>
                     <div>📅 ${sub.deadline}</div>
                   </div>`;
-                }
+              }
 
-                // Done: duyệt hoặc giao lại
-                if (p.status === 'done' && sub && sub.status === 'done') {
-                  actions += `<a href="/manga/mangaka/submission/${sub.id}/edit" 
+              // Done: duyệt hoặc giao lại
+              if (p.status === 'done' && sub && sub.status === 'done') {
+                actions += `<a href="/manga/mangaka/submission/${sub.id}/edit" 
                                 style="font-size:12px;color:#4da6ff;display:block;margin-bottom:4px">
                                 🖼 Mở bài nộp để chỉnh sửa</a>
                               <div style="display:flex;gap:6px">
@@ -1931,49 +2025,49 @@
                                   style="font-size:12px;padding:4px 10px"
                                   data-page-id="${p.id}" data-submission-id="${sub.id}">🔄 Giao lại</button>
                               </div>`;
-                }
+              }
 
-                // Done + finish: vẫn cho mở chỉnh sửa
-                if (p.status === 'done' && sub && sub.status === 'finish') {
-                  actions += `<a href="/manga/mangaka/submission/${sub.id}/edit"
+              // Done + finish: vẫn cho mở chỉnh sửa
+              if (p.status === 'done' && sub && sub.status === 'finish') {
+                actions += `<a href="/manga/mangaka/submission/${sub.id}/edit"
                                 style="font-size:12px;color:#4da6ff;display:block">
                                 🖼 Mở bài nộp để chỉnh sửa</a>`;
-                }
+              }
 
-                // Nút giao việc
-                if (chapter.status === 'unfinish' && p.status === 'unfinish') {
-                  actions += `<button type="button" class="btn-assign-task btn-open-assign"
+              // Nút giao việc
+              if (chapter.status === 'unfinish' && p.status === 'unfinish') {
+                actions += `<button type="button" class="btn-assign-task btn-open-assign"
                                 data-page-id="${p.id}">
                                 <i class="fa-solid fa-user-plus"></i> Giao việc</button>`;
-                }
+              }
 
-                html += `<div class="page-grid-item">
+              html += `<div class="page-grid-item">
                   <div class="page-preview-box">${imgHtml}</div>
                   <p>Trang ${p.pageNumber}</p>
                   <p>${p.status}</p>
                   <div class="chapter-create-inline-form">${actions}</div>
                 </div>`;
-              });
-            }
+            });
+          }
 
-            html += `</div>`;
-            document.getElementById('project-view-page').innerHTML = html;
-            document.getElementById('project-view-page').style.display = '';
-          });
-      }
+          html += `</div>`;
+          document.getElementById('project-view-page').innerHTML = html;
+          document.getElementById('project-view-page').style.display = '';
+        });
+    }
 
-      function submitAddPage(sid, cid) {
-        fetch(`/manga/mangaka/myseries/${sid}/${cid}/addpage/data`, { method: 'POST' })
-          .then(r => r.json())
-          .then(data => {
-            if (data.status === 'success') {
-              window.location.href = `/manga/mangaka/myseries/${sid}/${cid}/${data.pageId}/edit`;
-            } else {
-              alert('❌ ' + data.message);
-            }
-          });
-      }
-    </script>
+    function submitAddPage(sid, cid) {
+      fetch(`/manga/mangaka/myseries/${sid}/${cid}/addpage/data`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'success') {
+            window.location.href = `/manga/mangaka/myseries/${sid}/${cid}/${data.pageId}/edit`;
+          } else {
+            alert('❌ ' + data.message);
+          }
+        });
+    }
+  </script>
 
 </body>
 

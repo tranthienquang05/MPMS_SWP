@@ -295,7 +295,7 @@ public class AdminController {
                         .ifPresent(assistantRepository::delete);
                 case "tantou" -> tantoEditorRepository.findByUserId(id)
                         .ifPresent(tantoEditorRepository::delete);
-                case "board" -> boardRepository.findByUserId(id)
+                case "board" -> boardRepository.findByUser_Id(id)
                         .ifPresent(boardRepository::delete);
             }
 

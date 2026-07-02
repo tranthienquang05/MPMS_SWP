@@ -91,86 +91,75 @@ public class SubmissionController {
         return result;
     }
 
-    @PostMapping("/{submissionId}/edit")
-    @ResponseBody
-    public Map<String, String> editSubmission(@PathVariable String submissionId,
-            @RequestBody Map<String, String> body) {
-        Map<String, String> result = new HashMap<>();
-
-        try {
-            Submission submission = submissionRepository.findById(submissionId).orElse(null);
-            if (submission == null) {
-                result.put("status", "error");
-                result.put("message", "Không tìm thấy submission: " + submissionId);
-                return result;
-            }
-
-            MangaPage mangaPage = mangaPageRepository.findById(submission.getPageId().getId()).orElse(null);
-            if (mangaPage == null) {
-                result.put("status", "error");
-                result.put("message", "Không tìm thấy trang manga");
-                return result;
-            }
-
-            String base64 = body.get("imageBase64");
-            String status = body.get("status");
-            String comment = body.get("comment");
-            String normalizedStatus = status == null ? "" : status.trim().toLowerCase();
-
-            if (!"pass".equals(normalizedStatus) && !"unfinish".equals(normalizedStatus)) {
-                result.put("status", "error");
-                result.put("message", "Trạng thái không hợp lệ");
-                return result;
-            }
-
-            submission.setStatus(normalizedStatus);
-            if (comment != null) {
-                submission.setComment(comment);
-            }
-
-            byte[] imageBytes = null;
-            if (base64 != null && !base64.isBlank()) {
-                if (base64.contains(",")) {
-                    base64 = base64.split(",")[1];
-                }
-                imageBytes = Base64.getDecoder().decode(base64);
-
-                String uploadDir = "src/main/resources/static/Submission/";
-                Files.createDirectories(Paths.get(uploadDir));
-                String fileName = submissionId + ".png";
-                Path filePath = Paths.get(uploadDir + fileName);
-                Files.write(filePath, imageBytes);
-                submission.setFilePath("/Submission/" + fileName);
-            }
-
-            if (imageBytes != null) {
-                String pageDir = "src/main/resources/static/MangaPage/";
-                Files.createDirectories(Paths.get(pageDir));
-                Path pageFilePath = Paths.get(pageDir + mangaPage.getId() + ".png");
-                Files.write(pageFilePath, imageBytes);
-                mangaPage.setFilePath("/MangaPage/" + mangaPage.getId() + ".png");
-            }
-
-            mangaPage.setStatus(normalizedStatus);
-            mangaPageRepository.save(mangaPage);
-            submissionRepository.save(submission);
-
-            String seriesId = submission.getPageId().getChapter().getSeries().getId();
-            String chapterId = submission.getPageId().getChapter().getId();
-
-            result.put("status", "success");
-            result.put("message", "Cập nhật bài nộp thành công!");
-            result.put("redirectUrl", "/manga/mangaka/myseries/" + seriesId + "/" + chapterId);
-        } catch (IllegalArgumentException e) {
-            result.put("status", "error");
-            result.put("message", "Base64 không hợp lệ");
-        } catch (IOException e) {
-            result.put("status", "error");
-            result.put("message", "Lỗi ghi file: " + e.getMessage());
-        } catch (Exception e) {
-            result.put("status", "error");
-            result.put("message", "Lỗi hệ thống: " + e.getMessage());
-        }
-        return result;
-    }
+    // @PostMapping("/{submissionId}/edit")
+    // @ResponseBody
+    // public Map<String, String> editSubmission(@PathVariable String submissionId,
+    //         @RequestBody Map<String, String> body) {
+    //     Map<String, String> result = new HashMap<>();
+    //     try {
+    //         Submission submission = submissionRepository.findById(submissionId).orElse(null);
+    //         if (submission == null) {
+    //             result.put("status", "error");
+    //             result.put("message", "Không tìm thấy submission: " + submissionId);
+    //             return result;
+    //         }
+    //         MangaPage mangaPage = mangaPageRepository.findById(submission.getPageId().getId()).orElse(null);
+    //         if (mangaPage == null) {
+    //             result.put("status", "error");
+    //             result.put("message", "Không tìm thấy trang manga");
+    //             return result;
+    //         }
+    //         String base64 = body.get("imageBase64");
+    //         String status = body.get("status");
+    //         String comment = body.get("comment");
+    //         String normalizedStatus = status == null ? "" : status.trim().toLowerCase();
+    //         if (!"pass".equals(normalizedStatus) && !"unfinish".equals(normalizedStatus)) {
+    //             result.put("status", "error");
+    //             result.put("message", "Trạng thái không hợp lệ");
+    //             return result;
+    //         }
+    //         submission.setStatus(normalizedStatus);
+    //         if (comment != null) {
+    //             submission.setComment(comment);
+    //         }
+    //         byte[] imageBytes = null;
+    //         if (base64 != null && !base64.isBlank()) {
+    //             if (base64.contains(",")) {
+    //                 base64 = base64.split(",")[1];
+    //             }
+    //             imageBytes = Base64.getDecoder().decode(base64);
+    //             String uploadDir = "src/main/resources/static/Submission/";
+    //             Files.createDirectories(Paths.get(uploadDir));
+    //             String fileName = submissionId + ".png";
+    //             Path filePath = Paths.get(uploadDir + fileName);
+    //             Files.write(filePath, imageBytes);
+    //             submission.setFilePath("/Submission/" + fileName);
+    //         }
+    //         if (imageBytes != null) {
+    //             String pageDir = "src/main/resources/static/MangaPage/";
+    //             Files.createDirectories(Paths.get(pageDir));
+    //             Path pageFilePath = Paths.get(pageDir + mangaPage.getId() + ".png");
+    //             Files.write(pageFilePath, imageBytes);
+    //             mangaPage.setFilePath("/MangaPage/" + mangaPage.getId() + ".png");
+    //         }
+    //         mangaPage.setStatus(normalizedStatus);
+    //         mangaPageRepository.save(mangaPage);
+    //         submissionRepository.save(submission);
+    //         String seriesId = submission.getPageId().getChapter().getSeries().getId();
+    //         String chapterId = submission.getPageId().getChapter().getId();
+    //         result.put("status", "success");
+    //         result.put("message", "Cập nhật bài nộp thành công!");
+    //         result.put("redirectUrl", "/manga/mangaka/myseries/" + seriesId + "/" + chapterId);
+    //     } catch (IllegalArgumentException e) {
+    //         result.put("status", "error");
+    //         result.put("message", "Base64 không hợp lệ");
+    //     } catch (IOException e) {
+    //         result.put("status", "error");
+    //         result.put("message", "Lỗi ghi file: " + e.getMessage());
+    //     } catch (Exception e) {
+    //         result.put("status", "error");
+    //         result.put("message", "Lỗi hệ thống: " + e.getMessage());
+    //     }
+    //     return result;
+    // }
 }

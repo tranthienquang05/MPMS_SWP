@@ -298,10 +298,7 @@
 
               <input type="file" id="inputLoadPage" accept="image/png" />
 
-              <button type="button" class="btn-ai-support-top" id="btnAiSupport">
-                <i class="fa-solid fa-brain"></i>
-                AI Support
-              </button>
+
 
               <button type="button" class="btn-ai-support-top" id="btnDownload">
                 <i class="fa-solid fa-download"></i>
@@ -331,8 +328,6 @@
 
             <div class="canvas-viewport" id="canvasViewport">
               <div class="canvas-stack" id="canvasStack" style="width: 400px; height: 600px">
-                <canvas id="bgCanvas" width="400" height="600"></canvas>
-                <canvas id="layer2Canvas" width="400" height="600"></canvas>
                 <canvas id="drawCanvas" width="400" height="600"></canvas>
                 <div class="canvas-region-select" id="regionSelectBox"></div>
               </div>
@@ -367,133 +362,31 @@
               </div>
               <div id="layerList"></div>
             </div>
-            <div class="panel-section" style="
-                  flex: 1;
-                  display: flex;
-                  flex-direction: column;
-                  min-height: 0;
-                ">
-              <div class="panel-section-header">Lịch sử thao tác</div>
-              <div class="history-list" id="historyList"></div>
+            <div class="panel-section">
+              <div class="panel-section-header">Manga Chat</div>
+              <div class="chat-history-list" id="chatHistoryList">
+              </div>
+                  <div class="chat-input-area">
+                     <div id="chatImagePreview" style="display: none; position: relative; width: fit-content;">
+                        <img id="chatImgPrevSrc" src="" style="max-height: 100px; max-width: 100%; border-radius: 4px; border: 1px solid var(--ps-border);" />
+                        <button type="button" onclick="removeChatImage()" style="position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border: none; border-radius: 50%; cursor: pointer; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center;">&times;</button>
+                     </div>
+                     <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn-icon" onclick="document.getElementById('chatImageInput').click()" title="Đính kèm ảnh" style="border: 1px solid var(--ps-border); padding: 6px 10px; border-radius: 4px; cursor: pointer; background: var(--ps-bg-alt);">
+                            <i class="fa-solid fa-image"></i>
+                        </button>
+                        <input type="file" id="chatImageInput" accept="image/png, image/jpeg" style="display: none;" onchange="previewChatImage(event)" />
+                        <input type="text" id="chatTextInput" placeholder="Nhắn cho trợ lý..." style="flex: 1; padding: 6px; border: 1px solid var(--ps-border); border-radius: 4px; background: var(--ps-bg-alt); color: var(--ps-text-main);" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}" />
+                        <button type="button" class="btn-submit" onclick="sendChatMessage()" id="btnSendChat" style="padding: 6px 14px; border-radius: 4px; background: var(--ps-primary, #204fa6); color: white; border: none; cursor: pointer; font-size: 14px; min-width: 40px;">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                     </div>
+                  </div>
             </div>
           </div>
         </div>
 
-        <div id="aiModalOverlay" class="ai-modal-overlay">
-          <div class="ai-modal-box">
-            <div class="ai-modal-header">
-              <h5><i class="fa-solid fa-brain"></i> AI Support</h5>
-              <button type="button" class="ai-modal-close" id="btnCloseAiModal">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
-            </div>
 
-            <div class="ai-modal-body">
-              <div id="aiFeatureListView">
-                <div class="ai-feature-grid">
-                  <button type="button" class="ai-feature-card" data-feature="color" data-name="Tô màu"
-                    data-type="image">
-                    <i class="fa-solid fa-palette"></i>
-                    <div class="ai-feature-name">Tô màu</div>
-                    <div class="ai-feature-desc">
-                      Tô màu panel theo gam màu tự nhiên
-                    </div>
-                  </button>
-                  <button type="button" class="ai-feature-card" data-feature="shadow" data-name="Đổ bóng"
-                    data-type="image">
-                    <i class="fa-solid fa-circle-half-stroke"></i>
-                    <div class="ai-feature-name">Đổ bóng</div>
-                    <div class="ai-feature-desc">
-                      Thêm shading & lighting tự động
-                    </div>
-                  </button>
-                  <button type="button" class="ai-feature-card" data-feature="clean_line" data-name="Clean lineart"
-                    data-type="image">
-                    <i class="fa-solid fa-pen-nib"></i>
-                    <div class="ai-feature-name">Clean lineart</div>
-                    <div class="ai-feature-desc">
-                      Nét thảo thành nét sạch chuyên nghiệp
-                    </div>
-                  </button>
-                  <button type="button" class="ai-feature-card" data-feature="background" data-name="Background"
-                    data-type="image">
-                    <i class="fa-solid fa-mountain-sun"></i>
-                    <div class="ai-feature-name">Background</div>
-                    <div class="ai-feature-desc">
-                      Vẽ background chi tiết cho panel
-                    </div>
-                  </button>
-                  <button type="button" class="ai-feature-card" data-feature="lettering" data-name="Lettering"
-                    data-type="vision">
-                    <i class="fa-solid fa-comment-dots"></i>
-                    <div class="ai-feature-name">Lettering</div>
-                    <div class="ai-feature-desc">
-                      Phân tích balloon, gợi ý căn chỉnh
-                    </div>
-                  </button>
-                  <button type="button" class="ai-feature-card" data-feature="expression" data-name="Biểu cảm"
-                    data-type="vision">
-                    <i class="fa-solid fa-face-smile"></i>
-                    <div class="ai-feature-name">Biểu cảm</div>
-                    <div class="ai-feature-desc">
-                      Nhận diện emotion nhân vật
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              <div id="aiDetailView" class="ai-detail-view">
-                <button type="button" class="ai-detail-back" id="btnBackToFeatureList">
-                  <i class="fa-solid fa-arrow-left"></i> Quay lại
-                </button>
-                <div class="ai-detail-title" id="aiDetailTitle"></div>
-
-                <div class="ai-region-row">
-                  <span class="ai-region-label">Vùng áp dụng:</span>
-                  <button type="button" class="ai-region-btn active" data-region="full">
-                    Toàn canvas
-                  </button>
-                  <button type="button" class="ai-region-btn" data-region="select">
-                    Chọn vùng
-                  </button>
-                </div>
-                <span class="ai-region-status" id="aiRegionStatus">Sẽ áp dụng
-                  cho toàn bộ canvas</span>
-
-                <textarea class="ai-prompt-input" id="aiPromptInput"
-                  placeholder="Mô tả thêm yêu cầu (không bắt buộc)..."></textarea>
-
-                <div class="ai-modal-footer">
-                  <button type="button" class="ai-btn-run" id="btnRunAi">
-                    Chạy AI
-                  </button>
-                </div>
-              </div>
-
-              <div id="aiLoadingView" class="ai-loading-view">
-                <div class="ai-spinner"></div>
-                <p style="font-size: 12.5px; color: var(--ps-text-dim)">
-                  AI đang xử lý, vui lòng chờ...
-                </p>
-              </div>
-
-              <div id="aiResultView" class="ai-result-view">
-                <div class="ai-detail-title" id="aiResultTitle">Kết quả</div>
-                <img id="aiResultImage" class="ai-result-image" style="display: none" />
-                <div id="aiResultText" class="ai-result-text" style="display: none"></div>
-                <div id="aiErrorText" class="ai-error-text" style="display: none"></div>
-                <div class="ai-modal-footer">
-                  <button type="button" class="ai-btn-secondary" id="btnAiResultBack">
-                    Quay lại
-                  </button>
-                  <button type="button" class="ai-btn-run" id="btnApplyToCanvas" style="display: none">
-                    Apply to canvas
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div id="tab-project" class="tab-pane">

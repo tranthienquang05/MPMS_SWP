@@ -179,6 +179,16 @@ public class TantouController {
             return result;
         }
 
+        String fileNameOfTantou = fileOfTantou.getOriginalFilename();
+
+        if (fileNameOfTantou == null ||
+                !fileNameOfTantou.toLowerCase().endsWith(".pdf")) {
+
+            result.put("status", "error");
+            result.put("message", "Chỉ được phép tải lên file PDF!");
+            return result;
+        }
+
         try {
             String workingDir = System.getProperty("user.dir");
             String uploadDir = workingDir + File.separator + "src" + File.separator + "main" + File.separator

@@ -166,6 +166,17 @@ public class MangakaController {
             result.put("message", "Vui lòng chọn file bản thảo!");
             return result;
         }
+
+        String fileName = fileManuscript.getOriginalFilename();
+
+        if (fileName == null ||
+                !fileName.toLowerCase().endsWith(".pdf")) {
+
+            result.put("status", "error");
+            result.put("message", "Chỉ được phép tải lên file PDF!");
+            return result;
+        }
+
         if (txtSeriesName == null || txtSeriesName.trim().isEmpty()) {
             result.put("status", "error");
             result.put("message", "Vui lòng nhập tên series!");

@@ -51,6 +51,7 @@ public class TantouController {
         if (editor == null)
             return "redirect:/login";
 
+        model.addAttribute("currentUserId", user.getId());
         model.addAttribute("tantouId", editor.getId());
         return "tantou";
     }

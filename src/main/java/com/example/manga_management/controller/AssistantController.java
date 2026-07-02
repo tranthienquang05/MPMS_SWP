@@ -49,6 +49,8 @@ public class AssistantController {
             return "redirect:/login";
         }
 
+        model.addAttribute("currentUserId", user.getId());
+
         Assistant assistant = assistantRepository.findByUserId(user.getId()).orElse(null);
 
         if (assistant == null) {

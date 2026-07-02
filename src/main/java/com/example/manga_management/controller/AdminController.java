@@ -69,6 +69,7 @@ public class AdminController {
         if (user == null || !"admin".equalsIgnoreCase(user.getRole())) {
             return "redirect:/login";
         }
+        model.addAttribute("currentUserId", user.getId());
         return "admin";
     }
 

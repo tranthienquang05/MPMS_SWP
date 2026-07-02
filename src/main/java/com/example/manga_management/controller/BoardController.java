@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.manga_management.entity.Board;
@@ -40,9 +41,11 @@ public class BoardController {
     }
 
     @GetMapping("")
-    public String editorPage(HttpSession session) {
-        if (session.getAttribute("user") == null)
+    public String editorPage(HttpSession session, Model model) {
+        Object userObj = session.getAttribute("user");
+        if (!(userObj instanceof User user))
             return "redirect:/login";
+        model.addAttribute("currentUserId", user.getId());
         return "editor";
     }
 

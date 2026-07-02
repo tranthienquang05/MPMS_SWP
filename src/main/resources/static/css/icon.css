@@ -57,3 +57,7 @@
 .icon-history::before {
     content: "\f1da";
 }
+
+.icon-chat::before {
+    content: "\f086";
+}

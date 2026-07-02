@@ -85,6 +85,7 @@ public class MangakaController {
         if (user == null) {
             return "redirect:/login";
         }
+        model.addAttribute("currentUserId", user.getId());
         Mangaka mangaka = mangakaRepository.findByUser(user).orElse(null);
         model.addAttribute("mangaka", mangaka);
         if (mangaka != null) {

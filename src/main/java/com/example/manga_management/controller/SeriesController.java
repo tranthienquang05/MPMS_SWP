@@ -167,71 +167,62 @@ public class SeriesController {
         return result;
     }
 
-    @GetMapping("/{seriesId}/chapters")
-    @Operation(summary = "[SWAGGER] Lấy danh sách chapter của một series")
-    @ResponseBody
-    public Map<String, Object> getChaptersBySeriesId(@PathVariable String seriesId) {
-        Map<String, Object> result = new HashMap<>();
-
-        Series series = seriesRepository.findById(seriesId).orElse(null);
-        if (series == null) {
-            result.put("status", "error");
-            result.put("message", "Không tìm thấy series: " + seriesId);
-            return result;
-        }
-
-        List<Chapter> chapters = chapterRepository.findBySeriesId(seriesId);
-        result.put("status", "success");
-        result.put("seriesId", seriesId);
-        result.put("chapters", chapters);
-        return result;
-    }
-
-    @PostMapping("/{seriesId}/chapters")
-    @Operation(summary = "[SWAGGER] Tạo chapter mới trong một series")
-    @ResponseBody
-    public Map<String, Object> createChapter(@PathVariable String seriesId,
-            @RequestParam String chapterName) {
-        Map<String, Object> result = new HashMap<>();
-
-        Series series = seriesRepository.findById(seriesId).orElse(null);
-        if (series == null) {
-            result.put("status", "error");
-            result.put("message", "Không tìm thấy series: " + seriesId);
-            return result;
-        }
-
-        try {
-            Optional<Chapter> lastChapter = chapterRepository.findTopByOrderByIdDesc();
-            int maxId = 0;
-            if (lastChapter.isPresent()) {
-                maxId = Integer.parseInt(lastChapter.get().getId().substring(3));
-            }
-            String newId = "CHP" + String.format("%03d", maxId + 1);
-
-            List<Chapter> chapters = chapterRepository.findBySeriesId(seriesId);
-            int nextChapterNumber = chapters.size() + 1;
-
-            Chapter chapter = new Chapter();
-            chapter.setId(newId);
-            chapter.setSeries(series);
-            chapter.setChapterName(chapterName);
-            chapter.setChapterNumber(nextChapterNumber);
-            chapter.setDeadline(resolveNextSaturday(series));
-            chapter.setStatus("unfinish");
-            chapterRepository.save(chapter);
-
-            result.put("status", "success");
-            result.put("chapterId", newId);
-            result.put("chapterNumber", nextChapterNumber);
-            result.put("message", "Tạo chapter thành công!");
-        } catch (Exception e) {
-            result.put("status", "error");
-            result.put("message", "Lỗi hệ thống: " + e.getMessage());
-        }
-        return result;
-    }
-
+    // @GetMapping("/{seriesId}/chapters")
+    // @Operation(summary = "[SWAGGER] Lấy danh sách chapter của một series")
+    // @ResponseBody
+    // public Map<String, Object> getChaptersBySeriesId(@PathVariable String seriesId) {
+    //     Map<String, Object> result = new HashMap<>();
+    //     Series series = seriesRepository.findById(seriesId).orElse(null);
+    //     if (series == null) {
+    //         result.put("status", "error");
+    //         result.put("message", "Không tìm thấy series: " + seriesId);
+    //         return result;
+    //     }
+    //     List<Chapter> chapters = chapterRepository.findBySeriesId(seriesId);
+    //     result.put("status", "success");
+    //     result.put("seriesId", seriesId);
+    //     result.put("chapters", chapters);
+    //     return result;
+    // }
+    // @PostMapping("/{seriesId}/chapters")
+    // @Operation(summary = "[SWAGGER] Tạo chapter mới trong một series")
+    // @ResponseBody
+    // public Map<String, Object> createChapter(@PathVariable String seriesId,
+    //         @RequestParam String chapterName) {
+    //     Map<String, Object> result = new HashMap<>();
+    //     Series series = seriesRepository.findById(seriesId).orElse(null);
+    //     if (series == null) {
+    //         result.put("status", "error");
+    //         result.put("message", "Không tìm thấy series: " + seriesId);
+    //         return result;
+    //     }
+    //     try {
+    //         Optional<Chapter> lastChapter = chapterRepository.findTopByOrderByIdDesc();
+    //         int maxId = 0;
+    //         if (lastChapter.isPresent()) {
+    //             maxId = Integer.parseInt(lastChapter.get().getId().substring(3));
+    //         }
+    //         String newId = "CHP" + String.format("%03d", maxId + 1);
+    //         List<Chapter> chapters = chapterRepository.findBySeriesId(seriesId);
+    //         int nextChapterNumber = chapters.size() + 1;
+    //         Chapter chapter = new Chapter();
+    //         chapter.setId(newId);
+    //         chapter.setSeries(series);
+    //         chapter.setChapterName(chapterName);
+    //         chapter.setChapterNumber(nextChapterNumber);
+    //         chapter.setDeadline(resolveNextSaturday(series));
+    //         chapter.setStatus("unfinish");
+    //         chapterRepository.save(chapter);
+    //         result.put("status", "success");
+    //         result.put("chapterId", newId);
+    //         result.put("chapterNumber", nextChapterNumber);
+    //         result.put("message", "Tạo chapter thành công!");
+    //     } catch (Exception e) {
+    //         result.put("status", "error");
+    //         result.put("message", "Lỗi hệ thống: " + e.getMessage());
+    //     }
+    //     return result;
+    // }
     private LocalDate resolveNextSaturday(Series series) {
         Optional<Chapter> latest = chapterRepository.findTopBySeriesOrderByChapterNumberDesc(series);
         if (latest.isPresent() && latest.get().getDeadline() != null) {

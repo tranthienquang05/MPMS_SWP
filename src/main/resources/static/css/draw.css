@@ -10,6 +10,9 @@
     --ps-accent: #3d8eff;
     --ps-accent-hover: #5a9fff;
     --ps-canvas-checker-a: #4a4a4a;
+    --ps-primary: #204fa6;
+    --ps-bg-alt: #333333;
+    --ps-text-main: #cfcfcf;
 }
 
 /* Định dạng cho chính thẻ tab bao bọc chức năng vẽ */
@@ -711,4 +714,31 @@
     font-size: 12.5px;
     margin-top: 8px;
     text-align: left;
+}
+
+/* =================== OVERRIDE CHO MANGAKA LAYOUT =================== */
+.right-panel { 
+    display: flex; 
+    flex-direction: column; 
+    height: 100%; 
+    overflow: hidden; 
+}
+.right-panel .panel-section:last-child { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    min-height: 0; 
+}
+#chatHistoryList { 
+    flex: 1; 
+    overflow-y: auto; 
+    min-height: 0; 
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: var(--ps-bg-darkest);
+}
+.chat-input-area { 
+    flex-shrink: 0; 
 }

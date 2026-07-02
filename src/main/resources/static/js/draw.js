@@ -126,7 +126,7 @@ let history = [];
 let shapeStart = null;
 let shapeFillMode = 'outline';
 
-const historyListEl = document.getElementById('historyList');
+const historyListEl = document.getElementById('historyList') || document.createElement('div');
 
 function snapshotAllLayers() {
     // Lưu trạng thái toàn bộ layer hiện có (đơn giản hoá: lưu canvas của activeLayer)
@@ -139,9 +139,11 @@ function pushHistoryEntry(label) {
     const item = document.createElement('div');
     item.className = 'history-item current';
     item.textContent = label;
-    Array.from(historyListEl.children).forEach(c => c.classList.remove('current'));
-    historyListEl.appendChild(item);
-    historyListEl.scrollTop = historyListEl.scrollHeight;
+    if (historyListEl.parentNode) {
+        Array.from(historyListEl.children).forEach(c => c.classList.remove('current'));
+        historyListEl.appendChild(item);
+        historyListEl.scrollTop = historyListEl.scrollHeight;
+    }
 }
 pushHistoryEntry('Tạo canvas mới');
 
@@ -985,99 +987,125 @@ canvasViewport.addEventListener('wheel', (e) => {
 });
 
 // ========================================================
-// PHẦN 6: Modal AI Support
+// MANGA CHATBOX LOGIC
 // ========================================================
-const aiModalOverlay = document.getElementById('aiModalOverlay');
-const aiFeatureListView = document.getElementById('aiFeatureListView');
-const aiDetailView = document.getElementById('aiDetailView');
-const aiLoadingView = document.getElementById('aiLoadingView');
-const aiResultView = document.getElementById('aiResultView');
+let currentChatImageFile = null;
 
-let selectedFeature = null;
-let regionMode = 'full';
-let lastUsedRegion = null;
-
-function openAiModal() { aiModalOverlay.style.display = 'flex'; }
-function closeAiModal() { aiModalOverlay.style.display = 'none'; }
-
-function showFeatureListView() {
-    aiFeatureListView.style.display = 'block';
-    aiDetailView.style.display = 'none';
-    aiLoadingView.style.display = 'none';
-    aiResultView.style.display = 'none';
-}
-function showAiDetailView() {
-    aiFeatureListView.style.display = 'none';
-    aiDetailView.style.display = 'block';
-    aiLoadingView.style.display = 'none';
-    aiResultView.style.display = 'none';
-}
-function showAiLoadingView() {
-    aiFeatureListView.style.display = 'none';
-    aiDetailView.style.display = 'none';
-    aiLoadingView.style.display = 'block';
-    aiResultView.style.display = 'none';
-}
-function showAiResultView() {
-    aiFeatureListView.style.display = 'none';
-    aiDetailView.style.display = 'none';
-    aiLoadingView.style.display = 'none';
-    aiResultView.style.display = 'block';
+async function loadChatHistory() {
+    try {
+        const res = await fetch('/api/chat/history');
+        const history = await res.json();
+        const list = document.getElementById('chatHistoryList');
+        if(!list) return;
+        list.innerHTML = '';
+        history.forEach(msg => {
+            appendChatMessage(msg.role, msg.content, msg.isImage);
+        });
+        list.scrollTop = list.scrollHeight;
+    } catch (e) {
+        console.error('Lỗi tải lịch sử chat', e);
+    }
 }
 
-document.getElementById('btnAiSupport').addEventListener('click', () => {
-    showFeatureListView();
-    openAiModal();
-});
-document.getElementById('btnCloseAiModal').addEventListener('click', closeAiModal);
-aiModalOverlay.addEventListener('click', (e) => { if (e.target === aiModalOverlay) closeAiModal(); });
-
-document.querySelectorAll('.ai-feature-card').forEach(card => {
-    card.addEventListener('click', () => {
-        selectedFeature = {
-            code: card.dataset.feature,
-            name: card.dataset.name,
-            type: card.dataset.type
+function previewChatImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        currentChatImageFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('chatImgPrevSrc').src = e.target.result;
+            document.getElementById('chatImagePreview').style.display = 'block';
         };
-        document.getElementById('aiDetailTitle').textContent = selectedFeature.name;
-        document.getElementById('aiPromptInput').value = '';
+        reader.readAsDataURL(file);
+    }
+}
 
-        // BUG 1 FIX: auto-detect existing selection
-        const statusEl = document.getElementById('aiRegionStatus');
-        if (selectionRect && selectionRect.w > 5) {
-            regionMode = 'select';
-            document.querySelectorAll('.ai-region-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector('.ai-region-btn[data-region="select"]').classList.add('active');
-            statusEl.textContent = `Sẽ áp dụng cho vùng đã chọn (${Math.round(selectionRect.w)}×${Math.round(selectionRect.h)}px)`;
+function removeChatImage() {
+    currentChatImageFile = null;
+    document.getElementById('chatImageInput').value = '';
+    document.getElementById('chatImagePreview').style.display = 'none';
+}
+
+async function sendChatMessage() {
+    const input = document.getElementById('chatTextInput');
+    const msg = input.value.trim();
+    if (!msg && !currentChatImageFile) return;
+
+    // Show user msg
+    let userDisplay = msg;
+    if (currentChatImageFile) userDisplay += ' [Đã đính kèm ảnh]';
+    appendChatMessage('user', userDisplay, false);
+
+    input.value = '';
+    const btnSend = document.getElementById('btnSendChat');
+    btnSend.disabled = true;
+    btnSend.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+    const formData = new FormData();
+    formData.append('message', msg);
+    if (currentChatImageFile) {
+        formData.append('image', currentChatImageFile);
+    }
+
+    // Hide preview
+    removeChatImage();
+
+    try {
+        const res = await fetch('/api/chat/message', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        appendChatMessage('ai', data.content, data.type === 'image');
+    } catch (e) {
+        appendChatMessage('ai', 'Lỗi: ' + e.message, false);
+    } finally {
+        btnSend.disabled = false;
+        btnSend.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+    }
+}
+
+function appendChatMessage(role, content, isImage) {
+    const list = document.getElementById('chatHistoryList');
+    if(!list) return;
+    const msgDiv = document.createElement('div');
+    msgDiv.style.cssText = 'padding: 8px; border-radius: 6px; font-size: 13px; max-width: 90%; word-break: break-word;';
+    
+    if (role === 'user') {
+        msgDiv.style.background = 'var(--ps-primary)';
+        msgDiv.style.color = 'white';
+        msgDiv.style.alignSelf = 'flex-end';
+        msgDiv.style.marginLeft = 'auto';
+        msgDiv.textContent = content;
+    } else {
+        msgDiv.style.background = 'var(--ps-bg-alt)';
+        msgDiv.style.color = 'var(--ps-text-main)';
+        msgDiv.style.alignSelf = 'flex-start';
+        msgDiv.style.border = '1px solid var(--ps-border)';
+        
+        if (isImage) {
+            msgDiv.innerHTML = `<img src="${content}" style="max-width:100%; border-radius:4px; margin-bottom:8px;" />
+                                <button type="button" class="btn-submit" onclick="applyChatImageToCanvas('${content}')" style="width:100%; padding:4px;">Đưa vào Canvas</button>`;
         } else {
-            regionMode = 'full';
-            document.querySelectorAll('.ai-region-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector('.ai-region-btn[data-region="full"]').classList.add('active');
-            statusEl.textContent = 'Sẽ áp dụng cho toàn bộ canvas';
+            msgDiv.innerHTML = content.replace(/\\n/g, '<br/>');
         }
+    }
+    
+    list.appendChild(msgDiv);
+    list.scrollTop = list.scrollHeight;
+}
 
-        showAiDetailView();
-    });
-});
+function applyChatImageToCanvas(base64DataUrl) {
+    const img = new Image();
+    img.onload = () => {
+        const layerCtx = getActiveLayer().ctx;
+        layerCtx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
+        pushHistoryEntry('AI Chat: Thêm ảnh');
+    };
+    img.src = base64DataUrl;
+}
 
-document.getElementById('btnBackToFeatureList').addEventListener('click', showFeatureListView);
-document.getElementById('btnAiResultBack').addEventListener('click', showFeatureListView);
-
-document.querySelectorAll('.ai-region-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.ai-region-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        regionMode = btn.dataset.region;
-        const statusEl = document.getElementById('aiRegionStatus');
-        if (regionMode === 'full') {
-            statusEl.textContent = 'Sẽ áp dụng cho toàn bộ canvas';
-        } else if (selectionRect && selectionRect.w > 5) {
-            statusEl.textContent = `Sẽ áp dụng cho vùng đã chọn (${Math.round(selectionRect.w)}×${Math.round(selectionRect.h)}px)`;
-        } else {
-            statusEl.textContent = 'Chưa có vùng nào — đóng modal, chọn tool "Chọn vùng" rồi kéo trên canvas';
-        }
-    });
-});
+document.addEventListener('DOMContentLoaded', loadChatHistory);
 
 // ========================================================
 // PHẦN 7: Gộp tất cả layer thành 1 ảnh rồi gọi /api/ai/run
@@ -1096,181 +1124,7 @@ function flattenAllLayers() {
     return flat;
 }
 
-function canvasRegionToBase64() {
-    const flat = flattenAllLayers();
-    // Always send full canvas — mask will tell AI which area to edit
-    return flat.toDataURL('image/png').split(',')[1];
-}
 
-/**
- * Generate a mask PNG for OpenAI /images/edits.
- * Transparent pixels (alpha=0) = area AI should edit.
- * Opaque white pixels = area to keep unchanged.
- * Returns base64 string (no data: prefix), or null if no selection.
- */
-function generateMaskBase64() {
-    if (regionMode !== 'select' || !selectionRect || selectionRect.w <= 5) {
-        return null;
-    }
-
-    const mask = document.createElement('canvas');
-    mask.width = CANVAS_W;
-    mask.height = CANVAS_H;
-    const mCtx = mask.getContext('2d');
-
-    // Fill entire canvas with opaque white (keep area)
-    mCtx.fillStyle = '#ffffff';
-    mCtx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-
-    // Cut out the selection region (make it transparent = edit area)
-    mCtx.globalCompositeOperation = 'destination-out';
-    mCtx.fillStyle = '#000000';
-
-    if (selectionShape === 'oval') {
-        const cx = selectionRect.x + selectionRect.w / 2;
-        const cy = selectionRect.y + selectionRect.h / 2;
-        const rx = selectionRect.w / 2;
-        const ry = selectionRect.h / 2;
-        mCtx.beginPath();
-        mCtx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-        mCtx.fill();
-    } else if (selectionShape === 'free' && selectionPath.length > 2) {
-        mCtx.beginPath();
-        mCtx.moveTo(selectionPath[0].x, selectionPath[0].y);
-        for (let i = 1; i < selectionPath.length; i++) {
-            mCtx.lineTo(selectionPath[i].x, selectionPath[i].y);
-        }
-        mCtx.closePath();
-        mCtx.fill();
-    } else {
-        // Rectangle selection
-        mCtx.fillRect(selectionRect.x, selectionRect.y, selectionRect.w, selectionRect.h);
-    }
-
-    mCtx.globalCompositeOperation = 'source-over';
-    return mask.toDataURL('image/png').split(',')[1];
-}
-
-document.getElementById('btnRunAi').addEventListener('click', async () => {
-    if (!selectedFeature) return;
-
-    // Store the region info at the moment "Run AI" is clicked
-    lastUsedRegion = {
-        mode: regionMode,
-        rect: regionMode === 'select' ? { ...selectionRect } : null,
-        shape: selectionShape,
-        path: (regionMode === 'select' && selectionShape === 'free')
-            ? selectionPath.map(p => ({ ...p }))
-            : null
-    };
-
-    const promptVal = document.getElementById('aiPromptInput').value;
-    const imageBase64 = canvasRegionToBase64();
-    const maskBase64 = generateMaskBase64();
-
-    showAiLoadingView();
-
-    try {
-        const requestBody = {
-            feature: selectedFeature.code,
-            prompt: promptVal,
-            imageBase64: imageBase64
-        };
-        // Only include mask when user selected a region
-        if (maskBase64) {
-            requestBody.maskBase64 = maskBase64;
-        }
-
-        const response = await fetch('/api/ai/run', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody)
-        });
-
-        const data = await response.json();
-        renderAiResult(data);
-
-    } catch (err) {
-        renderAiResult({ status: 'error', message: 'Không thể kết nối tới server: ' + err.message });
-    }
-});
-
-// BUG 2 FIX: draw AI result image back onto the canvas at the correct position
-function applyAiResultToCanvas(base64) {
-    const img = new Image();
-    img.onload = () => {
-        const layerCtx = getActiveLayer().ctx;
-
-        if (lastUsedRegion && lastUsedRegion.mode === 'select' && lastUsedRegion.rect) {
-            const r = lastUsedRegion.rect;
-            layerCtx.save();
-            layerCtx.beginPath();
-
-            if (lastUsedRegion.shape === 'oval') {
-                const cx = r.x + r.w / 2;
-                const cy = r.y + r.h / 2;
-                layerCtx.ellipse(cx, cy, r.w / 2, r.h / 2, 0, 0, Math.PI * 2);
-            } else if (lastUsedRegion.shape === 'free' && lastUsedRegion.path && lastUsedRegion.path.length > 2) {
-                layerCtx.moveTo(lastUsedRegion.path[0].x, lastUsedRegion.path[0].y);
-                for (let i = 1; i < lastUsedRegion.path.length; i++) {
-                    layerCtx.lineTo(lastUsedRegion.path[i].x, lastUsedRegion.path[i].y);
-                }
-                layerCtx.closePath();
-            } else {
-                // rect: bounding box chính là vùng chọn, không cần clip thêm
-                layerCtx.rect(r.x, r.y, r.w, r.h);
-            }
-
-            layerCtx.clip();
-            layerCtx.drawImage(img, r.x, r.y, r.w, r.h);
-            layerCtx.restore();
-        } else {
-            layerCtx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
-        }
-
-        pushHistoryEntry('AI: ' + (selectedFeature ? selectedFeature.name : ''));
-        closeAiModal();
-    };
-    img.src = 'data:image/png;base64,' + base64;
-}
-
-function renderAiResult(data) {
-    showAiResultView();
-    const titleEl = document.getElementById('aiResultTitle');
-    const imgEl = document.getElementById('aiResultImage');
-    const textEl = document.getElementById('aiResultText');
-    const errEl = document.getElementById('aiErrorText');
-    const applyBtn = document.getElementById('btnApplyToCanvas');
-
-    imgEl.style.display = 'none';
-    textEl.style.display = 'none';
-    errEl.style.display = 'none';
-    if (applyBtn) applyBtn.style.display = 'none';
-
-    if (data.status === 'success') {
-        titleEl.textContent = 'Hoàn thành — ' + (selectedFeature ? selectedFeature.name : '');
-
-        if (data.type === 'image_base64' || data.type === 'image') {
-            imgEl.src = data.type === 'image_base64'
-                ? 'data:image/png;base64,' + data.result
-                : data.result;
-            imgEl.style.display = 'block';
-
-            // BUG 2 FIX: show "Apply to canvas" button for image results
-            if (applyBtn) {
-                applyBtn.style.display = 'inline-block';
-                applyBtn.onclick = () => applyAiResultToCanvas(data.result);
-            }
-        } else if (data.type === 'text') {
-            textEl.textContent = data.result;
-            textEl.style.display = 'block';
-        }
-    } else {
-        titleEl.textContent = 'Có lỗi xảy ra';
-        errEl.textContent = data.message || 'Lỗi không xác định';
-        errEl.style.display = 'block';
-    }
-}
 // Lưu trang
 // ========================================================
 // PHẦN 8: Lưu trang & Submission

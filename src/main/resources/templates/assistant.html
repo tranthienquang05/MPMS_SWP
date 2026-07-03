@@ -440,10 +440,7 @@
                             <a th:href="@{/manga/assistant/submission/{id}/edit(id=${s.id})}">
                                 <button type="button">Mở</button>
                             </a>
-                            <form th:action="@{'/manga/assistant/submission/' + ${s.id} + '/submit'}" method="post">
-                                <input type="hidden" name="status" value="done" />
-                                <button type="submit">Nộp Bài</button>
-                            </form>
+                            <button type="button" th:data-submission-id="${s.id}" onclick="submitSubmission(this)">Nộp Bài</button>
                         </div>
                     </div>
                 </div>
@@ -535,6 +532,31 @@
             openTab(activeTabFromController);
         }
 
+        // Load ảnh submission đã lưu lên canvas khi assistant mở edit
+        document.addEventListener('DOMContentLoaded', function () {
+            const path = window.location.pathname;
+            const submissionEditMatch = path.match(/\/submission\/([^/]+)\/edit$/);
+            if (submissionEditMatch) {
+                const subId = submissionEditMatch[1];
+                fetch('/manga/assistant/submission/' + subId + '/edit/data')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.status === 'success' && data.submission && data.submission.filePath) {
+                            const img = new Image();
+                            img.onload = () => {
+                                if (layers && layers[1]) {
+                                    layers[1].ctx.clearRect(0, 0, 400, 600);
+                                    layers[1].ctx.drawImage(img, 0, 0);
+                                    pushHistoryEntry('Load submission đã lưu');
+                                }
+                            };
+                            img.src = data.submission.filePath + '?t=' + Date.now();
+                        }
+                    })
+                    .catch(err => console.error('Lỗi load submission:', err));
+            }
+        });
+
         document.addEventListener("DOMContentLoaded", function () {
             // Notification toggle
             const btnNoti = document.getElementById("btnNoti");
@@ -568,6 +590,26 @@
                 });
             }
         });
+
+        function submitSubmission(btn) {
+            const submissionId = btn.dataset.submissionId;
+            if (!confirm('Xác nhận nộp bài?')) return;
+            fetch('/manga/assistant/submission/' + submissionId + '/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'status=done'
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('✅ ' + data.message);
+                    location.reload();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(err => alert('❌ Lỗi: ' + err.message));
+        }
 
     </script>
 

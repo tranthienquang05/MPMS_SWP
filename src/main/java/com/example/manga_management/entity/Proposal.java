@@ -39,7 +39,7 @@ public class Proposal {
     private String comment;
 
     @Column(name = "EditorScore")
-    private Integer editorScore;
+    private Double editorScore;
 
     @Column(name = "RevisionDeadline")
     private LocalDateTime revisionDeadline;

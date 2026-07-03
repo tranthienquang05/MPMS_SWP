@@ -96,7 +96,7 @@ public class TantouController {
             @RequestParam String id,
             @RequestParam String action, // "approve" | "revision" | "reject"
             @RequestParam(required = false) String comment,
-            @RequestParam(required = false) Integer score,
+            @RequestParam(required = false) Double score,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime deadline) {
 
         Map<String, String> result = new HashMap<>();
@@ -118,8 +118,11 @@ public class TantouController {
         switch (action) {
             case "approve" -> {
                 p.setStatus("approved");
+                String scoreText = score != null ? String.format(" Điểm chấm: %.2f/10.", score) : "";
+                String commentText = (comment != null && !comment.isBlank()) ? " Nhận xét: " + comment.trim() : "";
                 notificationController.send(null, p.getMangaka().getUser().getId(),
-                        "Đề xuất '" + p.getSeriesName() + "' đã được Tantou duyệt.",
+                        "Đề xuất \"" + p.getSeriesName() + "\" đã được biên tập viên duyệt và sẽ sớm gửi lên hội đồng."
+                                + scoreText + commentText,
                         "/manga/mangaka/my-projects");
             }
             case "revision" -> {
@@ -131,14 +134,17 @@ public class TantouController {
                 p.setStatus("revision");
                 p.setRevisionDeadline(deadline);
 
+                String deadlineText = deadline.toLocalDate() + " lúc " + deadline.toLocalTime();
+                String commentText = (comment != null && !comment.isBlank()) ? " Góp ý: " + comment.trim() : "";
                 notificationController.send(null, p.getMangaka().getUser().getId(),
-                        "Bản thảo '" + p.getSeriesName() + "' cần sửa. Hạn: " + deadline,
+                        "Đề xuất \"" + p.getSeriesName() + "\" cần chỉnh sửa trước " + deadlineText + "." + commentText,
                         "/manga/mangaka/my-projects");
             }
             case "reject" -> {
                 p.setStatus("locked");
+                String commentText = (comment != null && !comment.isBlank()) ? " Lý do: " + comment.trim() : "";
                 notificationController.send(null, p.getMangaka().getUser().getId(),
-                        "Đề xuất '" + p.getSeriesName() + "' đã bị từ chối.",
+                        "Rất tiếc, đề xuất \"" + p.getSeriesName() + "\" đã bị từ chối." + commentText,
                         "/manga/mangaka/my-projects");
             }
             default -> {
@@ -152,6 +158,16 @@ public class TantouController {
         result.put("status", "success");
         result.put("proposalId", id);
         result.put("newStatus", p.getStatus());
+
+        // ✅ THÊM: set message phù hợp theo action để trả về cho frontend
+        String successMessage = switch (action) {
+            case "approve" -> "Đã duyệt đề xuất \"" + p.getSeriesName() + "\"!";
+            case "revision" -> "Đã yêu cầu sửa lại đề xuất \"" + p.getSeriesName() + "\"!";
+            case "reject" -> "Đã từ chối đề xuất \"" + p.getSeriesName() + "\"!";
+            default -> "Cập nhật thành công!";
+        };
+        result.put("message", successMessage);
+
         return result;
     }
 

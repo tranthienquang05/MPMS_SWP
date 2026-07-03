@@ -1256,10 +1256,13 @@
       function createBottomVoteSessionsAdmin() {
         if (!confirm("Phiên vote cho 3 series cuối sẽ được khởi tạo.")) return;
         const month = document.getElementById("vote-rank-month").value;
+        const quarter = document.getElementById("vote-rank-quarter").value;
         const year = document.getElementById("vote-rank-year").value;
         fetch(
           "/manga/system-admin/ranking/create-bottom-sessions?month=" +
             month +
+            "&quarter=" +
+            quarter +
             "&year=" +
             year,
           { method: "POST" },

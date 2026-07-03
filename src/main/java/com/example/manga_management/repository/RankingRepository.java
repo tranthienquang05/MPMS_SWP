@@ -33,6 +33,15 @@ public interface RankingRepository extends JpaRepository<VoteResult, String> {
            "ORDER BY COALESCE(SUM(v.voteNumber), 0L) ASC")
     List<Object[]> findBottomByYear(@Param("year") int year);
 
+    @Query("SELECT s.id, s.seriesName, COALESCE(SUM(v.voteNumber), 0L) " +
+           "FROM Series s LEFT JOIN VoteResult v ON v.series.id = s.id " +
+           "AND v.year = :year AND v.month IN :months " +
+           "WHERE s.status <> 'stopped' " +
+           "GROUP BY s.id, s.seriesName " +
+           "ORDER BY COALESCE(SUM(v.voteNumber), 0L) ASC")
+    List<Object[]> findBottomByQuarterAndYear(@Param("months") List<Integer> months,
+                                              @Param("year") int year);
+
     @Query("SELECT s.id, s.seriesName, COALESCE(v.voteNumber, 0) " +
            "FROM Series s LEFT JOIN VoteResult v ON v.series.id = s.id AND v.month = :month AND v.year = :year " +
            "WHERE s.status <> 'stopped' " +

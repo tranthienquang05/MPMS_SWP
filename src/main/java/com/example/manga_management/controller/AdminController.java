@@ -486,6 +486,7 @@ public class AdminController {
     @ResponseBody
     public Map<String, Object> createBottomVoteSessions(
             @RequestParam(defaultValue = "0") int month,
+            @RequestParam(defaultValue = "0") int quarter,
             @RequestParam(defaultValue = "2026") int year,
             HttpSession session) {
 
@@ -498,9 +499,15 @@ public class AdminController {
         }
 
         try {
-            List<Object[]> rows = (month == 0)
-                    ? rankingRepository.findBottomByYear(year)
-                    : rankingRepository.findBottomByMonthAndYear(month, year);
+            List<Object[]> rows;
+            if (quarter >= 1 && quarter <= 4) {
+                List<Integer> months = getMonthsForQuarter(quarter);
+                rows = rankingRepository.findBottomByQuarterAndYear(months, year);
+            } else if (month > 0) {
+                rows = rankingRepository.findBottomByMonthAndYear(month, year);
+            } else {
+                rows = rankingRepository.findBottomByYear(year);
+            }
 
             int count = Math.min(3, rows.size());
             List<String> createdNames = new ArrayList<>();
@@ -823,6 +830,11 @@ public class AdminController {
     }
 
     // ── Helper ────────────────────────────────────────────────────
+    private List<Integer> getMonthsForQuarter(int quarter) {
+        int start = (quarter - 1) * 3 + 1;
+        return List.of(start, start + 1, start + 2);
+    }
+
     private boolean isSet(Map<String, String> body, String key) {
         return body.containsKey(key) && body.get(key) != null && !body.get(key).isBlank();
     }

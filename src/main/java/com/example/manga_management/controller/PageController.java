@@ -296,38 +296,32 @@ public class PageController {
         return result;
     }
 
-    @PostMapping("/{pageId}/reject-done")
-    @ResponseBody
-    public Map<String, Object> rejectPageDone(@PathVariable String pageId) {
-        Map<String, Object> result = new HashMap<>();
-
-        MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
-        if (page == null) {
-            result.put("status", "error");
-            result.put("message", "Không tìm thấy trang!");
-            return result;
-        }
-
-        Optional<Submission> subOpt = submissionRepository.findByPageIdId(pageId);
-        if (subOpt.isEmpty() || !"done".equals(subOpt.get().getStatus())) {
-            result.put("status", "error");
-            result.put("message", "Trợ lý chưa nộp bài!");
-            return result;
-        }
-
-        Submission sub = subOpt.get();
-        sub.setStatus("intask");
-        submissionRepository.save(sub);
-
-        page.setStatus("intask");
-        mangaPageRepository.save(page);
-
-        result.put("status", "success");
-        result.put("message", "Đã giao lại cho trợ lý!");
-        result.put("pageId", pageId);
-        return result;
-    }
-
+    // @PostMapping("/{pageId}/reject-done")
+    // @ResponseBody
+    // public Map<String, Object> rejectPageDone(@PathVariable String pageId) {
+    //     Map<String, Object> result = new HashMap<>();
+    //     MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
+    //     if (page == null) {
+    //         result.put("status", "error");
+    //         result.put("message", "Không tìm thấy trang!");
+    //         return result;
+    //     }
+    //     Optional<Submission> subOpt = submissionRepository.findByPageIdId(pageId);
+    //     if (subOpt.isEmpty() || !"done".equals(subOpt.get().getStatus())) {
+    //         result.put("status", "error");
+    //         result.put("message", "Trợ lý chưa nộp bài!");
+    //         return result;
+    //     }
+    //     Submission sub = subOpt.get();
+    //     sub.setStatus("intask");
+    //     submissionRepository.save(sub);
+    //     page.setStatus("intask");
+    //     mangaPageRepository.save(page);
+    //     result.put("status", "success");
+    //     result.put("message", "Đã giao lại cho trợ lý!");
+    //     result.put("pageId", pageId);
+    //     return result;
+    // }
     @PostMapping("/{pageId}/reassign")
     @ResponseBody
     public Map<String, Object> reassignPage(@PathVariable String pageId,

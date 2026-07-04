@@ -46,4 +46,7 @@ public class Chapter {
 
     @Column(name = "Script", length = 3000)
     private String script;
+
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private Integer viewCount = 0;
 }

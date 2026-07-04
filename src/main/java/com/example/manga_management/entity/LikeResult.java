@@ -4,12 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "voteResult")
+@Table(name = "likeResult")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class VoteResult {
+public class LikeResult {
 
     @Id
     @Column(name = "VoteID", length = 7)
@@ -19,8 +19,11 @@ public class VoteResult {
     @JoinColumn(name = "SeriesID", nullable = false)
     private Series series;
 
-    @Column(name = "VoteNumber", nullable = false)
-    private Integer voteNumber;
+    @Column(name = "likeNumber", nullable = false)
+    private Integer likeNumber;
+
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private Integer dislikeNumber = 0;
 
     @Column(nullable = false)
     private Integer month;

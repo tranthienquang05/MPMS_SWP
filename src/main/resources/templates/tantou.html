@@ -61,6 +61,11 @@
         <i class="fa-solid fa-book-open"></i>
       </button>
     </li>
+    <li>
+      <button type="button" class="btn-icon" onclick="openTab('tab-manage-mangaka'); mmLoadMangakas();" title="Quản lý Mangaka">
+        <i class="fa-solid fa-users"></i>
+      </button>
+    </li>
     <!-- ==========================================================
                  ========================================================== -->
 
@@ -295,6 +300,65 @@
 
     <!-- ============================================================================
      ============================================================================ -->
+
+    <div id="tab-manage-mangaka" class="tab-pane">
+      <h2>Quản lý Mangaka</h2>
+      <div id="mm-screen-1">
+        <h3>Danh sách Mangaka trực thuộc</h3>
+        <table class="data-table">
+          <thead><tr><th>Tên</th><th>Email</th><th>Hành động</th></tr></thead>
+          <tbody id="mm-mangaka-list"><tr><td colspan="3" style="text-align:center;">Đang tải...</td></tr></tbody>
+        </table>
+      </div>
+      
+      <div id="mm-screen-2" style="display:none;">
+        <button class="btn-action primary" onclick="mmGoToScreen(1)">⬅ Quay lại</button>
+        <h3 id="mm-s2-title" style="margin-top:12px;">Danh sách Series</h3>
+        <table class="data-table">
+          <thead><tr><th>Tên Series</th><th>Trạng thái</th><th>Ngày bắt đầu</th><th>Tổng View</th><th>Hành động</th></tr></thead>
+          <tbody id="mm-series-list"></tbody>
+        </table>
+      </div>
+
+      <div id="mm-screen-3" style="display:none;">
+        <button class="btn-action primary" onclick="mmGoToScreen(2)">⬅ Quay lại</button>
+        <h3 id="mm-s3-title" style="margin-top:12px;">Danh sách Chapter</h3>
+        <table class="data-table">
+          <thead><tr><th>Tập</th><th>Tên</th><th>Deadline</th><th>Trạng thái</th><th>Lượt xem</th><th>Hành động</th></tr></thead>
+          <tbody id="mm-chapter-list"></tbody>
+        </table>
+      </div>
+
+      <div id="mm-screen-4" style="display:none;">
+        <button class="btn-action primary" onclick="mmGoToScreen(3)">⬅ Quay lại</button>
+        <h3 id="mm-s4-title" style="margin-top:12px;">Kịch bản & Trang</h3>
+        <div style="background:#222; padding:12px; margin-bottom:12px; border-radius:4px;">
+            <h4>Kịch bản Chapter:</h4>
+            <p id="mm-s4-script" style="white-space: pre-wrap; font-size:14px; color:#ddd;"></p>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Số trang</th><th>Loại trang</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
+          <tbody id="mm-page-list"></tbody>
+        </table>
+      </div>
+
+      <div id="mm-screen-5" style="display:none;">
+        <button class="btn-action primary" onclick="mmGoToScreen(4)">⬅ Quay lại</button>
+        <h3 id="mm-s5-title" style="margin-top:12px;">Chi tiết trang</h3>
+        <div style="display:flex; gap:24px; margin-top:16px;">
+            <div style="flex:1;">
+                <h4>Ảnh Trang</h4>
+                <div id="mm-s5-image" style="background:#222; padding:8px; border:1px solid #444; border-radius:4px; min-height:300px; display:flex; align-items:center; justify-content:center;">
+                </div>
+            </div>
+            <div style="flex:1;">
+                <h4>Kịch bản Trang</h4>
+                <div id="mm-s5-script" style="background:#222; padding:12px; border:1px solid #444; border-radius:4px; min-height:300px; white-space: pre-wrap; font-size:14px; color:#ddd;">
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
 
     <div id="tab-chat" class="tab-pane">
       <h2>Tin nhắn</h2>
@@ -704,6 +768,166 @@
 
   <!-- ==========================================================================
      ============================================================================ -->
+  <script>
+    // ==========================================
+    // Quản lý Mangaka (Tính năng 2)
+    // ==========================================
+    let mmCurrentMangakaId = null;
+    let mmCurrentSeriesId = null;
+    let mmCurrentChapterId = null;
+
+    function mmGoToScreen(screenNumber) {
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById('mm-screen-' + i).style.display = (i === screenNumber) ? 'block' : 'none';
+      }
+      if (screenNumber === 1) mmLoadMangakas();
+    }
+
+    function mmLoadMangakas() {
+      fetch('/manga/tantou/my-mangakas')
+        .then(r => r.json())
+        .then(res => {
+          const tbody = document.getElementById('mm-mangaka-list');
+          if (res.status === 'success') {
+            if (res.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Chưa có Mangaka nào.</td></tr>';
+            } else {
+                tbody.innerHTML = res.data.map(m => `
+                  <tr>
+                    <td>${m.name}</td>
+                    <td>${m.email}</td>
+                    <td><button class="btn-action primary" onclick="mmViewSeries('${m.mangakaId}', '${m.name.replace(/'/g, "\\'")}')">Xem Series</button></td>
+                  </tr>
+                `).join('');
+            }
+          } else {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:red;">Lỗi: ${res.message}</td></tr>`;
+          }
+        })
+        .catch(err => {
+          document.getElementById('mm-mangaka-list').innerHTML = `<tr><td colspan="3" style="text-align:center;color:red;">Lỗi tải dữ liệu</td></tr>`;
+        });
+    }
+
+    function mmViewSeries(mangakaId, mangakaName) {
+      mmCurrentMangakaId = mangakaId;
+      document.getElementById('mm-s2-title').textContent = 'Danh sách Series của ' + mangakaName;
+      document.getElementById('mm-series-list').innerHTML = '<tr><td colspan="5" style="text-align:center;">Đang tải...</td></tr>';
+      mmGoToScreen(2);
+
+      fetch('/manga/tantou/mangaka/' + mangakaId + '/series')
+        .then(r => r.json())
+        .then(res => {
+          const tbody = document.getElementById('mm-series-list');
+          if (res.status === 'success') {
+            if (res.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Mangaka này chưa có series nào.</td></tr>';
+            } else {
+                tbody.innerHTML = res.data.map(s => `
+                  <tr>
+                    <td>${s.seriesName}</td>
+                    <td>${s.status}</td>
+                    <td>${s.startDate || '—'}</td>
+                    <td>${s.viewCount}</td>
+                    <td><button class="btn-action primary" onclick="mmViewChapters('${s.seriesId}', '${s.seriesName.replace(/'/g, "\\'")}')">Xem Chapter</button></td>
+                  </tr>
+                `).join('');
+            }
+          } else {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:red;">Lỗi: ${res.message}</td></tr>`;
+          }
+        });
+    }
+
+    function mmViewChapters(seriesId, seriesName) {
+      mmCurrentSeriesId = seriesId;
+      document.getElementById('mm-s3-title').textContent = 'Danh sách Chapter của ' + seriesName;
+      document.getElementById('mm-chapter-list').innerHTML = '<tr><td colspan="6" style="text-align:center;">Đang tải...</td></tr>';
+      mmGoToScreen(3);
+
+      fetch('/manga/mangaka/myseries/' + seriesId + '/data')
+        .then(r => r.json())
+        .then(res => {
+          const tbody = document.getElementById('mm-chapter-list');
+          if (res.status === 'success') {
+            if (!res.chapters || res.chapters.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Series này chưa có chapter nào.</td></tr>';
+            } else {
+                tbody.innerHTML = res.chapters.map(c => {
+                  // handle double quotes and single quotes in script properly
+                  const scriptEscaped = (c.script || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+                  return `
+                  <tr>
+                    <td>${c.chapterNumber}</td>
+                    <td>${c.chapterName}</td>
+                    <td>${c.deadline || '—'}</td>
+                    <td>${c.status}</td>
+                    <td>${c.viewCount || 0}</td>
+                    <td><button class="btn-action primary" onclick="mmViewPages('${c.id}', 'Chapter ${c.chapterNumber}: ${c.chapterName.replace(/'/g, "\\'")}', '${scriptEscaped}')">Xem Trang</button></td>
+                  </tr>
+                  `;
+                }).join('');
+            }
+          } else {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;">Lỗi: ${res.message}</td></tr>`;
+          }
+        });
+    }
+
+    function mmViewPages(chapterId, chapterTitle, script) {
+      mmCurrentChapterId = chapterId;
+      document.getElementById('mm-s4-title').textContent = chapterTitle;
+      document.getElementById('mm-s4-script').textContent = script || 'Không có kịch bản';
+      document.getElementById('mm-page-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Đang tải...</td></tr>';
+      mmGoToScreen(4);
+
+      fetch('/manga/mangaka/myseries/' + mmCurrentSeriesId + '/' + chapterId + '/data')
+        .then(r => r.json())
+        .then(res => {
+          const tbody = document.getElementById('mm-page-list');
+          if (res.status === 'success') {
+            if (!res.pages || res.pages.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chapter này chưa có trang nào.</td></tr>';
+            } else {
+                const typeMap = {
+                    'cover': 'Trang bìa',
+                    'action': 'Trang hành động',
+                    'rest': 'Trang nghỉ',
+                    'info': 'Trang thông tin',
+                    'end': 'Trang cuối'
+                };
+                tbody.innerHTML = res.pages.map(p => {
+                  const scriptEscaped = (p.script || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+                  return `
+                  <tr>
+                    <td>${p.pageNumber}</td>
+                    <td>${typeMap[p.pageType] || p.pageType}</td>
+                    <td>${p.status}</td>
+                    <td><button class="btn-action primary" onclick="mmViewPageDetail('${p.filePath || ''}', '${scriptEscaped}')">Xem Chi Tiết</button></td>
+                  </tr>
+                  `;
+                }).join('');
+            }
+          } else {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">Lỗi: ${res.message}</td></tr>`;
+          }
+        });
+    }
+
+    function mmViewPageDetail(filePath, script) {
+      document.getElementById('mm-s5-title').textContent = 'Chi tiết trang';
+      
+      const imgContainer = document.getElementById('mm-s5-image');
+      if (filePath && filePath !== 'null') {
+          imgContainer.innerHTML = `<img src="${filePath}" style="max-width:100%; max-height:600px; border-radius:4px; cursor:zoom-in;" onclick="openFullImage('${filePath}')">`;
+      } else {
+          imgContainer.innerHTML = `<span style="color:#777;">Chưa có ảnh</span>`;
+      }
+
+      document.getElementById('mm-s5-script').textContent = script || 'Không có kịch bản';
+      mmGoToScreen(5);
+    }
+  </script>
 </body>
 
 </html>

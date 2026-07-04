@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,11 +18,17 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.manga_management.entity.Series;
+import com.example.manga_management.entity.Chapter;
+import com.example.manga_management.entity.Mangaka;
 import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.TantoEditor;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.ProposalRepository;
 import com.example.manga_management.repository.TantoEditorRepository;
+import com.example.manga_management.repository.MangakaRepository;
+import com.example.manga_management.repository.SeriesRepository;
+import com.example.manga_management.repository.ChapterRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpSession;
@@ -33,12 +40,19 @@ public class TantouController {
     private final ProposalRepository proposalRepository;
     private final TantoEditorRepository tantoEditorRepository;
     private final NotificationController notificationController;
+    private final MangakaRepository mangakaRepository;
+    private final SeriesRepository seriesRepository;
+    private final ChapterRepository chapterRepository;
 
     public TantouController(ProposalRepository proposalRepository, TantoEditorRepository tantoEditorRepository,
-            NotificationController notificationController) {
+            NotificationController notificationController, MangakaRepository mangakaRepository,
+            SeriesRepository seriesRepository, ChapterRepository chapterRepository) {
         this.proposalRepository = proposalRepository;
         this.tantoEditorRepository = tantoEditorRepository;
         this.notificationController = notificationController;
+        this.mangakaRepository = mangakaRepository;
+        this.seriesRepository = seriesRepository;
+        this.chapterRepository = chapterRepository;
     }
 
     @GetMapping("")
@@ -240,6 +254,69 @@ public class TantouController {
             result.put("status", "error");
             result.put("message", "Lỗi hệ thống: " + e.getMessage());
         }
+        return result;
+    }
+
+    // ================== MỚI THÊM CHO TÍNH NĂNG 2 ==================
+    @GetMapping("/my-mangakas")
+    @ResponseBody
+    public Map<String, Object> getMyMangakas(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập!");
+            return result;
+        }
+
+        TantoEditor editor = tantoEditorRepository.findByUser(user).orElse(null);
+        if (editor == null) {
+            result.put("status", "error");
+            result.put("message", "Không phải Tanto Editor!");
+            return result;
+        }
+
+        List<Mangaka> list = mangakaRepository.findByEditor_Id(editor.getId());
+        List<Map<String, Object>> data = list.stream().map(m -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("mangakaId", m.getId());
+            map.put("name", m.getUser().getFullname());
+            map.put("email", m.getUser().getEmail());
+            return map;
+        }).collect(Collectors.toList());
+
+        result.put("status", "success");
+        result.put("data", data);
+        return result;
+    }
+
+    @GetMapping("/mangaka/{mangakaId}/series")
+    @ResponseBody
+    public Map<String, Object> getMangakaSeries(@PathVariable String mangakaId, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập!");
+            return result;
+        }
+
+        List<Series> list = seriesRepository.findByProposal_Mangaka_Id(mangakaId);
+        List<Map<String, Object>> data = list.stream().map(s -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("seriesId", s.getId());
+            map.put("seriesName", s.getSeriesName());
+            map.put("status", s.getStatus());
+            map.put("startDate", s.getStartDate());
+            
+            List<Chapter> chapters = chapterRepository.findBySeriesId(s.getId());
+            int totalView = chapters.stream().mapToInt(Chapter::getViewCount).sum();
+            map.put("viewCount", totalView);
+            return map;
+        }).collect(Collectors.toList());
+
+        result.put("status", "success");
+        result.put("data", data);
         return result;
     }
 }

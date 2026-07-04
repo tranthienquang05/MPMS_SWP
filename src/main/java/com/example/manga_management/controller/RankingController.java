@@ -23,17 +23,20 @@ public class RankingController {
     private final VoteSessionRepository voteSessionRepository;
     private final SeriesVoteRepository seriesVoteRepository;
     private final SeriesRepository seriesRepository;
+    private final LikeResultRepository likeResultRepository;
 
     public RankingController(RankingRepository rankingRepository,
             BoardRepository boardRepository,
             VoteSessionRepository voteSessionRepository,
             SeriesVoteRepository seriesVoteRepository,
-            SeriesRepository seriesRepository) {
+            SeriesRepository seriesRepository,
+            LikeResultRepository likeResultRepository) {
         this.rankingRepository = rankingRepository;
         this.boardRepository = boardRepository;
         this.voteSessionRepository = voteSessionRepository;
         this.seriesVoteRepository = seriesVoteRepository;
         this.seriesRepository = seriesRepository;
+        this.likeResultRepository = likeResultRepository;
     }
 
     // ===== 1. API ranking =====

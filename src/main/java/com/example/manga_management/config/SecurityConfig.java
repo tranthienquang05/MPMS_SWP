@@ -27,6 +27,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                         .requestMatchers("/manga/system-admin/**").hasRole("ADMIN")
+                        .requestMatchers("/manga/mangaka/myseries/*/data", "/manga/mangaka/myseries/*/*/data").hasAnyRole("MANGAKA", "TANTOU")
                         .requestMatchers("/manga/mangaka/**").hasRole("MANGAKA")
                         .requestMatchers("/manga/assistant/**").hasRole("ASSISTANT")
                         .requestMatchers("/manga/tantou/**").hasRole("TANTOU")

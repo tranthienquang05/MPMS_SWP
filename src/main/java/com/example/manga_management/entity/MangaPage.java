@@ -27,5 +27,11 @@ public class MangaPage {
 
     @Column(name = "Status", nullable = false, length = 20)
     private String status;
-    
+
+    @Column(name = "PageType", length = 20)
+    private String pageType;
+
+    @Column(name = "Script", length = 1000)
+    private String script;
+
 }

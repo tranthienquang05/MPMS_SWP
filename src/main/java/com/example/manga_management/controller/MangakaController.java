@@ -537,7 +537,8 @@ public class MangakaController {
     @PostMapping("/myseries/{seriesId}/{chapterId}/addpage/data")
     @ResponseBody
     public Map<String, Object> addPageData(@PathVariable String seriesId,
-            @PathVariable String chapterId) {
+            @PathVariable String chapterId,
+            @org.springframework.web.bind.annotation.RequestBody(required = false) Map<String, String> body) {
         Map<String, Object> result = new HashMap<>();
         Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
         if (chapter == null) {
@@ -545,6 +546,34 @@ public class MangakaController {
             result.put("message", "Không tìm thấy chapter: " + chapterId);
             return result;
         }
+
+        // ✅ Chapter phải có kịch bản thì mới được tạo trang mới
+        if (chapter.getScript() == null || chapter.getScript().trim().isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "Chapter chưa có kịch bản. Hãy tạo kịch bản trước khi tạo trang mới!");
+            return result;
+        }
+
+        String pageType = body != null ? body.get("pageType") : null;
+        String pageScript = body != null ? body.get("script") : null;
+
+        List<String> allowedTypes = List.of("cover", "action", "rest", "info", "end");
+        if (pageType == null || !allowedTypes.contains(pageType)) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng chọn thể loại trang!");
+            return result;
+        }
+        if (pageScript == null || pageScript.trim().isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng nhập kịch bản trang!");
+            return result;
+        }
+        if (pageScript.trim().length() > 1000) {
+            result.put("status", "error");
+            result.put("message", "Kịch bản trang tối đa 1000 chữ!");
+            return result;
+        }
+
         try {
             // ✅ Sinh ID dựa trên ID lớn nhất hiện có, không dùng count()
             Optional<MangaPage> lastPage = mangaPageRepository.findTopByOrderByIdDesc();
@@ -562,6 +591,8 @@ public class MangakaController {
             page.setChapter(chapter);
             page.setPageNumber(nextNum);
             page.setStatus("unfinish");
+            page.setPageType(pageType);
+            page.setScript(pageScript.trim());
             mangaPageRepository.save(page);
 
             result.put("status", "success");

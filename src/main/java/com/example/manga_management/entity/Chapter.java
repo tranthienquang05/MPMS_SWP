@@ -43,4 +43,7 @@ public class Chapter {
 
     @Column(name = "tantou_comment", length = 500)
     private String tantouComment;
+
+    @Column(name = "Script", length = 3000)
+    private String script;
 }

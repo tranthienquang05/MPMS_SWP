@@ -5,6 +5,7 @@ import com.example.manga_management.entity.Notification;
 import com.example.manga_management.entity.Submission;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.AssistantRepository;
+import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.NotificationRepository;
 import com.example.manga_management.repository.SubmissionRepository;
 import java.time.LocalDateTime;
@@ -21,10 +22,12 @@ public class NotificationService {
     private static final String TYPE_GENERIC = "GENERIC";
     private static final String TYPE_DEADLINE_SOON = "DEADLINE_SOON";
     private static final String TYPE_DEADLINE_OVERDUE = "DEADLINE_OVERDUE";
+    private static final String TYPE_AUTO_SUBMIT = "AUTO_SUBMIT";
 
     private final NotificationRepository notificationRepository;
     private final SubmissionRepository submissionRepository;
     private final AssistantRepository assistantRepository;
+    private final MangaPageRepository mangaPageRepository;
 
     public List<Notification> getInbox(User user) {
         if (user == null) {
@@ -117,6 +120,37 @@ public class NotificationService {
         }
         return (note.getUserId() != null && note.getUserId().equals(user.getId()))
                 || (note.getRole() != null && note.getRole().equalsIgnoreCase(user.getRole()));
+    }
+
+    /**
+     * Quá hạn deadline thì tự động nộp bài: submission intask -> done, page ->
+     * done. Assistant vẫn giữ intask cho tới khi mangaka duyệt hết task.
+     */
+    @Transactional
+    @Scheduled(fixedDelay = 60_000)
+    public void autoSubmitOverdueSubmissions() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Submission> overdueList = submissionRepository.findByStatusAndDeadlineBefore("intask", now);
+
+        for (Submission submission : overdueList) {
+            submission.setStatus("done");
+            submissionRepository.save(submission);
+
+            if (submission.getPageId() != null) {
+                submission.getPageId().setStatus("done");
+                mangaPageRepository.save(submission.getPageId());
+            }
+
+            Assistant assistant = submission.getAssistant();
+            if (assistant != null && assistant.getUser() != null) {
+                sendToUser(assistant.getUser().getId(),
+                        "Bài làm " + submission.getId() + " đã được tự động nộp do quá hạn deadline ("
+                                + submission.getDeadline() + ")",
+                        "/manga/assistant",
+                        TYPE_AUTO_SUBMIT,
+                        submission.getId());
+            }
+        }
     }
 
     @Transactional

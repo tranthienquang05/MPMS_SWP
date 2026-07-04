@@ -418,6 +418,11 @@
             <label>Yêu cầu / Ghi chú:</label>
             <textarea id="assignComment" rows="4" placeholder="Nhập yêu cầu chỉnh sửa..."></textarea>
 
+            <label>Số frame:</label>
+            <input type="number" id="assignFrameCount" min="1" max="20" value="1"
+              style="width:100%; padding:8px; margin:8px 0 4px;" oninput="renderFrameNotes()" />
+            <div id="frameNotesContainer" style="max-height:200px; overflow-y:auto;"></div>
+
             <label class="deadline-lbl"> Deadline: </label>
             <input type="date" id="assignDeadline" required />
             <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:4px; margin-top:6px;">
@@ -632,6 +637,59 @@
               <button type="button"
                 onclick="document.getElementById('reassignModalOverlay').style.display='none'">Hủy</button>
               <button type="button" onclick="submitReassign()" class="btn-submit">Xác nhận</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Kịch bản Chapter -->
+        <div id="chapterScriptModalOverlay"
+          style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+          <div class="modal-box" style="background:#333333; border-radius:8px; padding:24px; min-width:480px; max-width:90vw;">
+            <h4 id="chapterScriptModalTitle">Kịch bản chapter</h4>
+            <textarea id="chapterScriptInput" rows="12" maxlength="3000"
+              placeholder="Nhập kịch bản chapter (tối đa 3000 chữ)..."
+              style="width:100%; padding:8px; resize:vertical;"
+              oninput="updateScriptCounter('chapterScriptInput','chapterScriptCount')"></textarea>
+            <div style="text-align:right; font-size:12px; color:#aaa;">
+              <span id="chapterScriptCount">0</span>/3000
+            </div>
+            <div class="footer-actions" style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+              <button type="button"
+                onclick="document.getElementById('chapterScriptModalOverlay').style.display='none'">Hủy</button>
+              <button type="button" onclick="saveChapterScript()" class="btn-submit"
+                style="background:#ff7f00; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer;">Lưu
+                kịch bản</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Tạo trang mới -->
+        <div id="addPageModalOverlay"
+          style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+          <div class="modal-box" style="background:#333333; border-radius:8px; padding:24px; min-width:440px; max-width:90vw;">
+            <h4>Tạo trang mới</h4>
+            <label>Thể loại trang:</label>
+            <select id="addPageType" style="width:100%; margin:8px 0 12px; padding:8px;">
+              <option value="cover">Trang bìa</option>
+              <option value="action">Trang hành động</option>
+              <option value="rest">Trang nghỉ</option>
+              <option value="info">Trang thông tin</option>
+              <option value="end">Trang cuối</option>
+            </select>
+            <label>Kịch bản trang:</label>
+            <textarea id="addPageScript" rows="8" maxlength="1000"
+              placeholder="Nhập kịch bản trang (tối đa 1000 chữ)..."
+              style="width:100%; padding:8px; resize:vertical;"
+              oninput="updateScriptCounter('addPageScript','addPageScriptCount')"></textarea>
+            <div style="text-align:right; font-size:12px; color:#aaa;">
+              <span id="addPageScriptCount">0</span>/1000
+            </div>
+            <div class="footer-actions" style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+              <button type="button"
+                onclick="document.getElementById('addPageModalOverlay').style.display='none'">Hủy</button>
+              <button type="button" onclick="confirmAddPage()" class="btn-submit"
+                style="background:#ff7f00; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer;">Tạo
+                trang</button>
             </div>
           </div>
         </div>
@@ -1463,6 +1521,10 @@
             const nowDt = new Date();
             dlInput.min = `${nowDt.getFullYear()}-${pad(nowDt.getMonth() + 1)}-${pad(nowDt.getDate())}`;
 
+            // Reset số frame + note cho lần giao việc mới
+            document.getElementById("assignFrameCount").value = "1";
+            renderFrameNotes();
+
             document.getElementById("assignModalOverlay").style.display =
               "flex";
           })
@@ -1505,6 +1567,15 @@
           return;
         }
 
+        // Thu thập note công việc cho từng frame
+        const frameNotes = Array.from(
+          document.querySelectorAll("#frameNotesContainer textarea"),
+        ).map((t) => t.value);
+        if (frameNotes.length === 0) {
+          alert("Vui lòng chọn số frame và nhập note cho từng frame!");
+          return;
+        }
+
         fetch(`/api/page/${_currentPageId}/assign`, {
           method: "POST",
           headers: {
@@ -1514,6 +1585,7 @@
             assistantId: assistantId,
             comment: comment,
             deadline: deadline,
+            frameNotes: frameNotes,
           }),
         })
           .then((r) => r.json())
@@ -1883,6 +1955,12 @@
             const subMap = data.submissionMap || {};
             const mangakaId = data.mangakaId || '';
 
+            // Lưu lại state chapter hiện tại cho modal kịch bản / tạo trang
+            window._chapterScript = chapter.script || '';
+            window._currentChapterId = chapter.id;
+            window._currentSid = sid;
+            window._currentCid = cid;
+
             let html = `
               <div id="mangaka-meta" data-mangaka-id="${mangakaId}" style="display:none"></div>
               <h3>Danh sách trang — Chapter: ${chapter.chapterName}</h3>
@@ -1893,6 +1971,8 @@
               <div style="display:flex;align-items:center;gap:10px;margin:12px 0;">`;
 
             if (chapter.status === 'unfinish') {
+              const hasScript = !!(chapter.script && chapter.script.trim() !== '');
+              html += `<button type="button" onclick="openChapterScriptModal()">${hasScript ? '✏️ Sửa kịch bản' : '📝 Tạo kịch bản'}</button>`;
               html += `<button type="button" onclick="submitAddPage('${sid}','${cid}')">+ Thêm trang mới</button>`;
               if (pages.length > 0) {
                 html += `<button type="button" class="btn-action primary btn-submit-chapter" 
@@ -1975,9 +2055,21 @@
                                 <i class="fa-solid fa-user-plus"></i> Giao việc</button>`;
                 }
 
+                const pageTypeLabels = {
+                  cover: '📕 Trang bìa',
+                  action: '🎬 Trang hành động',
+                  rest: '☕ Trang nghỉ',
+                  info: 'ℹ️ Trang thông tin',
+                  end: '🏁 Trang cuối',
+                };
+                const pageTypeBadge = pageTypeLabels[p.pageType]
+                  ? `<span class="badge-status-default" style="font-size:11px">${pageTypeLabels[p.pageType]}</span>`
+                  : '';
+
                 html += `<div class="page-grid-item">
                   <div class="page-preview-box">${imgHtml}</div>
                   <p>Trang ${p.pageNumber}</p>
+                  ${pageTypeBadge}
                   <p>${p.status}</p>
                   <div class="chapter-create-inline-form">${actions}</div>
                 </div>`;
@@ -1991,15 +2083,101 @@
       }
 
       function submitAddPage(sid, cid) {
-        fetch(`/manga/mangaka/myseries/${sid}/${cid}/addpage/data`, { method: 'POST' })
+        // Chapter phải có kịch bản thì mới được tạo trang mới
+        if (!window._chapterScript || window._chapterScript.trim() === '') {
+          alert('⚠️ Chapter chưa có kịch bản. Hãy tạo kịch bản trước khi tạo trang mới!');
+          return;
+        }
+        window._addPageSid = sid;
+        window._addPageCid = cid;
+        document.getElementById('addPageType').value = 'cover';
+        document.getElementById('addPageScript').value = '';
+        updateScriptCounter('addPageScript', 'addPageScriptCount');
+        document.getElementById('addPageModalOverlay').style.display = 'flex';
+      }
+
+      function confirmAddPage() {
+        const pageType = document.getElementById('addPageType').value;
+        const script = document.getElementById('addPageScript').value;
+        if (!pageType) { alert('Vui lòng chọn thể loại trang!'); return; }
+        if (!script.trim()) { alert('Vui lòng nhập kịch bản trang!'); return; }
+        if (script.trim().length > 1000) { alert('Kịch bản trang tối đa 1000 chữ!'); return; }
+
+        const sid = window._addPageSid;
+        const cid = window._addPageCid;
+        fetch(`/manga/mangaka/myseries/${sid}/${cid}/addpage/data`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pageType: pageType, script: script.trim() })
+        })
           .then(r => r.json())
           .then(data => {
             if (data.status === 'success') {
+              document.getElementById('addPageModalOverlay').style.display = 'none';
               window.location.href = `/manga/mangaka/myseries/${sid}/${cid}/${data.pageId}/edit`;
             } else {
               alert('❌ ' + data.message);
             }
           });
+      }
+
+      // ===== KỊCH BẢN CHAPTER =====
+      function openChapterScriptModal() {
+        document.getElementById('chapterScriptModalTitle').textContent =
+          window._chapterScript && window._chapterScript.trim() !== '' ? 'Sửa kịch bản chapter' : 'Tạo kịch bản chapter';
+        document.getElementById('chapterScriptInput').value = window._chapterScript || '';
+        updateScriptCounter('chapterScriptInput', 'chapterScriptCount');
+        document.getElementById('chapterScriptModalOverlay').style.display = 'flex';
+      }
+
+      function saveChapterScript() {
+        const script = document.getElementById('chapterScriptInput').value;
+        if (!script.trim()) { alert('Vui lòng nhập kịch bản!'); return; }
+        if (script.trim().length > 3000) { alert('Kịch bản tối đa 3000 chữ!'); return; }
+
+        fetch(`/api/chapters/${window._currentChapterId}/script`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ script: script.trim() })
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === 'success') {
+              document.getElementById('chapterScriptModalOverlay').style.display = 'none';
+              alert('✅ ' + data.message);
+              loadChapterView(window._currentSid, window._currentCid);
+            } else {
+              alert('❌ ' + data.message);
+            }
+          })
+          .catch(err => alert('❌ Lỗi: ' + err.message));
+      }
+
+      function updateScriptCounter(inputId, countId) {
+        const input = document.getElementById(inputId);
+        const count = document.getElementById(countId);
+        if (input && count) count.textContent = input.value.length;
+      }
+
+      // ===== NOTE CÔNG VIỆC TỪNG FRAME (form giao việc) =====
+      function renderFrameNotes() {
+        const countInput = document.getElementById('assignFrameCount');
+        const container = document.getElementById('frameNotesContainer');
+        if (!countInput || !container) return;
+        let count = parseInt(countInput.value, 10) || 0;
+        if (count > 20) count = 20;
+
+        // Giữ lại nội dung đã nhập khi đổi số frame
+        const oldValues = Array.from(container.querySelectorAll('textarea')).map(t => t.value);
+        let html = '';
+        for (let i = 0; i < count; i++) {
+          html += `<label style="display:block; margin-top:8px;">Note frame ${i + 1}:</label>
+            <textarea rows="2" maxlength="1000" placeholder="Note công việc cho frame ${i + 1}..."></textarea>`;
+        }
+        container.innerHTML = html;
+        container.querySelectorAll('textarea').forEach((t, i) => {
+          if (oldValues[i]) t.value = oldValues[i];
+        });
       }
     </script>
 

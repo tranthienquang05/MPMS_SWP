@@ -1,5 +1,6 @@
 package com.example.manga_management.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ import com.example.manga_management.entity.Assistant;
 import com.example.manga_management.entity.Submission;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.AssistantRepository;
+import com.example.manga_management.repository.FrameTaskRepository;
 import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.SubmissionRepository;
 
@@ -34,12 +36,35 @@ public class AssistantController {
 
     private final SubmissionRepository submissionRepository;
 
+    private final FrameTaskRepository frameTaskRepository;
+
     public AssistantController(AssistantRepository assistantRepository,
             SubmissionRepository submissionRepository,
-            MangaPageRepository mangaPageRepository) {
+            MangaPageRepository mangaPageRepository,
+            FrameTaskRepository frameTaskRepository) {
         this.assistantRepository = assistantRepository;
         this.submissionRepository = submissionRepository;
         this.mangaPageRepository = mangaPageRepository;
+        this.frameTaskRepository = frameTaskRepository;
+    }
+
+    /**
+     * Đếm số frame đã giao cho từng submission, để hiển thị trên kanban card mà
+     * không cần mở từng task.
+     */
+    private Map<String, Integer> buildFrameCounts(List<Submission> todo, List<Submission> waiting,
+            List<Submission> done) {
+        Map<String, Integer> frameCounts = new HashMap<>();
+        for (Submission s : todo) {
+            frameCounts.put(s.getId(), frameTaskRepository.findBySubmission_IdOrderByFrameNumberAsc(s.getId()).size());
+        }
+        for (Submission s : waiting) {
+            frameCounts.put(s.getId(), frameTaskRepository.findBySubmission_IdOrderByFrameNumberAsc(s.getId()).size());
+        }
+        for (Submission s : done) {
+            frameCounts.put(s.getId(), frameTaskRepository.findBySubmission_IdOrderByFrameNumberAsc(s.getId()).size());
+        }
+        return frameCounts;
     }
 
     // ================= HOME =================
@@ -63,11 +88,14 @@ public class AssistantController {
             return "assistant";
         }
 
-        model.addAttribute("todo", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "intask"));
+        List<Submission> todo = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "intask");
+        List<Submission> waiting = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "done");
+        List<Submission> done = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "finish");
 
-        model.addAttribute("waiting", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "done"));
-
-        model.addAttribute("done", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "finish"));
+        model.addAttribute("todo", todo);
+        model.addAttribute("waiting", waiting);
+        model.addAttribute("done", done);
+        model.addAttribute("frameCounts", buildFrameCounts(todo, waiting, done));
         if (model.getAttribute("activeTab") == null) {
             model.addAttribute("activeTab", "tab-home");
         }
@@ -96,11 +124,14 @@ public class AssistantController {
 
         List<Submission> submissions = submissionRepository.findByAssistant_Id(assistant.getId());
 
-        model.addAttribute("todo", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "intask"));
+        List<Submission> todo = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "intask");
+        List<Submission> waiting = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "done");
+        List<Submission> done = submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "finish");
 
-        model.addAttribute("waiting", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "done"));
-
-        model.addAttribute("done", submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "finish"));
+        model.addAttribute("todo", todo);
+        model.addAttribute("waiting", waiting);
+        model.addAttribute("done", done);
+        model.addAttribute("frameCounts", buildFrameCounts(todo, waiting, done));
 
         model.addAttribute("submissions", submissions);
         model.addAttribute("activeTab", "tab-project");
@@ -168,10 +199,21 @@ public class AssistantController {
         model.addAttribute("todo", todo);
         model.addAttribute("waiting", waiting);
         model.addAttribute("done", done);
+        model.addAttribute("frameCounts", buildFrameCounts(todo, waiting, done));
 
         model.addAttribute("submission", submission);
         model.addAttribute("page", submission.getPageId());
         model.addAttribute("activeTab", "tab-draw");
+
+        // Kịch bản chapter + kịch bản trang + note từng frame cho assistant xem
+        model.addAttribute("chapterScript",
+                submission.getPageId() != null && submission.getPageId().getChapter() != null
+                        ? submission.getPageId().getChapter().getScript()
+                        : null);
+        model.addAttribute("pageScript",
+                submission.getPageId() != null ? submission.getPageId().getScript() : null);
+        model.addAttribute("frameTasks",
+                frameTaskRepository.findBySubmission_IdOrderByFrameNumberAsc(submission.getId()));
 
         return "assistant";
     }
@@ -204,7 +246,18 @@ public class AssistantController {
                 "status", "success",
                 "submission", submission,
                 "page", submission.getPageId(),
-                "submissionId", submission.getId()
+                "submissionId", submission.getId(),
+                "chapterScript",
+                submission.getPageId() != null && submission.getPageId().getChapter() != null
+                        && submission.getPageId().getChapter().getScript() != null
+                                ? submission.getPageId().getChapter().getScript()
+                                : "",
+                "pageScript",
+                submission.getPageId() != null && submission.getPageId().getScript() != null
+                        ? submission.getPageId().getScript()
+                        : "",
+                "frameTasks",
+                frameTaskRepository.findBySubmission_IdOrderByFrameNumberAsc(submission.getId())
         );
     }
 

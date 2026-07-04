@@ -28,4 +28,7 @@ public class Assistant {
 
     @Column(name = "SalaryPerTask", nullable = false)
     private Integer salaryPerTask = 0;
+
+    @Column(name = "Status", length = 10)
+    private String status = "untask";
 }

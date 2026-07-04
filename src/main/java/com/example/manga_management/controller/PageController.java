@@ -8,10 +8,12 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,10 +23,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.manga_management.entity.Assistant;
+import com.example.manga_management.entity.FrameTask;
 import com.example.manga_management.entity.MangaPage;
 import com.example.manga_management.entity.Submission;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.AssistantRepository;
+import com.example.manga_management.repository.FrameTaskRepository;
 import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.SubmissionRepository;
 
@@ -40,12 +44,27 @@ public class PageController {
     private final SubmissionRepository submissionRepository;
     @Autowired
     private final MangaPageRepository mangaPageRepository;
+    @Autowired
+    private final FrameTaskRepository frameTaskRepository;
 
     public PageController(AssistantRepository assistantRepository, SubmissionRepository submissionRepository,
-            MangaPageRepository mangaPageRepository) {
+            MangaPageRepository mangaPageRepository, FrameTaskRepository frameTaskRepository) {
         this.assistantRepository = assistantRepository;
         this.submissionRepository = submissionRepository;
         this.mangaPageRepository = mangaPageRepository;
+        this.frameTaskRepository = frameTaskRepository;
+    }
+
+    /**
+     * Chỉ về "untask" khi tất cả task của assistant đã được duyệt hết (không còn
+     * submission intask hoặc done chờ duyệt).
+     */
+    private void refreshAssistantStatus(Assistant assistant) {
+        boolean hasUnapprovedTask = !submissionRepository
+                .findByAssistant_IdAndStatus(assistant.getId(), "intask").isEmpty()
+                || !submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "done").isEmpty();
+        assistant.setStatus(hasUnapprovedTask ? "intask" : "untask");
+        assistantRepository.save(assistant);
     }
 
     @PostMapping("/{pageId}/savefile")
@@ -125,8 +144,9 @@ public class PageController {
 
     @PostMapping("/{pageId}/assign")
     @ResponseBody
+    @Transactional
     public Map<String, Object> assignPage(@PathVariable String pageId,
-            @RequestBody Map<String, String> body,
+            @RequestBody Map<String, Object> body,
             HttpSession session) {
         Map<String, Object> result = new HashMap<>();
 
@@ -164,9 +184,10 @@ public class PageController {
                 return result;
             }
 
-            String assistantId = body.get("assistantId");
-            String comment = body.get("comment");
-            String deadlineStr = body.get("deadline");
+            String assistantId = (String) body.get("assistantId");
+            String comment = (String) body.get("comment");
+            String deadlineStr = (String) body.get("deadline");
+            List<?> frameNotes = body.get("frameNotes") instanceof List<?> notes ? notes : null;
 
             Assistant assistant = assistantRepository.findById(assistantId).orElse(null);
             if (assistant == null) {
@@ -179,6 +200,19 @@ public class PageController {
                 result.put("status", "error");
                 result.put("message", "Deadline là bắt buộc");
                 return result;
+            }
+
+            if (frameNotes == null || frameNotes.isEmpty()) {
+                result.put("status", "error");
+                result.put("message", "Vui lòng chọn số frame và nhập note cho từng frame!");
+                return result;
+            }
+            for (Object note : frameNotes) {
+                if (note != null && note.toString().length() > 1000) {
+                    result.put("status", "error");
+                    result.put("message", "Note mỗi frame tối đa 1000 chữ!");
+                    return result;
+                }
             }
 
             LocalDateTime deadline = LocalDateTime.parse(deadlineStr);
@@ -216,6 +250,28 @@ public class PageController {
             submissionRepository.save(submission);
             page.setStatus("intask");
             mangaPageRepository.save(page);
+
+            // Lưu note công việc cho từng frame (xóa note cũ nếu giao lại từ đầu)
+            frameTaskRepository.deleteBySubmission_Id(submission.getId());
+            Optional<FrameTask> lastFrameTask = frameTaskRepository.findTopByOrderByIdDesc();
+            int maxFrameTaskId = 0;
+            if (lastFrameTask.isPresent()) {
+                maxFrameTaskId = Integer.parseInt(lastFrameTask.get().getId().substring(2));
+            }
+            int frameNumber = 1;
+            for (Object note : frameNotes) {
+                FrameTask frameTask = new FrameTask();
+                frameTask.setId("FT" + String.format("%05d", ++maxFrameTaskId));
+                frameTask.setPage(page);
+                frameTask.setSubmission(submission);
+                frameTask.setFrameNumber(frameNumber++);
+                frameTask.setContent(note == null ? "" : note.toString());
+                frameTaskRepository.save(frameTask);
+            }
+
+            // Giao việc xong thì assistant chuyển sang intask
+            assistant.setStatus("intask");
+            assistantRepository.save(assistant);
 
             result.put("status", "success");
             result.put("message", "Giao việc thành công!");
@@ -289,6 +345,11 @@ public class PageController {
         sub.setStatus("finish");
         sub.setApprovedAt(LocalDateTime.now());
         submissionRepository.save(sub);
+
+        // Nếu assistant không còn task nào chưa duyệt thì chuyển về untask
+        if (sub.getAssistant() != null) {
+            refreshAssistantStatus(sub.getAssistant());
+        }
 
         result.put("status", "success");
         result.put("message", "Đã duyệt! Bấm Hoàn thành để kết thúc trang.");
@@ -394,6 +455,8 @@ public class PageController {
                 return result;
             }
 
+            Assistant previousAssistant = submission.getAssistant();
+
             submission.setAssistant(assistant);
             submission.setComment(comment);
             submission.setDeadline(deadline);
@@ -402,6 +465,13 @@ public class PageController {
 
             page.setStatus("intask");
             mangaPageRepository.save(page);
+
+            // Assistant được giao lại chuyển sang intask, assistant cũ tính lại trạng thái
+            assistant.setStatus("intask");
+            assistantRepository.save(assistant);
+            if (previousAssistant != null && !previousAssistant.getId().equals(assistant.getId())) {
+                refreshAssistantStatus(previousAssistant);
+            }
 
             result.put("status", "success");
             result.put("message", "Đã giao lại thành công!");

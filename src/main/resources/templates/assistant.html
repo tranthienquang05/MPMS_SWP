@@ -226,6 +226,13 @@
                             Lưu
                         </button>
 
+                        <button type="button" class="btn-ai-support-top" id="btnViewScript"
+                            th:if="${submission != null}"
+                            onclick="document.getElementById('scriptModalOverlay').style.display='flex'">
+                            <i class="fa-solid fa-book-open"></i>
+                            Kịch bản
+                        </button>
+
                         <button type="button" class="btn-ai-support-top primary" id="btnLoadPage"
                             th:if="${page != null}">
                             <i class="fa-solid fa-folder-open"></i>
@@ -302,6 +309,39 @@
                     </div>
                 </div>
             </div>
+            <!-- Modal Kịch bản & Note công việc -->
+            <div id="scriptModalOverlay" th:if="${submission != null}"
+                style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center;">
+                <div
+                    style="background:#333333; color:#eee; border-radius:8px; padding:24px; width:560px; max-width:92vw; max-height:80vh; overflow-y:auto;">
+                    <h3 style="margin-top:0;">📖 Kịch bản &amp; Note công việc</h3>
+
+                    <h4>Kịch bản chapter</h4>
+                    <p style="white-space:pre-wrap;"
+                        th:text="${#strings.isEmpty(chapterScript)} ? 'Chưa có kịch bản chapter.' : ${chapterScript}">
+                    </p>
+
+                    <h4>Kịch bản trang</h4>
+                    <p style="white-space:pre-wrap;"
+                        th:text="${#strings.isEmpty(pageScript)} ? 'Chưa có kịch bản trang.' : ${pageScript}"></p>
+
+                    <h4>Note từng frame</h4>
+                    <p th:if="${frameTasks == null or #lists.isEmpty(frameTasks)}">Không có note frame nào.</p>
+                    <div th:each="ft : ${frameTasks}"
+                        style="border:1px solid #555; border-radius:6px; padding:8px 10px; margin-bottom:8px;">
+                        <b th:text="'Frame ' + ${ft.frameNumber}"></b>
+                        <p style="white-space:pre-wrap; margin:4px 0 0 0;"
+                            th:text="${#strings.isEmpty(ft.content)} ? '(không có note)' : ${ft.content}"></p>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+                        <button type="button"
+                            onclick="document.getElementById('scriptModalOverlay').style.display='none'"
+                            style="padding:8px 16px; cursor:pointer;">Đóng</button>
+                    </div>
+                </div>
+            </div>
+
             <div id="aiModalOverlay" class="ai-modal-overlay">
                 <div class="ai-modal-box">
                     <div class="ai-modal-header">
@@ -428,11 +468,20 @@
                         <p>
                             Chapter <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
                             Trang <span th:text="${s.pageId.pageNumber}"></span>
+                            <span th:switch="${s.pageId.pageType}">
+                                <span th:case="'cover'">— 📕 Trang bìa</span>
+                                <span th:case="'action'">— 🎬 Trang hành động</span>
+                                <span th:case="'rest'">— ☕ Trang nghỉ</span>
+                                <span th:case="'info'">— ℹ️ Trang thông tin</span>
+                                <span th:case="'end'">— 🏁 Trang cuối</span>
+                            </span>
                         </p>
 
                         <p>
                             Deadline: <span th:text="${#temporals.format(s.deadline, 'dd/MM/yyyy HH:mm')}"></span>
                         </p>
+
+                        <p>Số frame được giao: <span th:text="${frameCounts != null ? (frameCounts.get(s.id) ?: 0) : 0}"></span></p>
 
                         <p th:text="${s.comment}"></p>
 
@@ -441,6 +490,7 @@
                                 <button type="button">Mở</button>
                             </a>
                             <button type="button" th:data-submission-id="${s.id}" onclick="submitSubmission(this)">Nộp Bài</button>
+                            <button type="button" th:data-submission-id="${s.id}" onclick="viewKanbanScript(this)">📖 Kịch bản</button>
                         </div>
                     </div>
                 </div>
@@ -455,11 +505,24 @@
                         <p>
                             Chapter <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
                             Trang <span th:text="${s.pageId.pageNumber}"></span>
+                            <span th:switch="${s.pageId.pageType}">
+                                <span th:case="'cover'">— 📕 Trang bìa</span>
+                                <span th:case="'action'">— 🎬 Trang hành động</span>
+                                <span th:case="'rest'">— ☕ Trang nghỉ</span>
+                                <span th:case="'info'">— ℹ️ Trang thông tin</span>
+                                <span th:case="'end'">— 🏁 Trang cuối</span>
+                            </span>
                         </p>
 
                         <p>
                             Deadline: <span th:text="${#temporals.format(s.deadline, 'dd/MM/yyyy HH:mm')}"></span>
                         </p>
+
+                        <p>Số frame được giao: <span th:text="${frameCounts != null ? (frameCounts.get(s.id) ?: 0) : 0}"></span></p>
+
+                        <div class="kanban-actions-row">
+                            <button type="button" th:data-submission-id="${s.id}" onclick="viewKanbanScript(this)">📖 Kịch bản</button>
+                        </div>
                     </div>
                 </div>
 
@@ -477,6 +540,30 @@
                     </div>
                 </div>
 
+            </div>
+
+            <!-- Modal xem kịch bản + note frame ngay từ danh sách công việc -->
+            <div id="kanbanScriptModalOverlay"
+                style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center;">
+                <div
+                    style="background:#333333; color:#eee; border-radius:8px; padding:24px; width:560px; max-width:92vw; max-height:80vh; overflow-y:auto;">
+                    <h3 style="margin-top:0;">📖 Kịch bản &amp; Note công việc</h3>
+
+                    <h4>Kịch bản chapter</h4>
+                    <p id="kanbanChapterScript" style="white-space:pre-wrap;"></p>
+
+                    <h4>Kịch bản trang</h4>
+                    <p id="kanbanPageScript" style="white-space:pre-wrap;"></p>
+
+                    <h4>Note từng frame</h4>
+                    <div id="kanbanFrameNotesList"></div>
+
+                    <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+                        <button type="button"
+                            onclick="document.getElementById('kanbanScriptModalOverlay').style.display='none'"
+                            style="padding:8px 16px; cursor:pointer;">Đóng</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -609,6 +696,47 @@
                 }
             })
             .catch(err => alert('❌ Lỗi: ' + err.message));
+        }
+
+        function viewKanbanScript(btn) {
+            const submissionId = btn.dataset.submissionId;
+            fetch('/manga/assistant/submission/' + submissionId + '/edit/data')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status !== 'success') {
+                        alert('❌ ' + data.message);
+                        return;
+                    }
+                    document.getElementById('kanbanChapterScript').textContent =
+                        data.chapterScript && data.chapterScript.trim() !== '' ? data.chapterScript : 'Chưa có kịch bản chapter.';
+                    document.getElementById('kanbanPageScript').textContent =
+                        data.pageScript && data.pageScript.trim() !== '' ? data.pageScript : 'Chưa có kịch bản trang.';
+
+                    const frameTasks = data.frameTasks || [];
+                    const listEl = document.getElementById('kanbanFrameNotesList');
+                    listEl.innerHTML = '';
+                    if (frameTasks.length === 0) {
+                        const p = document.createElement('p');
+                        p.textContent = 'Không có note frame nào.';
+                        listEl.appendChild(p);
+                    } else {
+                        frameTasks.forEach(ft => {
+                            const box = document.createElement('div');
+                            box.style.cssText = 'border:1px solid #555; border-radius:6px; padding:8px 10px; margin-bottom:8px;';
+                            const b = document.createElement('b');
+                            b.textContent = 'Frame ' + ft.frameNumber;
+                            const p = document.createElement('p');
+                            p.style.cssText = 'white-space:pre-wrap; margin:4px 0 0 0;';
+                            p.textContent = ft.content && ft.content.trim() !== '' ? ft.content : '(không có note)';
+                            box.appendChild(b);
+                            box.appendChild(p);
+                            listEl.appendChild(box);
+                        });
+                    }
+
+                    document.getElementById('kanbanScriptModalOverlay').style.display = 'flex';
+                })
+                .catch(err => alert('❌ Lỗi: ' + err.message));
         }
 
     </script>

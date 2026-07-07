@@ -409,6 +409,7 @@
         <div id="project-view-series"></div>
         <div id="project-view-chapter" style="display:none"></div>
         <div id="project-view-page" style="display:none"></div>
+
         <div id="assignModalOverlay" style="display:none;">
           <div class="modal-box">
             <h4>Giao việc cho trợ lý</h4>
@@ -998,7 +999,16 @@
       <!-- Tab assistant content -->
       <div id="tab-assistant" class="tab-pane">
         <h2>Quản lý Trợ lý</h2>
-        <p>Tính năng đang phát triển...</p>
+        <div id="assistantTasksContainer">
+          <div id="assistantTasksLoading" style="text-align:center; padding:2rem; color:#888;">
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu...
+          </div>
+          <div id="assistantTasksEmpty" style="display:none; text-align:center; padding:2rem; color:#aaa;">
+            <i class="fa-solid fa-inbox" style="font-size:2rem;"></i>
+            <p>Không có task nào đang thực hiện.</p>
+          </div>
+          <div id="assistantTasksList" style="display:none; display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:1.2rem; padding:1rem 0;"></div>
+        </div>
       </div>
 
       <!-- Tab other content -->
@@ -1035,7 +1045,172 @@
           tabPanes[i].classList.remove("active");
         }
         document.getElementById(tabId).classList.add("active");
+        if (tabId === 'tab-assistant') {
+          loadAssistantTasks();
+        }
       }
+
+      // ===== QUẢN LÝ TRỢ LÝ =====
+      var _assistantTaskData = []; // lưu toàn bộ tasks để dùng khi click
+
+      function loadAssistantTasks() {
+        if (!mangakaId) return;
+        var loading = document.getElementById('assistantTasksLoading');
+        var emptyEl = document.getElementById('assistantTasksEmpty');
+        var listEl  = document.getElementById('assistantTasksList');
+
+        loading.style.display = 'block';
+        emptyEl.style.display  = 'none';
+        listEl.style.display   = 'none';
+        listEl.innerHTML = '';
+        _assistantTaskData = [];
+
+        fetch('/manga/mangaka/' + mangakaId + '/assistant-tasks')
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            loading.style.display = 'none';
+            if (data.status !== 'success' || !data.tasks || data.tasks.length === 0) {
+              emptyEl.style.display = 'block';
+              return;
+            }
+            _assistantTaskData = data.tasks;
+            listEl.style.display = 'grid';
+            data.tasks.forEach(function(task, idx) {
+              var imgHtml;
+              var imgSrc = task.submissionFilePath || task.pageFilePath || '';
+              if (imgSrc) {
+                imgHtml = '<img src="' + imgSrc + '" alt="Ảnh" style="width:100%;height:160px;object-fit:cover;border-radius:8px 8px 0 0;">';
+              } else {
+                imgHtml = '<div style="width:100%;height:160px;background:#2a2a3a;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:center;color:#666;font-size:0.85rem;">'
+                        + '<i class=\"fa-solid fa-image\" style=\"margin-right:6px;\"></i>Chưa có ảnh</div>';
+              }
+
+              var deadlineStr = task.deadline
+                ? new Date(task.deadline).toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})
+                : 'Không rõ';
+
+              var locationStr = (task.seriesName || '?')
+                + ' · Chương ' + (task.chapterNumber || '?')
+                + ' · Trang ' + (task.pageNumber || '?');
+
+              var card = '<div data-task-idx="' + idx + '" style="background:linear-gradient(145deg,#1e1e2f,#252535);border:1px solid #3a3a5a;border-radius:10px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.35);transition:transform .18s,box-shadow .18s;cursor:pointer;" '
+                + 'onmouseenter="this.style.transform=\'translateY(-4px)\';this.style.boxShadow=\'0 8px 28px rgba(0,0,0,0.5)\'" '
+                + 'onmouseleave="this.style.transform=\'\';this.style.boxShadow=\'0 4px 18px rgba(0,0,0,0.35)\'" '
+                + 'onclick="openAssistantTaskDetail(' + idx + ')">'
+                + imgHtml
+                + '<div style="padding:0.85rem 1rem;">'
+                + '<div style="font-weight:700;color:#e0d9ff;font-size:0.95rem;margin-bottom:4px;">'
+                + '<i class="fa-solid fa-user-pen" style="color:#a78bfa;margin-right:6px;"></i>'
+                + escapeHtml(task.assistantName)
+                + '</div>'
+                + '<div style="color:#9ca3af;font-size:0.82rem;margin-bottom:6px;">' + escapeHtml(locationStr) + '</div>'
+                + '<div style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:#f59e0b;">'
+                + '<i class="fa-regular fa-clock"></i>'
+                + '<span>' + deadlineStr + '</span>'
+                + '</div>'
+                + '</div>'
+                + '</div>';
+              listEl.innerHTML += card;
+            });
+          })
+          .catch(function() {
+            loading.style.display = 'none';
+            emptyEl.style.display = 'block';
+          });
+      }
+
+      function openAssistantTaskDetail(idx) {
+        var task = _assistantTaskData[idx];
+        if (!task) return;
+
+        // Ảnh
+        var imgSrc = task.submissionFilePath || task.pageFilePath || '';
+        var atdImg = document.getElementById('atdImg');
+        var atdPh  = document.getElementById('atdImgPlaceholder');
+        var wrapper = document.getElementById('atdImgWrapper');
+        if (imgSrc) {
+          atdImg.src = imgSrc;
+          atdImg.style.display = 'block';
+          atdPh.style.display = 'none';
+          wrapper.style.cursor = 'zoom-in';
+        } else {
+          atdImg.style.display = 'none';
+          atdPh.style.display = 'flex';
+          wrapper.style.cursor = 'default';
+          wrapper.onclick = null;
+        }
+
+        // Deadline
+        var deadlineFmt = task.deadline
+          ? new Date(task.deadline).toLocaleString('vi-VN', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+          : 'Không rõ';
+
+        // Vị trí
+        var locationStr = (task.seriesName || '?')
+          + ' · Chương ' + (task.chapterNumber || '?')
+          + ' · Trang ' + (task.pageNumber || '?');
+
+        document.getElementById('atdAssistantName').textContent = task.assistantName || '';
+        document.getElementById('atdLocation').textContent = locationStr;
+        document.getElementById('atdDeadline').textContent = deadlineFmt;
+
+        // Comment
+        var commentBlock = document.getElementById('atdCommentBlock');
+        var commentEl    = document.getElementById('atdComment');
+        if (task.comment && task.comment.trim()) {
+          commentEl.textContent = task.comment;
+          commentBlock.style.display = 'block';
+        } else {
+          commentBlock.style.display = 'none';
+        }
+
+        // Frame tasks
+        var ftBlock = document.getElementById('atdFrameTasksBlock');
+        var ftEl    = document.getElementById('atdFrameTasks');
+        if (task.frameTasks && task.frameTasks.length > 0) {
+          ftEl.innerHTML = task.frameTasks.map(function(ft) {
+            return '<div style="background:#1e1e35;border:1px solid #2e2e50;border-radius:6px;padding:0.45rem 0.7rem;">'
+              + '<span style="color:#a78bfa;font-weight:600;font-size:0.8rem;">Frame ' + ft.frameNumber + '</span>'
+              + '<div style="color:#d1d5db;font-size:0.85rem;margin-top:2px;">' + escapeHtml(ft.content || '') + '</div>'
+              + '</div>';
+          }).join('');
+          ftBlock.style.display = 'block';
+        } else {
+          ftBlock.style.display = 'none';
+        }
+
+        // Hiện modal
+        var overlay = document.getElementById('assistantTaskDetailOverlay');
+        overlay.style.display = 'flex';
+      }
+
+      function closeAssistantTaskDetail() {
+        document.getElementById('assistantTaskDetailOverlay').style.display = 'none';
+      }
+
+      function zoomAssistantTaskImage() {
+        var src = document.getElementById('atdImg').src;
+        if (!src) return;
+        var zoomOverlay = document.getElementById('assistantTaskImgZoomOverlay');
+        document.getElementById('assistantTaskImgZoomEl').src = src;
+        zoomOverlay.style.display = 'flex';
+      }
+
+      function closeAssistantTaskImageZoom() {
+        document.getElementById('assistantTaskImgZoomOverlay').style.display = 'none';
+      }
+
+      // Đóng modal khi click ra ngoài
+      document.addEventListener('click', function(e) {
+        var overlay = document.getElementById('assistantTaskDetailOverlay');
+        if (e.target === overlay) closeAssistantTaskDetail();
+      });
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
 
       //  THÊM: hàm loadRanking gọi API và hiển thị bảng ngay tại trang
       function loadRanking() {
@@ -2180,6 +2355,56 @@
         });
       }
     </script>
+
+  <!-- ====== Modal Chi tiết Task Trợ lý ====== -->
+  <div id="assistantTaskDetailOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9999;align-items:center;justify-content:center;padding:1rem;">
+    <div style="background:linear-gradient(160deg,#1a1a2e,#22223a);border:1px solid #3d3d5e;border-radius:14px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.6);position:relative;">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem 0.6rem;border-bottom:1px solid #2e2e4a;">
+        <div style="font-size:1.05rem;font-weight:700;color:#e0d9ff;">
+          <i class="fa-solid fa-clipboard-list" style="color:#a78bfa;margin-right:8px;"></i>Chi tiết nhiệm vụ
+        </div>
+        <button type="button" onclick="closeAssistantTaskDetail()" style="background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer;line-height:1;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <!-- Ảnh -->
+      <div id="atdImgWrapper" style="overflow:hidden;">
+        <div id="atdImgPlaceholder" style="display:none;width:100%;height:220px;background:#1e1e30;align-items:center;justify-content:center;color:#555;font-size:0.9rem;gap:8px;">
+          <i class="fa-solid fa-image"></i> Chưa có ảnh
+        </div>
+        <img id="atdImg" src="" alt="" style="display:none;width:100%;max-height:280px;object-fit:cover;cursor:zoom-in;" title="Click để phóng to" onclick="zoomAssistantTaskImage()" />
+      </div>
+      <!-- Body -->
+      <div style="padding:1rem 1.2rem;">
+        <div style="margin-bottom:0.75rem;">
+          <span style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;">Trợ lý</span>
+          <div id="atdAssistantName" style="font-weight:700;color:#e0d9ff;margin-top:2px;"></div>
+        </div>
+        <div style="margin-bottom:0.75rem;">
+          <span style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;">Vị trí</span>
+          <div id="atdLocation" style="color:#c4b5fd;margin-top:2px;"></div>
+        </div>
+        <div style="margin-bottom:0.75rem;">
+          <span style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;">Deadline</span>
+          <div id="atdDeadline" style="color:#f59e0b;font-weight:600;margin-top:2px;"></div>
+        </div>
+        <div id="atdCommentBlock" style="margin-bottom:0.75rem;display:none;">
+          <span style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;">Comment giao việc</span>
+          <div id="atdComment" style="color:#d1d5db;background:#1e1e35;border:1px solid #2e2e50;border-radius:6px;padding:0.5rem 0.7rem;margin-top:4px;font-size:0.87rem;white-space:pre-wrap;"></div>
+        </div>
+        <div id="atdFrameTasksBlock" style="margin-bottom:0.5rem;display:none;">
+          <span style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;">Frame Notes</span>
+          <div id="atdFrameTasks" style="margin-top:6px;display:flex;flex-direction:column;gap:6px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Overlay zoom ảnh full màn hình ====== -->
+  <div id="assistantTaskImgZoomOverlay" onclick="closeAssistantTaskImageZoom()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10000;align-items:center;justify-content:center;cursor:zoom-out;">
+    <img id="assistantTaskImgZoomEl" src="" alt="" style="max-width:95vw;max-height:95vh;object-fit:contain;border-radius:6px;box-shadow:0 0 60px rgba(0,0,0,0.8);" />
+  </div>
 
 </body>
 

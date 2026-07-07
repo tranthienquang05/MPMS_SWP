@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
 import java.util.List;
@@ -79,7 +78,7 @@ public class MangakaController {
         this.proposalService = proposalService;
     }
 
-    @GetMapping({ "" })
+    @GetMapping({""})
     public String mangakaPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if (user == null) {
@@ -170,8 +169,8 @@ public class MangakaController {
 
         String fileName = fileManuscript.getOriginalFilename();
 
-        if (fileName == null ||
-                !fileName.toLowerCase().endsWith(".pdf")) {
+        if (fileName == null
+                || !fileName.toLowerCase().endsWith(".pdf")) {
 
             result.put("status", "error");
             result.put("message", "Chỉ được phép tải lên file PDF!");
@@ -333,7 +332,7 @@ public class MangakaController {
         result.put("editorComment", p.getComment());
         result.put("editorScore", p.getEditorScore());
         result.put("revisionDeadline", p.getRevisionDeadline()); // FE tự so sánh với thời gian hiện tại nếu muốn hiển
-                                                                 // thị "còn X ngày"
+        // thị "còn X ngày"
 
         List<Map<String, Object>> boardComments = proposalService
                 .getCommentsForProposal(p.getId())
@@ -347,6 +346,7 @@ public class MangakaController {
 
         return result;
     }
+
 
     @Operation(summary = "[SWAGGER] Khởi động series từ proposal đã được duyệt")
     @PostMapping(value = "/start-series", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -681,6 +681,54 @@ public class MangakaController {
         }
         result.put("status", "success");
         result.put("page", page);
+        return result;
+    }
+
+    @Operation(summary = "[SWAGGER] Lấy danh sách submission intask của các assistant thuộc mangaka")
+    @GetMapping("/{mangakaId}/assistant-tasks")
+    @ResponseBody
+    public Map<String, Object> getAssistantTasks(@PathVariable String mangakaId) {
+        Map<String, Object> result = new HashMap<>();
+        Mangaka mangaka = mangakaRepository.findById(mangakaId).orElse(null);
+        if (mangaka == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy mangaka: " + mangakaId);
+            return result;
+        }
+
+        List<Submission> submissions = submissionRepository
+                .findByAssistant_Mangaka_IdAndStatus(mangakaId, "intask");
+
+        List<Map<String, Object>> tasks = submissions.stream().map(sub -> {
+            Map<String, Object> task = new HashMap<>();
+            task.put("submissionId", sub.getId());
+            task.put("deadline", sub.getDeadline());
+            task.put("submissionFilePath", sub.getFilePath());
+
+            // Assistant info
+            Assistant assistant = sub.getAssistant();
+            task.put("assistantName", assistant != null && assistant.getUser() != null
+                    ? assistant.getUser().getFullname()
+                    : "Không rõ");
+
+            // Page info
+            MangaPage page = sub.getPageId();
+            task.put("pageNumber", page != null ? page.getPageNumber() : null);
+            task.put("pageFilePath", page != null ? page.getFilePath() : null);
+
+            // Chapter info
+            Chapter chapter = page != null ? page.getChapter() : null;
+            task.put("chapterNumber", chapter != null ? chapter.getChapterNumber() : null);
+
+            // Series info
+            Series series = chapter != null ? chapter.getSeries() : null;
+            task.put("seriesName", series != null ? series.getSeriesName() : "Không rõ");
+
+            return task;
+        }).toList();
+
+        result.put("status", "success");
+        result.put("tasks", tasks);
         return result;
     }
 }

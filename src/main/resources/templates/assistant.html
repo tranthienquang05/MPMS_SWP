@@ -619,6 +619,18 @@
             openTab(activeTabFromController);
         }
 
+        // Tự động làm mới trang mỗi 60s để cập nhật task đã bị tự động nộp do
+        // quá hạn deadline (danh sách "Đang làm"/"Chờ duyệt" chỉ render 1 lần
+        // lúc tải trang nên cần reload mới thấy trạng thái mới nhất).
+        // Bỏ qua khi đang ở tab vẽ để không làm mất bản vẽ chưa lưu.
+        setInterval(function () {
+            const drawTab = document.getElementById('tab-draw');
+            if (drawTab && drawTab.classList.contains('active')) {
+                return;
+            }
+            location.reload();
+        }, 60000);
+
         // Load ảnh submission đã lưu lên canvas khi assistant mở edit
         document.addEventListener('DOMContentLoaded', function () {
             const path = window.location.pathname;

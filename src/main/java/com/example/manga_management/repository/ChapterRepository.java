@@ -1,5 +1,6 @@
 package com.example.manga_management.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,6 +12,8 @@ import com.example.manga_management.entity.Series;
 public interface ChapterRepository extends JpaRepository<Chapter, String> {
 
     List<Chapter> findBySeries(Series series);
+
+    List<Chapter> findByStatusAndDeadlineBefore(String status, LocalDate deadline);
 
     List<Chapter> findBySeriesId(String seriesId);
 

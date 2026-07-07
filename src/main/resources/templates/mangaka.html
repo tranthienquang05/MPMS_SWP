@@ -422,6 +422,7 @@
             <label>Số frame:</label>
             <input type="number" id="assignFrameCount" min="1" max="20" value="1"
               style="width:100%; padding:8px; margin:8px 0 4px;" oninput="renderFrameNotes()" />
+            <span id="assignFrameCountError" style="color:#dc3545; font-size:12px; display:none;"></span>
             <div id="frameNotesContainer" style="max-height:200px; overflow-y:auto;"></div>
 
             <label class="deadline-lbl"> Deadline: </label>
@@ -534,8 +535,8 @@
             <h4>Giao lại cho trợ lý</h4>
             <input type="hidden" id="reassignSubmissionId" />
             <input type="hidden" id="reassignPageId" />
-            <label>Trợ lý:</label>
-            <select id="reassignSelect"></select>
+            <label>Trợ lý (giữ nguyên người đang làm task này):</label>
+            <div id="reassignAssistantName" style="padding:8px; margin:4px 0 8px; border:1px solid #555; border-radius:4px;"></div>
             <label>Yêu cầu / Ghi chú:</label>
             <textarea id="reassignComment" rows="4" placeholder="Nhập yêu cầu chỉnh sửa..."></textarea>
             <label class="deadline-lbl">Deadline:</label>
@@ -1743,11 +1744,21 @@
         }
 
         // Thu thập note công việc cho từng frame
+        const frameCountVal = parseInt(document.getElementById("assignFrameCount").value, 10) || 0;
+        if (frameCountVal > MAX_FRAME_COUNT) {
+          alert(`⚠️ Số frame tối đa là ${MAX_FRAME_COUNT}, vui lòng chỉnh lại trước khi giao việc!`);
+          return;
+        }
+
         const frameNotes = Array.from(
           document.querySelectorAll("#frameNotesContainer textarea"),
         ).map((t) => t.value);
         if (frameNotes.length === 0) {
           alert("Vui lòng chọn số frame và nhập note cho từng frame!");
+          return;
+        }
+        if (frameNotes.length > MAX_FRAME_COUNT) {
+          alert(`⚠️ Số frame tối đa là ${MAX_FRAME_COUNT}, vui lòng chỉnh lại trước khi giao việc!`);
           return;
         }
 
@@ -1833,11 +1844,11 @@
           });
       }
 
-      function openReassignModal(pageId, submissionId) {
-        const mangakaId = document.getElementById("mangaka-meta")?.dataset.mangakaId;
-        if (!mangakaId) { alert("Không tìm thấy mangakaId!"); return; }
+      function openReassignModal(pageId, submissionId, assistantId, assistantName) {
         document.getElementById("reassignPageId").value = pageId;
         document.getElementById("reassignSubmissionId").value = submissionId;
+        document.getElementById("reassignAssistantName").dataset.assistantId = assistantId || "";
+        document.getElementById("reassignAssistantName").textContent = assistantName || "(không xác định)";
         document.getElementById("reassignComment").value = "";
         // Set default deadline: ngày mai lúc 23:59
         const pad2 = (n) => n.toString().padStart(2, '0');
@@ -1850,21 +1861,15 @@
         // Set min date = hôm nay
         const nowDt2 = new Date();
         dlInput2.min = `${nowDt2.getFullYear()}-${pad2(nowDt2.getMonth() + 1)}-${pad2(nowDt2.getDate())}`;
-        fetch(`/manga/mangaka/${mangakaId}/assistants`)
-          .then(r => r.json())
-          .then(assistants => {
-            if (!assistants || assistants.length === 0) { alert("Chưa có trợ lý nào!"); return; }
-            document.getElementById("reassignSelect").innerHTML = assistants
-              .map(a => `<option value="${a.id}">${a.user.fullname}</option>`).join("");
-            document.getElementById("reassignModalOverlay").style.display = "flex";
-          })
-          .catch(err => alert("❌ " + err.message));
+        document.getElementById("reassignModalOverlay").style.display = "flex";
       }
 
       function submitReassign() {
         const pageId = document.getElementById("reassignPageId").value;
         const submissionId = document.getElementById("reassignSubmissionId").value;
-        const assistantId = document.getElementById("reassignSelect").value;
+        // "Giao lại" luôn giữ nguyên đúng trợ lý đang làm task này — không cho đổi
+        // sang người khác (muốn giao cho người khác thì dùng nút "Giao việc").
+        const assistantId = document.getElementById("reassignAssistantName").dataset.assistantId;
         const comment = document.getElementById("reassignComment").value;
         const deadlineDate2 = document.getElementById("reassignDeadline").value;
         const deadlineHour2 = document.getElementById("reassignHour").value;
@@ -1920,7 +1925,15 @@
         if (submitBtn) { submitChapter(submitBtn.dataset.chapterId); return; }
 
         const reassignBtn = e.target.closest(".btn-reassign-page");
-        if (reassignBtn) { openReassignModal(reassignBtn.dataset.pageId, reassignBtn.dataset.submissionId); return; }
+        if (reassignBtn) {
+          openReassignModal(
+            reassignBtn.dataset.pageId,
+            reassignBtn.dataset.submissionId,
+            reassignBtn.dataset.assistantId,
+            reassignBtn.dataset.assistantName,
+          );
+          return;
+        }
       });
 
       function initProjectTab() {
@@ -2212,7 +2225,9 @@
                                   style="font-size:12px;padding:4px 10px" data-page-id="${p.id}">✅ Duyệt</button>
                                 <button type="button" class="btn-action reject btn-reassign-page"
                                   style="font-size:12px;padding:4px 10px"
-                                  data-page-id="${p.id}" data-submission-id="${sub.id}">🔄 Giao lại</button>
+                                  data-page-id="${p.id}" data-submission-id="${sub.id}"
+                                  data-assistant-id="${sub.assistant.id}"
+                                  data-assistant-name="${sub.assistant.user.fullname}">🔄 Giao lại</button>
                               </div>`;
                 }
 
@@ -2223,8 +2238,14 @@
                                 🖼 Mở bài nộp để chỉnh sửa</a>`;
                 }
 
-                // Nút giao việc
-                if (chapter.status === 'unfinish' && p.status === 'unfinish') {
+                // Nút giao việc — hiện khi trang chưa vướng task nào (chưa từng giao,
+                // hoặc task gần nhất đã được duyệt xong). Mỗi lần giao việc tạo 1
+                // task mới độc lập, không ghi đè task cũ đã duyệt, nên mangaka có
+                // thể giao nhiều vòng cho nhiều trợ lý khác nhau trên cùng 1 trang
+                // (vd ass1 vẽ bối cảnh xong duyệt, rồi giao ass2 viết thoại).
+                const canAssignNewRound = p.status === 'unfinish'
+                  || (p.status === 'done' && sub && sub.status === 'finish');
+                if (chapter.status === 'unfinish' && canAssignNewRound) {
                   actions += `<button type="button" class="btn-assign-task btn-open-assign"
                                 data-page-id="${p.id}">
                                 <i class="fa-solid fa-user-plus"></i> Giao việc</button>`;
@@ -2335,12 +2356,26 @@
       }
 
       // ===== NOTE CÔNG VIỆC TỪNG FRAME (form giao việc) =====
+      const MAX_FRAME_COUNT = 20;
+
       function renderFrameNotes() {
         const countInput = document.getElementById('assignFrameCount');
         const container = document.getElementById('frameNotesContainer');
+        const errEl = document.getElementById('assignFrameCountError');
         if (!countInput || !container) return;
-        let count = parseInt(countInput.value, 10) || 0;
-        if (count > 20) count = 20;
+        const rawCount = parseInt(countInput.value, 10) || 0;
+
+        if (rawCount > MAX_FRAME_COUNT) {
+          if (errEl) {
+            errEl.textContent = `⚠️ Số frame tối đa là ${MAX_FRAME_COUNT}! Đã tự động giới hạn còn ${MAX_FRAME_COUNT} frame.`;
+            errEl.style.display = 'block';
+          }
+          countInput.value = MAX_FRAME_COUNT;
+        } else if (errEl) {
+          errEl.style.display = 'none';
+        }
+
+        const count = Math.min(rawCount, MAX_FRAME_COUNT);
 
         // Giữ lại nội dung đã nhập khi đổi số frame
         const oldValues = Array.from(container.querySelectorAll('textarea')).map(t => t.value);

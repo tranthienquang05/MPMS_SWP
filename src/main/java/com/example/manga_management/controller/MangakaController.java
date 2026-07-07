@@ -517,7 +517,7 @@ public class MangakaController {
             List<MangaPage> pages = mangaPageRepository.findByChapterId(cid);
             Map<String, Submission> submissionMap = new HashMap<>();
             for (MangaPage page : pages) {
-                submissionRepository.findByPageIdId(page.getId())
+                submissionRepository.findTopByPageIdIdOrderByCreatedAtDesc(page.getId())
                         .ifPresent(sub -> submissionMap.put(page.getId(), sub));
             }
             Mangaka mangaka = chapter.getSeries().getProposal().getMangaka();

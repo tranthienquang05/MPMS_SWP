@@ -14,7 +14,10 @@ public interface SubmissionRepository extends JpaRepository<Submission, String> 
         String pageId,
         String status);
 
-    Optional<Submission> findByPageIdId(String pageId);
+    // 1 trang có thể có nhiều submission theo thời gian (nhiều vòng giao việc
+    // khác nhau, cho nhiều assistant khác nhau) — luôn lấy bản mới nhất làm task
+    // "hiện hành" của trang.
+    Optional<Submission> findTopByPageIdIdOrderByCreatedAtDesc(String pageId);
 
     List<Submission> findByAssistant_IdOrderByDeadlineAsc(String assistantId);
 

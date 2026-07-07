@@ -127,7 +127,7 @@ public class PageController {
     public Map<String, Object> getPageSubmission(@PathVariable String pageId) {
         Map<String, Object> result = new HashMap<>();
 
-        Optional<Submission> optSubmission = submissionRepository.findByPageIdId(pageId);
+        Optional<Submission> optSubmission = submissionRepository.findTopByPageIdIdOrderByCreatedAtDesc(pageId);
         if (optSubmission.isEmpty()) {
             result.put("status", "success");
             result.put("hasSubmission", false);
@@ -177,11 +177,23 @@ public class PageController {
                 return result;
             }
 
-            Optional<Submission> existingSubmissionOpt = submissionRepository.findByPageIdId(pageId);
-            if (existingSubmissionOpt.isPresent() && "intask".equals(existingSubmissionOpt.get().getStatus())) {
-                result.put("status", "error");
-                result.put("message", "Trang này đang được giao");
-                return result;
+            // Trang có thể trải qua nhiều vòng giao việc (nhiều assistant khác nhau
+            // theo thời gian) — chỉ chặn khi task gần nhất còn dang dở (đang làm
+            // hoặc đã nộp nhưng chưa duyệt/giao lại). Sau khi đã duyệt xong thì mở
+            // ra cho vòng giao việc mới.
+            Optional<Submission> latestSubmissionOpt = submissionRepository.findTopByPageIdIdOrderByCreatedAtDesc(pageId);
+            if (latestSubmissionOpt.isPresent()) {
+                String latestStatus = latestSubmissionOpt.get().getStatus();
+                if ("intask".equals(latestStatus)) {
+                    result.put("status", "error");
+                    result.put("message", "Trang này đang được giao");
+                    return result;
+                }
+                if ("done".equals(latestStatus)) {
+                    result.put("status", "error");
+                    result.put("message", "Trang này đang chờ duyệt, hãy Duyệt hoặc Giao lại trước khi giao task mới");
+                    return result;
+                }
             }
 
             String assistantId = (String) body.get("assistantId");
@@ -207,6 +219,11 @@ public class PageController {
                 result.put("message", "Vui lòng chọn số frame và nhập note cho từng frame!");
                 return result;
             }
+            if (frameNotes.size() > 20) {
+                result.put("status", "error");
+                result.put("message", "Số frame tối đa là 20 cho mỗi task!");
+                return result;
+            }
             for (Object note : frameNotes) {
                 if (note != null && note.toString().length() > 1000) {
                     result.put("status", "error");
@@ -222,15 +239,15 @@ public class PageController {
                 return result;
             }
 
-            Submission submission = existingSubmissionOpt.orElseGet(() -> {
-                String lastId = submissionRepository.findTopByOrderByIdDesc()
-                        .map(Submission::getId).orElse("SUB0000");
-                int num = Integer.parseInt(lastId.replaceAll("[^0-9]", "")) + 1;
-                String newId = "SUB" + String.format("%04d", num);
-                Submission newSubmission = new Submission();
-                newSubmission.setId(newId);
-                return newSubmission;
-            });
+            // Luôn tạo submission mới cho mỗi lần giao việc — không ghi đè submission
+            // cũ đã duyệt/hoàn thành, để giữ lại lịch sử từng vòng giao việc (vd
+            // ass1 vẽ bối cảnh xong duyệt, rồi giao vòng mới cho ass2 viết thoại).
+            String lastId = submissionRepository.findTopByOrderByIdDesc()
+                    .map(Submission::getId).orElse("SUB0000");
+            int num = Integer.parseInt(lastId.replaceAll("[^0-9]", "")) + 1;
+            String newId = "SUB" + String.format("%04d", num);
+            Submission submission = new Submission();
+            submission.setId(newId);
 
             submission.setPageId(page);
             submission.setAssistant(assistant);
@@ -251,8 +268,7 @@ public class PageController {
             page.setStatus("intask");
             mangaPageRepository.save(page);
 
-            // Lưu note công việc cho từng frame (xóa note cũ nếu giao lại từ đầu)
-            frameTaskRepository.deleteBySubmission_Id(submission.getId());
+            // Lưu note công việc cho từng frame của vòng giao việc mới này
             Optional<FrameTask> lastFrameTask = frameTaskRepository.findTopByOrderByIdDesc();
             int maxFrameTaskId = 0;
             if (lastFrameTask.isPresent()) {
@@ -305,7 +321,7 @@ public class PageController {
             return result;
         }
         if ("done".equals(page.getStatus())) {
-            Optional<Submission> subOpt = submissionRepository.findByPageIdId(pageId);
+            Optional<Submission> subOpt = submissionRepository.findTopByPageIdIdOrderByCreatedAtDesc(pageId);
             if (subOpt.isPresent() && "done".equals(subOpt.get().getStatus())) {
                 result.put("status", "error");
                 result.put("message", "Bạn phải ấn nút Duyệt trước khi hoàn thành!");
@@ -334,7 +350,7 @@ public class PageController {
             return result;
         }
 
-        Optional<Submission> subOpt = submissionRepository.findByPageIdId(pageId);
+        Optional<Submission> subOpt = submissionRepository.findTopByPageIdIdOrderByCreatedAtDesc(pageId);
         if (subOpt.isEmpty() || !"done".equals(subOpt.get().getStatus())) {
             result.put("status", "error");
             result.put("message", "Trợ lý chưa nộp bài!");
@@ -399,7 +415,6 @@ public class PageController {
             }
 
             String submissionId = body.get("submissionId");
-            String assistantId = body.get("assistantId");
             String comment = body.get("comment");
             String deadlineStr = body.get("deadline");
 
@@ -435,10 +450,13 @@ public class PageController {
                 return result;
             }
 
-            Assistant assistant = assistantRepository.findById(assistantId).orElse(null);
+            // "Giao lại" luôn giữ nguyên đúng trợ lý đang làm task này — không nhận
+            // assistantId từ client để tránh bị đổi sang người khác (muốn giao cho
+            // người khác thì dùng "Giao việc" để tạo task mới).
+            Assistant assistant = submission.getAssistant();
             if (assistant == null) {
                 result.put("status", "error");
-                result.put("message", "Không tìm thấy assistant: " + assistantId);
+                result.put("message", "Task này chưa có trợ lý để giao lại");
                 return result;
             }
 
@@ -455,9 +473,6 @@ public class PageController {
                 return result;
             }
 
-            Assistant previousAssistant = submission.getAssistant();
-
-            submission.setAssistant(assistant);
             submission.setComment(comment);
             submission.setDeadline(deadline);
             submission.setStatus("intask");
@@ -466,12 +481,8 @@ public class PageController {
             page.setStatus("intask");
             mangaPageRepository.save(page);
 
-            // Assistant được giao lại chuyển sang intask, assistant cũ tính lại trạng thái
             assistant.setStatus("intask");
             assistantRepository.save(assistant);
-            if (previousAssistant != null && !previousAssistant.getId().equals(assistant.getId())) {
-                refreshAssistantStatus(previousAssistant);
-            }
 
             result.put("status", "success");
             result.put("message", "Đã giao lại thành công!");

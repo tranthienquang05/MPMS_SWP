@@ -1,758 +1,1117 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Trợ lý</title>
-    <link rel="stylesheet" href="../static/css/all.css" th:href="@{/css/all.css}">
-    <link rel="stylesheet" href="../static/css/draw.css" th:href="@{/css/draw.css}">
+    <link
+      rel="stylesheet"
+      href="../static/css/all.css"
+      th:href="@{/css/all.css}"
+    />
+    <link
+      rel="stylesheet"
+      href="../static/css/draw.css"
+      th:href="@{/css/draw.css}"
+    />
     <script src="/js/draw.js" defer></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
 
-<body th:attr="data-user-id=${currentUserId}">
+  <body th:attr="data-user-id=${currentUserId}">
     <div class="header">
-        <div class="logo">SANKYUU
-            <p class="name">Trợ lý</p>
-        </div>
+      <div class="logo">
+        SANKYUU
+        <p class="name">Trợ lý</p>
+      </div>
 
-        <div class="header-actions">
+      <div class="header-actions">
+        <div style="position: relative">
+          <button
+            type="button"
+            class="btn-icon"
+            id="btnNoti"
+            aria-label="Thông báo"
+          >
+            <i class="fa-solid fa-bell"></i>
+            <span
+              th:if="${unreadCount > 0}"
+              th:text="${unreadCount}"
+              class="badge"
+            ></span>
+          </button>
 
-            <div style="position:relative;">
-                <button type="button" class="btn-icon" id="btnNoti" aria-label="Thông báo">
-                    <i class="fa-solid fa-bell"></i>
-                    <span th:if="${unreadCount > 0}" th:text="${unreadCount}" class="badge"></span>
-                </button>
+          <div class="notification-dropdown">
+            <div class="dropdown-header">Thông báo mới</div>
 
-                <div class="notification-dropdown">
-                    <div class="dropdown-header">Thông báo mới</div>
-
-                    <div th:each="note : ${myNotifications}" class="notification-item"
-                        th:classappend="${!note.isRead} ? ' unread' : ''">
-                        <span th:text="${note.content}"></span>
-                        <span class="time" th:text="${#temporals.format(note.createdAt, 'HH:mm dd/MM')}"></span>
-                    </div>
-
-                    <div th:if="${#lists.isEmpty(myNotifications)}" class="no-notify">
-                        Không có thông báo
-                    </div>
-
-                    <div class="notification-actions" th:if="${not #lists.isEmpty(myNotifications)}">
-                        <button type="button" class="mark-read-all">Đánh dấu đã đọc</button>
-                    </div>
-                </div>
+            <div
+              th:each="note : ${myNotifications}"
+              class="notification-item"
+              th:classappend="${!note.isRead} ? ' unread' : ''"
+            >
+              <span th:text="${note.content}"></span>
+              <span
+                class="time"
+                th:text="${#temporals.format(note.createdAt, 'HH:mm dd/MM')}"
+              ></span>
             </div>
 
+            <div th:if="${#lists.isEmpty(myNotifications)}" class="no-notify">
+              Không có thông báo
+            </div>
 
-            <a th:href="@{/login/logout}">
-                <button type="button" class="btn-icon" aria-label="Logout">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                </button>
-            </a>
+            <div
+              class="notification-actions"
+              th:if="${not #lists.isEmpty(myNotifications)}"
+            >
+              <button type="button" class="mark-read-all">
+                Đánh dấu đã đọc
+              </button>
+            </div>
+          </div>
         </div>
+
+        <a th:href="@{/login/logout}">
+          <button type="button" class="btn-icon" aria-label="Logout">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </a>
+      </div>
     </div>
 
     <ul class="topnav">
-        <li>
-            <button type="button" class="btn-icon" onclick="openTab('tab-home')">
-                <i class="fa-solid fa-house"></i>
-            </button>
-        </li>
-        <li>
-            <button type="button" class="btn-icon" onclick="openTab('tab-draw')">
-                <i class="fa-solid fa-brush"></i>
-            </button>
-        </li>
-        <li>
-            <button type="button" class="btn-icon" onclick="openTab('tab-project')">
-                <i class="fa-solid fa-folder-open"></i>
-            </button>
-        </li>
-        <li>
-            <button type="button" class="btn-icon" onclick="openTab('tab-assistant')">
-                <i class="fa-solid fa-user"></i>
-            </button>
-        </li>
-        <li>
-            <button type="button" class="btn-icon" onclick="openTab('tab-other')">
-                <i class="fa-solid fa-hashtag"></i>
-            </button>
-        </li>
-        <li style="position:relative;">
-            <button type="button" class="btn-icon" onclick="openTab('tab-chat')" title="Tin nhắn">
-                <i class="fa-solid fa-comments"></i>
-            </button>
-            <span id="chatTabBadge" class="badge" style="display:none;"></span>
-        </li>
+      <li>
+        <button type="button" class="btn-icon" onclick="openTab('tab-home')">
+          <i class="fa-solid fa-house"></i>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="btn-icon" onclick="openTab('tab-draw')">
+          <i class="fa-solid fa-brush"></i>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="btn-icon" onclick="openTab('tab-project')">
+          <i class="fa-solid fa-folder-open"></i>
+        </button>
+      </li>
+      <li>
+        <button
+          type="button"
+          class="btn-icon"
+          onclick="openTab('tab-assistant')"
+        >
+          <i class="fa-solid fa-user"></i>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="btn-icon" onclick="openTab('tab-other')">
+          <i class="fa-solid fa-hashtag"></i>
+        </button>
+      </li>
+      <li style="position: relative">
+        <button
+          type="button"
+          class="btn-icon"
+          onclick="openTab('tab-chat')"
+          title="Tin nhắn"
+        >
+          <i class="fa-solid fa-comments"></i>
+        </button>
+        <span id="chatTabBadge" class="badge" style="display: none"></span>
+      </li>
     </ul>
 
     <div class="flex-container">
+      <div id="tab-home" class="tab-pane">
+        <h2>Tổng quan</h2>
 
-        <div id="tab-home" class="tab-pane">
+        <div style="display: flex; gap: 20px">
+          <div
+            style="padding: 20px; border: 1px solid #ddd; border-radius: 8px"
+          >
+            <h3 th:text="${todo != null ? #lists.size(todo) : 0}"></h3>
+            <p>Đang làm</p>
+          </div>
 
-            <h2>Tổng quan</h2>
+          <div
+            style="padding: 20px; border: 1px solid #ddd; border-radius: 8px"
+          >
+            <h3 th:text="${waiting != null ? #lists.size(waiting) : 0}"></h3>
+            <p>Chờ duyệt</p>
+          </div>
 
-            <div style="display:flex; gap:20px;">
+          <div
+            style="padding: 20px; border: 1px solid #ddd; border-radius: 8px"
+          >
+            <h3 th:text="${done != null ? #lists.size(done) : 0}"></h3>
+            <p>Hoàn thành</p>
+          </div>
+        </div>
+      </div>
 
-                <div style="padding:20px;
-                    border:1px solid #ddd;
-                    border-radius:8px;">
-                    <h3 th:text="${todo != null ? #lists.size(todo) : 0}"></h3>
-                    <p>Đang làm</p>
+      <!-- Tab draw content -->
+      <div id="tab-draw" class="tab-pane">
+        <!-- Chức năng draw -->
+        <div class="draw-wrapper">
+          <!-- ============ TOOLBAR TRÁI ============ -->
+          <div class="left-toolbar">
+            <button
+              type="button"
+              class="lt-btn active"
+              data-tool="pencil"
+              title="Bút vẽ (B)"
+            >
+              <i class="fa-solid fa-pencil"></i>
+            </button>
+            <button
+              type="button"
+              class="lt-btn"
+              data-tool="brush"
+              title="Cọ mềm (cạnh mờ)"
+            >
+              <i class="fa-solid fa-paintbrush"></i>
+            </button>
+            <button
+              type="button"
+              class="lt-btn"
+              data-tool="eraser"
+              title="Tẩy (E)"
+            >
+              <i class="fa-solid fa-eraser"></i>
+            </button>
+            <button
+              type="button"
+              class="lt-btn"
+              data-tool="bucket"
+              title="Đổ màu (Bucket fill)"
+            >
+              <i class="fa-solid fa-fill-drip"></i>
+            </button>
+
+            <div class="lt-divider"></div>
+
+            <button
+              type="button"
+              class="lt-btn"
+              data-tool="line"
+              title="Đường thẳng"
+            >
+              <i class="fa-solid fa-slash"></i>
+            </button>
+            <button
+              type="button"
+              class="lt-btn"
+              data-tool="rect"
+              title="Hình chữ nhật"
+            >
+              <i class="fa-regular fa-square"></i>
+            </button>
+            <button
+              type="button"
+              class="lt-btn"
+              data-tool="oval"
+              title="Hình tròn / Oval (balloon)"
+            >
+              <i class="fa-regular fa-circle"></i>
+            </button>
+            <button
+              type="button"
+              class="lt-btn"
+              data-tool="text"
+              title="Chèn chữ (Lettering)"
+            >
+              <i class="fa-solid fa-font"></i>
+            </button>
+
+            <div class="lt-divider"></div>
+
+            <button
+              type="button"
+              class="lt-btn"
+              data-tool="select"
+              title="Chọn vùng chữ nhật (M)"
+            >
+              <i class="fa-solid fa-vector-square"></i>
+            </button>
+            <button
+              type="button"
+              class="lt-btn"
+              data-tool="select-oval"
+              title="Chọn vùng oval"
+            >
+              <i class="fa-regular fa-circle"></i>
+            </button>
+            <button
+              type="button"
+              class="lt-btn"
+              data-tool="select-free"
+              title="Chọn vùng tự do (Lasso)"
+            >
+              <i class="fa-solid fa-draw-polygon"></i>
+            </button>
+            <button
+              type="button"
+              class="lt-btn"
+              id="toolEyedrop"
+              title="Lấy màu từ canvas"
+            >
+              <i class="fa-solid fa-eye-dropper"></i>
+            </button>
+
+            <div class="lt-divider"></div>
+
+            <button
+              type="button"
+              class="lt-btn"
+              id="toolUndo"
+              title="Hoàn tác (Ctrl+Z)"
+            >
+              <i class="fa-solid fa-rotate-left"></i>
+            </button>
+            <button
+              type="button"
+              class="lt-btn"
+              id="toolClear"
+              title="Xóa toàn bộ layer hiện tại"
+            >
+              <i class="fa-solid fa-trash"></i>
+            </button>
+
+            <div class="lt-divider"></div>
+
+            <div class="lt-swatch-wrap">
+              <input
+                type="color"
+                class="lt-color-fg"
+                id="penColor"
+                value="#1a1a1a"
+                title="Màu nét vẽ"
+              />
+              <div class="lt-color-bg"></div>
+            </div>
+          </div>
+
+          <!-- ============ KHỐI CHÍNH ============ -->
+          <div class="center-area">
+            <div class="top-property-bar" id="topPropertyBar">
+              <div class="prop-group">
+                <span class="prop-label">Cỡ nét</span>
+                <input type="range" id="penSize" min="1" max="60" value="6" />
+                <span class="prop-value" id="penSizeValue">6</span>
+              </div>
+              <div class="prop-divider"></div>
+
+              <div class="prop-group">
+                <span class="prop-label">Độ mờ</span>
+                <input
+                  type="range"
+                  id="penOpacity"
+                  min="10"
+                  max="100"
+                  value="100"
+                />
+                <span class="prop-value" id="penOpacityValue">100%</span>
+              </div>
+              <div class="prop-divider"></div>
+
+              <div class="prop-group" id="shapeFillGroup" style="display: none">
+                <span class="prop-label">Kiểu</span>
+                <div class="shape-fill-toggle">
+                  <button
+                    type="button"
+                    class="shape-fill-btn active"
+                    data-fillmode="outline"
+                  >
+                    Viền
+                  </button>
+                  <button
+                    type="button"
+                    class="shape-fill-btn"
+                    data-fillmode="filled"
+                  >
+                    Tô đầy
+                  </button>
                 </div>
+              </div>
 
-                <div style="padding:20px;
-                    border:1px solid #ddd;
-                    border-radius:8px;">
-                    <h3 th:text="${waiting != null ? #lists.size(waiting) : 0}"></h3>
-                    <p>Chờ duyệt</p>
-                </div>
+              <div class="prop-group" id="textSizeGroup" style="display: none">
+                <span class="prop-label">Cỡ chữ</span>
+                <input
+                  type="range"
+                  id="textSize"
+                  min="10"
+                  max="72"
+                  value="24"
+                />
+                <span class="prop-value" id="textSizeValue">24</span>
+              </div>
 
-                <div style="padding:20px;
-                    border:1px solid #ddd;
-                    border-radius:8px;">
-                    <h3 th:text="${done != null ? #lists.size(done) : 0}"></h3>
-                    <p>Hoàn thành</p>
-                </div>
+              <button
+                id="btnSubmitSubmission"
+                th:if="${submission != null}"
+                th:data-submission-id="${submission.id}"
+                th:data-who="assistant"
+                th:data-saved-path="${submission.filePath}"
+                type="button"
+                class="btn-ai-support-top approve"
+              >
+                <i class="fa-solid fa-paper-plane"></i>
+                Lưu
+              </button>
 
+              <button
+                type="button"
+                class="btn-ai-support-top"
+                id="btnViewScript"
+                th:if="${submission != null}"
+                onclick="document.getElementById('scriptModalOverlay').style.display='flex'"
+              >
+                <i class="fa-solid fa-book-open"></i>
+                Kịch bản
+              </button>
+
+              <button
+                type="button"
+                class="btn-ai-support-top primary"
+                id="btnLoadPage"
+                th:if="${page != null}"
+              >
+                <i class="fa-solid fa-folder-open"></i>
+                Mở file
+              </button>
+
+              <input type="file" id="inputLoadPage" accept="image/png" />
+
+              <button
+                type="button"
+                class="btn-ai-support-top"
+                id="btnAiSupport"
+              >
+                <i class="fa-solid fa-brain"></i>
+                AI Support
+              </button>
             </div>
 
+            <div class="color-palette-bar">
+              <span class="palette-label">Palette</span>
+              <div class="palette-swatch" data-color="#000000"></div>
+              <div class="palette-swatch" data-color="#ffffff"></div>
+              <div class="palette-swatch" data-color="#7f7f7f"></div>
+              <div class="palette-swatch" data-color="#c3c3c3"></div>
+              <div class="palette-swatch" data-color="#ff0000"></div>
+              <div class="palette-swatch" data-color="#ff7f00"></div>
+              <div class="palette-swatch" data-color="#ffff00"></div>
+              <div class="palette-swatch" data-color="#00ff00"></div>
+              <div class="palette-swatch" data-color="#00ffff"></div>
+              <div class="palette-swatch" data-color="#0078ff"></div>
+              <div class="palette-swatch" data-color="#7f00ff"></div>
+              <div class="palette-swatch" data-color="#ff00ff"></div>
+              <div class="palette-swatch" data-color="#8b4513"></div>
+              <div class="palette-swatch" data-color="#ffc0cb"></div>
+              <div class="palette-swatch" data-color="#ffd700"></div>
+              <div class="palette-swatch" data-color="#2e8b57"></div>
+            </div>
+
+            <div class="canvas-viewport" id="canvasViewport">
+              <div
+                class="canvas-stack"
+                id="canvasStack"
+                style="width: 400px; height: 600px"
+              >
+                <canvas id="bgCanvas" width="400" height="600"></canvas>
+                <canvas id="layer2Canvas" width="400" height="600"></canvas>
+                <canvas id="drawCanvas" width="400" height="600"></canvas>
+                <div class="canvas-region-select" id="regionSelectBox"></div>
+              </div>
+            </div>
+
+            <div class="status-bar">
+              <span id="statusTool">Công cụ: Bút vẽ</span>
+              <span id="statusRegion">Vùng AI: Toàn canvas</span>
+              <div class="zoom-controls">
+                <button type="button" class="zoom-btn" id="zoomOut">
+                  <i class="fa-solid fa-magnifying-glass-minus"></i>
+                </button>
+                <span id="zoomValue">100%</span>
+                <button type="button" class="zoom-btn" id="zoomIn">
+                  <i class="fa-solid fa-magnifying-glass-plus"></i>
+                </button>
+                <button type="button" class="zoom-btn" id="zoomReset">
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ PANEL PHẢI ============ -->
+          <div class="right-panel">
+            <div class="panel-section">
+              <div class="panel-section-header">
+                <span>Layers</span>
+                <button
+                  type="button"
+                  class="header-btn"
+                  id="btnAddLayer"
+                  title="Thêm layer"
+                >
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+              </div>
+              <div id="layerList"></div>
+            </div>
+            <div
+              class="panel-section"
+              style="
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+              "
+            >
+              <div class="panel-section-header">Lịch sử thao tác</div>
+              <div class="history-list" id="historyList"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Modal Kịch bản & Note công việc -->
+        <div
+          id="scriptModalOverlay"
+          th:if="${submission != null}"
+          style="
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <div
+            style="
+              background: #333333;
+              color: #eee;
+              border-radius: 8px;
+              padding: 24px;
+              width: 560px;
+              max-width: 92vw;
+              max-height: 80vh;
+              overflow-y: auto;
+            "
+          >
+            <h3 style="margin-top: 0">📖 Kịch bản &amp; Note công việc</h3>
+
+            <h4>Kịch bản chapter</h4>
+            <p
+              style="white-space: pre-wrap"
+              th:text="${#strings.isEmpty(chapterScript)} ? 'Chưa có kịch bản chapter.' : ${chapterScript}"
+            ></p>
+
+            <h4>Kịch bản trang</h4>
+            <p
+              style="white-space: pre-wrap"
+              th:text="${#strings.isEmpty(pageScript)} ? 'Chưa có kịch bản trang.' : ${pageScript}"
+            ></p>
+
+            <h4>Note từng frame</h4>
+            <p th:if="${frameTasks == null or #lists.isEmpty(frameTasks)}">
+              Không có note frame nào.
+            </p>
+            <div
+              th:each="ft : ${frameTasks}"
+              style="
+                border: 1px solid #555;
+                border-radius: 6px;
+                padding: 8px 10px;
+                margin-bottom: 8px;
+              "
+            >
+              <b th:text="'Frame ' + ${ft.frameNumber}"></b>
+              <p
+                style="white-space: pre-wrap; margin: 4px 0 0 0"
+                th:text="${#strings.isEmpty(ft.content)} ? '(không có note)' : ${ft.content}"
+              ></p>
+            </div>
+
+            <div
+              style="display: flex; justify-content: flex-end; margin-top: 12px"
+            >
+              <button
+                type="button"
+                onclick="document.getElementById('scriptModalOverlay').style.display='none'"
+                style="padding: 8px 16px; cursor: pointer"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
         </div>
 
-        <!-- Tab draw content -->
-        <div id="tab-draw" class="tab-pane">
-            <!-- Chức năng draw -->
-            <div class="draw-wrapper">
-                <!-- ============ TOOLBAR TRÁI ============ -->
-                <div class="left-toolbar">
-                    <button type="button" class="lt-btn active" data-tool="pencil" title="Bút vẽ (B)">
-                        <i class="fa-solid fa-pencil"></i>
-                    </button>
-                    <button type="button" class="lt-btn" data-tool="brush" title="Cọ mềm (cạnh mờ)">
-                        <i class="fa-solid fa-paintbrush"></i>
-                    </button>
-                    <button type="button" class="lt-btn" data-tool="eraser" title="Tẩy (E)">
-                        <i class="fa-solid fa-eraser"></i>
-                    </button>
-                    <button type="button" class="lt-btn" data-tool="bucket" title="Đổ màu (Bucket fill)">
-                        <i class="fa-solid fa-fill-drip"></i>
-                    </button>
-
-                    <div class="lt-divider"></div>
-
-                    <button type="button" class="lt-btn" data-tool="line" title="Đường thẳng">
-                        <i class="fa-solid fa-slash"></i>
-                    </button>
-                    <button type="button" class="lt-btn" data-tool="rect" title="Hình chữ nhật">
-                        <i class="fa-regular fa-square"></i>
-                    </button>
-                    <button type="button" class="lt-btn" data-tool="oval" title="Hình tròn / Oval (balloon)">
-                        <i class="fa-regular fa-circle"></i>
-                    </button>
-                    <button type="button" class="lt-btn" data-tool="text" title="Chèn chữ (Lettering)">
-                        <i class="fa-solid fa-font"></i>
-                    </button>
-
-                    <div class="lt-divider"></div>
-
-                    <button type="button" class="lt-btn" data-tool="select" title="Chọn vùng chữ nhật (M)">
-                        <i class="fa-solid fa-vector-square"></i>
-                    </button>
-                    <button type="button" class="lt-btn" data-tool="select-oval" title="Chọn vùng oval">
-                        <i class="fa-regular fa-circle"></i>
-                    </button>
-                    <button type="button" class="lt-btn" data-tool="select-free" title="Chọn vùng tự do (Lasso)">
-                        <i class="fa-solid fa-draw-polygon"></i>
-                    </button>
-                    <button type="button" class="lt-btn" id="toolEyedrop" title="Lấy màu từ canvas">
-                        <i class="fa-solid fa-eye-dropper"></i>
-                    </button>
-
-                    <div class="lt-divider"></div>
-
-                    <button type="button" class="lt-btn" id="toolUndo" title="Hoàn tác (Ctrl+Z)">
-                        <i class="fa-solid fa-rotate-left"></i>
-                    </button>
-                    <button type="button" class="lt-btn" id="toolClear" title="Xóa toàn bộ layer hiện tại">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-
-                    <div class="lt-divider"></div>
-
-                    <div class="lt-swatch-wrap">
-                        <input type="color" class="lt-color-fg" id="penColor" value="#1a1a1a" title="Màu nét vẽ">
-                        <div class="lt-color-bg"></div>
-                    </div>
-                </div>
-
-                <!-- ============ KHỐI CHÍNH ============ -->
-                <div class="center-area">
-
-                    <div class="top-property-bar" id="topPropertyBar">
-                        <div class="prop-group">
-                            <span class="prop-label">Cỡ nét</span>
-                            <input type="range" id="penSize" min="1" max="60" value="6">
-                            <span class="prop-value" id="penSizeValue">6</span>
-                        </div>
-                        <div class="prop-divider"></div>
-
-                        <div class="prop-group">
-                            <span class="prop-label">Độ mờ</span>
-                            <input type="range" id="penOpacity" min="10" max="100" value="100">
-                            <span class="prop-value" id="penOpacityValue">100%</span>
-                        </div>
-                        <div class="prop-divider"></div>
-
-                        <div class="prop-group" id="shapeFillGroup" style="display:none;">
-                            <span class="prop-label">Kiểu</span>
-                            <div class="shape-fill-toggle">
-                                <button type="button" class="shape-fill-btn active"
-                                    data-fillmode="outline">Viền</button>
-                                <button type="button" class="shape-fill-btn" data-fillmode="filled">Tô đầy</button>
-                            </div>
-                        </div>
-
-                        <div class="prop-group" id="textSizeGroup" style="display:none;">
-                            <span class="prop-label">Cỡ chữ</span>
-                            <input type="range" id="textSize" min="10" max="72" value="24">
-                            <span class="prop-value" id="textSizeValue">24</span>
-                        </div>
-
-                        <button id="btnSubmitSubmission" th:if="${submission != null}"
-                            th:data-submission-id="${submission.id}" th:data-who="assistant"
-                            th:data-saved-path="${submission.filePath}" type="button"
-                            class="btn-ai-support-top approve">
-                            <i class="fa-solid fa-paper-plane"></i>
-                            Lưu
-                        </button>
-
-                        <button type="button" class="btn-ai-support-top" id="btnViewScript"
-                            th:if="${submission != null}"
-                            onclick="document.getElementById('scriptModalOverlay').style.display='flex'">
-                            <i class="fa-solid fa-book-open"></i>
-                            Kịch bản
-                        </button>
-
-                        <button type="button" class="btn-ai-support-top primary" id="btnLoadPage"
-                            th:if="${page != null}">
-                            <i class="fa-solid fa-folder-open"></i>
-                            Mở file
-                        </button>
-
-                        <input type="file" id="inputLoadPage" accept="image/png">
-
-                        <button type="button" class="btn-ai-support-top" id="btnAiSupport">
-                            <i class="fa-solid fa-brain"></i>
-                            AI Support
-                        </button>
-                    </div>
-
-                    <div class="color-palette-bar">
-                        <span class="palette-label">Palette</span>
-                        <div class="palette-swatch" data-color="#000000"></div>
-                        <div class="palette-swatch" data-color="#ffffff"></div>
-                        <div class="palette-swatch" data-color="#7f7f7f"></div>
-                        <div class="palette-swatch" data-color="#c3c3c3"></div>
-                        <div class="palette-swatch" data-color="#ff0000"></div>
-                        <div class="palette-swatch" data-color="#ff7f00"></div>
-                        <div class="palette-swatch" data-color="#ffff00"></div>
-                        <div class="palette-swatch" data-color="#00ff00"></div>
-                        <div class="palette-swatch" data-color="#00ffff"></div>
-                        <div class="palette-swatch" data-color="#0078ff"></div>
-                        <div class="palette-swatch" data-color="#7f00ff"></div>
-                        <div class="palette-swatch" data-color="#ff00ff"></div>
-                        <div class="palette-swatch" data-color="#8b4513"></div>
-                        <div class="palette-swatch" data-color="#ffc0cb"></div>
-                        <div class="palette-swatch" data-color="#ffd700"></div>
-                        <div class="palette-swatch" data-color="#2e8b57"></div>
-                    </div>
-
-                    <div class="canvas-viewport" id="canvasViewport">
-                        <div class="canvas-stack" id="canvasStack" style="width: 400px; height: 600px;">
-                            <canvas id="bgCanvas" width="400" height="600"></canvas>
-                            <canvas id="layer2Canvas" width="400" height="600"></canvas>
-                            <canvas id="drawCanvas" width="400" height="600"></canvas>
-                            <div class="canvas-region-select" id="regionSelectBox"></div>
-                        </div>
-                    </div>
-
-                    <div class="status-bar">
-                        <span id="statusTool">Công cụ: Bút vẽ</span>
-                        <span id="statusRegion">Vùng AI: Toàn canvas</span>
-                        <div class="zoom-controls">
-                            <button type="button" class="zoom-btn" id="zoomOut"><i
-                                    class="fa-solid fa-magnifying-glass-minus"></i></button>
-                            <span id="zoomValue">100%</span>
-                            <button type="button" class="zoom-btn" id="zoomIn"><i
-                                    class="fa-solid fa-magnifying-glass-plus"></i></button>
-                            <button type="button" class="zoom-btn" id="zoomReset">Reset</button>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- ============ PANEL PHẢI ============ -->
-                <div class="right-panel">
-                    <div class="panel-section">
-                        <div class="panel-section-header">
-                            <span>Layers</span>
-                            <button type="button" class="header-btn" id="btnAddLayer" title="Thêm layer">
-                                <i class="fa-solid fa-plus"></i>
-                            </button>
-                        </div>
-                        <div id="layerList"></div>
-                    </div>
-                    <div class="panel-section" style="flex:1; display:flex; flex-direction:column; min-height:0;">
-                        <div class="panel-section-header">Lịch sử thao
-                            tác</div>
-                        <div class="history-list" id="historyList"></div>
-                    </div>
-                </div>
+        <div id="aiModalOverlay" class="ai-modal-overlay">
+          <div class="ai-modal-box">
+            <div class="ai-modal-header">
+              <h5><i class="fa-solid fa-brain"></i> AI Support</h5>
+              <button type="button" class="ai-modal-close" id="btnCloseAiModal">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
             </div>
-            <!-- Modal Kịch bản & Note công việc -->
-            <div id="scriptModalOverlay" th:if="${submission != null}"
-                style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center;">
+
+            <div class="ai-modal-body">
+              <div id="aiFeatureListView">
+                <div class="ai-feature-grid">
+                  <button
+                    type="button"
+                    class="ai-feature-card"
+                    data-feature="color"
+                    data-name="Tô màu"
+                    data-type="image"
+                  >
+                    <i class="fa-solid fa-palette"></i>
+                    <div class="ai-feature-name">Tô màu</div>
+                    <div class="ai-feature-desc">
+                      Tô màu panel theo gam màu tự nhiên
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    class="ai-feature-card"
+                    data-feature="shadow"
+                    data-name="Đổ bóng"
+                    data-type="image"
+                  >
+                    <i class="fa-solid fa-circle-half-stroke"></i>
+                    <div class="ai-feature-name">Đổ bóng</div>
+                    <div class="ai-feature-desc">
+                      Thêm shading & lighting tự động
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    class="ai-feature-card"
+                    data-feature="clean_line"
+                    data-name="Clean lineart"
+                    data-type="image"
+                  >
+                    <i class="fa-solid fa-pen-nib"></i>
+                    <div class="ai-feature-name">Clean lineart</div>
+                    <div class="ai-feature-desc">
+                      Nét thảo thành nét sạch chuyên nghiệp
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    class="ai-feature-card"
+                    data-feature="background"
+                    data-name="Background"
+                    data-type="image"
+                  >
+                    <i class="fa-solid fa-mountain-sun"></i>
+                    <div class="ai-feature-name">Background</div>
+                    <div class="ai-feature-desc">
+                      Vẽ background chi tiết cho panel
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    class="ai-feature-card"
+                    data-feature="lettering"
+                    data-name="Lettering"
+                    data-type="vision"
+                  >
+                    <i class="fa-solid fa-comment-dots"></i>
+                    <div class="ai-feature-name">Lettering</div>
+                    <div class="ai-feature-desc">
+                      Phân tích balloon, gợi ý căn chỉnh
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    class="ai-feature-card"
+                    data-feature="expression"
+                    data-name="Biểu cảm"
+                    data-type="vision"
+                  >
+                    <i class="fa-solid fa-face-smile"></i>
+                    <div class="ai-feature-name">Biểu cảm</div>
+                    <div class="ai-feature-desc">
+                      Nhận diện emotion nhân vật
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <div id="aiDetailView" class="ai-detail-view">
+                <button
+                  type="button"
+                  class="ai-detail-back"
+                  id="btnBackToFeatureList"
+                >
+                  <i class="fa-solid fa-arrow-left"></i> Quay lại
+                </button>
+                <div class="ai-detail-title" id="aiDetailTitle"></div>
+
+                <div class="ai-region-row">
+                  <span class="ai-region-label">Vùng áp dụng:</span>
+                  <button
+                    type="button"
+                    class="ai-region-btn active"
+                    data-region="full"
+                  >
+                    Toàn canvas
+                  </button>
+                  <button
+                    type="button"
+                    class="ai-region-btn"
+                    data-region="select"
+                  >
+                    Chọn vùng
+                  </button>
+                </div>
+                <span class="ai-region-status" id="aiRegionStatus"
+                  >Sẽ áp dụng cho toàn bộ canvas</span
+                >
+
+                <textarea
+                  class="ai-prompt-input"
+                  id="aiPromptInput"
+                  placeholder="Mô tả thêm yêu cầu (không bắt buộc)..."
+                ></textarea>
+
+                <div class="ai-modal-footer">
+                  <button type="button" class="ai-btn-run" id="btnRunAi">
+                    Chạy AI
+                  </button>
+                </div>
+              </div>
+
+              <div id="aiLoadingView" class="ai-loading-view">
+                <div class="ai-spinner"></div>
+                <p style="font-size: 12.5px; color: var(--ps-text-dim)">
+                  AI đang xử lý, vui lòng chờ...
+                </p>
+              </div>
+
+              <div id="aiResultView" class="ai-result-view">
+                <div class="ai-detail-title" id="aiResultTitle">Kết quả</div>
+                <img
+                  id="aiResultImage"
+                  class="ai-result-image"
+                  style="display: none"
+                />
                 <div
-                    style="background:#333333; color:#eee; border-radius:8px; padding:24px; width:560px; max-width:92vw; max-height:80vh; overflow-y:auto;">
-                    <h3 style="margin-top:0;">📖 Kịch bản &amp; Note công việc</h3>
-
-                    <h4>Kịch bản chapter</h4>
-                    <p style="white-space:pre-wrap;"
-                        th:text="${#strings.isEmpty(chapterScript)} ? 'Chưa có kịch bản chapter.' : ${chapterScript}">
-                    </p>
-
-                    <h4>Kịch bản trang</h4>
-                    <p style="white-space:pre-wrap;"
-                        th:text="${#strings.isEmpty(pageScript)} ? 'Chưa có kịch bản trang.' : ${pageScript}"></p>
-
-                    <h4>Note từng frame</h4>
-                    <p th:if="${frameTasks == null or #lists.isEmpty(frameTasks)}">Không có note frame nào.</p>
-                    <div th:each="ft : ${frameTasks}"
-                        style="border:1px solid #555; border-radius:6px; padding:8px 10px; margin-bottom:8px;">
-                        <b th:text="'Frame ' + ${ft.frameNumber}"></b>
-                        <p style="white-space:pre-wrap; margin:4px 0 0 0;"
-                            th:text="${#strings.isEmpty(ft.content)} ? '(không có note)' : ${ft.content}"></p>
-                    </div>
-
-                    <div style="display:flex; justify-content:flex-end; margin-top:12px;">
-                        <button type="button"
-                            onclick="document.getElementById('scriptModalOverlay').style.display='none'"
-                            style="padding:8px 16px; cursor:pointer;">Đóng</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="aiModalOverlay" class="ai-modal-overlay">
-                <div class="ai-modal-box">
-                    <div class="ai-modal-header">
-                        <h5><i class="fa-solid fa-brain"></i> AI
-                            Support</h5>
-                        <button type="button" class="ai-modal-close" id="btnCloseAiModal">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    </div>
-
-                    <div class="ai-modal-body">
-                        <div id="aiFeatureListView">
-                            <div class="ai-feature-grid">
-                                <button type="button" class="ai-feature-card" data-feature="color" data-name="Tô màu"
-                                    data-type="image">
-                                    <i class="fa-solid fa-palette"></i>
-                                    <div class="ai-feature-name">Tô
-                                        màu</div>
-                                    <div class="ai-feature-desc">Tô màu
-                                        panel theo gam màu tự nhiên</div>
-                                </button>
-                                <button type="button" class="ai-feature-card" data-feature="shadow" data-name="Đổ bóng"
-                                    data-type="image">
-                                    <i class="fa-solid fa-circle-half-stroke"></i>
-                                    <div class="ai-feature-name">Đổ
-                                        bóng</div>
-                                    <div class="ai-feature-desc">Thêm
-                                        shading & lighting tự động</div>
-                                </button>
-                                <button type="button" class="ai-feature-card" data-feature="clean_line"
-                                    data-name="Clean lineart" data-type="image">
-                                    <i class="fa-solid fa-pen-nib"></i>
-                                    <div class="ai-feature-name">Clean
-                                        lineart</div>
-                                    <div class="ai-feature-desc">Nét thảo
-                                        thành nét sạch chuyên nghiệp</div>
-                                </button>
-                                <button type="button" class="ai-feature-card" data-feature="background"
-                                    data-name="Background" data-type="image">
-                                    <i class="fa-solid fa-mountain-sun"></i>
-                                    <div class="ai-feature-name">Background</div>
-                                    <div class="ai-feature-desc">Vẽ
-                                        background chi tiết cho panel</div>
-                                </button>
-                                <button type="button" class="ai-feature-card" data-feature="lettering"
-                                    data-name="Lettering" data-type="vision">
-                                    <i class="fa-solid fa-comment-dots"></i>
-                                    <div class="ai-feature-name">Lettering</div>
-                                    <div class="ai-feature-desc">Phân tích
-                                        balloon, gợi ý căn chỉnh</div>
-                                </button>
-                                <button type="button" class="ai-feature-card" data-feature="expression"
-                                    data-name="Biểu cảm" data-type="vision">
-                                    <i class="fa-solid fa-face-smile"></i>
-                                    <div class="ai-feature-name">Biểu
-                                        cảm</div>
-                                    <div class="ai-feature-desc">Nhận diện
-                                        emotion nhân vật</div>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div id="aiDetailView" class="ai-detail-view">
-                            <button type="button" class="ai-detail-back" id="btnBackToFeatureList">
-                                <i class="fa-solid fa-arrow-left"></i> Quay
-                                lại
-                            </button>
-                            <div class="ai-detail-title" id="aiDetailTitle"></div>
-
-                            <div class="ai-region-row">
-                                <span class="ai-region-label">Vùng áp
-                                    dụng:</span>
-                                <button type="button" class="ai-region-btn active" data-region="full">Toàn
-                                    canvas</button>
-                                <button type="button" class="ai-region-btn" data-region="select">Chọn vùng</button>
-                            </div>
-                            <span class="ai-region-status" id="aiRegionStatus">Sẽ áp dụng cho toàn bộ
-                                canvas</span>
-
-                            <textarea class="ai-prompt-input" id="aiPromptInput"
-                                placeholder="Mô tả thêm yêu cầu (không bắt buộc)..."></textarea>
-
-                            <div class="ai-modal-footer">
-                                <button type="button" class="ai-btn-run" id="btnRunAi">Chạy AI</button>
-                            </div>
-                        </div>
-
-                        <div id="aiLoadingView" class="ai-loading-view">
-                            <div class="ai-spinner"></div>
-                            <p style="font-size:12.5px; color:var(--ps-text-dim);">AI
-                                đang xử lý, vui lòng chờ...</p>
-                        </div>
-
-                        <div id="aiResultView" class="ai-result-view">
-                            <div class="ai-detail-title" id="aiResultTitle">Kết quả</div>
-                            <img id="aiResultImage" class="ai-result-image" style="display: none;">
-                            <div id="aiResultText" class="ai-result-text" style="display: none;"></div>
-                            <div id="aiErrorText" class="ai-error-text" style="display: none;"></div>
-                            <div class="ai-modal-footer">
-                                <button type="button" class="ai-btn-secondary" id="btnAiResultBack">Quay lại</button>
-                                <button type="button" class="ai-btn-run" id="btnApplyToCanvas"
-                                    style="display:none;">Apply to
-                                    canvas</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-project" class="tab-pane">
-
-            <h2>Công việc được giao</h2>
-
-            <div class="kanban-grid">
-
-                <div>
-                    <h3>🟠 Đang làm</h3>
-
-                    <div th:each="s : ${todo}" class="kanban-card todo-bg">
-
-                        <b th:text="${s.pageId.chapter.series.seriesName}"></b>
-
-                        <p>
-                            Chapter <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
-                            Trang <span th:text="${s.pageId.pageNumber}"></span>
-                            <span th:switch="${s.pageId.pageType}">
-                                <span th:case="'cover'">— 📕 Trang bìa</span>
-                                <span th:case="'action'">— 🎬 Trang hành động</span>
-                                <span th:case="'rest'">— ☕ Trang nghỉ</span>
-                                <span th:case="'info'">— ℹ️ Trang thông tin</span>
-                                <span th:case="'end'">— 🏁 Trang cuối</span>
-                            </span>
-                        </p>
-
-                        <p>
-                            Deadline: <span th:text="${#temporals.format(s.deadline, 'dd/MM/yyyy HH:mm')}"></span>
-                        </p>
-
-                        <p>Số frame được giao: <span th:text="${frameCounts != null ? (frameCounts.get(s.id) ?: 0) : 0}"></span></p>
-
-                        <p th:text="${s.comment}"></p>
-
-                        <div class="kanban-actions-row">
-                            <a th:href="@{/manga/assistant/submission/{id}/edit(id=${s.id})}">
-                                <button type="button">Mở</button>
-                            </a>
-                            <button type="button" th:data-submission-id="${s.id}" onclick="submitSubmission(this)">Nộp Bài</button>
-                            <button type="button" th:data-submission-id="${s.id}" onclick="viewKanbanScript(this)">📖 Kịch bản</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h3>🔵 Chờ duyệt</h3>
-
-                    <div th:each="s : ${waiting}" class="kanban-card waiting-bg">
-
-                        <b th:text="${s.pageId.chapter.series.seriesName}"></b>
-
-                        <p>
-                            Chapter <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
-                            Trang <span th:text="${s.pageId.pageNumber}"></span>
-                            <span th:switch="${s.pageId.pageType}">
-                                <span th:case="'cover'">— 📕 Trang bìa</span>
-                                <span th:case="'action'">— 🎬 Trang hành động</span>
-                                <span th:case="'rest'">— ☕ Trang nghỉ</span>
-                                <span th:case="'info'">— ℹ️ Trang thông tin</span>
-                                <span th:case="'end'">— 🏁 Trang cuối</span>
-                            </span>
-                        </p>
-
-                        <p>
-                            Deadline: <span th:text="${#temporals.format(s.deadline, 'dd/MM/yyyy HH:mm')}"></span>
-                        </p>
-
-                        <p>Số frame được giao: <span th:text="${frameCounts != null ? (frameCounts.get(s.id) ?: 0) : 0}"></span></p>
-
-                        <div class="kanban-actions-row">
-                            <button type="button" th:data-submission-id="${s.id}" onclick="viewKanbanScript(this)">📖 Kịch bản</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h3>🟢 Hoàn thành</h3>
-
-                    <div th:each="s : ${done}" class="kanban-card done-bg">
-
-                        <b th:text="${s.pageId.chapter.series.seriesName}"></b>
-
-                        <p>
-                            Chapter <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
-                            Trang <span th:text="${s.pageId.pageNumber}"></span>
-                        </p>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Modal xem kịch bản + note frame ngay từ danh sách công việc -->
-            <div id="kanbanScriptModalOverlay"
-                style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center;">
+                  id="aiResultText"
+                  class="ai-result-text"
+                  style="display: none"
+                ></div>
                 <div
-                    style="background:#333333; color:#eee; border-radius:8px; padding:24px; width:560px; max-width:92vw; max-height:80vh; overflow-y:auto;">
-                    <h3 style="margin-top:0;">📖 Kịch bản &amp; Note công việc</h3>
-
-                    <h4>Kịch bản chapter</h4>
-                    <p id="kanbanChapterScript" style="white-space:pre-wrap;"></p>
-
-                    <h4>Kịch bản trang</h4>
-                    <p id="kanbanPageScript" style="white-space:pre-wrap;"></p>
-
-                    <h4>Note từng frame</h4>
-                    <div id="kanbanFrameNotesList"></div>
-
-                    <div style="display:flex; justify-content:flex-end; margin-top:12px;">
-                        <button type="button"
-                            onclick="document.getElementById('kanbanScriptModalOverlay').style.display='none'"
-                            style="padding:8px 16px; cursor:pointer;">Đóng</button>
-                    </div>
+                  id="aiErrorText"
+                  class="ai-error-text"
+                  style="display: none"
+                ></div>
+                <div class="ai-modal-footer">
+                  <button
+                    type="button"
+                    class="ai-btn-secondary"
+                    id="btnAiResultBack"
+                  >
+                    Quay lại
+                  </button>
+                  <button
+                    type="button"
+                    class="ai-btn-run"
+                    id="btnApplyToCanvas"
+                    style="display: none"
+                  >
+                    Apply to canvas
+                  </button>
                 </div>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
 
-        <div id="tab-assistant" class="tab-pane">
-            <h2>Tác giả đang hỗ trợ</h2>
-            <p>Tính năng đang phát triển...</p>
-        </div>
+      <div id="tab-project" class="tab-pane">
+        <h2>Công việc được giao</h2>
 
-        <div id="tab-other" class="tab-pane">
-            <h2>Cài đặt khác</h2>
-            <p>Tính năng đang phát triển...</p>
-        </div>
+        <div class="kanban-grid">
+          <div>
+            <h3>🟠 Đang làm</h3>
 
-        <div id="tab-chat" class="tab-pane">
-            <h2>Tin nhắn</h2>
-            <div class="chat-layout">
-                <div class="chat-contact-list" id="chatContactList">
-                    <div class="chat-empty">Đang tải danh sách liên hệ...</div>
-                </div>
-                <div class="chat-thread">
-                    <div class="chat-thread-header" id="chatThreadHeader">Chọn một liên hệ để bắt đầu trò chuyện</div>
-                    <div class="chat-messages" id="chatMessages"></div>
-                    <div class="chat-input-bar">
-                        <input type="text" id="chatInput" placeholder="Nhập tin nhắn..." disabled>
-                        <button type="button" id="chatSendBtn" disabled><i class="fa-solid fa-paper-plane"></i></button>
-                    </div>
-                </div>
+            <div th:each="s : ${todo}" class="kanban-card todo-bg">
+              <b th:text="${s.pageId.chapter.series.seriesName}"></b>
+
+              <p>
+                Chapter
+                <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
+                Trang <span th:text="${s.pageId.pageNumber}"></span>
+                <span th:switch="${s.pageId.pageType}">
+                  <span th:case="'cover'">— 📕 Trang bìa</span>
+                  <span th:case="'action'">— 🎬 Trang hành động</span>
+                  <span th:case="'rest'">— ☕ Trang nghỉ</span>
+                  <span th:case="'info'">— ℹ️ Trang thông tin</span>
+                  <span th:case="'end'">— 🏁 Trang cuối</span>
+                </span>
+              </p>
+
+              <p>
+                Deadline:
+                <span
+                  th:text="${#temporals.format(s.deadline, 'dd/MM/yyyy HH:mm')}"
+                ></span>
+              </p>
+
+              <p>
+                Số frame được giao:
+                <span
+                  th:text="${frameCounts != null ? (frameCounts.get(s.id) ?: 0) : 0}"
+                ></span>
+              </p>
+
+              <p th:text="${s.comment}"></p>
+
+              <div class="kanban-actions-row">
+                <a
+                  th:href="@{/manga/assistant/submission/{id}/edit(id=${s.id})}"
+                >
+                  <button type="button">Mở</button>
+                </a>
+                <button
+                  type="button"
+                  th:data-submission-id="${s.id}"
+                  onclick="submitSubmission(this)"
+                >
+                  Nộp Bài
+                </button>
+                <button
+                  type="button"
+                  th:data-submission-id="${s.id}"
+                  onclick="viewKanbanScript(this)"
+                >
+                  📖 Kịch bản
+                </button>
+              </div>
             </div>
+          </div>
+
+          <div>
+            <h3>🔵 Chờ duyệt</h3>
+
+            <div th:each="s : ${waiting}" class="kanban-card waiting-bg">
+              <b th:text="${s.pageId.chapter.series.seriesName}"></b>
+
+              <p>
+                Chapter
+                <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
+                Trang <span th:text="${s.pageId.pageNumber}"></span>
+                <span th:switch="${s.pageId.pageType}">
+                  <span th:case="'cover'">— 📕 Trang bìa</span>
+                  <span th:case="'action'">— 🎬 Trang hành động</span>
+                  <span th:case="'rest'">— ☕ Trang nghỉ</span>
+                  <span th:case="'info'">— ℹ️ Trang thông tin</span>
+                  <span th:case="'end'">— 🏁 Trang cuối</span>
+                </span>
+              </p>
+
+              <p>
+                Deadline:
+                <span
+                  th:text="${#temporals.format(s.deadline, 'dd/MM/yyyy HH:mm')}"
+                ></span>
+              </p>
+
+              <p>
+                Số frame được giao:
+                <span
+                  th:text="${frameCounts != null ? (frameCounts.get(s.id) ?: 0) : 0}"
+                ></span>
+              </p>
+
+              <div class="kanban-actions-row">
+                <button
+                  type="button"
+                  th:data-submission-id="${s.id}"
+                  onclick="viewKanbanScript(this)"
+                >
+                  📖 Kịch bản
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3>🟢 Hoàn thành</h3>
+
+            <div th:each="s : ${done}" class="kanban-card done-bg">
+              <b th:text="${s.pageId.chapter.series.seriesName}"></b>
+
+              <p>
+                Chapter
+                <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
+                Trang <span th:text="${s.pageId.pageNumber}"></span>
+              </p>
+            </div>
+          </div>
         </div>
 
+        <!-- Modal xem kịch bản + note frame ngay từ danh sách công việc -->
+        <div
+          id="kanbanScriptModalOverlay"
+          style="
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <div
+            style="
+              background: #333333;
+              color: #eee;
+              border-radius: 8px;
+              padding: 24px;
+              width: 560px;
+              max-width: 92vw;
+              max-height: 80vh;
+              overflow-y: auto;
+            "
+          >
+            <h3 style="margin-top: 0">📖 Kịch bản &amp; Note công việc</h3>
+
+            <h4>Kịch bản chapter</h4>
+            <p id="kanbanChapterScript" style="white-space: pre-wrap"></p>
+
+            <h4>Kịch bản trang</h4>
+            <p id="kanbanPageScript" style="white-space: pre-wrap"></p>
+
+            <h4>Note từng frame</h4>
+            <div id="kanbanFrameNotesList"></div>
+
+            <div
+              style="display: flex; justify-content: flex-end; margin-top: 12px"
+            >
+              <button
+                type="button"
+                onclick="document.getElementById('kanbanScriptModalOverlay').style.display='none'"
+                style="padding: 8px 16px; cursor: pointer"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-assistant" class="tab-pane">
+        <h2>Tác giả đang hỗ trợ</h2>
+        <p>Tính năng đang phát triển...</p>
+      </div>
+
+      <div id="tab-other" class="tab-pane">
+        <h2>Cài đặt khác</h2>
+        <p>Tính năng đang phát triển...</p>
+      </div>
+
+      <div id="tab-chat" class="tab-pane">
+        <h2>Tin nhắn</h2>
+        <div class="chat-layout">
+          <div class="chat-contact-list" id="chatContactList">
+            <div class="chat-empty">Đang tải danh sách liên hệ...</div>
+          </div>
+          <div class="chat-thread">
+            <div class="chat-thread-header" id="chatThreadHeader">
+              Chọn một liên hệ để bắt đầu trò chuyện
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-bar">
+              <input
+                type="text"
+                id="chatInput"
+                placeholder="Nhập tin nhắn..."
+                disabled
+              />
+              <button type="button" id="chatSendBtn" disabled>
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
     <script th:src="@{/js/chat.js}"></script>
     <script th:inline="javascript">
+      function openTab(tabId) {
+        var tabPanes = document.getElementsByClassName("tab-pane");
 
-        function openTab(tabId) {
-            var tabPanes = document.getElementsByClassName("tab-pane");
-
-            for (var i = 0; i < tabPanes.length; i++) {
-                tabPanes[i].classList.remove("active");
-            }
-
-            document.getElementById(tabId).classList.add("active");
+        for (var i = 0; i < tabPanes.length; i++) {
+          tabPanes[i].classList.remove("active");
         }
 
-        var activeTabFromController = /*[[${activeTab}]]*/ 'tab-home';
+        document.getElementById(tabId).classList.add("active");
+      }
 
-        console.log(activeTabFromController);
+      var activeTabFromController = /*[[${activeTab}]]*/ "tab-home";
 
-        if (activeTabFromController) {
-            openTab(activeTabFromController);
+      console.log(activeTabFromController);
+
+      if (activeTabFromController) {
+        openTab(activeTabFromController);
+      }
+
+      // Tự động làm mới trang mỗi 60s để cập nhật task đã bị tự động nộp do
+      // quá hạn deadline (danh sách "Đang làm"/"Chờ duyệt" chỉ render 1 lần
+      // lúc tải trang nên cần reload mới thấy trạng thái mới nhất).
+      // Bỏ qua khi đang ở tab vẽ để không làm mất bản vẽ chưa lưu.
+      setInterval(function () {
+        const drawTab = document.getElementById("tab-draw");
+        if (drawTab && drawTab.classList.contains("active")) {
+          return;
         }
+        location.reload();
+      }, 60000);
 
-        // Tự động làm mới trang mỗi 60s để cập nhật task đã bị tự động nộp do
-        // quá hạn deadline (danh sách "Đang làm"/"Chờ duyệt" chỉ render 1 lần
-        // lúc tải trang nên cần reload mới thấy trạng thái mới nhất).
-        // Bỏ qua khi đang ở tab vẽ để không làm mất bản vẽ chưa lưu.
-        setInterval(function () {
-            const drawTab = document.getElementById('tab-draw');
-            if (drawTab && drawTab.classList.contains('active')) {
-                return;
-            }
-            location.reload();
-        }, 60000);
-
-        // Load ảnh submission đã lưu lên canvas khi assistant mở edit
-        document.addEventListener('DOMContentLoaded', function () {
-            const path = window.location.pathname;
-            const submissionEditMatch = path.match(/\/submission\/([^/]+)\/edit$/);
-            if (submissionEditMatch) {
-                const subId = submissionEditMatch[1];
-                fetch('/manga/assistant/submission/' + subId + '/edit/data')
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.status === 'success' && data.submission && data.submission.filePath) {
-                            const img = new Image();
-                            img.onload = () => {
-                                if (layers && layers[1]) {
-                                    layers[1].ctx.clearRect(0, 0, 400, 600);
-                                    layers[1].ctx.drawImage(img, 0, 0);
-                                    pushHistoryEntry('Load submission đã lưu');
-                                }
-                            };
-                            img.src = data.submission.filePath + '?t=' + Date.now();
-                        }
-                    })
-                    .catch(err => console.error('Lỗi load submission:', err));
-            }
-        });
-
-        document.addEventListener("DOMContentLoaded", function () {
-            // Notification toggle
-            const btnNoti = document.getElementById("btnNoti");
-            const dropdown = document.querySelector(".notification-dropdown");
-
-            if (btnNoti && dropdown) {
-                btnNoti.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    dropdown.classList.toggle("show");
-                });
-
-                const markReadAllBtn = dropdown.querySelector(".mark-read-all");
-                if (markReadAllBtn) {
-                    markReadAllBtn.addEventListener("click", (e) => {
-                        e.stopPropagation();
-                        fetch("/notification/read-all", { method: "POST" })
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data.status === "success") {
-                                    const badge = btnNoti.querySelector(".badge");
-                                    if (badge) badge.remove();
-                                    document.querySelectorAll(".notification-item.unread")
-                                        .forEach(el => el.classList.remove("unread"));
-                                }
-                            });
-                    });
-                }
-
-                document.addEventListener("click", () => {
-                    dropdown.classList.remove("show");
-                });
-            }
-        });
-
-        function submitSubmission(btn) {
-            const submissionId = btn.dataset.submissionId;
-            if (!confirm('Xác nhận nộp bài?')) return;
-            fetch('/manga/assistant/submission/' + submissionId + '/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'status=done'
+      // Load ảnh submission đã lưu lên canvas khi assistant mở edit
+      document.addEventListener("DOMContentLoaded", function () {
+        const path = window.location.pathname;
+        const submissionEditMatch = path.match(/\/submission\/([^/]+)\/edit$/);
+        if (submissionEditMatch) {
+          const subId = submissionEditMatch[1];
+          fetch("/manga/assistant/submission/" + subId + "/edit/data")
+            .then((r) => r.json())
+            .then((data) => {
+              if (
+                data.status === "success" &&
+                data.submission &&
+                data.submission.filePath
+              ) {
+                const img = new Image();
+                img.onload = () => {
+                  if (layers && layers[1]) {
+                    layers[1].ctx.clearRect(0, 0, 400, 600);
+                    layers[1].ctx.drawImage(img, 0, 0);
+                    pushHistoryEntry("Load submission đã lưu");
+                  }
+                };
+                img.src = data.submission.filePath + "?t=" + Date.now();
+              }
             })
-            .then(r => r.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alert('✅ ' + data.message);
-                    location.reload();
-                } else {
-                    alert('❌ ' + data.message);
-                }
-            })
-            .catch(err => alert('❌ Lỗi: ' + err.message));
+            .catch((err) => console.error("Lỗi load submission:", err));
         }
+      });
 
-        function viewKanbanScript(btn) {
-            const submissionId = btn.dataset.submissionId;
-            fetch('/manga/assistant/submission/' + submissionId + '/edit/data')
-                .then(r => r.json())
-                .then(data => {
-                    if (data.status !== 'success') {
-                        alert('❌ ' + data.message);
-                        return;
-                    }
-                    document.getElementById('kanbanChapterScript').textContent =
-                        data.chapterScript && data.chapterScript.trim() !== '' ? data.chapterScript : 'Chưa có kịch bản chapter.';
-                    document.getElementById('kanbanPageScript').textContent =
-                        data.pageScript && data.pageScript.trim() !== '' ? data.pageScript : 'Chưa có kịch bản trang.';
+      document.addEventListener("DOMContentLoaded", function () {
+        // Notification toggle
+        const btnNoti = document.getElementById("btnNoti");
+        const dropdown = document.querySelector(".notification-dropdown");
 
-                    const frameTasks = data.frameTasks || [];
-                    const listEl = document.getElementById('kanbanFrameNotesList');
-                    listEl.innerHTML = '';
-                    if (frameTasks.length === 0) {
-                        const p = document.createElement('p');
-                        p.textContent = 'Không có note frame nào.';
-                        listEl.appendChild(p);
-                    } else {
-                        frameTasks.forEach(ft => {
-                            const box = document.createElement('div');
-                            box.style.cssText = 'border:1px solid #555; border-radius:6px; padding:8px 10px; margin-bottom:8px;';
-                            const b = document.createElement('b');
-                            b.textContent = 'Frame ' + ft.frameNumber;
-                            const p = document.createElement('p');
-                            p.style.cssText = 'white-space:pre-wrap; margin:4px 0 0 0;';
-                            p.textContent = ft.content && ft.content.trim() !== '' ? ft.content : '(không có note)';
-                            box.appendChild(b);
-                            box.appendChild(p);
-                            listEl.appendChild(box);
-                        });
-                    }
+        if (btnNoti && dropdown) {
+          btnNoti.addEventListener("click", (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle("show");
+          });
 
-                    document.getElementById('kanbanScriptModalOverlay').style.display = 'flex';
-                })
-                .catch(err => alert('❌ Lỗi: ' + err.message));
+          const markReadAllBtn = dropdown.querySelector(".mark-read-all");
+          if (markReadAllBtn) {
+            markReadAllBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              fetch("/notification/read-all", { method: "POST" })
+                .then((res) => res.json())
+                .then((data) => {
+                  if (data.status === "success") {
+                    const badge = btnNoti.querySelector(".badge");
+                    if (badge) badge.remove();
+                    document
+                      .querySelectorAll(".notification-item.unread")
+                      .forEach((el) => el.classList.remove("unread"));
+                  }
+                });
+            });
+          }
+
+          document.addEventListener("click", () => {
+            dropdown.classList.remove("show");
+          });
         }
+      });
 
+      function submitSubmission(btn) {
+        const submissionId = btn.dataset.submissionId;
+        if (!confirm("Xác nhận nộp bài?")) return;
+        fetch("/manga/assistant/submission/" + submissionId + "/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "status=done",
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status === "success") {
+              alert("✅ " + data.message);
+              location.reload();
+            } else {
+              alert("❌ " + data.message);
+            }
+          })
+          .catch((err) => alert("❌ Lỗi: " + err.message));
+      }
+
+      function viewKanbanScript(btn) {
+        const submissionId = btn.dataset.submissionId;
+        fetch("/manga/assistant/submission/" + submissionId + "/edit/data")
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status !== "success") {
+              alert("❌ " + data.message);
+              return;
+            }
+            document.getElementById("kanbanChapterScript").textContent =
+              data.chapterScript && data.chapterScript.trim() !== ""
+                ? data.chapterScript
+                : "Chưa có kịch bản chapter.";
+            document.getElementById("kanbanPageScript").textContent =
+              data.pageScript && data.pageScript.trim() !== ""
+                ? data.pageScript
+                : "Chưa có kịch bản trang.";
+
+            const frameTasks = data.frameTasks || [];
+            const listEl = document.getElementById("kanbanFrameNotesList");
+            listEl.innerHTML = "";
+            if (frameTasks.length === 0) {
+              const p = document.createElement("p");
+              p.textContent = "Không có note frame nào.";
+              listEl.appendChild(p);
+            } else {
+              frameTasks.forEach((ft) => {
+                const box = document.createElement("div");
+                box.style.cssText =
+                  "border:1px solid #555; border-radius:6px; padding:8px 10px; margin-bottom:8px;";
+                const b = document.createElement("b");
+                b.textContent = "Frame " + ft.frameNumber;
+                const p = document.createElement("p");
+                p.style.cssText = "white-space:pre-wrap; margin:4px 0 0 0;";
+                p.textContent =
+                  ft.content && ft.content.trim() !== ""
+                    ? ft.content
+                    : "(không có note)";
+                box.appendChild(b);
+                box.appendChild(p);
+                listEl.appendChild(box);
+              });
+            }
+
+            document.getElementById("kanbanScriptModalOverlay").style.display =
+              "flex";
+          })
+          .catch((err) => alert("❌ Lỗi: " + err.message));
+      }
     </script>
-
-</body>
-
+  </body>
 </html>

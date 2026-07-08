@@ -63,14 +63,24 @@
           <i class="icon-history"></i>
         </button>
       </li>
-      <li style="position:relative;">
-        <button type="button" class="btn-icon" onclick="openTab('tab-chat')" title="Tin nhắn">
+      <li style="position: relative">
+        <button
+          type="button"
+          class="btn-icon"
+          onclick="openTab('tab-chat')"
+          title="Tin nhắn"
+        >
           <i class="icon-chat"></i>
         </button>
-        <span id="chatTabBadge" class="badge" style="display:none;"></span>
+        <span id="chatTabBadge" class="badge" style="display: none"></span>
       </li>
       <li>
-        <button type="button" class="btn-icon" onclick="openTab('tab-import')" title="Import Excel">
+        <button
+          type="button"
+          class="btn-icon"
+          onclick="openTab('tab-import')"
+          title="Import Excel"
+        >
           <i class="fa-solid fa-file-excel"></i>
         </button>
       </li>
@@ -208,7 +218,10 @@
           <div class="form-inline">
             <div class="field">
               <label>Tháng</label>
-              <select id="vote-rank-month" onchange="if(this.value!='0') document.getElementById('vote-rank-quarter').value='0'">
+              <select
+                id="vote-rank-month"
+                onchange="if(this.value!='0') document.getElementById('vote-rank-quarter').value='0'"
+              >
                 <option value="0">-- Cả năm --</option>
                 <option value="1">Tháng 1</option>
                 <option value="2">Tháng 2</option>
@@ -226,7 +239,10 @@
             </div>
             <div class="field">
               <label>Quý</label>
-              <select id="vote-rank-quarter" onchange="if(this.value!='0') document.getElementById('vote-rank-month').value='0'">
+              <select
+                id="vote-rank-quarter"
+                onchange="if(this.value!='0') document.getElementById('vote-rank-month').value='0'"
+              >
                 <option value="0">-- Tất cả --</option>
                 <option value="1">Quý 1 (T1-T3)</option>
                 <option value="2">Quý 2 (T4-T6)</option>
@@ -358,40 +374,73 @@
             <div class="chat-empty">Đang tải danh sách liên hệ...</div>
           </div>
           <div class="chat-thread">
-            <div class="chat-thread-header" id="chatThreadHeader">Chọn một liên hệ để bắt đầu trò chuyện</div>
+            <div class="chat-thread-header" id="chatThreadHeader">
+              Chọn một liên hệ để bắt đầu trò chuyện
+            </div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input-bar">
-              <input type="text" id="chatInput" placeholder="Nhập tin nhắn..." disabled>
-              <button type="button" id="chatSendBtn" disabled><i class="fa-solid fa-paper-plane"></i></button>
+              <input
+                type="text"
+                id="chatInput"
+                placeholder="Nhập tin nhắn..."
+                disabled
+              />
+              <button type="button" id="chatSendBtn" disabled>
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
             </div>
           </div>
         </div>
       </div>
-      
+
       <!-- Tab Import Excel -->
       <div id="tab-import" class="tab-pane">
         <h2>Import dữ liệu Excel</h2>
         <div class="section-card">
-          <h3><i class="fa-solid fa-file-excel"></i> Upload file Excel (.xlsx)</h3>
+          <h3>
+            <i class="fa-solid fa-file-excel"></i> Upload file Excel (.xlsx)
+          </h3>
           <p class="text-muted-small">
-            Tải lên file Excel để cập nhật số lượt xem của Chapter và phiếu Like/Dislike.
+            Tải lên file Excel để cập nhật số lượt xem của Chapter và phiếu
+            Like/Dislike.
           </p>
-          <div style="margin: 20px 0;">
-             <input type="file" id="excel-file" accept=".xlsx" style="display:none" onchange="updateFileName()">
-             <button class="btn-sm btn-cancel" onclick="document.getElementById('excel-file').click()">
-                <i class="fa-solid fa-folder-open"></i> Chọn file
-             </button>
-             <span id="excel-file-name" style="margin-left:10px; color:#64748b; font-size:0.9rem;">Chưa chọn file nào</span>
+          <div style="margin: 20px 0">
+            <input
+              type="file"
+              id="excel-file"
+              accept=".xlsx"
+              style="display: none"
+              onchange="updateFileName()"
+            />
+            <button
+              class="btn-sm btn-cancel"
+              onclick="document.getElementById('excel-file').click()"
+            >
+              <i class="fa-solid fa-folder-open"></i> Chọn file
+            </button>
+            <span
+              id="excel-file-name"
+              style="margin-left: 10px; color: #64748b; font-size: 0.9rem"
+              >Chưa chọn file nào</span
+            >
           </div>
-          
+
           <div class="form-inline mb-10">
             <button class="btn-sm btn-primary" onclick="uploadExcel()">
               <i class="fa-solid fa-cloud-arrow-up"></i> Tải lên và Xử lý
             </button>
           </div>
-          
-          <div id="import-result" style="margin-top:20px; padding:15px; border-radius:6px; background-color:#f1f5f9; display:none;">
-          </div>
+
+          <div
+            id="import-result"
+            style="
+              margin-top: 20px;
+              padding: 15px;
+              border-radius: 6px;
+              background-color: #f1f5f9;
+              display: none;
+            "
+          ></div>
         </div>
       </div>
     </div>
@@ -708,58 +757,75 @@
       }
 
       function updateFileName() {
-        const fileInput = document.getElementById('excel-file');
-        const fileNameSpan = document.getElementById('excel-file-name');
+        const fileInput = document.getElementById("excel-file");
+        const fileNameSpan = document.getElementById("excel-file-name");
         if (fileInput.files.length > 0) {
-            fileNameSpan.textContent = fileInput.files[0].name;
+          fileNameSpan.textContent = fileInput.files[0].name;
         } else {
-            fileNameSpan.textContent = 'Chưa chọn file nào';
+          fileNameSpan.textContent = "Chưa chọn file nào";
         }
       }
 
       async function uploadExcel() {
-        const fileInput = document.getElementById('excel-file');
-        const resultDiv = document.getElementById('import-result');
-        
+        const fileInput = document.getElementById("excel-file");
+        const resultDiv = document.getElementById("import-result");
+
         if (fileInput.files.length === 0) {
-            showToast("Vui lòng chọn file Excel trước", "error");
-            return;
+          showToast("Vui lòng chọn file Excel trước", "error");
+          return;
         }
 
         const file = fileInput.files[0];
         const formData = new FormData();
         formData.append("file", file);
 
-        resultDiv.style.display = 'block';
-        resultDiv.innerHTML = '<span style="color:#0284c7;"><i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...</span>';
+        resultDiv.style.display = "block";
+        resultDiv.innerHTML =
+          '<span style="color:#0284c7;"><i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...</span>';
 
         try {
-            const res = await fetch('/manga/system-admin/import-excel', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            
-            if (data.status === 'success') {
-                showToast(data.message, "success");
-                resultDiv.innerHTML = '<span style="color:#16a34a;"><i class="fa-solid fa-circle-check"></i> ' + data.message + '</span>';
+          const res = await fetch("/manga/system-admin/import-excel", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+
+          if (data.status === "success") {
+            showToast(data.message, "success");
+            resultDiv.innerHTML =
+              '<span style="color:#16a34a;"><i class="fa-solid fa-circle-check"></i> ' +
+              data.message +
+              "</span>";
+          } else {
+            if (
+              data.errors &&
+              Array.isArray(data.errors) &&
+              data.errors.length > 0
+            ) {
+              showToast("Import thất bại, xem chi tiết lỗi bên dưới", "error");
+              let html =
+                '<div style="color:#dc2626;"><i class="fa-solid fa-circle-xmark"></i> <b>Có ' +
+                data.errors.length +
+                ' lỗi cần sửa:</b><ul style="margin-top: 10px; padding-left: 20px;">';
+              data.errors.forEach((err) => {
+                html += '<li style="margin-bottom: 5px;">' + err + "</li>";
+              });
+              html += "</ul></div>";
+              resultDiv.innerHTML = html;
             } else {
-                if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
-                    showToast("Import thất bại, xem chi tiết lỗi bên dưới", "error");
-                    let html = '<div style="color:#dc2626;"><i class="fa-solid fa-circle-xmark"></i> <b>Có ' + data.errors.length + ' lỗi cần sửa:</b><ul style="margin-top: 10px; padding-left: 20px;">';
-                    data.errors.forEach(err => {
-                        html += '<li style="margin-bottom: 5px;">' + err + '</li>';
-                    });
-                    html += '</ul></div>';
-                    resultDiv.innerHTML = html;
-                } else {
-                    showToast(data.message, "error");
-                    resultDiv.innerHTML = '<span style="color:#dc2626;"><i class="fa-solid fa-circle-xmark"></i> ' + (data.message || "Lỗi không xác định") + '</span>';
-                }
+              showToast(data.message, "error");
+              resultDiv.innerHTML =
+                '<span style="color:#dc2626;"><i class="fa-solid fa-circle-xmark"></i> ' +
+                (data.message || "Lỗi không xác định") +
+                "</span>";
             }
+          }
         } catch (e) {
-            showToast("Lỗi kết nối", "error");
-            resultDiv.innerHTML = '<span style="color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi kết nối: ' + e.message + '</span>';
+          showToast("Lỗi kết nối", "error");
+          resultDiv.innerHTML =
+            '<span style="color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi kết nối: ' +
+            e.message +
+            "</span>";
         }
       }
 
@@ -1266,7 +1332,14 @@
         const month = document.getElementById("vote-rank-month").value;
         const quarter = document.getElementById("vote-rank-quarter").value;
         const year = document.getElementById("vote-rank-year").value;
-        fetch("/manga/ranking?month=" + month + "&quarter=" + quarter + "&year=" + year)
+        fetch(
+          "/manga/ranking?month=" +
+            month +
+            "&quarter=" +
+            quarter +
+            "&year=" +
+            year,
+        )
           .then((r) => r.json())
           .then((data) => {
             const tbody = document.getElementById("vote-ranking-tbody");

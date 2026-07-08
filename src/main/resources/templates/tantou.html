@@ -1,8 +1,12 @@
 <!doctype html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
     <title>Tantou</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    />
     <link
       rel="stylesheet"
       href="../static/css/all.css"
@@ -23,7 +27,7 @@
       </div>
 
       <div class="header-actions">
-        <div style="position: relative">
+        <div class="u-inline-style-001">
           <button
             type="button"
             class="btn-icon"
@@ -136,7 +140,7 @@
           <i class="fa-solid fa-hashtag"></i>
         </button>
       </li>
-      <li style="position: relative">
+      <li class="u-inline-style-001">
         <button
           type="button"
           class="btn-icon"
@@ -145,7 +149,7 @@
         >
           <i class="fa-solid fa-comments"></i>
         </button>
-        <span id="chatTabBadge" class="badge" style="display: none"></span>
+        <span id="chatTabBadge" class="badge u-inline-style-002"></span>
       </li>
     </ul>
 
@@ -185,12 +189,12 @@
             </thead>
             <tbody id="proposalTableBody">
               <tr>
-                <td colspan="5" style="text-align: center">Đang tải...</td>
+                <td colspan="5" class="u-inline-style-048">Đang tải...</td>
               </tr>
             </tbody>
           </table>
 
-          <h3 style="margin-top: 24px">Đã duyệt — chờ nộp lên hội đồng</h3>
+          <h3 class="u-inline-style-137">Đã duyệt — chờ nộp lên hội đồng</h3>
           <table class="data-table">
             <thead>
               <tr>
@@ -201,7 +205,7 @@
             </thead>
             <tbody id="approvedTableBody">
               <tr>
-                <td colspan="3" style="text-align: center">Đang tải...</td>
+                <td colspan="3" class="u-inline-style-048">Đang tải...</td>
               </tr>
             </tbody>
           </table>
@@ -209,8 +213,7 @@
 
         <div
           id="submitBoardModalOverlay"
-          class="modal-overlay"
-          style="display: none"
+          class="modal-overlay u-inline-style-002"
         >
           <div class="modal-content">
             <div class="modal-header">
@@ -243,8 +246,7 @@
 
         <div
           id="reviewProposalModalOverlay"
-          class="modal-overlay"
-          style="display: none"
+          class="modal-overlay u-inline-style-002"
         >
           <div class="modal-content">
             <div class="modal-header">
@@ -281,10 +283,7 @@
                 />
               </div>
 
-              <div
-                id="reviewModalActions"
-                style="display: flex; gap: 8px; margin-top: 16px"
-              >
+              <div id="reviewModalActions" class="u-inline-style-138">
                 <button
                   type="button"
                   onclick="reviewSubmit('approve')"
@@ -295,8 +294,7 @@
                 <button
                   type="button"
                   onclick="openDeadlinePicker()"
-                  class="btn-approve"
-                  style="background: #e0a800"
+                  class="btn-approve u-inline-style-139"
                 >
                   ✏️ Cần sửa
                 </button>
@@ -310,27 +308,16 @@
               </div>
 
               <!-- Deadline picker: chỉ hiện khi bấm "Cần sửa", chỉ đóng bằng Xác nhận / Hủy -->
-              <div
-                id="deadlinePickerBlock"
-                style="
-                  display: none;
-                  margin-top: 16px;
-                  padding: 14px;
-                  border: 1px solid #555;
-                  border-radius: 6px;
-                  background: #2a2a2a;
-                "
-              >
+              <div id="deadlinePickerBlock" class="u-inline-style-140">
                 <label class="form-label fw-bold form-label-dark"
                   >Chọn hạn sửa bài:</label
                 >
                 <input
                   type="datetime-local"
                   id="reviewModalDeadline"
-                  class="form-control"
-                  style="margin-bottom: 12px"
+                  class="form-control u-inline-style-042"
                 />
-                <div style="display: flex; gap: 8px">
+                <div class="u-inline-style-064">
                   <button
                     type="button"
                     onclick="cancelDeadlinePicker()"
@@ -363,11 +350,9 @@
       <div id="tab-chapter-review" class="tab-pane">
         <h2>Duyệt Chapter</h2>
 
-        <p id="chapterReviewCount" style="color: #888; font-style: italic">
-          Đang tải...
-        </p>
+        <p id="chapterReviewCount" class="u-inline-style-141">Đang tải...</p>
 
-        <table class="data-table" id="chapterReviewTable" style="display: none">
+        <table class="data-table u-inline-style-002" id="chapterReviewTable">
           <thead>
             <tr>
               <th>Series</th>
@@ -380,70 +365,23 @@
           <tbody id="chapterReviewBody"></tbody>
         </table>
 
-        <p
-          id="chapterReviewEmpty"
-          style="
-            display: none;
-            color: gray;
-            font-style: italic;
-            margin-top: 12px;
-          "
-        >
+        <p id="chapterReviewEmpty" class="u-inline-style-142">
           Không có chapter nào chờ duyệt.
         </p>
 
         <!-- Modal xem thumbnail các trang -->
-        <div
-          id="chapterPreviewModal"
-          style="
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 3000;
-            justify-content: center;
-            align-items: center;
-          "
-        >
-          <div
-            style="
-              background: #262626;
-              border-radius: 8px;
-              padding: 24px;
-              width: 700px;
-              max-width: 95%;
-              max-height: 85vh;
-              overflow-y: auto;
-            "
-          >
-            <div
-              style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 16px;
-              "
-            >
-              <h3 id="previewTitle" style="margin: 0; color: #fff"></h3>
+        <div id="chapterPreviewModal" class="u-inline-style-143">
+          <div class="u-inline-style-144">
+            <div class="u-inline-style-145">
+              <h3 id="previewTitle" class="u-inline-style-146"></h3>
               <button
                 onclick="closeChapterPreview()"
-                class="btn-action reject"
-                style="padding: 6px 12px"
+                class="btn-action reject u-inline-style-147"
               >
                 ✕ Đóng
               </button>
             </div>
-            <div
-              id="previewPagesGrid"
-              style="
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 12px;
-              "
-            ></div>
+            <div id="previewPagesGrid" class="u-inline-style-148"></div>
           </div>
         </div>
       </div>
@@ -465,17 +403,17 @@
             </thead>
             <tbody id="mm-mangaka-list">
               <tr>
-                <td colspan="3" style="text-align: center">Đang tải...</td>
+                <td colspan="3" class="u-inline-style-048">Đang tải...</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div id="mm-screen-2" style="display: none">
+        <div id="mm-screen-2" class="u-inline-style-002">
           <button class="btn-action primary" onclick="mmGoToScreen(1)">
             ⬅ Quay lại
           </button>
-          <h3 id="mm-s2-title" style="margin-top: 12px">Danh sách Series</h3>
+          <h3 id="mm-s2-title" class="u-inline-style-149">Danh sách Series</h3>
           <table class="data-table">
             <thead>
               <tr>
@@ -490,11 +428,11 @@
           </table>
         </div>
 
-        <div id="mm-screen-3" style="display: none">
+        <div id="mm-screen-3" class="u-inline-style-002">
           <button class="btn-action primary" onclick="mmGoToScreen(2)">
             ⬅ Quay lại
           </button>
-          <h3 id="mm-s3-title" style="margin-top: 12px">Danh sách Chapter</h3>
+          <h3 id="mm-s3-title" class="u-inline-style-149">Danh sách Chapter</h3>
           <table class="data-table">
             <thead>
               <tr>
@@ -510,24 +448,14 @@
           </table>
         </div>
 
-        <div id="mm-screen-4" style="display: none">
+        <div id="mm-screen-4" class="u-inline-style-002">
           <button class="btn-action primary" onclick="mmGoToScreen(3)">
             ⬅ Quay lại
           </button>
-          <h3 id="mm-s4-title" style="margin-top: 12px">Kịch bản & Trang</h3>
-          <div
-            style="
-              background: #222;
-              padding: 12px;
-              margin-bottom: 12px;
-              border-radius: 4px;
-            "
-          >
+          <h3 id="mm-s4-title" class="u-inline-style-149">Kịch bản & Trang</h3>
+          <div class="u-inline-style-150">
             <h4>Kịch bản Chapter:</h4>
-            <p
-              id="mm-s4-script"
-              style="white-space: pre-wrap; font-size: 14px; color: #ddd"
-            ></p>
+            <p id="mm-s4-script" class="u-inline-style-151"></p>
           </div>
           <table class="data-table">
             <thead>
@@ -542,43 +470,19 @@
           </table>
         </div>
 
-        <div id="mm-screen-5" style="display: none">
+        <div id="mm-screen-5" class="u-inline-style-002">
           <button class="btn-action primary" onclick="mmGoToScreen(4)">
             ⬅ Quay lại
           </button>
-          <h3 id="mm-s5-title" style="margin-top: 12px">Chi tiết trang</h3>
-          <div style="display: flex; gap: 24px; margin-top: 16px">
-            <div style="flex: 1">
+          <h3 id="mm-s5-title" class="u-inline-style-149">Chi tiết trang</h3>
+          <div class="u-inline-style-152">
+            <div class="u-inline-style-153">
               <h4>Ảnh Trang</h4>
-              <div
-                id="mm-s5-image"
-                style="
-                  background: #222;
-                  padding: 8px;
-                  border: 1px solid #444;
-                  border-radius: 4px;
-                  min-height: 300px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                "
-              ></div>
+              <div id="mm-s5-image" class="u-inline-style-154"></div>
             </div>
-            <div style="flex: 1">
+            <div class="u-inline-style-153">
               <h4>Kịch bản Trang</h4>
-              <div
-                id="mm-s5-script"
-                style="
-                  background: #222;
-                  padding: 12px;
-                  border: 1px solid #444;
-                  border-radius: 4px;
-                  min-height: 300px;
-                  white-space: pre-wrap;
-                  font-size: 14px;
-                  color: #ddd;
-                "
-              ></div>
+              <div id="mm-s5-script" class="u-inline-style-155"></div>
             </div>
           </div>
         </div>
@@ -611,9 +515,20 @@
       </div>
     </div>
     <!-- JS -->
+
+    <!-- ==========================================================================
+     ============================================================================ -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    ></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+
     <script th:src="@{/js/chat.js}"></script>
+
     <script>
       function openTab(tabId) {
         document
@@ -693,12 +608,12 @@
             const tbody = document.getElementById("proposalTableBody");
             const countEl = document.getElementById("proposalCount");
             if (data.status === "error") {
-              tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:red;">${data.message}</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="5" class="u-inline-style-049">${data.message}</td></tr>`;
               return;
             }
             countEl.textContent = "Tổng số bản thảo chờ duyệt: " + data.total;
             if (!data.proposals || data.proposals.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Không có bản thảo nào chờ duyệt.</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="5" class="u-inline-style-019">Không có bản thảo nào chờ duyệt.</td></tr>`;
               return;
             }
             tbody.innerHTML = data.proposals
@@ -724,7 +639,7 @@
           })
           .catch(() => {
             document.getElementById("proposalTableBody").innerHTML =
-              `<tr><td colspan="5" style="text-align:center;color:red;">Lỗi tải dữ liệu</td></tr>`;
+              `<tr><td colspan="5" class="u-inline-style-049">Lỗi tải dữ liệu</td></tr>`;
           });
       }
 
@@ -821,7 +736,7 @@
               !data.proposals ||
               data.proposals.length === 0
             ) {
-              tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Chưa có đề xuất nào chờ nộp.</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="3" class="u-inline-style-019">Chưa có đề xuất nào chờ nộp.</td></tr>`;
               return;
             }
             tbody.innerHTML = data.proposals
@@ -837,7 +752,7 @@
           })
           .catch(() => {
             document.getElementById("approvedTableBody").innerHTML =
-              `<tr><td colspan="3" style="text-align:center;color:red;">Lỗi tải dữ liệu</td></tr>`;
+              `<tr><td colspan="3" class="u-inline-style-049">Lỗi tải dữ liệu</td></tr>`;
           });
       }
 
@@ -908,18 +823,16 @@
                 (c) => `
                     <tr id="cr-row-${c.id}">
                         <td>${c.series.seriesName}</td>
-                        <td><b>Chapter ${c.chapterNumber}</b><br><small style="color:#aaa;">${c.chapterName}</small></td>
+                        <td><b>Chapter ${c.chapterNumber}</b><br><small class="u-inline-style-156">${c.chapterName}</small></td>
                         <td>
                             <button type="button" onclick="openChapterPreview('${c.id}','Chapter ${c.chapterNumber} — ${c.chapterName}')"
-                                class="btn-action primary" style="font-size:12px;padding:4px 10px;">🖼 Xem trang</button>
+                                class="btn-action primary u-inline-style-134">🖼 Xem trang</button>
                         </td>
                         <td>
-                            <textarea id="cr-comment-${c.id}" placeholder="Nhận xét nếu từ chối..."
-                                style="width:100%;height:50px;font-size:12px;background:#333;color:#fff;
-                                       border:1px solid #555;border-radius:4px;padding:4px;"></textarea>
+                            <textarea id="cr-comment-${c.id}" placeholder="Nhận xét nếu từ chối..." class="u-inline-style-157"></textarea>
                         </td>
                         <td>
-                            <div style="display:flex;gap:6px;justify-content:center;">
+                            <div class="u-inline-style-158">
                                 <button type="button" onclick="reviewChapter('${c.id}','approve')" class="btn-action approve">✅ Duyệt</button>
                                 <button type="button" onclick="reviewChapter('${c.id}','reject')" class="btn-action reject">❌ Từ chối</button>
                             </div>
@@ -966,7 +879,7 @@
       function openChapterPreview(chapterId, title) {
         document.getElementById("previewTitle").textContent = title;
         document.getElementById("previewPagesGrid").innerHTML =
-          '<p style="color:#aaa;text-align:center;grid-column:1/-1;">Đang tải...</p>';
+          '<p class="u-inline-style-159">Đang tải...</p>';
         document.getElementById("chapterPreviewModal").style.display = "flex";
         fetch("/api/chapters/" + chapterId + "/pages")
           .then((r) => r.json())
@@ -975,37 +888,33 @@
             if (data.status === "error") {
               // ← thêm
               grid.innerHTML =
-                '<p style="color:red;grid-column:1/-1;">' +
-                data.message +
-                "</p>";
+                '<p class="u-inline-style-160">' + data.message + "</p>";
               return;
             }
             const pages = data.pages;
             if (!pages || pages.length === 0) {
               grid.innerHTML =
-                '<p style="color:#aaa;text-align:center;grid-column:1/-1;">Chưa có trang nào.</p>';
+                '<p class="u-inline-style-159">Chưa có trang nào.</p>';
               return;
             }
             grid.innerHTML = pages
               .map(
                 (p) => `
-    <div style="text-align:center;border:1px solid #444;border-radius:4px;padding:8px;background:#1e1e1e;">
+    <div class="u-inline-style-161">
         ${
           p.filePath
             ? `<img src="${p.filePath}?t=${Date.now()}"
-                  style="width:100%;border-radius:3px;display:block;margin-bottom:4px;cursor:zoom-in;"
-                  onclick="openFullImage('${p.filePath}?t=${Date.now()}')">`
-            : `<div style="width:100%;height:120px;background:#333;display:flex;align-items:center;
-                        justify-content:center;color:#666;font-size:12px;border-radius:3px;margin-bottom:4px;">Chưa có ảnh</div>`
+                  onclick="openFullImage('${p.filePath}?t=${Date.now()}')" class="u-inline-style-162">`
+            : `<div class="u-inline-style-163">Chưa có ảnh</div>`
         }
-        <small style="color:#aaa;">Trang ${p.pageNumber}</small>
+        <small class="u-inline-style-156">Trang ${p.pageNumber}</small>
     </div>`,
               )
               .join("");
           })
           .catch(() => {
             document.getElementById("previewPagesGrid").innerHTML =
-              '<p style="color:red;grid-column:1/-1;">Lỗi tải trang.</p>';
+              '<p class="u-inline-style-160">Lỗi tải trang.</p>';
           });
       }
 
@@ -1036,8 +945,6 @@
       }
     </script>
 
-    <!-- ==========================================================================
-     ============================================================================ -->
     <script>
       // ==========================================
       // Quản lý Mangaka (Tính năng 2)
@@ -1062,7 +969,7 @@
             if (res.status === "success") {
               if (res.data.length === 0) {
                 tbody.innerHTML =
-                  '<tr><td colspan="3" style="text-align:center;">Chưa có Mangaka nào.</td></tr>';
+                  '<tr><td colspan="3" class="u-inline-style-019">Chưa có Mangaka nào.</td></tr>';
               } else {
                 tbody.innerHTML = res.data
                   .map(
@@ -1077,12 +984,12 @@
                   .join("");
               }
             } else {
-              tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:red;">Lỗi: ${res.message}</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="3" class="u-inline-style-049">Lỗi: ${res.message}</td></tr>`;
             }
           })
           .catch((err) => {
             document.getElementById("mm-mangaka-list").innerHTML =
-              `<tr><td colspan="3" style="text-align:center;color:red;">Lỗi tải dữ liệu</td></tr>`;
+              `<tr><td colspan="3" class="u-inline-style-049">Lỗi tải dữ liệu</td></tr>`;
           });
       }
 
@@ -1091,7 +998,7 @@
         document.getElementById("mm-s2-title").textContent =
           "Danh sách Series của " + mangakaName;
         document.getElementById("mm-series-list").innerHTML =
-          '<tr><td colspan="5" style="text-align:center;">Đang tải...</td></tr>';
+          '<tr><td colspan="5" class="u-inline-style-019">Đang tải...</td></tr>';
         mmGoToScreen(2);
 
         fetch("/manga/tantou/mangaka/" + mangakaId + "/series")
@@ -1101,7 +1008,7 @@
             if (res.status === "success") {
               if (res.data.length === 0) {
                 tbody.innerHTML =
-                  '<tr><td colspan="5" style="text-align:center;">Mangaka này chưa có series nào.</td></tr>';
+                  '<tr><td colspan="5" class="u-inline-style-019">Mangaka này chưa có series nào.</td></tr>';
               } else {
                 tbody.innerHTML = res.data
                   .map(
@@ -1111,14 +1018,14 @@
                     <td>${s.status}</td>
                     <td>${s.startDate || "—"}</td>
                     <td>${s.viewCount}</td>
-                    <td><button class="btn-action primary" onclick="mmViewChapters('${s.seriesId}', '${s.seriesName.replace(/'/g, "\\'")}')">Xem Chapter</button></td>
+                    <td><button class="btn-action primary u-inline-style-049" onclick="mmViewChapters('${s.seriesId}', '${s.seriesName.replace(/'/g, "\\'")}')">Xem Chapter</button></td>
                   </tr>
                 `,
                   )
                   .join("");
               }
             } else {
-              tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:red;">Lỗi: ${res.message}</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="5">Lỗi: ${res.message}</td></tr>`;
             }
           });
       }
@@ -1128,7 +1035,7 @@
         document.getElementById("mm-s3-title").textContent =
           "Danh sách Chapter của " + seriesName;
         document.getElementById("mm-chapter-list").innerHTML =
-          '<tr><td colspan="6" style="text-align:center;">Đang tải...</td></tr>';
+          '<tr><td colspan="6" class="u-inline-style-019">Đang tải...</td></tr>';
         mmGoToScreen(3);
 
         fetch("/manga/mangaka/myseries/" + seriesId + "/data")
@@ -1138,7 +1045,7 @@
             if (res.status === "success") {
               if (!res.chapters || res.chapters.length === 0) {
                 tbody.innerHTML =
-                  '<tr><td colspan="6" style="text-align:center;">Series này chưa có chapter nào.</td></tr>';
+                  '<tr><td colspan="6" class="u-inline-style-019">Series này chưa có chapter nào.</td></tr>';
               } else {
                 tbody.innerHTML = res.chapters
                   .map((c) => {
@@ -1162,7 +1069,7 @@
                   .join("");
               }
             } else {
-              tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;">Lỗi: ${res.message}</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="6" class="u-inline-style-049">Lỗi: ${res.message}</td></tr>`;
             }
           });
       }
@@ -1173,7 +1080,7 @@
         document.getElementById("mm-s4-script").textContent =
           script || "Không có kịch bản";
         document.getElementById("mm-page-list").innerHTML =
-          '<tr><td colspan="4" style="text-align:center;">Đang tải...</td></tr>';
+          '<tr><td colspan="4" class="u-inline-style-019">Đang tải...</td></tr>';
         mmGoToScreen(4);
 
         fetch(
@@ -1189,7 +1096,7 @@
             if (res.status === "success") {
               if (!res.pages || res.pages.length === 0) {
                 tbody.innerHTML =
-                  '<tr><td colspan="4" style="text-align:center;">Chapter này chưa có trang nào.</td></tr>';
+                  '<tr><td colspan="4" class="u-inline-style-019">Chapter này chưa có trang nào.</td></tr>';
               } else {
                 const typeMap = {
                   cover: "Trang bìa",
@@ -1217,7 +1124,7 @@
                   .join("");
               }
             } else {
-              tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">Lỗi: ${res.message}</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="4" class="u-inline-style-049">Lỗi: ${res.message}</td></tr>`;
             }
           });
       }
@@ -1227,9 +1134,9 @@
 
         const imgContainer = document.getElementById("mm-s5-image");
         if (filePath && filePath !== "null") {
-          imgContainer.innerHTML = `<img src="${filePath}" style="max-width:100%; max-height:600px; border-radius:4px; cursor:zoom-in;" onclick="openFullImage('${filePath}')">`;
+          imgContainer.innerHTML = `<img src="${filePath}" onclick="openFullImage('${filePath}')" class="u-inline-style-164">`;
         } else {
-          imgContainer.innerHTML = `<span style="color:#777;">Chưa có ảnh</span>`;
+          imgContainer.innerHTML = `<span class="u-inline-style-165">Chưa có ảnh</span>`;
         }
 
         document.getElementById("mm-s5-script").textContent =

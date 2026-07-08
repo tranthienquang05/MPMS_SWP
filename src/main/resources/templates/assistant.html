@@ -1,8 +1,12 @@
 <!doctype html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
     <title>Trợ lý</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    />
     <link
       rel="stylesheet"
       href="../static/css/all.css"
@@ -13,7 +17,7 @@
       href="../static/css/draw.css"
       th:href="@{/css/draw.css}"
     />
-    <script src="/js/draw.js" defer></script>
+
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -28,7 +32,7 @@
       </div>
 
       <div class="header-actions">
-        <div style="position: relative">
+        <div class="u-inline-style-001">
           <button
             type="button"
             class="btn-icon"
@@ -111,7 +115,7 @@
           <i class="fa-solid fa-hashtag"></i>
         </button>
       </li>
-      <li style="position: relative">
+      <li class="u-inline-style-001">
         <button
           type="button"
           class="btn-icon"
@@ -120,7 +124,7 @@
         >
           <i class="fa-solid fa-comments"></i>
         </button>
-        <span id="chatTabBadge" class="badge" style="display: none"></span>
+        <span id="chatTabBadge" class="badge u-inline-style-002"></span>
       </li>
     </ul>
 
@@ -128,24 +132,18 @@
       <div id="tab-home" class="tab-pane">
         <h2>Tổng quan</h2>
 
-        <div style="display: flex; gap: 20px">
-          <div
-            style="padding: 20px; border: 1px solid #ddd; border-radius: 8px"
-          >
+        <div class="u-inline-style-029">
+          <div class="u-inline-style-030">
             <h3 th:text="${todo != null ? #lists.size(todo) : 0}"></h3>
             <p>Đang làm</p>
           </div>
 
-          <div
-            style="padding: 20px; border: 1px solid #ddd; border-radius: 8px"
-          >
+          <div class="u-inline-style-030">
             <h3 th:text="${waiting != null ? #lists.size(waiting) : 0}"></h3>
             <p>Chờ duyệt</p>
           </div>
 
-          <div
-            style="padding: 20px; border: 1px solid #ddd; border-radius: 8px"
-          >
+          <div class="u-inline-style-030">
             <h3 th:text="${done != null ? #lists.size(done) : 0}"></h3>
             <p>Hoàn thành</p>
           </div>
@@ -317,7 +315,7 @@
               </div>
               <div class="prop-divider"></div>
 
-              <div class="prop-group" id="shapeFillGroup" style="display: none">
+              <div class="prop-group u-inline-style-002" id="shapeFillGroup">
                 <span class="prop-label">Kiểu</span>
                 <div class="shape-fill-toggle">
                   <button
@@ -337,7 +335,7 @@
                 </div>
               </div>
 
-              <div class="prop-group" id="textSizeGroup" style="display: none">
+              <div class="prop-group u-inline-style-002" id="textSizeGroup">
                 <span class="prop-label">Cỡ chữ</span>
                 <input
                   type="range"
@@ -416,11 +414,7 @@
             </div>
 
             <div class="canvas-viewport" id="canvasViewport">
-              <div
-                class="canvas-stack"
-                id="canvasStack"
-                style="width: 400px; height: 600px"
-              >
+              <div class="canvas-stack u-inline-style-031" id="canvasStack">
                 <canvas id="bgCanvas" width="400" height="600"></canvas>
                 <canvas id="layer2Canvas" width="400" height="600"></canvas>
                 <canvas id="drawCanvas" width="400" height="600"></canvas>
@@ -462,15 +456,7 @@
               </div>
               <div id="layerList"></div>
             </div>
-            <div
-              class="panel-section"
-              style="
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                min-height: 0;
-              "
-            >
+            <div class="panel-section u-inline-style-032">
               <div class="panel-section-header">Lịch sử thao tác</div>
               <div class="history-list" id="historyList"></div>
             </div>
@@ -480,69 +466,40 @@
         <div
           id="scriptModalOverlay"
           th:if="${submission != null}"
-          style="
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.55);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-          "
+          class="u-inline-style-033"
         >
-          <div
-            style="
-              background: #333333;
-              color: #eee;
-              border-radius: 8px;
-              padding: 24px;
-              width: 560px;
-              max-width: 92vw;
-              max-height: 80vh;
-              overflow-y: auto;
-            "
-          >
-            <h3 style="margin-top: 0">📖 Kịch bản &amp; Note công việc</h3>
+          <div class="u-inline-style-034">
+            <h3 class="u-inline-style-035">📖 Kịch bản &amp; Note công việc</h3>
 
             <h4>Kịch bản chapter</h4>
             <p
-              style="white-space: pre-wrap"
               th:text="${#strings.isEmpty(chapterScript)} ? 'Chưa có kịch bản chapter.' : ${chapterScript}"
+              class="u-inline-style-036"
             ></p>
 
             <h4>Kịch bản trang</h4>
             <p
-              style="white-space: pre-wrap"
               th:text="${#strings.isEmpty(pageScript)} ? 'Chưa có kịch bản trang.' : ${pageScript}"
+              class="u-inline-style-036"
             ></p>
 
             <h4>Note từng frame</h4>
             <p th:if="${frameTasks == null or #lists.isEmpty(frameTasks)}">
               Không có note frame nào.
             </p>
-            <div
-              th:each="ft : ${frameTasks}"
-              style="
-                border: 1px solid #555;
-                border-radius: 6px;
-                padding: 8px 10px;
-                margin-bottom: 8px;
-              "
-            >
+            <div th:each="ft : ${frameTasks}" class="u-inline-style-037">
               <b th:text="'Frame ' + ${ft.frameNumber}"></b>
               <p
-                style="white-space: pre-wrap; margin: 4px 0 0 0"
                 th:text="${#strings.isEmpty(ft.content)} ? '(không có note)' : ${ft.content}"
+                class="u-inline-style-038"
               ></p>
             </div>
 
-            <div
-              style="display: flex; justify-content: flex-end; margin-top: 12px"
-            >
+            <div class="u-inline-style-039">
               <button
                 type="button"
                 onclick="document.getElementById('scriptModalOverlay').style.display='none'"
-                style="padding: 8px 16px; cursor: pointer"
+                class="u-inline-style-040"
               >
                 Đóng
               </button>
@@ -689,27 +646,22 @@
 
               <div id="aiLoadingView" class="ai-loading-view">
                 <div class="ai-spinner"></div>
-                <p style="font-size: 12.5px; color: var(--ps-text-dim)">
-                  AI đang xử lý, vui lòng chờ...
-                </p>
+                <p class="u-inline-style-041">AI đang xử lý, vui lòng chờ...</p>
               </div>
 
               <div id="aiResultView" class="ai-result-view">
                 <div class="ai-detail-title" id="aiResultTitle">Kết quả</div>
                 <img
                   id="aiResultImage"
-                  class="ai-result-image"
-                  style="display: none"
+                  class="ai-result-image u-inline-style-002"
                 />
                 <div
                   id="aiResultText"
-                  class="ai-result-text"
-                  style="display: none"
+                  class="ai-result-text u-inline-style-002"
                 ></div>
                 <div
                   id="aiErrorText"
-                  class="ai-error-text"
-                  style="display: none"
+                  class="ai-error-text u-inline-style-002"
                 ></div>
                 <div class="ai-modal-footer">
                   <button
@@ -721,9 +673,8 @@
                   </button>
                   <button
                     type="button"
-                    class="ai-btn-run"
+                    class="ai-btn-run u-inline-style-002"
                     id="btnApplyToCanvas"
-                    style="display: none"
                   >
                     Apply to canvas
                   </button>
@@ -858,48 +809,24 @@
         </div>
 
         <!-- Modal xem kịch bản + note frame ngay từ danh sách công việc -->
-        <div
-          id="kanbanScriptModalOverlay"
-          style="
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.55);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-          "
-        >
-          <div
-            style="
-              background: #333333;
-              color: #eee;
-              border-radius: 8px;
-              padding: 24px;
-              width: 560px;
-              max-width: 92vw;
-              max-height: 80vh;
-              overflow-y: auto;
-            "
-          >
-            <h3 style="margin-top: 0">📖 Kịch bản &amp; Note công việc</h3>
+        <div id="kanbanScriptModalOverlay" class="u-inline-style-033">
+          <div class="u-inline-style-034">
+            <h3 class="u-inline-style-035">📖 Kịch bản &amp; Note công việc</h3>
 
             <h4>Kịch bản chapter</h4>
-            <p id="kanbanChapterScript" style="white-space: pre-wrap"></p>
+            <p id="kanbanChapterScript" class="u-inline-style-036"></p>
 
             <h4>Kịch bản trang</h4>
-            <p id="kanbanPageScript" style="white-space: pre-wrap"></p>
+            <p id="kanbanPageScript" class="u-inline-style-036"></p>
 
             <h4>Note từng frame</h4>
             <div id="kanbanFrameNotesList"></div>
 
-            <div
-              style="display: flex; justify-content: flex-end; margin-top: 12px"
-            >
+            <div class="u-inline-style-039">
               <button
                 type="button"
                 onclick="document.getElementById('kanbanScriptModalOverlay').style.display='none'"
-                style="padding: 8px 16px; cursor: pointer"
+                class="u-inline-style-040"
               >
                 Đóng
               </button>
@@ -944,10 +871,19 @@
         </div>
       </div>
     </div>
+    <script src="/js/draw.js" defer></script>
+
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    ></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+
     <script th:src="@{/js/chat.js}"></script>
+
     <script th:inline="javascript">
       function openTab(tabId) {
         var tabPanes = document.getElementsByClassName("tab-pane");

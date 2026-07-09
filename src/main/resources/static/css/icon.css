@@ -1,80 +1,32 @@
-/* Tự động áp dụng cấu hình chung cho tất cả các class bắt đầu bằng "icon-" */
-[class^="icon-"]::before,
-[class*=" icon-"]::before {
-  font-family: "Font Awesome 6 Free"; /* Tên font-family của Font Awesome 6 */
-  font-weight: 900; /* Bắt buộc là 900 đối với thuộc tính fa-solid */
-  display: inline-block;
-  font-style: normal;
-  font-variant: normal;
-  text-rendering: auto;
-  -webkit-font-smoothing: antialiased;
+.icon-btn,
+.header-icon-btn,
+.notification-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Danh sách các class icon cụ thể */
-.icon-logout::before {
-  content: "\f08b";
+.icon-btn i,
+.header-icon-btn i,
+.notification-btn i,
+.btn-icon i {
+  pointer-events: none;
 }
 
-.icon-ranking::before {
-  content: "\e561";
-}
-
-.icon-vote::before {
-  content: "\f682";
-}
-
-.icon-3user::before {
-  content: "\f0c0";
-}
-
-.icon-task::before {
-  content: "\f0ae";
-}
-
-.icon-link::before {
-  content: "\f0c1";
-}
-
-.icon-check::before {
-  content: "\f00c";
-}
-
-.icon-plus::before {
-  content: "\f067";
-}
-
-.icon-glass::before {
-  content: "\f002";
-}
-
-.icon-danger::before {
-  content: "\f071";
-}
-
-.icon-home::before {
-  content: "\f015";
-}
-
-.icon-history::before {
-  content: "\f1da";
-}
-
-.icon-chat::before {
-  content: "\f086";
-}
-
-/* Icon polish */
-[class^="icon-"]::before,
-[class*=" icon-"]::before {
-  width: 1em;
-  line-height: 1;
-  text-align: center;
-  transition:
-    color 180ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.btn-icon:hover [class^="icon-"]::before,
-.btn-icon:hover [class*=" icon-"]::before {
-  transform: translateY(-1px);
+.icon-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: inline-flex;
+  min-width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #08090d;
+  border-radius: 999px;
+  background: #ef3b36;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 900;
 }

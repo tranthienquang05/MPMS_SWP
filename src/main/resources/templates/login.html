@@ -17,17 +17,18 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
   </head>
-  <body>
+  <body class="login-page no-sidebar">
     <div class="header">
       <div class="logo">
-        SANKYUU
-        <p class="name">Công ty truyện tranh</p>
+        <span class="brand-word">SANKYUU</span>
       </div>
     </div>
 
     <div class="main-background">
-      <h1 class="main-title">SANKYUU</h1>
-      <h2 class="sub-title">Hệ thống vẽ truyện tranh</h2>
+      <div class="login-hero-copy">
+        <h1 class="main-title">SANKYUU</h1>
+        <h2 class="sub-title">Hệ thống vẽ truyện tranh</h2>
+      </div>
 
       <form class="login-form" th:action="@{/login}" method="POST">
         <h1 class="form-group">ĐĂNG NHẬP HỆ THỐNG</h1>

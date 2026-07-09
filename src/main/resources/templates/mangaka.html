@@ -34,8 +34,10 @@
       <!-- Header -->
       <div class="header">
         <div class="logo">
-          SANKYUU
-          <p class="name">Tác giả truyện tranh</p>
+          <div class="brand-stack">
+            <span class="brand-word">SANKYUU</span>
+            <p class="name">Tác giả truyện tranh</p>
+          </div>
         </div>
 
         <div class="header-actions">
@@ -431,53 +433,6 @@
                 >
                   <i class="fa-solid fa-floppy-disk"></i> Lưu trang
                 </button>
-
-                <button
-                  type="button"
-                  class="btn-ai-support-top primary u-inline-style-002"
-                  id="btnEditSubmission"
-                >
-                  <i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật
-                </button>
-
-                <div id="editSubmissionModal">
-                  <div class="modal-content-box">
-                    <h3>Cập nhật Bài nộp</h3>
-
-                    <div class="form-item">
-                      <label>Trạng thái:</label>
-                      <select id="subStatus">
-                        <option value="pass">Hoàn thành (Finished)</option>
-                        <option value="unfinish">
-                          Yêu cầu vẽ lại (Rejected)
-                        </option>
-                      </select>
-                    </div>
-
-                    <div class="form-item-last">
-                      <label>Góp ý:</label>
-                      <textarea id="subComment" rows="4"></textarea>
-                    </div>
-
-                    <div class="actions-wrapper">
-                      <button
-                        type="button"
-                        onclick="closeEditSubmissionModal()"
-                        class="btn-cancel"
-                      >
-                        Hủy
-                      </button>
-
-                      <button
-                        type="button"
-                        id="btnConfirmEdit"
-                        class="btn-confirm"
-                      >
-                        Xác nhận Lưu
-                      </button>
-                    </div>
-                  </div>
-                </div>
                 <button
                   type="button"
                   class="btn-ai-support-top primary"
@@ -617,6 +572,56 @@
                     >
                       <i class="fa-solid fa-paper-plane"></i>
                     </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel-section submission-update-panel">
+                <div class="panel-section-header">Cập nhật Bài nộp</div>
+                <button
+                  type="button"
+                  class="btn-ai-support-top primary"
+                  id="btnEditSubmission"
+                >
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật
+                </button>
+
+                <div id="editSubmissionModal">
+                  <div class="modal-content-box">
+                    <h3>Cập nhật Bài nộp</h3>
+
+                    <div class="form-item">
+                      <label>Trạng thái:</label>
+                      <select id="subStatus">
+                        <option value="pass">Hoàn thành (Finished)</option>
+                        <option value="unfinish">
+                          Yêu cầu vẽ lại (Rejected)
+                        </option>
+                      </select>
+                    </div>
+
+                    <div class="form-item-last">
+                      <label>Góp ý:</label>
+                      <textarea id="subComment" rows="4"></textarea>
+                    </div>
+
+                    <div class="actions-wrapper">
+                      <button
+                        type="button"
+                        onclick="closeEditSubmissionModal()"
+                        class="btn-cancel"
+                      >
+                        Hủy
+                      </button>
+
+                      <button
+                        type="button"
+                        id="btnConfirmEdit"
+                        class="btn-confirm"
+                      >
+                        Xác nhận Lưu
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1676,6 +1681,35 @@
         document.getElementById(tabId).classList.add("active");
         if (tabId === "tab-assistant") {
           loadAssistantTasks();
+        }
+        if (tabId === "tab-project" && isProjectListRoute()) {
+          restoreProjectSeriesView();
+        }
+      }
+
+      function isProjectListRoute() {
+        const path = window.location.pathname.replace(/\/$/, "");
+        return path === "/manga/mangaka";
+      }
+
+      function showProjectView(viewName) {
+        const seriesView = document.getElementById("project-view-series");
+        const chapterView = document.getElementById("project-view-chapter");
+        const pageView = document.getElementById("project-view-page");
+
+        if (seriesView)
+          seriesView.style.display = viewName === "series" ? "block" : "none";
+        if (chapterView)
+          chapterView.style.display = viewName === "chapter" ? "block" : "none";
+        if (pageView)
+          pageView.style.display = viewName === "page" ? "block" : "none";
+      }
+
+      function restoreProjectSeriesView() {
+        showProjectView("series");
+
+        if (typeof loadMySeriesList === "function") {
+          loadMySeriesList();
         }
       }
 
@@ -2822,7 +2856,7 @@
             }
             html += `</tbody></table>`;
             document.getElementById("project-view-series").innerHTML = html;
-            document.getElementById("project-view-series").style.display = "";
+            showProjectView("series");
           });
       }
 
@@ -2878,7 +2912,7 @@
             }
             html += `</tbody></table>`;
             document.getElementById("project-view-chapter").innerHTML = html;
-            document.getElementById("project-view-chapter").style.display = "";
+            showProjectView("chapter");
           });
       }
 
@@ -2926,15 +2960,15 @@
               <p class="ptab-sub-desc u-inline-style-127">
                 Deadline: <strong>${chapter.deadline || "Chưa đặt deadline"}</strong>
               </p>
-              <a href="/manga/mangaka/myseries/${sid}" class="btn-link">&larr; Quay lại danh sách chapter</a>
+              <a href="/manga/mangaka/myseries/${sid}" class="project-action-btn">← Quay lại danh sách chapter</a>
               <div class="u-inline-style-128">`;
 
             if (chapter.status === "unfinish") {
               const hasScript = !!(
                 chapter.script && chapter.script.trim() !== ""
               );
-              html += `<button type="button" onclick="openChapterScriptModal()">${hasScript ? "✏️ Sửa kịch bản" : "📝 Tạo kịch bản"}</button>`;
-              html += `<button type="button" onclick="submitAddPage('${sid}','${cid}')">+ Thêm trang mới</button>`;
+              html += `<button type="button" class="project-action-btn" onclick="openChapterScriptModal()">${hasScript ? "✏️ Sửa kịch bản" : "📝 Tạo kịch bản"}</button>`;
+              html += `<button type="button" class="project-action-btn" onclick="submitAddPage('${sid}','${cid}')">+ Thêm trang mới</button>`;
               if (pages.length > 0) {
                 html += `<button type="button" class="btn-action primary btn-submit-chapter u-inline-style-129"
                           data-chapter-id="${chapter.id}">
@@ -3050,7 +3084,7 @@
 
             html += `</div>`;
             document.getElementById("project-view-page").innerHTML = html;
-            document.getElementById("project-view-page").style.display = "";
+            showProjectView("page");
           });
       }
 

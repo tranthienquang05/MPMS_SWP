@@ -26,8 +26,10 @@
   <body th:attr="data-user-id=${currentUserId}">
     <div class="header">
       <div class="logo">
-        SANKYUU
-        <p class="name">Quản trị viên hệ thống</p>
+        <div class="brand-stack">
+          <span class="brand-word">SANKYUU</span>
+          <p class="name">Quản trị viên hệ thống</p>
+        </div>
       </div>
       <div class="header-actions">
         <a th:href="@{/login/logout}">

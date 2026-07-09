@@ -197,7 +197,7 @@
               data-tool="pencil"
               title="Bút vẽ (B)"
             >
-              <i class="fa-solid fa-pencil"></i>
+              <i class="fa-solid fa-pen"></i>
             </button>
             <button
               type="button"
@@ -232,7 +232,7 @@
               data-tool="line"
               title="Đường thẳng"
             >
-              <i class="fa-solid fa-slash"></i>
+              <i class="fa-solid fa-minus"></i>
             </button>
             <button
               type="button"
@@ -240,7 +240,7 @@
               data-tool="rect"
               title="Hình chữ nhật"
             >
-              <i class="fa-regular fa-square"></i>
+              <i class="fa-solid fa-square"></i>
             </button>
             <button
               type="button"
@@ -248,7 +248,7 @@
               data-tool="oval"
               title="Hình tròn / Oval (balloon)"
             >
-              <i class="fa-regular fa-circle"></i>
+              <i class="fa-solid fa-circle"></i>
             </button>
             <button
               type="button"
@@ -275,7 +275,7 @@
               data-tool="select-oval"
               title="Chọn vùng oval"
             >
-              <i class="fa-regular fa-circle"></i>
+              <i class="fa-solid fa-circle-dot"></i>
             </button>
             <button
               type="button"
@@ -283,7 +283,7 @@
               data-tool="select-free"
               title="Chọn vùng tự do (Lasso)"
             >
-              <i class="fa-solid fa-draw-polygon"></i>
+              <i class="fa-solid fa-crop-simple"></i>
             </button>
             <button
               type="button"
@@ -391,7 +391,6 @@
                 type="button"
                 class="btn-ai-support-top approve"
               >
-                <i class="fa-solid fa-paper-plane"></i>
                 Lưu
               </button>
 
@@ -402,7 +401,6 @@
                 th:if="${submission != null}"
                 onclick="document.getElementById('scriptModalOverlay').style.display='flex'"
               >
-                <i class="fa-solid fa-book-open"></i>
                 Kịch bản
               </button>
 
@@ -412,7 +410,6 @@
                 id="btnLoadPage"
                 th:if="${page != null}"
               >
-                <i class="fa-solid fa-folder-open"></i>
                 Mở file
               </button>
 
@@ -423,7 +420,6 @@
                 class="btn-ai-support-top"
                 id="btnAiSupport"
               >
-                <i class="fa-solid fa-brain"></i>
                 AI Support
               </button>
             </div>
@@ -450,8 +446,6 @@
 
             <div class="canvas-viewport" id="canvasViewport">
               <div class="canvas-stack u-inline-style-031" id="canvasStack">
-                <canvas id="bgCanvas" width="400" height="600"></canvas>
-                <canvas id="layer2Canvas" width="400" height="600"></canvas>
                 <canvas id="drawCanvas" width="400" height="600"></canvas>
                 <div class="canvas-region-select" id="regionSelectBox"></div>
               </div>
@@ -504,7 +498,7 @@
           class="u-inline-style-033"
         >
           <div class="u-inline-style-034">
-            <h3 class="u-inline-style-035">📖 Kịch bản &amp; Note công việc</h3>
+            <h3 class="u-inline-style-035">Kịch bản &amp; Note công việc</h3>
 
             <h4>Kịch bản chapter</h4>
             <p
@@ -545,7 +539,7 @@
         <div id="aiModalOverlay" class="ai-modal-overlay">
           <div class="ai-modal-box">
             <div class="ai-modal-header">
-              <h5><i class="fa-solid fa-brain"></i> AI Support</h5>
+              <h5>AI Support</h5>
               <button type="button" class="ai-modal-close" id="btnCloseAiModal">
                 <i class="fa-solid fa-xmark"></i>
               </button>
@@ -561,7 +555,6 @@
                     data-name="Tô màu"
                     data-type="image"
                   >
-                    <i class="fa-solid fa-palette"></i>
                     <div class="ai-feature-name">Tô màu</div>
                     <div class="ai-feature-desc">
                       Tô màu panel theo gam màu tự nhiên
@@ -574,7 +567,6 @@
                     data-name="Đổ bóng"
                     data-type="image"
                   >
-                    <i class="fa-solid fa-circle-half-stroke"></i>
                     <div class="ai-feature-name">Đổ bóng</div>
                     <div class="ai-feature-desc">
                       Thêm shading & lighting tự động
@@ -587,7 +579,6 @@
                     data-name="Clean lineart"
                     data-type="image"
                   >
-                    <i class="fa-solid fa-pen-nib"></i>
                     <div class="ai-feature-name">Clean lineart</div>
                     <div class="ai-feature-desc">
                       Nét thảo thành nét sạch chuyên nghiệp
@@ -600,7 +591,6 @@
                     data-name="Background"
                     data-type="image"
                   >
-                    <i class="fa-solid fa-mountain-sun"></i>
                     <div class="ai-feature-name">Background</div>
                     <div class="ai-feature-desc">
                       Vẽ background chi tiết cho panel
@@ -613,7 +603,6 @@
                     data-name="Lettering"
                     data-type="vision"
                   >
-                    <i class="fa-solid fa-comment-dots"></i>
                     <div class="ai-feature-name">Lettering</div>
                     <div class="ai-feature-desc">
                       Phân tích balloon, gợi ý căn chỉnh
@@ -626,7 +615,6 @@
                     data-name="Biểu cảm"
                     data-type="vision"
                   >
-                    <i class="fa-solid fa-face-smile"></i>
                     <div class="ai-feature-name">Biểu cảm</div>
                     <div class="ai-feature-desc">
                       Nhận diện emotion nhân vật
@@ -641,7 +629,7 @@
                   class="ai-detail-back"
                   id="btnBackToFeatureList"
                 >
-                  <i class="fa-solid fa-arrow-left"></i> Quay lại
+                  Quay lại
                 </button>
                 <div class="ai-detail-title" id="aiDetailTitle"></div>
 
@@ -723,6 +711,56 @@
       <div id="tab-project" class="tab-pane">
         <h2>Công việc được giao</h2>
 
+        <div
+          class="proposal-tabs-nav assistant-task-tabs-nav"
+          role="tablist"
+          aria-label="Lọc công việc theo trạng thái"
+        >
+          <button
+            type="button"
+            class="proposal-tab-btn active"
+            data-assistant-task-tab="doing"
+            onclick="setAssistantTaskTab('doing')"
+          >
+            Đang làm
+            <span
+              class="proposal-tab-count"
+              th:text="${todo != null ? #lists.size(todo) : 0}"
+            ></span>
+          </button>
+          <button
+            type="button"
+            class="proposal-tab-btn"
+            data-assistant-task-tab="waiting"
+            onclick="setAssistantTaskTab('waiting')"
+          >
+            Chờ duyệt
+            <span
+              class="proposal-tab-count"
+              th:text="${waiting != null ? #lists.size(waiting) : 0}"
+            ></span>
+          </button>
+          <button
+            type="button"
+            class="proposal-tab-btn"
+            data-assistant-task-tab="done"
+            onclick="setAssistantTaskTab('done')"
+          >
+            Hoàn thành
+            <span
+              class="proposal-tab-count"
+              th:text="${done != null ? #lists.size(done) : 0}"
+            ></span>
+          </button>
+        </div>
+
+        <p
+          id="assistantTaskTabDesc"
+          class="ptab-sub-desc assistant-task-tab-desc"
+        >
+          Các công việc đang cần thực hiện.
+        </p>
+
         <div class="assistant-task-table-wrap">
           <table class="data-table assistant-task-table">
             <thead>
@@ -738,19 +776,16 @@
               </tr>
             </thead>
             <tbody>
-              <tr th:each="s : ${todo}">
+              <tr th:each="s : ${todo}" data-assistant-task-status="doing">
                 <td>
-                  <span class="task-status-pill status-doing">
-                    <span></span>
-                    Đang làm
-                  </span>
+                  <span class="task-status-pill status-doing">Đang làm </span>
                 </td>
                 <td>
                   <strong
                     th:text="${s.pageId.chapter.series.seriesName}"
                   ></strong>
-                  <small>
-                    Chapter
+                  <small
+                    >Chapter
                     <span th:text="${s.pageId.chapter.chapterNumber}"></span>
                   </small>
                 </td>
@@ -777,9 +812,7 @@
                     <a
                       th:href="@{/manga/assistant/submission/{id}/edit(id=${s.id})}"
                       class="project-action-btn series-chapter-btn"
-                    >
-                      <i class="fa-solid fa-pen"></i>
-                      Mở
+                      >Mở
                     </a>
                     <button
                       type="button"
@@ -787,7 +820,6 @@
                       th:data-submission-id="${s.id}"
                       onclick="submitSubmission(this)"
                     >
-                      <i class="fa-solid fa-upload"></i>
                       Nộp bài
                     </button>
                     <button
@@ -796,26 +828,24 @@
                       th:data-submission-id="${s.id}"
                       onclick="viewKanbanScript(this)"
                     >
-                      <i class="fa-solid fa-book-open"></i>
                       Kịch bản
                     </button>
                   </div>
                 </td>
               </tr>
 
-              <tr th:each="s : ${waiting}">
+              <tr th:each="s : ${waiting}" data-assistant-task-status="waiting">
                 <td>
-                  <span class="task-status-pill status-waiting">
-                    <span></span>
-                    Chờ duyệt
+                  <span class="task-status-pill status-waiting"
+                    >Chờ duyệt
                   </span>
                 </td>
                 <td>
                   <strong
                     th:text="${s.pageId.chapter.series.seriesName}"
                   ></strong>
-                  <small>
-                    Chapter
+                  <small
+                    >Chapter
                     <span th:text="${s.pageId.chapter.chapterNumber}"></span>
                   </small>
                 </td>
@@ -845,26 +875,22 @@
                       th:data-submission-id="${s.id}"
                       onclick="viewKanbanScript(this)"
                     >
-                      <i class="fa-solid fa-book-open"></i>
                       Kịch bản
                     </button>
                   </div>
                 </td>
               </tr>
 
-              <tr th:each="s : ${done}">
+              <tr th:each="s : ${done}" data-assistant-task-status="done">
                 <td>
-                  <span class="task-status-pill status-done">
-                    <span></span>
-                    Hoàn thành
-                  </span>
+                  <span class="task-status-pill status-done">Hoàn thành </span>
                 </td>
                 <td>
                   <strong
                     th:text="${s.pageId.chapter.series.seriesName}"
                   ></strong>
-                  <small>
-                    Chapter
+                  <small
+                    >Chapter
                     <span th:text="${s.pageId.chapter.chapterNumber}"></span>
                   </small>
                 </td>
@@ -894,7 +920,6 @@
                       th:data-submission-id="${s.id}"
                       onclick="viewKanbanScript(this)"
                     >
-                      <i class="fa-solid fa-book-open"></i>
                       Kịch bản
                     </button>
                   </div>
@@ -902,10 +927,30 @@
               </tr>
 
               <tr
-                th:if="${#lists.isEmpty(todo) and #lists.isEmpty(waiting) and #lists.isEmpty(done)}"
+                class="assistant-task-empty-row"
+                data-assistant-task-status="doing"
+                th:if="${todo == null or #lists.isEmpty(todo)}"
               >
                 <td colspan="8" class="ptab-sub-desc">
-                  Chưa có công việc nào được giao.
+                  Không có công việc đang làm.
+                </td>
+              </tr>
+              <tr
+                class="assistant-task-empty-row"
+                data-assistant-task-status="waiting"
+                th:if="${waiting == null or #lists.isEmpty(waiting)}"
+              >
+                <td colspan="8" class="ptab-sub-desc">
+                  Không có công việc chờ duyệt.
+                </td>
+              </tr>
+              <tr
+                class="assistant-task-empty-row"
+                data-assistant-task-status="done"
+                th:if="${done == null or #lists.isEmpty(done)}"
+              >
+                <td colspan="8" class="ptab-sub-desc">
+                  Không có công việc hoàn thành.
                 </td>
               </tr>
             </tbody>
@@ -916,9 +961,7 @@
         <div id="kanbanScriptModalOverlay" class="u-inline-style-033">
           <div class="u-inline-style-034 assistant-script-modal">
             <div class="assistant-script-modal-head">
-              <h3 class="u-inline-style-035">
-                📖 Kịch bản &amp; Note công việc
-              </h3>
+              <h3 class="u-inline-style-035">Kịch bản &amp; Note công việc</h3>
               <button
                 type="button"
                 class="modal-close-btn"
@@ -1032,7 +1075,36 @@
       }, 60000);
 
       // Load ảnh submission đã lưu lên canvas khi assistant mở edit
+
+      function setAssistantTaskTab(status) {
+        const labels = {
+          doing: "Các công việc đang cần thực hiện.",
+          waiting: "Các công việc đã nộp và đang chờ duyệt.",
+          done: "Các công việc đã hoàn thành.",
+        };
+
+        document
+          .querySelectorAll("[data-assistant-task-tab]")
+          .forEach((button) => {
+            button.classList.toggle(
+              "active",
+              button.dataset.assistantTaskTab === status,
+            );
+          });
+
+        document
+          .querySelectorAll("[data-assistant-task-status]")
+          .forEach((row) => {
+            row.hidden = row.dataset.assistantTaskStatus !== status;
+          });
+
+        const desc = document.getElementById("assistantTaskTabDesc");
+        if (desc) desc.textContent = labels[status] || labels.doing;
+      }
+
       document.addEventListener("DOMContentLoaded", function () {
+        setAssistantTaskTab("doing");
+
         const path = window.location.pathname;
         const submissionEditMatch = path.match(/\/submission\/([^/]+)\/edit$/);
         if (submissionEditMatch) {
@@ -1095,24 +1167,68 @@
         }
       });
 
-      function submitSubmission(btn) {
+      document.addEventListener("DOMContentLoaded", function () {
+        const savedTab = sessionStorage.getItem("assistantActiveTab");
+        const savedTaskTab = sessionStorage.getItem("assistantTaskStatusTab");
+
+        if (savedTab && document.getElementById(savedTab)) {
+          sessionStorage.removeItem("assistantActiveTab");
+          openTab(savedTab);
+        }
+
+        if (savedTaskTab && typeof setAssistantTaskTab === "function") {
+          sessionStorage.removeItem("assistantTaskStatusTab");
+          setAssistantTaskTab(savedTaskTab);
+        }
+      });
+
+      async function submitSubmission(btn) {
         const submissionId = btn.dataset.submissionId;
-        if (!confirm("Xác nhận nộp bài?")) return;
-        fetch("/manga/assistant/submission/" + submissionId + "/submit", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: "status=done",
-        })
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.status === "success") {
-              alert("✅ " + data.message);
-              location.reload();
+        const confirmed = window.showUiConfirm
+          ? await window.showUiConfirm("X\u00e1c nh\u1eadn n\u1ed9p b\u00e0i?", {
+              title: "N\u1ed9p b\u00e0i",
+              okText: "X\u00e1c nh\u1eadn",
+              cancelText: "H\u1ee7y",
+            })
+          : confirm("X\u00e1c nh\u1eadn n\u1ed9p b\u00e0i?");
+
+        if (!confirmed) return;
+
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.textContent = "\u0110ang n\u1ed9p...";
+
+        try {
+          const response = await fetch(
+            "/manga/assistant/submission/" + submissionId + "/submit",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: "status=done",
+            },
+          );
+          const data = await response.json();
+
+          if (data.status === "success") {
+            sessionStorage.setItem("assistantActiveTab", "tab-project");
+            sessionStorage.setItem("assistantTaskStatusTab", "waiting");
+
+            if (window.showUiAlertAsync) {
+              await window.showUiAlertAsync("" + data.message);
             } else {
-              alert("❌ " + data.message);
+              alert("" + data.message);
             }
-          })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
+
+            location.reload();
+          } else {
+            alert("" + data.message);
+          }
+        } catch (err) {
+          alert("L\u1ed7i: " + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        }
       }
 
       function viewKanbanScript(btn) {
@@ -1121,7 +1237,7 @@
           .then((r) => r.json())
           .then((data) => {
             if (data.status !== "success") {
-              alert("❌ " + data.message);
+              alert("" + data.message);
               return;
             }
             document.getElementById("kanbanChapterScript").textContent =
@@ -1162,8 +1278,9 @@
             document.getElementById("kanbanScriptModalOverlay").style.display =
               "flex";
           })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
+          .catch((err) => alert("Lỗi: " + err.message));
       }
     </script>
+    <script src="/js/ui-alert.js" th:src="@{/js/ui-alert.js}"></script>
   </body>
 </html>

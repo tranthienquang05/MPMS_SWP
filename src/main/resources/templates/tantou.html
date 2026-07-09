@@ -324,21 +324,21 @@
                   onclick="reviewSubmit('approve')"
                   class="btn-approve"
                 >
-                  ✅ Được duyệt
+                  Được duyệt
                 </button>
                 <button
                   type="button"
                   onclick="openDeadlinePicker()"
                   class="btn-approve u-inline-style-139"
                 >
-                  ✏️ Cần sửa
+                  Cần sửa
                 </button>
                 <button
                   type="button"
                   onclick="reviewSubmit('reject')"
                   class="btn-reject"
                 >
-                  ❌ Từ chối
+                  Từ chối
                 </button>
               </div>
 
@@ -541,9 +541,7 @@
                 placeholder="Nhập tin nhắn..."
                 disabled
               />
-              <button type="button" id="chatSendBtn" disabled>
-                <i class="fa-solid fa-paper-plane"></i>
-              </button>
+              <button type="button" id="chatSendBtn" disabled></button>
             </div>
           </div>
         </div>
@@ -660,12 +658,11 @@
           <td>${p.seriesName}</td>
           <td>${
             p.filePath
-              ? `<a href="${p.filePath}" class="btn-link" target="_blank"><i class="fa-solid fa-file-pdf"></i> Xem bản thảo</a>`
+              ? `<a href="${p.filePath}" class="btn-link" target="_blank">Xem bản thảo</a>`
               : "Không có file"
           }</td>
           <td>
-            <button type="button" onclick="openReviewModal('${p.id}', '${p.seriesName.replace(/'/g, "\\'")}')" class="btn-approve">
-              📝 Xem & duyệt
+            <button type="button" onclick="openReviewModal('${p.id}', '${p.seriesName.replace(/'/g, "\\'")}')" class="btn-approve">Xem & duyệt
             </button>
           </td>
         </tr>`,
@@ -747,17 +744,17 @@
           .then((res) => res.json())
           .then((data) => {
             if (data.status === "success") {
-              alert("✅ " + data.message);
+              alert("" + data.message);
               document.getElementById(
                 "reviewProposalModalOverlay",
               ).style.display = "none";
               loadProposals();
               loadApprovedProposals();
             } else {
-              alert("❌ " + data.message);
+              alert("" + data.message);
             }
           })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
+          .catch((err) => alert("Lỗi: " + err.message));
       }
 
       // ── Danh sách chờ nộp hội đồng ──────────────────────
@@ -823,12 +820,12 @@
           .then((res) => res.json())
           .then((data) => {
             if (data.status === "success") {
-              alert("✅ " + data.message);
+              alert("" + data.message);
               closeSubmitBoardModal();
               loadApprovedProposals();
-            } else alert("❌ " + data.message);
+            } else alert("" + data.message);
           })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
+          .catch((err) => alert("Lỗi: " + err.message));
       }
 
       // ── Chapter Review ─────────────────────────────────
@@ -841,7 +838,7 @@
             const tbody = document.getElementById("chapterReviewBody");
             const emptyEl = document.getElementById("chapterReviewEmpty");
             if (data.status === "error") {
-              countEl.textContent = "❌ " + data.message;
+              countEl.textContent = "" + data.message;
               return;
             }
             countEl.textContent =
@@ -861,15 +858,15 @@
                         <td><b>Chapter ${c.chapterNumber}</b><br><small class="u-inline-style-156">${c.chapterName}</small></td>
                         <td>
                             <button type="button" onclick="openChapterPreview('${c.id}','Chapter ${c.chapterNumber} — ${c.chapterName}')"
-                                class="btn-action primary u-inline-style-134">🖼 Xem trang</button>
+                                class="btn-action primary u-inline-style-134">Xem trang</button>
                         </td>
                         <td>
                             <textarea id="cr-comment-${c.id}" placeholder="Nhận xét nếu từ chối..." class="u-inline-style-157"></textarea>
                         </td>
                         <td>
                             <div class="u-inline-style-158">
-                                <button type="button" onclick="reviewChapter('${c.id}','approve')" class="btn-action approve">✅ Duyệt</button>
-                                <button type="button" onclick="reviewChapter('${c.id}','reject')" class="btn-action reject">❌ Từ chối</button>
+                                <button type="button" onclick="reviewChapter('${c.id}','approve')" class="btn-action approve">Duyệt</button>
+                                <button type="button" onclick="reviewChapter('${c.id}','reject')" class="btn-action reject">Từ chối</button>
                             </div>
                         </td>
                     </tr>`,
@@ -878,7 +875,7 @@
           })
           .catch(() => {
             document.getElementById("chapterReviewCount").textContent =
-              "❌ Lỗi tải dữ liệu";
+              "Lỗi tải dữ liệu";
           });
       }
 
@@ -903,12 +900,12 @@
           .then((r) => r.json())
           .then((data) => {
             if (data.status === "success") {
-              alert("✅ " + data.message);
+              alert("" + data.message);
               document.getElementById("cr-row-" + chapterId)?.remove();
               loadChapterReviews();
-            } else alert("❌ " + data.message);
+            } else alert("" + data.message);
           })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
+          .catch((err) => alert("Lỗi: " + err.message));
       }
 
       function openChapterPreview(chapterId, title) {
@@ -1179,5 +1176,7 @@
         mmGoToScreen(5);
       }
     </script>
+    <script src="/js/ui-alert.js" th:src="@{/js/ui-alert.js}"></script>
+    \n\n
   </body>
 </html>

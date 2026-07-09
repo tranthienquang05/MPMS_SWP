@@ -272,7 +272,7 @@
                 data-tool="pencil"
                 title="Bút vẽ (B)"
               >
-                <i class="fa-solid fa-pencil"></i>
+                <i class="fa-solid fa-pen"></i>
               </button>
               <button
                 type="button"
@@ -307,7 +307,7 @@
                 data-tool="line"
                 title="Đường thẳng"
               >
-                <i class="fa-solid fa-slash"></i>
+                <i class="fa-solid fa-minus"></i>
               </button>
               <button
                 type="button"
@@ -315,7 +315,7 @@
                 data-tool="rect"
                 title="Hình chữ nhật"
               >
-                <i class="fa-regular fa-square"></i>
+                <i class="fa-solid fa-square"></i>
               </button>
               <button
                 type="button"
@@ -323,7 +323,7 @@
                 data-tool="oval"
                 title="Hình tròn / Oval (balloon)"
               >
-                <i class="fa-regular fa-circle"></i>
+                <i class="fa-solid fa-circle"></i>
               </button>
               <button
                 type="button"
@@ -350,7 +350,7 @@
                 data-tool="select-oval"
                 title="Chọn vùng oval"
               >
-                <i class="fa-regular fa-circle"></i>
+                <i class="fa-solid fa-circle-dot"></i>
               </button>
               <button
                 type="button"
@@ -358,7 +358,7 @@
                 data-tool="select-free"
                 title="Chọn vùng tự do (Lasso)"
               >
-                <i class="fa-solid fa-draw-polygon"></i>
+                <i class="fa-solid fa-crop-simple"></i>
               </button>
               <button
                 type="button"
@@ -463,7 +463,7 @@
                   class="btn-ai-support-top approve u-inline-style-002 draw-hidden-action"
                   id="btnSavePage"
                 >
-                  <i class="fa-solid fa-floppy-disk"></i> Lưu trang
+                  Lưu trang
                 </button>
                 <button
                   type="button"
@@ -471,7 +471,6 @@
                   id="btnLoadPage"
                   th:if="${page != null}"
                 >
-                  <i class="fa-solid fa-folder-open"></i>
                   Mở file
                 </button>
 
@@ -482,7 +481,6 @@
                   class="btn-ai-support-top draw-hidden-action"
                   id="btnDownload"
                 >
-                  <i class="fa-solid fa-download"></i>
                   Download
                 </button>
               </div>
@@ -550,10 +548,7 @@
               </div>
               <div class="panel-section manga-chat-panel">
                 <div class="panel-section-header manga-chat-header">
-                  <span>
-                    <i class="fa-solid fa-comments"></i>
-                    Manga Chat
-                  </span>
+                  <span>Manga Chat </span>
                   <span class="manga-chat-status">AI hỗ trợ</span>
                 </div>
                 <div class="chat-history-list" id="chatHistoryList"></div>
@@ -586,7 +581,7 @@
                       title="Đính kèm ảnh"
                       aria-label="Đính kèm ảnh"
                     >
-                      <i class="fa-solid fa-image"></i>
+                      <i class="fa-solid fa-paperclip"></i>
                     </button>
                     <input
                       type="file"
@@ -627,7 +622,7 @@
                   class="btn-ai-support-top primary"
                   id="btnEditSubmission"
                 >
-                  <i class="fa-solid fa-sliders"></i> Tác vụ trang
+                  Tác vụ trang
                 </button>
 
                 <div id="editSubmissionModal">
@@ -647,45 +642,24 @@
                       </button>
                     </div>
 
-                    <div class="draw-action-grid">
+                    <div class="draw-action-grid compact-draw-actions">
                       <button type="button" id="btnModalLoadPage">
-                        <i class="fa-solid fa-upload"></i>
                         <span>Upload file</span>
                       </button>
                       <button type="button" id="btnModalDownload">
-                        <i class="fa-solid fa-download"></i>
                         <span>Download file</span>
-                      </button>
-                      <button type="button" id="btnModalSaveArtwork">
-                        <i class="fa-solid fa-floppy-disk"></i>
-                        <span>Lưu bản vẽ</span>
                       </button>
                     </div>
 
                     <div class="draw-modal-divider"></div>
 
-                    <div class="form-item">
-                      <label>Trạng thái:</label>
-                      <select id="subStatus">
-                        <option value="pass">Hoàn thành (Finished)</option>
-                        <option value="unfinish">
-                          Yêu cầu vẽ lại (Rejected)
-                        </option>
-                      </select>
-                    </div>
-
-                    <div class="form-item-last">
-                      <label>Góp ý:</label>
-                      <textarea id="subComment" rows="4"></textarea>
-                    </div>
-
-                    <div class="actions-wrapper">
+                    <div class="actions-wrapper compact-draw-footer">
                       <button
                         type="button"
                         onclick="closeEditSubmissionModal()"
                         class="btn-cancel"
                       >
-                        Hủy
+                        Quay lại
                       </button>
 
                       <button
@@ -693,7 +667,7 @@
                         id="btnConfirmEdit"
                         class="btn-confirm"
                       >
-                        Xác nhận Lưu
+                        Lưu bản vẽ
                       </button>
                     </div>
                   </div>
@@ -790,7 +764,7 @@
               ></span>
               <div id="frameNotesContainer" class="u-inline-style-070"></div>
 
-              <label class="deadline-lbl"> Deadline: </label>
+              <label class="deadline-lbl">Deadline: </label>
               <input type="date" id="assignDeadline" required />
               <div class="u-inline-style-071">
                 <select id="assignHour">
@@ -883,8 +857,8 @@
                   <option value="59">59</option>
                 </select>
               </div>
-              <span id="assignDeadlineError" class="u-inline-style-069">
-                ⚠️ Vui lòng chọn deadline sau ngày hôm nay!
+              <span id="assignDeadlineError" class="u-inline-style-069"
+                >Vui lòng chọn deadline sau ngày hôm nay!
               </span>
 
               <div class="footer-actions">
@@ -1015,8 +989,8 @@
                   <option value="59">59</option>
                 </select>
               </div>
-              <span id="reassignDeadlineError" class="u-inline-style-069">
-                ⚠️ Vui lòng chọn deadline sau ngày hôm nay!
+              <span id="reassignDeadlineError" class="u-inline-style-069"
+                >Vui lòng chọn deadline sau ngày hôm nay!
               </span>
               <div class="footer-actions">
                 <button
@@ -1382,7 +1356,6 @@
                       th:if="${p.comment != null and !#strings.isEmpty(p.comment)}"
                       class="rejected-comment-box"
                     >
-                      <i class="fa-solid fa-comment"></i>
                       <span th:text="${p.comment}"></span>
                     </div>
                     <span
@@ -1437,7 +1410,6 @@
                       th:if="${p.comment != null and !#strings.isEmpty(p.comment)}"
                       class="rejected-comment-box"
                     >
-                      <i class="fa-solid fa-comment"></i>
                       <span th:text="${p.comment}"></span>
                     </div>
                     <span
@@ -1683,10 +1655,9 @@
           <h2>Quản lý Trợ lý</h2>
           <div id="assistantTasksContainer">
             <div id="assistantTasksLoading" class="u-inline-style-085">
-              <i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu...
+              Đang tải dữ liệu...
             </div>
             <div id="assistantTasksEmpty" class="u-inline-style-086">
-              <i class="fa-solid fa-inbox u-inline-style-087"></i>
               <p>Không có task nào đang thực hiện.</p>
             </div>
             <div id="assistantTasksList" class="u-inline-style-088"></div>
@@ -1732,22 +1703,17 @@
         <div class="u-inline-style-090">
           <!-- Header -->
           <div class="u-inline-style-091">
-            <div class="u-inline-style-092">
-              <i class="fa-solid fa-clipboard-list u-inline-style-093"></i>Chi
-              tiết nhiệm vụ
-            </div>
+            <div class="u-inline-style-092">Chi tiết nhiệm vụ</div>
             <button
               type="button"
               onclick="closeAssistantTaskDetail()"
               class="u-inline-style-094"
-            >
-              <i class="fa-solid fa-xmark"></i>
-            </button>
+            ></button>
           </div>
           <!-- Ảnh -->
           <div id="atdImgWrapper" class="u-inline-style-095">
             <div id="atdImgPlaceholder" class="u-inline-style-096">
-              <i class="fa-solid fa-image"></i> Chưa có ảnh
+              Chưa có ảnh
             </div>
             <img
               id="atdImg"
@@ -1939,8 +1905,7 @@
                   '" alt="Ảnh" class="u-inline-style-110">';
               } else {
                 imgHtml =
-                  '<div class="u-inline-style-111">' +
-                  '<i class="fa-solid fa-image u-inline-style-112"></i>Chưa có ảnh</div>';
+                  '<div class="u-inline-style-111">' + "Chưa có ảnh</div>";
               }
 
               var deadlineStr = task.deadline
@@ -1972,14 +1937,14 @@
                 imgHtml +
                 '<div class="u-inline-style-114">' +
                 '<div class="u-inline-style-115">' +
-                '<i class="fa-solid fa-user-pen u-inline-style-116"></i>' +
+                "" +
                 escapeHtml(task.assistantName) +
                 "</div>" +
                 '<div class="u-inline-style-117">' +
                 escapeHtml(locationStr) +
                 "</div>" +
                 '<div class="u-inline-style-118">' +
-                '<i class="fa-regular fa-clock"></i>' +
+                "" +
                 "<span>" +
                 deadlineStr +
                 "</span>" +
@@ -2113,7 +2078,7 @@
           .replace(/"/g, "&quot;");
       }
 
-      //  THÊM: hàm loadRanking gọi API và hiển thị bảng ngay tại trang
+      // THÊM: hàm loadRanking gọi API và hiển thị bảng ngay tại trang
       function loadRanking() {
         var month = document.getElementById("rankMonth").value;
         var quarter = document.getElementById("rankQuarter").value;
@@ -2209,16 +2174,16 @@
 
               // Hiển thị thông báo thành công bằng cửa sổ nổi
               const successMsg =
-                "✅ " + data.message + "\nMã đề xuất: " + data.proposalId;
+                "" + data.message + "\nMã đề xuất: " + data.proposalId;
               showSystemNotification(successMsg, true);
             } else {
               // Hiển thị thông báo thất bại từ phía Server
-              showSystemNotification("❌ " + data.message, false);
+              showSystemNotification("" + data.message, false);
             }
           })
           .catch((err) => {
             // Hiển thị lỗi kết nối hoặc lỗi logic hệ thống
-            showSystemNotification("❌ Lỗi hệ thống: " + err.message, false);
+            showSystemNotification("Lỗi hệ thống: " + err.message, false);
           });
       }
 
@@ -2300,7 +2265,7 @@
           .then((res) => res.json())
           .then((data) => {
             if (data.status !== "success") {
-              alert("❌ " + data.message);
+              alert("" + data.message);
               return;
             }
 
@@ -2331,7 +2296,7 @@
               (data.boardComments || [])
                 .map(
                   (c) => `
-        <li>${c.action === "pass" ? "✅ Thông qua" : "❌ Từ chối"}: ${c.content || "(không có nhận xét)"}</li>
+        <li>${c.action === "pass" ? "Thông qua" : "Từ chối"}: ${c.content || "(không có nhận xét)"}</li>
       `,
                 )
                 .join("") || "<li>Chưa có nhận xét nào.</li>";
@@ -2340,7 +2305,7 @@
               "proposalDetailModalOverlay",
             ).style.display = "flex";
           })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
+          .catch((err) => alert("Lỗi: " + err.message));
       }
 
       function closeDetailModal() {
@@ -2375,14 +2340,14 @@
           .then((res) => res.json())
           .then((data) => {
             if (data.status === "success") {
-              alert("✅ " + data.message);
+              alert("" + data.message);
               closeResubmitModal();
               location.reload();
             } else {
-              alert("❌ " + data.message);
+              alert("" + data.message);
             }
           })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
+          .catch((err) => alert("Lỗi: " + err.message));
       }
 
       function openStartSeriesModal(btn) {
@@ -2439,14 +2404,14 @@
           .then((res) => res.json())
           .then((data) => {
             if (data.status === "success") {
-              alert("✅ " + data.message + "\nMã series: " + data.seriesId);
+              alert("" + data.message + "\nMã series: " + data.seriesId);
               closeStartSeriesModal();
               location.reload();
             } else {
-              alert("❌ " + data.message);
+              alert("" + data.message);
             }
           })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
+          .catch((err) => alert("Lỗi: " + err.message));
       }
 
       // Modal thông báo
@@ -2591,13 +2556,14 @@
             dropdown.classList.remove("show");
           });
         }
-        // ✅ Cache-bust tất cả ảnh thumbnail trong grid
+        // Cache-bust tất cả ảnh thumbnail trong grid
         document.querySelectorAll(".page-preview-box img").forEach((img) => {
           if (img.src) img.src = img.src + "?t=" + Date.now();
         });
       });
 
       function openAssignModal(pageId) {
+        closePageActionModal();
         _currentPageId = pageId;
 
         const mangakaId =
@@ -2652,7 +2618,7 @@
           })
           .catch((err) => {
             console.error(err);
-            alert("❌ Không tải được danh sách trợ lý");
+            alert("Không tải được danh sách trợ lý");
           });
       }
 
@@ -2674,8 +2640,7 @@
         // Validate deadline bắt buộc
         const errSpan = document.getElementById("assignDeadlineError");
         if (!deadline || deadline.trim() === "") {
-          errSpan.textContent =
-            "⚠️ Vui lòng chọn deadline trước khi giao việc!";
+          errSpan.textContent = "Vui lòng chọn deadline trước khi giao việc!";
           errSpan.style.display = "block";
           return;
         }
@@ -2684,7 +2649,7 @@
         );
         const now = new Date();
         if (selectedDate <= now) {
-          errSpan.textContent = "⚠️ Deadline phải sau thời điểm hiện tại!";
+          errSpan.textContent = "Deadline phải sau thời điểm hiện tại!";
           errSpan.style.display = "block";
           return;
         }
@@ -2700,7 +2665,7 @@
           parseInt(document.getElementById("assignFrameCount").value, 10) || 0;
         if (frameCountVal > MAX_FRAME_COUNT) {
           alert(
-            `⚠️ Số frame tối đa là ${MAX_FRAME_COUNT}, vui lòng chỉnh lại trước khi giao việc!`,
+            `Số frame tối đa là ${MAX_FRAME_COUNT}, vui lòng chỉnh lại trước khi giao việc!`,
           );
           return;
         }
@@ -2714,7 +2679,7 @@
         }
         if (frameNotes.length > MAX_FRAME_COUNT) {
           alert(
-            `⚠️ Số frame tối đa là ${MAX_FRAME_COUNT}, vui lòng chỉnh lại trước khi giao việc!`,
+            `Số frame tối đa là ${MAX_FRAME_COUNT}, vui lòng chỉnh lại trước khi giao việc!`,
           );
           return;
         }
@@ -2734,19 +2699,19 @@
           .then((r) => r.json())
           .then((data) => {
             if (data.status === "success") {
-              alert("✅ Đã giao việc");
+              alert("Đã giao việc");
               location.reload();
             } else {
-              alert("❌ " + data.message);
+              alert("" + data.message);
             }
           })
           .catch((err) => {
             console.error(err);
-            alert("❌ " + err.message);
+            alert("" + err.message);
           });
       }
       function submitChapter(chapterId) {
-        // ✅ THÊM VÀO: kiểm tra chapter có trang chưa
+        // THÊM VÀO: kiểm tra chapter có trang chưa
         const pageItems = document.querySelectorAll(".page-grid-item");
         if (pageItems.length === 0) {
           alert(
@@ -2763,13 +2728,13 @@
           .then((r) => r.json())
           .then((data) => {
             if (data.status === "success") {
-              alert("✅ " + data.message);
+              alert("" + data.message);
               location.reload();
             } else {
-              alert("❌ " + data.message);
+              alert("" + data.message);
             }
           })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
+          .catch((err) => alert("Lỗi: " + err.message));
       }
 
       let _currentPageId = null;
@@ -2780,13 +2745,13 @@
           .then((r) => r.json())
           .then((data) => {
             if (data.status === "success") {
-              alert("✅ " + data.message);
+              alert("" + data.message);
               location.reload();
             } else {
-              alert("⚠️ " + data.message);
+              alert("" + data.message);
             }
           })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
+          .catch((err) => alert("Lỗi: " + err.message));
       }
 
       function approvePageDone(pageId) {
@@ -2795,10 +2760,10 @@
           .then((r) => r.json())
           .then((data) => {
             if (data.status === "success") {
-              alert("✅ " + data.message);
+              alert("" + data.message);
               location.reload();
             } else {
-              alert("❌ " + data.message);
+              alert("" + data.message);
             }
           });
       }
@@ -2809,6 +2774,7 @@
         assistantId,
         assistantName,
       ) {
+        closePageActionModal();
         document.getElementById("reassignPageId").value = pageId;
         document.getElementById("reassignSubmissionId").value = submissionId;
         document.getElementById("reassignAssistantName").dataset.assistantId =
@@ -2851,8 +2817,7 @@
         // Validate deadline bắt buộc
         const errSpan2 = document.getElementById("reassignDeadlineError");
         if (!deadline || deadline.trim() === "") {
-          errSpan2.textContent =
-            "⚠️ Vui lòng chọn deadline trước khi giao lại!";
+          errSpan2.textContent = "Vui lòng chọn deadline trước khi giao lại!";
           errSpan2.style.display = "block";
           return;
         }
@@ -2861,7 +2826,7 @@
         );
         const now2 = new Date();
         if (selectedDate2 <= now2) {
-          errSpan2.textContent = "⚠️ Deadline phải sau thời điểm hiện tại!";
+          errSpan2.textContent = "Deadline phải sau thời điểm hiện tại!";
           errSpan2.style.display = "block";
           return;
         }
@@ -2886,13 +2851,13 @@
             if (data.status === "success") {
               document.getElementById("reassignModalOverlay").style.display =
                 "none";
-              alert("✅ " + data.message);
+              alert("" + data.message);
               location.reload();
             } else {
-              alert("❌ " + data.message);
+              alert("" + data.message);
             }
           })
-          .catch((err) => alert("❌ " + err.message));
+          .catch((err) => alert("" + err.message));
       }
 
       document.addEventListener("click", function (e) {
@@ -2969,7 +2934,7 @@
                     actionBtn.style.display = "";
                   }
 
-                  // 👇 THÊM: load ảnh đã lưu lên canvas
+                  // THÊM: load ảnh đã lưu lên canvas
                   if (data.page.filePath) {
                     const img = new Image();
                     img.onload = () => {
@@ -3008,7 +2973,7 @@
                     saveBtn.dataset.returnUrl = data.returnUrl || "";
                   }
 
-                  // 👇 THÊM: load ảnh đã lưu lên canvas
+                  // THÊM: load ảnh đã lưu lên canvas
                   if (data.submission.filePath) {
                     const img = new Image();
                     img.onload = () => {
@@ -3065,7 +3030,7 @@
                 const coverPath = s.bookJacket || "";
                 const coverHtml = coverPath
                   ? `<img src="${coverPath}?t=${Date.now()}" alt="Bìa ${s.seriesName}" class="series-cover-thumb" />`
-                  : `<span class="series-cover-thumb series-cover-empty"><i class="fa-solid fa-image"></i></span>`;
+                  : `<span class="series-cover-thumb series-cover-empty"></span>`;
                 const statusMap = {
                   unfinish:
                     '<span class="badge-status-approved">Đang thực hiện</span>',
@@ -3085,7 +3050,7 @@
                   </td>
                   <td>${statusMap[s.status] || s.status}</td>
                   <td>${s.startDate || ""}</td>
-                  <td><a href="/manga/mangaka/myseries/${s.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectSeries('${s.id}')"><i class="fa-solid fa-book-open"></i> Xem chapter</a></td>
+                  <td><a href="/manga/mangaka/myseries/${s.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectSeries('${s.id}')">Xem chapter</a></td>
                 </tr>`;
               });
             }
@@ -3105,13 +3070,9 @@
             let html = `
               <h3>Chapter của series: ${series.seriesName}</h3>
               <div class="chapter-toolbar">
-                <button type="button" class="project-action-btn" onclick="restoreProjectSeriesView(true)">
-                  <i class="fa-solid fa-arrow-left"></i>
-                  Quay lại
+                <button type="button" class="project-action-btn" onclick="restoreProjectSeriesView(true)">Quay lại
                 </button>
-                <button type="button" class="project-action-btn project-action-primary" onclick="openCreateChapterModal('${series.id}')">
-                  <i class="fa-solid fa-plus"></i>
-                  Tạo chapter mới
+                <button type="button" class="project-action-btn project-action-primary" onclick="openCreateChapterModal('${series.id}')">Tạo chapter mới
                 </button>
                 <span class="chapter-toolbar-note">Deadline sẽ luôn là thứ 7.</span>
               </div>
@@ -3131,11 +3092,11 @@
                   : `<span class="tantou-comment-empty">—</span>`;
                 const finishBadge =
                   c.status === "finish"
-                    ? `<span class="badge-status-approved u-inline-style-125">⏳ Chờ BTV duyệt</span>`
+                    ? `<span class="badge-status-approved u-inline-style-125">Chờ BTV duyệt</span>`
                     : "";
                 const passBadge =
                   c.status === "pass"
-                    ? `<span class="badge-status-passed u-inline-style-125">✅ Đã duyệt</span>`
+                    ? `<span class="badge-status-passed u-inline-style-125">Đã duyệt</span>`
                     : "";
                 const chapterStatusMap = {
                   unfinish:
@@ -3152,7 +3113,7 @@
                   <td>${chapterStatusMap[c.status] || c.status}</td>
                   <td>${comment}</td>
                   <td>
-                    <a href="/manga/mangaka/myseries/${sid}/${c.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectChapter('${sid}','${c.id}')"><i class="fa-solid fa-file-lines"></i> Xem trang</a>
+                    <a href="/manga/mangaka/myseries/${sid}/${c.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectChapter('${sid}','${c.id}')">Xem trang</a>
                     ${finishBadge}${passBadge}
                   </td>
                 </tr>`;
@@ -3201,13 +3162,92 @@
           .then((r) => r.json())
           .then((data) => {
             if (data.status === "success") {
-              alert("✅ " + data.message);
+              alert("" + data.message);
               closeCreateChapterModal();
               loadSeriesView(seriesId);
             } else {
-              alert("❌ " + data.message);
+              alert("" + data.message);
             }
           });
+      }
+
+      function escapeProjectHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function getVietnamesePageType(pageType) {
+        const labels = {
+          cover: "Trang b\u00eca",
+          action: "Trang h\u00e0nh \u0111\u1ed9ng",
+          rest: "Trang ngh\u1ec9",
+          info: "Trang th\u00f4ng tin",
+          end: "Trang cu\u1ed1i",
+        };
+        return labels[pageType] || "Trang truy\u1ec7n";
+      }
+
+      function getVietnamesePageStatus(page, submission) {
+        if (!page) return "Ch\u01b0a x\u00e1c \u0111\u1ecbnh";
+        if (page.status === "finish") return "Ho\u00e0n th\u00e0nh";
+        if (page.status === "intask") return "\u0110ang giao tr\u1ee3 l\u00ed";
+        if (page.status === "done" && submission && submission.status === "done") {
+          return "Tr\u1ee3 l\u00ed \u0111\u00e3 n\u1ed9p, ch\u1edd duy\u1ec7t";
+        }
+        if (page.status === "done" && submission && submission.status === "finish") {
+          return "B\u1ea3n v\u1ebd tr\u1ee3 l\u00ed \u0111\u00e3 duy\u1ec7t";
+        }
+        if (page.status === "done") return "Ch\u1edd duy\u1ec7t";
+        if (page.status === "unfinish") return "\u0110ang v\u1ebd";
+        return page.status || "Ch\u01b0a x\u00e1c \u0111\u1ecbnh";
+      }
+
+      function closePageActionModal() {
+        const overlay = document.getElementById("pageActionModalOverlay");
+        if (!overlay) return;
+        overlay.classList.remove("show");
+        overlay.style.display = "none";
+      }
+
+      function togglePageScriptPanel() {
+        const panel = document.getElementById("pageActionScriptPanel");
+        if (!panel) return;
+        panel.hidden = !panel.hidden;
+      }
+
+      function openPageActionModal(pageId) {
+        const card = document.querySelector(
+          `.page-grid-item[data-page-id="${CSS.escape(String(pageId))}"]`,
+        );
+        const overlay = document.getElementById("pageActionModalOverlay");
+        if (!card || !overlay) return;
+        if (overlay.parentElement !== document.body) {
+          document.body.appendChild(overlay);
+        }
+
+        const actionsTemplate = document.getElementById(
+          `pageActions-${pageId}`,
+        );
+        const title = card.dataset.pageTitle || "Trang";
+        const type = card.dataset.pageType || "Trang truy\u1ec7n";
+        const status = card.dataset.pageStatus || "Ch\u01b0a x\u00e1c \u0111\u1ecbnh";
+        const script = card.dataset.pageScript || "";
+
+        overlay.querySelector("#pageActionModalTitle").textContent = title;
+        overlay.querySelector("#pageActionModalType").textContent = type;
+        overlay.querySelector("#pageActionModalStatus").textContent = status;
+        overlay.querySelector("#pageActionScriptText").textContent =
+          script.trim() || "Trang n\u00e0y ch\u01b0a c\u00f3 k\u1ecbch b\u1ea3n.";
+        overlay.querySelector("#pageActionScriptPanel").hidden = true;
+        overlay.querySelector("#pageActionModalActions").innerHTML =
+          actionsTemplate ? actionsTemplate.innerHTML : "";
+
+        overlay.style.display = "flex";
+        requestAnimationFrame(() => overlay.classList.add("show"));
       }
 
       function loadChapterView(sid, cid) {
@@ -3229,8 +3269,7 @@
             let html = `
               <div id="mangaka-meta" data-mangaka-id="${mangakaId}" class="u-inline-style-126"></div>
               <h3>Danh sách trang — Chapter: ${chapter.chapterName}</h3>
-              <p class="ptab-sub-desc u-inline-style-127">
-                Deadline: <strong>${chapter.deadline || "Chưa đặt deadline"}</strong>
+              <p class="ptab-sub-desc u-inline-style-127">Deadline: <strong>${chapter.deadline || "Chưa đặt deadline"}</strong>
               </p>
               <div class="chapter-page-toolbar">`;
 
@@ -3238,18 +3277,17 @@
               const hasScript = !!(
                 chapter.script && chapter.script.trim() !== ""
               );
-              html += `<a href="/manga/mangaka/myseries/${sid}" class="project-action-btn" onclick="event.preventDefault(); navigateProjectSeries('${sid}')"><i class="fa-solid fa-arrow-left"></i> Quay lại danh sách chapter</a>`;
-              html += `<button type="button" class="project-action-btn" onclick="openChapterScriptModal()">${hasScript ? '<i class="fa-solid fa-pen-to-square"></i> Sửa kịch bản' : '<i class="fa-solid fa-file-pen"></i> Tạo kịch bản'}</button>`;
-              html += `<button type="button" class="project-action-btn project-action-primary" onclick="openAddPageModal('${sid}','${cid}')"><i class="fa-solid fa-plus"></i> Thêm trang mới</button>`;
+              html += `<a href="/manga/mangaka/myseries/${sid}" class="project-action-btn" onclick="event.preventDefault(); navigateProjectSeries('${sid}')">Quay lại danh sách chapter</a>`;
+              html += `<button type="button" class="project-action-btn" onclick="openChapterScriptModal()">${hasScript ? "Sửa kịch bản" : "Tạo kịch bản"}</button>`;
+              html += `<button type="button" class="project-action-btn project-action-primary" onclick="openAddPageModal('${sid}','${cid}')">Thêm trang mới</button>`;
               if (pages.length > 0) {
                 html += `<button type="button" class="btn-action primary btn-submit-chapter u-inline-style-129"
-                          data-chapter-id="${chapter.id}">
-                          📤 Submit lên BTV</button>`;
+                          data-chapter-id="${chapter.id}">Submit lên BTV</button>`;
               }
             } else if (chapter.status === "finish") {
-              html += `<span class="badge-status-approved u-inline-style-130">⏳ Chờ BTV duyệt</span>`;
+              html += `<span class="badge-status-approved u-inline-style-130">Chờ BTV duyệt</span>`;
             } else if (chapter.status === "pass") {
-              html += `<span class="badge-status-passed u-inline-style-130">✅ Đã duyệt</span>`;
+              html += `<span class="badge-status-passed u-inline-style-130">Đã duyệt</span>`;
             }
 
             html += `</div><div class="pages-grid-container">`;
@@ -3261,97 +3299,114 @@
                 const sub = subMap[p.id];
                 const imgHtml = p.filePath
                   ? `<img src="${p.filePath}?t=${Date.now()}" />`
-                  : `<i class="fa-solid fa-image"></i>`;
+                  : ``;
 
                 let actions = "";
 
-                // Nút mở để vẽ
-                if (chapter.status === "unfinish" && p.status === "unfinish") {
-                  actions += `<a href="/manga/mangaka/myseries/${sid}/${cid}/${p.id}/edit" class="page-action-btn page-action-draw"><i class="fa-solid fa-pen-nib"></i> Mở để vẽ</a>`;
+                actions += `<button type="button" class="page-action-btn page-action-script btn-toggle-page-script" onclick="togglePageScriptPanel()">Xem k\u1ecbch b\u1ea3n trang</button>`;
+
+                if (chapter.status === "unfinish" && p.status !== "finish") {
+                  actions += `<a href="/manga/mangaka/myseries/${sid}/${cid}/${p.id}/edit" class="page-action-btn page-action-draw">M\u1edf trang v\u1ebd</a>`;
+                } else {
+                  actions += `<button type="button" class="page-action-btn page-action-disabled" disabled>M\u1edf trang v\u1ebd</button>`;
                 }
 
-                // Nút hoàn thành
-                if (
-                  p.status === "unfinish" ||
-                  (p.status === "done" && sub && sub.status === "finish")
-                ) {
-                  actions += `<button type="button" class="page-action-btn page-action-finish btn-finish-page" data-page-id="${p.id}"><i class="fa-solid fa-check"></i> Hoàn thành</button>`;
-                }
+                const pageTypeLabel = getVietnamesePageType(p.pageType);
+                const pageStatusLabel = getVietnamesePageStatus(p, sub);
+                const pageTitle = `Trang ${p.pageNumber}`;
+                const pageScript = p.script || "";
 
-                // Badge status
-                if (p.status === "finish") {
-                  actions += `<span class="badge-status-passed u-inline-style-132">✅ Finish</span>`;
-                } else if (p.status === "intask") {
-                  actions += `<span class="badge-status-approved u-inline-style-132">🔄 Đang làm</span>`;
-                } else if (
-                  p.status === "done" &&
-                  (!sub || sub.status !== "finish")
-                ) {
-                  actions += `<span class="badge-status-waiting u-inline-style-132">👁 Chờ duyệt</span>`;
-                }
-
-                // Assignment info
-                if (sub && p.status === "intask") {
-                  actions += `<div class="assistant-assignment-badge">
-                    <div>👤 <b>${sub.assistant.user.fullname}</b></div>
-                    <div>📅 ${sub.deadline}</div>
-                  </div>`;
-                }
-
-                // Done: duyệt hoặc giao lại
-                if (p.status === "done" && sub && sub.status === "done") {
-                  actions += `<a href="/manga/mangaka/submission/${sub.id}/edit" class="u-inline-style-133">
-                                🖼 Mở bài nộp để chỉnh sửa</a>
-                              <div class="u-inline-style-018">
-                                <button type="button" class="btn-action approve btn-approve-page u-inline-style-134"
-                                  data-page-id="${p.id}">✅ Duyệt</button>
-                                <button type="button" class="btn-action reject btn-reassign-page u-inline-style-134"
-                                  data-page-id="${p.id}" data-submission-id="${sub.id}"
-                                  data-assistant-id="${sub.assistant.id}"
-                                  data-assistant-name="${sub.assistant.user.fullname}">🔄 Giao lại</button>
-                              </div>`;
-                }
-
-                // Done + finish: vẫn cho mở chỉnh sửa
-                if (p.status === "done" && sub && sub.status === "finish") {
-                  actions += `<a href="/manga/mangaka/submission/${sub.id}/edit" class="u-inline-style-135">
-                                🖼 Mở bài nộp để chỉnh sửa</a>`;
-                }
-
-                // Nút giao việc — hiện khi trang chưa vướng task nào (chưa từng giao,
-                // hoặc task gần nhất đã được duyệt xong). Mỗi lần giao việc tạo 1
-                // task mới độc lập, không ghi đè task cũ đã duyệt, nên mangaka có
-                // thể giao nhiều vòng cho nhiều trợ lý khác nhau trên cùng 1 trang
-                // (vd ass1 vẽ bối cảnh xong duyệt, rồi giao ass2 viết thoại).
                 const canAssignNewRound =
                   p.status === "unfinish" ||
                   (p.status === "done" && sub && sub.status === "finish");
                 if (chapter.status === "unfinish" && canAssignNewRound) {
-                  actions += `<button type="button" class="page-action-btn page-action-assign btn-assign-task btn-open-assign" data-page-id="${p.id}"><i class="fa-solid fa-user-plus"></i> Giao việc</button>`;
+                  actions += `<button type="button" class="page-action-btn page-action-assign btn-assign-task btn-open-assign" data-page-id="${p.id}">Giao vi\u1ec7c cho tr\u1ee3 l\u00ed</button>`;
                 }
 
-                const pageTypeLabels = {
-                  cover: "📕 Trang bìa",
-                  action: "🎬 Trang hành động",
-                  rest: "☕ Trang nghỉ",
-                  info: "ℹ️ Trang thông tin",
-                  end: "🏁 Trang cuối",
-                };
-                const pageTypeBadge = pageTypeLabels[p.pageType]
-                  ? `<span class="badge-status-default u-inline-style-132">${pageTypeLabels[p.pageType]}</span>`
-                  : "";
+                if (
+                  p.status === "unfinish" ||
+                  (p.status === "done" && sub && sub.status === "finish")
+                ) {
+                  actions += `<button type="button" class="page-action-btn page-action-finish btn-finish-page" data-page-id="${p.id}">Ho\u00e0n th\u00e0nh</button>`;
+                }
 
-                html += `<div class="page-grid-item">
-                  <div class="page-preview-box">${imgHtml}</div>
-                  <p>Trang ${p.pageNumber}</p>
-                  ${pageTypeBadge}
-                  <p>${p.status}</p>
-                  <div class="chapter-create-inline-form">${actions}</div>
+                if (p.status === "done" && sub && sub.status === "done") {
+                  actions += `<button type="button" class="page-action-btn page-action-finish btn-approve-page"
+                                  data-page-id="${p.id}">Duy\u1ec7t</button>
+                              <button type="button" class="page-action-btn page-action-assign btn-reassign-page"
+                                  data-page-id="${p.id}" data-submission-id="${sub.id}"
+                                  data-assistant-id="${sub.assistant.id}"
+                                  data-assistant-name="${escapeProjectHtml(sub.assistant.user.fullname)}">Giao l\u1ea1i vi\u1ec7c cho tr\u1ee3 l\u00ed</button>`;
+                }
+
+                let assignmentInfo = "";
+                if (sub && p.status === "intask") {
+                  assignmentInfo = `<div class="assistant-assignment-badge page-detail-assignment">
+                    <div>Tr\u1ee3 l\u00ed: <b>${escapeProjectHtml(sub.assistant.user.fullname)}</b></div>
+                    <div>Deadline: ${escapeProjectHtml(sub.deadline || "Ch\u01b0a \u0111\u1eb7t")}</div>
+                  </div>`;
+                }
+
+                html += `<div class="page-grid-item page-detail-card"
+                    data-page-id="${p.id}"
+                    data-page-title="${escapeProjectHtml(pageTitle)}"
+                    data-page-type="${escapeProjectHtml(pageTypeLabel)}"
+                    data-page-status="${escapeProjectHtml(pageStatusLabel)}"
+                    data-page-script="${escapeProjectHtml(pageScript)}">
+                  <button
+                    type="button"
+                    class="page-detail-trigger page-detail-preview-trigger"
+                    onclick="openPageActionModal('${p.id}')"
+                    aria-label="Mở tác vụ ${escapeProjectHtml(pageTitle)}"
+                  >
+                    <span class="page-preview-box">${imgHtml}</span>
+                    <span class="page-detail-trigger-title">${pageTitle}</span>
+                    <span class="page-detail-card-meta">
+                      <span>${pageTypeLabel}</span>
+                      <span>${pageStatusLabel}</span>
+                    </span>
+                  </button>
+                  ${assignmentInfo}
+                  <div class="page-action-template" id="pageActions-${p.id}" hidden>${actions}</div>
                 </div>`;
               });
             }
 
-            html += `</div>`;
+            html += `</div>
+              <div
+                id="pageActionModalOverlay"
+                class="page-action-modal-overlay app-floating-modal"
+                onclick="if (event.target === this) closePageActionModal()"
+              >
+                <div class="modal-box page-action-modal-box">
+                  <div class="assistant-script-modal-head">
+                    <h3 id="pageActionModalTitle">Trang</h3>
+                    <button
+                      type="button"
+                      class="modal-close-btn"
+                      onclick="closePageActionModal()"
+                      aria-label="\u0110\u00f3ng"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                  <div class="page-action-summary">
+                    <div>
+                      <span>Th\u1ec3 lo\u1ea1i trang</span>
+                      <strong id="pageActionModalType"></strong>
+                    </div>
+                    <div>
+                      <span>Tr\u1ea1ng th\u00e1i trang</span>
+                      <strong id="pageActionModalStatus"></strong>
+                    </div>
+                  </div>
+                  <div id="pageActionScriptPanel" class="page-action-script-panel" hidden>
+                    <span>K\u1ecbch b\u1ea3n trang</span>
+                    <p id="pageActionScriptText"></p>
+                  </div>
+                  <div id="pageActionModalActions" class="page-action-modal-actions"></div>
+                </div>
+              </div>`;
             document.getElementById("project-view-page").innerHTML = html;
             showProjectView("page");
           });
@@ -3361,7 +3416,7 @@
         // Chapter phải có kịch bản thì mới được tạo trang mới
         if (!window._chapterScript || window._chapterScript.trim() === "") {
           alert(
-            "⚠️ Chapter chưa có kịch bản. Hãy tạo kịch bản trước khi tạo trang mới!",
+            "Chapter chưa có kịch bản. Hãy tạo kịch bản trước khi tạo trang mới!",
           );
           return;
         }
@@ -3403,7 +3458,7 @@
                 "none";
               window.location.href = `/manga/mangaka/myseries/${sid}/${cid}/${data.pageId}/edit`;
             } else {
-              alert("❌ " + data.message);
+              alert("" + data.message);
             }
           });
       }
@@ -3443,13 +3498,13 @@
               document.getElementById(
                 "chapterScriptModalOverlay",
               ).style.display = "none";
-              alert("✅ " + data.message);
+              alert("" + data.message);
               loadChapterView(window._currentSid, window._currentCid);
             } else {
-              alert("❌ " + data.message);
+              alert("" + data.message);
             }
           })
-          .catch((err) => alert("❌ Lỗi: " + err.message));
+          .catch((err) => alert("Lỗi: " + err.message));
       }
 
       function updateScriptCounter(inputId, countId) {
@@ -3470,7 +3525,7 @@
 
         if (rawCount > MAX_FRAME_COUNT) {
           if (errEl) {
-            errEl.textContent = `⚠️ Số frame tối đa là ${MAX_FRAME_COUNT}! Đã tự động giới hạn còn ${MAX_FRAME_COUNT} frame.`;
+            errEl.textContent = `Số frame tối đa là ${MAX_FRAME_COUNT}! Đã tự động giới hạn còn ${MAX_FRAME_COUNT} frame.`;
             errEl.style.display = "block";
           }
           countInput.value = MAX_FRAME_COUNT;
@@ -3495,5 +3550,7 @@
         });
       }
     </script>
+    <script src="/js/ui-alert.js" th:src="@{/js/ui-alert.js}"></script>
+    \n\n
   </body>
 </html>

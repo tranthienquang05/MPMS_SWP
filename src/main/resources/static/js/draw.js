@@ -2,6 +2,20 @@ const CANVAS_W = 400,
   CANVAS_H = 600;
 const canvasStack = document.getElementById("canvasStack");
 
+function normalizeDrawCanvasStack() {
+  if (!canvasStack) return;
+  const input = document.getElementById("drawCanvas");
+  const region = document.getElementById("regionSelectBox");
+  canvasStack.querySelectorAll("canvas").forEach((canvas) => {
+    if (canvas !== input) canvas.remove();
+  });
+  if (input && region && input.nextElementSibling !== region) {
+    canvasStack.insertBefore(input, region);
+  }
+}
+
+normalizeDrawCanvasStack();
+
 // Cấu trúc layer: { id, name, canvas, ctx, visible, opacity }
 let layers = [];
 let activeLayerIndex = 0;
@@ -132,6 +146,46 @@ let shapeFillMode = "outline";
 
 const historyListEl =
   document.getElementById("historyList") || document.createElement("div");
+
+function decorateDrawIconButtons() {
+  const icons = {
+    pencil: "fa-pen",
+    brush: "fa-paintbrush",
+    eraser: "fa-eraser",
+    bucket: "fa-fill-drip",
+    line: "fa-minus",
+    rect: "fa-square",
+    oval: "fa-circle",
+    text: "fa-font",
+    select: "fa-vector-square",
+    "select-oval": "fa-circle-dot",
+    "select-free": "fa-crop-simple",
+    toolEyedrop: "fa-eye-dropper",
+    toolUndo: "fa-rotate-left",
+    toolClear: "fa-trash",
+    btnAddLayer: "fa-plus",
+    zoomOut: "fa-magnifying-glass-minus",
+    zoomIn: "fa-magnifying-glass-plus",
+  };
+
+  document.querySelectorAll(".lt-btn[data-tool]").forEach((button) => {
+    if (!button.querySelector("i")) {
+      button.innerHTML =
+        '<i class="fa-solid ' +
+        (icons[button.dataset.tool] || "fa-circle") +
+        '"></i>';
+    }
+  });
+
+  Object.entries(icons).forEach(([id, icon]) => {
+    const button = document.getElementById(id);
+    if (button && !button.querySelector("i") && !button.textContent.trim()) {
+      button.innerHTML = '<i class="fa-solid ' + icon + '"></i>';
+    }
+  });
+}
+
+decorateDrawIconButtons();
 
 function snapshotAllLayers() {
   // Lưu trạng thái toàn bộ layer hiện có (đơn giản hoá: lưu canvas của activeLayer)
@@ -918,7 +972,7 @@ document.querySelectorAll(".lt-btn[data-tool]").forEach((btn) => {
     inputLayer.style.cursor = isSelTool
       ? "cell"
       : currentTool === "text"
-        ? "textCursor"
+        ? textCursor
         : darkCrosshair;
 
     // Hiện/ẩn property phù hợp
@@ -1222,7 +1276,7 @@ async function sendChatMessage() {
   input.value = "";
   const btnSend = document.getElementById("btnSendChat");
   btnSend.disabled = true;
-  btnSend.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  btnSend.innerHTML = "Đang xử lý...";
 
   const formData = new FormData();
   formData.append("message", msg);
@@ -1312,15 +1366,14 @@ if (btnSavePage) {
   btnSavePage.addEventListener("click", async () => {
     const pageId = btnSavePage.dataset.pageId; // 👈 đọc tại thời điểm click, không đọc lúc load file
     if (!pageId) {
-      alert("❌ Không tìm thấy pageId, vui lòng tải lại trang!");
+      alert("Không tìm thấy pageId, vui lòng tải lại trang!");
       return;
     }
 
     const base64 = flattenAllLayers().toDataURL("image/png");
 
     btnSavePage.disabled = true;
-    btnSavePage.innerHTML =
-      '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+    btnSavePage.innerHTML = "Đang lưu...";
 
     try {
       const res = await fetch(`/api/page/${pageId}/savefile`, {
@@ -1330,23 +1383,20 @@ if (btnSavePage) {
       });
       const data = await res.json();
       if (data.status === "success") {
-        btnSavePage.innerHTML = '<i class="fa-solid fa-check"></i> Đã lưu!';
+        btnSavePage.innerHTML = "Đã lưu!";
         setTimeout(() => {
-          btnSavePage.innerHTML =
-            '<i class="fa-solid fa-floppy-disk"></i> Lưu trang';
+          btnSavePage.innerHTML = "Lưu trang";
           if (data.redirectUrl) {
             window.location.href = data.redirectUrl;
           }
         }, 2000);
       } else {
-        alert("❌ " + data.message);
-        btnSavePage.innerHTML =
-          '<i class="fa-solid fa-floppy-disk"></i> Lưu trang';
+        alert("" + data.message);
+        btnSavePage.innerHTML = "Lưu trang";
       }
     } catch (err) {
-      alert("❌ Lỗi: " + err.message);
-      btnSavePage.innerHTML =
-        '<i class="fa-solid fa-floppy-disk"></i> Lưu trang';
+      alert("Lỗi: " + err.message);
+      btnSavePage.innerHTML = "Lưu trang";
     } finally {
       btnSavePage.disabled = false;
     }
@@ -1362,8 +1412,7 @@ if (btnSubmitSubmission) {
 
     btnSubmitSubmission.disabled = true;
 
-    btnSubmitSubmission.innerHTML =
-      '<i class="fa-solid fa-spinner fa-spin"></i> Đang nộp...';
+    btnSubmitSubmission.innerHTML = "Đang nộp...";
 
     try {
       const res = await fetch(`/api/submission/${submissionId}/savefile`, {
@@ -1379,8 +1428,7 @@ if (btnSubmitSubmission) {
       const data = await res.json();
 
       if (data.status === "success") {
-        btnSubmitSubmission.innerHTML =
-          '<i class="fa-solid fa-check"></i> Đã nộp';
+        btnSubmitSubmission.innerHTML = "Đã nộp";
 
         setTimeout(() => {
           if (data.redirectUrl) {
@@ -1388,16 +1436,14 @@ if (btnSubmitSubmission) {
           }
         }, 1000);
       } else {
-        alert("❌ " + data.message);
+        alert("" + data.message);
 
-        btnSubmitSubmission.innerHTML =
-          '<i class="fa-solid fa-paper-plane"></i> Nộp bài';
+        btnSubmitSubmission.innerHTML = "Nộp bài";
       }
     } catch (err) {
-      alert("❌ " + err.message);
+      alert("" + err.message);
 
-      btnSubmitSubmission.innerHTML =
-        '<i class="fa-solid fa-paper-plane"></i> Nộp bài';
+      btnSubmitSubmission.innerHTML = "Nộp bài";
     } finally {
       btnSubmitSubmission.disabled = false;
     }
@@ -1433,8 +1479,7 @@ if (btnSubmitSubmission) {
     button.disabled = loading;
     if (loading) {
       button.dataset.originalHtml = button.innerHTML;
-      button.innerHTML =
-        '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+      button.innerHTML = "Đang xử lý...";
     } else {
       button.innerHTML =
         label || button.dataset.originalHtml || button.innerHTML;
@@ -1469,7 +1514,7 @@ if (btnSubmitSubmission) {
       }
 
       if (button) {
-        button.innerHTML = '<i class="fa-solid fa-check"></i> Đã lưu';
+        button.innerHTML = "Đã lưu";
       }
 
       if (options.redirect !== false) {
@@ -1530,9 +1575,10 @@ if (btnSubmitSubmission) {
 
   btnModalLoadPage?.addEventListener("click", () => btnLoadPageLegacy?.click());
   btnModalDownload?.addEventListener("click", () => btnDownloadLegacy?.click());
-  btnModalSaveArtwork?.addEventListener("click", (e) =>
-    saveArtwork(e.currentTarget, { redirect: false }),
-  );
+  btnModalSaveArtwork?.addEventListener("click", async (e) => {
+    const saved = await saveArtwork(e.currentTarget, { redirect: false });
+    if (saved) closeEditSubmissionModal();
+  });
 
   btnConfirmEdit?.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -1541,8 +1587,10 @@ if (btnSubmitSubmission) {
     if (!saved) return;
 
     try {
-      await updateSubmissionMeta(button);
-      button.innerHTML = '<i class="fa-solid fa-check"></i> Hoàn tất';
+      if (document.getElementById("subStatus")) {
+        await updateSubmissionMeta(button);
+      }
+      button.innerHTML = "Hoàn tất";
       closeEditSubmissionModal();
 
       const { returnUrl } = getDrawContext();

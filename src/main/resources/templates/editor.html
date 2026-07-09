@@ -296,9 +296,7 @@
                 placeholder="Nhập tin nhắn..."
                 disabled
               />
-              <button type="button" id="chatSendBtn" disabled>
-                <i class="fa-solid fa-paper-plane"></i>
-              </button>
+              <button type="button" id="chatSendBtn" disabled></button>
             </div>
           </div>
         </div>
@@ -361,8 +359,8 @@
                             <td>${p.mangaka?.user?.fullname ?? "-"}</td>
                             <td>${p.seriesName}</td>
                             <td>
-                                ${p.filePath ? `<a href="${p.filePath}" class="btn-link" target="_blank"><i class="fa-solid fa-file-pdf"></i> Bản thảo</a><br>` : ""}
-                                ${p.fileOfTantou ? `<a href="${p.fileOfTantou}" class="btn-link" target="_blank"><i class="fa-solid fa-file-lines"></i> Hồ sơ đề xuất</a>` : ""}
+                                ${p.filePath ? `<a href="${p.filePath}" class="btn-link" target="_blank">Bản thảo</a><br>` : ""}
+                                ${p.fileOfTantou ? `<a href="${p.fileOfTantou}" class="btn-link" target="_blank">Hồ sơ đề xuất</a>` : ""}
                             </td>
                             <td>${voteProgress}</td>
                             <td>
@@ -396,7 +394,7 @@
           .then((data) => {
             if (data.status === "success") {
               const msgEl = document.getElementById("voteMessage");
-              msgEl.textContent = "✅ " + data.message;
+              msgEl.textContent = "" + data.message;
               msgEl.style.display = "block";
               setTimeout(() => (msgEl.style.display = "none"), 3000);
               loadVoteProposals();
@@ -623,5 +621,7 @@
         loadActiveSessions();
       });
     </script>
+    <script src="/js/ui-alert.js" th:src="@{/js/ui-alert.js}"></script>
+    \n\n
   </body>
 </html>

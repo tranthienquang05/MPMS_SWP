@@ -34,7 +34,7 @@
       <div class="header-actions">
         <a th:href="@{/login/logout}">
           <button type="button" class="btn-icon" aria-label="Logout">
-            <i class="icon-logout"></i>
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
           </button>
         </a>
       </div>
@@ -123,7 +123,7 @@
       <div id="tab-accounts" class="tab-pane active">
         <h2>Tài khoản</h2>
         <div class="section-card">
-          <h3><i class="icon-3user"></i> Quản lý tài khoản</h3>
+          <h3><i class="icon-3user"></i>Quản lý tài khoản</h3>
 
           <div class="form-inline mb-10">
             <div class="field">
@@ -139,7 +139,7 @@
             </div>
             <div class="flex-end-layout">
               <button class="btn-sm btn-primary" onclick="openCreateModal()">
-                <i class="icon-plus"></i> Tạo tài khoản
+                <i class="icon-plus"></i>Tạo tài khoản
               </button>
             </div>
           </div>
@@ -167,7 +167,7 @@
       <div id="tab-relations" class="tab-pane">
         <h2>Phân công</h2>
         <div class="section-card">
-          <h3><i class="icon-link"></i> Tantou phụ trách Mangaka</h3>
+          <h3><i class="icon-link"></i>Tantou phụ trách Mangaka</h3>
 
           <div class="form-inline">
             <div class="field">
@@ -180,7 +180,7 @@
             </div>
             <div class="flex-end-layout">
               <button class="btn-sm btn-primary" onclick="assignMangakaTanto()">
-                <i class="icon-check"></i> Phân công
+                <i class="icon-check"></i>Phân công
               </button>
             </div>
           </div>
@@ -202,7 +202,7 @@
         </div>
 
         <div class="section-card">
-          <h3><i class="icon-link"></i> Assistant làm việc với Mangaka</h3>
+          <h3><i class="icon-link"></i>Assistant làm việc với Mangaka</h3>
 
           <div class="form-inline">
             <div class="field">
@@ -218,7 +218,7 @@
                 class="btn-sm btn-primary"
                 onclick="assignAssistantMangaka()"
               >
-                <i class="icon-check"></i> Phân công
+                <i class="icon-check"></i>Phân công
               </button>
             </div>
           </div>
@@ -243,7 +243,7 @@
       <div id="tab-vote" class="tab-pane">
         <h2>Tạo vote</h2>
         <div class="section-card">
-          <h3><i class="fa-solid fa-ranking-star"></i> Bảng xếp hạng series</h3>
+          <h3>Bảng xếp hạng series</h3>
 
           <div class="form-inline">
             <div class="field">
@@ -289,7 +289,7 @@
             </div>
             <div class="flex-end-layout">
               <button class="btn-sm btn-primary" onclick="loadVoteRanking()">
-                <i class="icon-glass"></i> Xem ranking
+                <i class="icon-glass"></i>Xem ranking
               </button>
             </div>
           </div>
@@ -314,9 +314,7 @@
         </div>
 
         <div class="section-card">
-          <h3>
-            <i class="fa-solid fa-square-poll-vertical"></i> Phiên vote đang mở
-          </h3>
+          <h3>Phiên vote đang mở</h3>
 
           <div class="form-inline mb-10">
             <div class="flex-wrap-layout">
@@ -324,13 +322,13 @@
                 class="btn-sm btn-danger"
                 onclick="createBottomVoteSessionsAdmin()"
               >
-                <i class="icon-danger"></i> Tạo vote hủy 3 series tệ nhất năm
+                <i class="icon-danger"></i>Tạo vote hủy 3 series tệ nhất năm
               </button>
               <button
                 class="btn-sm btn-primary"
                 onclick="openCreateVoteModalAdmin()"
               >
-                <i class="icon-plus"></i> Tự chọn tạo vote
+                <i class="icon-plus"></i>Tự chọn tạo vote
               </button>
             </div>
           </div>
@@ -358,9 +356,7 @@
       <div id="tab-history" class="tab-pane">
         <h2>Lịch sử hoạt động</h2>
         <div class="section-card">
-          <h3>
-            <i class="fa-solid fa-clock-rotate-left"></i> Tra cứu người dùng
-          </h3>
+          <h3>Tra cứu người dùng</h3>
 
           <div class="form-inline">
             <div class="field">
@@ -372,7 +368,7 @@
             </div>
             <div class="flex-end-layout">
               <button class="btn-sm btn-primary" onclick="searchUsersHistory()">
-                <i class="icon-glass"></i> Tải lại
+                <i class="icon-glass"></i>Tải lại
               </button>
             </div>
           </div>
@@ -415,9 +411,7 @@
                 placeholder="Nhập tin nhắn..."
                 disabled
               />
-              <button type="button" id="chatSendBtn" disabled>
-                <i class="fa-solid fa-paper-plane"></i>
-              </button>
+              <button type="button" id="chatSendBtn" disabled></button>
             </div>
           </div>
         </div>
@@ -427,9 +421,7 @@
       <div id="tab-import" class="tab-pane">
         <h2>Import dữ liệu Excel</h2>
         <div class="section-card">
-          <h3>
-            <i class="fa-solid fa-file-excel"></i> Upload file Excel (.xlsx)
-          </h3>
+          <h3>Upload file Excel (.xlsx)</h3>
           <p class="text-muted-small">
             Tải lên file Excel để cập nhật số lượt xem của Chapter và phiếu
             Like/Dislike.
@@ -446,7 +438,7 @@
               class="btn-sm btn-cancel"
               onclick="document.getElementById('excel-file').click()"
             >
-              <i class="fa-solid fa-folder-open"></i> Chọn file
+              Chọn file
             </button>
             <span id="excel-file-name" class="u-inline-style-004"
               >Chưa chọn file nào</span
@@ -455,7 +447,7 @@
 
           <div class="form-inline mb-10">
             <button class="btn-sm btn-primary" onclick="uploadExcel()">
-              <i class="fa-solid fa-cloud-arrow-up"></i> Tải lên và Xử lý
+              Tải lên và Xử lý
             </button>
           </div>
 
@@ -466,10 +458,7 @@
 
     <div id="modal-create" class="modal-overlay">
       <div class="modal-box">
-        <h3>
-          <i class="fa-solid fa-user-plus u-inline-style-006"></i>Tạo tài khoản
-          mới
-        </h3>
+        <h3>Tạo tài khoản mới</h3>
 
         <div class="field">
           <label>Họ tên <span class="text-danger-span">*</span></label>
@@ -536,7 +525,7 @@
             Hủy
           </button>
           <button class="btn-sm btn-primary" onclick="createAccount()">
-            <i class="fa-solid fa-save"></i> Tạo
+            Tạo
           </button>
         </div>
       </div>
@@ -544,9 +533,7 @@
 
     <div id="modal-edit" class="modal-overlay">
       <div class="modal-box">
-        <h3>
-          <i class="fa-solid fa-user-pen u-inline-style-007"></i>Sửa tài khoản
-        </h3>
+        <h3>Sửa tài khoản</h3>
 
         <input type="hidden" id="e-id" />
         <div class="field">
@@ -573,19 +560,14 @@
           <button class="btn-sm btn-cancel" onclick="closeModal('modal-edit')">
             Hủy
           </button>
-          <button class="btn-sm btn-primary" onclick="saveEdit()">
-            <i class="fa-solid fa-save"></i> Lưu
-          </button>
+          <button class="btn-sm btn-primary" onclick="saveEdit()">Lưu</button>
         </div>
       </div>
     </div>
 
     <div id="modal-delete" class="modal-overlay">
       <div class="modal-box modal-width-360">
-        <h3>
-          <i class="fa-solid fa-triangle-exclamation u-inline-style-008"></i>Xác
-          nhận xóa
-        </h3>
+        <h3>Xác nhận xóa</h3>
         <p id="delete-confirm-msg" class="p-delete-msg"></p>
         <p class="text-muted-small">Hành động này không thể hoàn tác.</p>
         <input type="hidden" id="delete-id" />
@@ -597,7 +579,7 @@
             Hủy
           </button>
           <button class="btn-sm btn-danger" onclick="confirmDelete()">
-            <i class="fa-solid fa-trash"></i> Xóa
+            Xóa
           </button>
         </div>
       </div>
@@ -605,9 +587,7 @@
 
     <div id="modal-change-tanto" class="modal-overlay">
       <div class="modal-box modal-width-380">
-        <h3>
-          <i class="fa-solid fa-pen u-inline-style-009"></i>Đổi Tantou Editor
-        </h3>
+        <h3>Đổi Tantou Editor</h3>
         <input type="hidden" id="ct-mangakaId" />
         <div class="field">
           <label>Mangaka</label>
@@ -627,7 +607,7 @@
             Hủy
           </button>
           <button class="btn-sm btn-primary" onclick="confirmChangeTanto()">
-            <i class="fa-solid fa-save"></i> Lưu
+            Lưu
           </button>
         </div>
       </div>
@@ -635,7 +615,7 @@
 
     <div id="modal-change-mangaka" class="modal-overlay">
       <div class="modal-box modal-width-380">
-        <h3><i class="fa-solid fa-pen u-inline-style-010"></i>Đổi Mangaka</h3>
+        <h3>Đổi Mangaka</h3>
         <input type="hidden" id="cm-assistantId" />
         <div class="field">
           <label>Assistant</label>
@@ -653,7 +633,7 @@
             Hủy
           </button>
           <button class="btn-sm btn-primary" onclick="confirmChangeMangaka()">
-            <i class="fa-solid fa-save"></i> Lưu
+            Lưu
           </button>
         </div>
       </div>
@@ -661,10 +641,7 @@
 
     <div id="modal-create-vote" class="modal-overlay">
       <div class="modal-box">
-        <h3>
-          <i class="fa-solid fa-square-poll-vertical u-inline-style-006"></i>Tạo
-          phiên vote mới
-        </h3>
+        <h3>Tạo phiên vote mới</h3>
 
         <div class="field">
           <label>Loại vote <span class="text-danger-span">*</span></label>
@@ -695,7 +672,7 @@
             class="btn-sm btn-primary"
             onclick="submitCreateVoteSessionAdmin()"
           >
-            <i class="fa-solid fa-save"></i> Tạo Vote
+            Tạo Vote
           </button>
         </div>
       </div>
@@ -703,10 +680,7 @@
 
     <div id="modal-activity" class="modal-overlay">
       <div class="modal-box modal-box-wide">
-        <h3>
-          <i class="fa-solid fa-clock-rotate-left u-inline-style-010"></i>Lịch
-          sử hoạt động: <span id="activity-user-name"></span>
-        </h3>
+        <h3>Lịch sử hoạt động: <span id="activity-user-name"></span></h3>
         <p id="activity-user-info" class="text-muted-info"></p>
 
         <div class="activity-list-container">
@@ -744,7 +718,7 @@
 
     <script>
       // ════════════════════════════════════════════
-      //  UTILS
+      // UTILS
       // ════════════════════════════════════════════
       function openTab(id) {
         document
@@ -781,7 +755,7 @@
 
         resultDiv.style.display = "block";
         resultDiv.innerHTML =
-          '<span class="u-inline-style-011"><i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...</span>';
+          '<span class="u-inline-style-011">Đang xử lý...</span>';
 
         try {
           const res = await fetch("/manga/system-admin/import-excel", {
@@ -793,9 +767,7 @@
           if (data.status === "success") {
             showToast(data.message, "success");
             resultDiv.innerHTML =
-              '<span class="u-inline-style-012"><i class="fa-solid fa-circle-check"></i> ' +
-              data.message +
-              "</span>";
+              '<span class="u-inline-style-012">' + data.message + "</span>";
           } else {
             if (
               data.errors &&
@@ -804,7 +776,7 @@
             ) {
               showToast("Import thất bại, xem chi tiết lỗi bên dưới", "error");
               let html =
-                '<div class="u-inline-style-013"><i class="fa-solid fa-circle-xmark"></i> <b>Có ' +
+                '<div class="u-inline-style-013"><b>Có ' +
                 data.errors.length +
                 ' lỗi cần sửa:</b><ul class="u-inline-style-014">';
               data.errors.forEach((err) => {
@@ -815,7 +787,7 @@
             } else {
               showToast(data.message, "error");
               resultDiv.innerHTML =
-                '<span class="u-inline-style-013"><i class="fa-solid fa-circle-xmark"></i> ' +
+                '<span class="u-inline-style-013">' +
                 (data.message || "Lỗi không xác định") +
                 "</span>";
             }
@@ -823,7 +795,7 @@
         } catch (e) {
           showToast("Lỗi kết nối", "error");
           resultDiv.innerHTML =
-            '<span class="u-inline-style-013"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi kết nối: ' +
+            '<span class="u-inline-style-013">Lỗi kết nối: ' +
             e.message +
             "</span>";
         }
@@ -831,7 +803,7 @@
 
       function showToast(msg, type = "success") {
         const t = document.getElementById("toast");
-        t.textContent = (type === "success" ? "✅ " : "❌ ") + msg;
+        t.textContent = (type === "success" ? "" : "") + msg;
         t.className = "show " + type;
         setTimeout(() => (t.className = ""), 3000);
       }
@@ -863,12 +835,12 @@
       }
 
       // ════════════════════════════════════════════
-      //  STATE
+      // STATE
       // ════════════════════════════════════════════
       let allData = {};
 
       // ════════════════════════════════════════════
-      //  LOAD DỮ LIỆU
+      // LOAD DỮ LIỆU
       // ════════════════════════════════════════════
       async function loadData() {
         const res = await fetch("/manga/system-admin/data");
@@ -906,11 +878,9 @@
                 <td>${u.email}</td>
                 <td>${badgeHtml(u.role)}</td>
                 <td class="u-inline-style-018">
-                    <button class="btn-sm btn-warning" onclick="openEditModal('${u.id}','${u.fullname}','${u.username}','${u.email}')">
-                        <i class="fa-solid fa-pen"></i> Sửa
+                    <button class="btn-sm btn-warning" onclick="openEditModal('${u.id}','${u.fullname}','${u.username}','${u.email}')">Sửa
                     </button>
-                    <button class="btn-sm btn-danger" onclick="openDeleteModal('${u.id}','${u.fullname}')">
-                        <i class="fa-solid fa-trash"></i> Xóa
+                    <button class="btn-sm btn-danger" onclick="openDeleteModal('${u.id}','${u.fullname}')">Xóa
                     </button>
                 </td>
             </tr>`,
@@ -919,7 +889,7 @@
       }
 
       // ════════════════════════════════════════════
-      //  TẠO TÀI KHOẢN
+      // TẠO TÀI KHOẢN
       // ════════════════════════════════════════════
       function openCreateModal() {
         ["c-fullname", "c-username", "c-email", "c-password"].forEach(
@@ -1013,7 +983,7 @@
       }
 
       // ════════════════════════════════════════════
-      //  SỬA TÀI KHOẢN
+      // SỬA TÀI KHOẢN
       // ════════════════════════════════════════════
       function openEditModal(id, fullname, username, email) {
         document.getElementById("e-id").value = id;
@@ -1051,7 +1021,7 @@
       }
 
       // ════════════════════════════════════════════
-      //  XÓA TÀI KHOẢN
+      // XÓA TÀI KHOẢN
       // ════════════════════════════════════════════
       function openDeleteModal(id, fullname) {
         document.getElementById("delete-id").value = id;
@@ -1079,7 +1049,7 @@
       }
 
       // ════════════════════════════════════════════
-      //  QUAN HỆ
+      // QUAN HỆ
       // ════════════════════════════════════════════
       function loadRelations() {
         const mgks = (allData.mangakas || []).map((m) => ({
@@ -1145,8 +1115,7 @@
                 <td>
                     <!-- FIX: gọi openChangeTantoModal thay vì prompt() -->
                     <button class="btn-sm btn-warning"
-                        onclick="openChangeTantoModal('${m.id}', '${m.user?.fullname ?? ""}')">
-                        <i class="fa-solid fa-pen"></i> Đổi Tantou
+                        onclick="openChangeTantoModal('${m.id}', '${m.user?.fullname ?? ""}')">Đổi Tantou
                     </button>
                 </td>
             </tr>`,
@@ -1171,8 +1140,7 @@
                 <td>
                     <!-- FIX: gọi openChangeMangakaModal thay vì prompt() -->
                     <button class="btn-sm btn-warning"
-                        onclick="openChangeMangakaModal('${a.id}', '${a.user?.fullname ?? ""}')">
-                        <i class="fa-solid fa-pen"></i> Đổi Mangaka
+                        onclick="openChangeMangakaModal('${a.id}', '${a.user?.fullname ?? ""}')">Đổi Mangaka
                     </button>
                 </td>
             </tr>`,
@@ -1325,7 +1293,7 @@
       }
 
       // ════════════════════════════════════════════
-      //  QUẢN LÝ VOTE SERIES
+      // QUẢN LÝ VOTE SERIES
       // ════════════════════════════════════════════
 
       function loadVoteRanking() {
@@ -1377,8 +1345,8 @@
               .map((s) => {
                 const typeLabel =
                   s.voteType === "stop"
-                    ? '<span class="u-inline-style-020">🚫 Dừng</span>'
-                    : '<span class="u-inline-style-021">🏆 Khen Thưởng</span>';
+                    ? '<span class="u-inline-style-020">Dừng</span>'
+                    : '<span class="u-inline-style-021">Khen Thưởng</span>';
                 const progress = s.voted + "/" + s.totalBoards + " đã vote";
                 let result;
                 if (s.sessionStatus === "closed") {
@@ -1514,7 +1482,7 @@
               if (
                 inTop5 &&
                 !confirm(
-                  '⚠️ Series "' +
+                  'Series "' +
                     inTop5.seriesName +
                     '" đang trong TOP 5 có lượt yêu thích cao. Bạn có chắc muốn tạo vote dừng?',
                 )
@@ -1528,7 +1496,7 @@
       }
 
       // ════════════════════════════════════════════
-      //  LỊCH SỬ HOẠT ĐỘNG NGƯỜI DÙNG
+      // LỊCH SỬ HOẠT ĐỘNG NGƯỜI DÙNG
       // ════════════════════════════════════════════
       let historyTabInited = false;
       let allUsersForHistory = [];
@@ -1591,7 +1559,7 @@
                 <td>${badgeHtml((u.role || "").toLowerCase())}</td>
                 <td>
                   <button class="btn-sm btn-primary" onclick="viewUserActivity('${u.id}')">
-                    <i class="icon-history"></i> Xem lịch sử
+                    <i class="icon-history"></i>Xem lịch sử
                   </button>
                 </td>
               </tr>`,
@@ -1641,9 +1609,11 @@
       }
 
       // ════════════════════════════════════════════
-      //  INIT
+      // INIT
       // ════════════════════════════════════════════
       document.addEventListener("DOMContentLoaded", loadData);
     </script>
+    <script src="/js/ui-alert.js" th:src="@{/js/ui-alert.js}"></script>
+    \n\n
   </body>
 </html>

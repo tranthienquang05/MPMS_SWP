@@ -723,130 +723,211 @@
       <div id="tab-project" class="tab-pane">
         <h2>Công việc được giao</h2>
 
-        <div class="kanban-grid">
-          <div>
-            <h3>🟠 Đang làm</h3>
-
-            <div th:each="s : ${todo}" class="kanban-card todo-bg">
-              <b th:text="${s.pageId.chapter.series.seriesName}"></b>
-
-              <p>
-                Chapter
-                <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
-                Trang <span th:text="${s.pageId.pageNumber}"></span>
-                <span th:switch="${s.pageId.pageType}">
-                  <span th:case="'cover'">— 📕 Trang bìa</span>
-                  <span th:case="'action'">— 🎬 Trang hành động</span>
-                  <span th:case="'rest'">— ☕ Trang nghỉ</span>
-                  <span th:case="'info'">— ℹ️ Trang thông tin</span>
-                  <span th:case="'end'">— 🏁 Trang cuối</span>
-                </span>
-              </p>
-
-              <p>
-                Deadline:
-                <span
+        <div class="assistant-task-table-wrap">
+          <table class="data-table assistant-task-table">
+            <thead>
+              <tr>
+                <th>Trạng thái</th>
+                <th>Series</th>
+                <th>Trang</th>
+                <th>Loại trang</th>
+                <th>Deadline</th>
+                <th>Frame</th>
+                <th>Ghi chú</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="s : ${todo}">
+                <td>
+                  <span class="task-status-pill status-doing">
+                    <span></span>
+                    Đang làm
+                  </span>
+                </td>
+                <td>
+                  <strong
+                    th:text="${s.pageId.chapter.series.seriesName}"
+                  ></strong>
+                  <small>
+                    Chapter
+                    <span th:text="${s.pageId.chapter.chapterNumber}"></span>
+                  </small>
+                </td>
+                <td>Trang <span th:text="${s.pageId.pageNumber}"></span></td>
+                <td>
+                  <span th:switch="${s.pageId.pageType}">
+                    <span th:case="'cover'">Trang bìa</span>
+                    <span th:case="'action'">Trang hành động</span>
+                    <span th:case="'rest'">Trang nghỉ</span>
+                    <span th:case="'info'">Trang thông tin</span>
+                    <span th:case="'end'">Trang cuối</span>
+                    <span th:case="*">Trang</span>
+                  </span>
+                </td>
+                <td
                   th:text="${#temporals.format(s.deadline, 'dd/MM/yyyy HH:mm')}"
-                ></span>
-              </p>
-
-              <p>
-                Số frame được giao:
-                <span
+                ></td>
+                <td
                   th:text="${frameCounts != null ? (frameCounts.get(s.id) ?: 0) : 0}"
-                ></span>
-              </p>
+                ></td>
+                <td class="assistant-task-note" th:text="${s.comment}"></td>
+                <td>
+                  <div class="assistant-task-actions">
+                    <a
+                      th:href="@{/manga/assistant/submission/{id}/edit(id=${s.id})}"
+                      class="project-action-btn series-chapter-btn"
+                    >
+                      <i class="fa-solid fa-pen"></i>
+                      Mở
+                    </a>
+                    <button
+                      type="button"
+                      class="project-action-btn series-chapter-btn"
+                      th:data-submission-id="${s.id}"
+                      onclick="submitSubmission(this)"
+                    >
+                      <i class="fa-solid fa-upload"></i>
+                      Nộp bài
+                    </button>
+                    <button
+                      type="button"
+                      class="project-action-btn series-chapter-btn"
+                      th:data-submission-id="${s.id}"
+                      onclick="viewKanbanScript(this)"
+                    >
+                      <i class="fa-solid fa-book-open"></i>
+                      Kịch bản
+                    </button>
+                  </div>
+                </td>
+              </tr>
 
-              <p th:text="${s.comment}"></p>
-
-              <div class="kanban-actions-row">
-                <a
-                  th:href="@{/manga/assistant/submission/{id}/edit(id=${s.id})}"
-                >
-                  <button type="button">Mở</button>
-                </a>
-                <button
-                  type="button"
-                  th:data-submission-id="${s.id}"
-                  onclick="submitSubmission(this)"
-                >
-                  Nộp Bài
-                </button>
-                <button
-                  type="button"
-                  th:data-submission-id="${s.id}"
-                  onclick="viewKanbanScript(this)"
-                >
-                  📖 Kịch bản
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3>🔵 Chờ duyệt</h3>
-
-            <div th:each="s : ${waiting}" class="kanban-card waiting-bg">
-              <b th:text="${s.pageId.chapter.series.seriesName}"></b>
-
-              <p>
-                Chapter
-                <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
-                Trang <span th:text="${s.pageId.pageNumber}"></span>
-                <span th:switch="${s.pageId.pageType}">
-                  <span th:case="'cover'">— 📕 Trang bìa</span>
-                  <span th:case="'action'">— 🎬 Trang hành động</span>
-                  <span th:case="'rest'">— ☕ Trang nghỉ</span>
-                  <span th:case="'info'">— ℹ️ Trang thông tin</span>
-                  <span th:case="'end'">— 🏁 Trang cuối</span>
-                </span>
-              </p>
-
-              <p>
-                Deadline:
-                <span
+              <tr th:each="s : ${waiting}">
+                <td>
+                  <span class="task-status-pill status-waiting">
+                    <span></span>
+                    Chờ duyệt
+                  </span>
+                </td>
+                <td>
+                  <strong
+                    th:text="${s.pageId.chapter.series.seriesName}"
+                  ></strong>
+                  <small>
+                    Chapter
+                    <span th:text="${s.pageId.chapter.chapterNumber}"></span>
+                  </small>
+                </td>
+                <td>Trang <span th:text="${s.pageId.pageNumber}"></span></td>
+                <td>
+                  <span th:switch="${s.pageId.pageType}">
+                    <span th:case="'cover'">Trang bìa</span>
+                    <span th:case="'action'">Trang hành động</span>
+                    <span th:case="'rest'">Trang nghỉ</span>
+                    <span th:case="'info'">Trang thông tin</span>
+                    <span th:case="'end'">Trang cuối</span>
+                    <span th:case="*">Trang</span>
+                  </span>
+                </td>
+                <td
                   th:text="${#temporals.format(s.deadline, 'dd/MM/yyyy HH:mm')}"
-                ></span>
-              </p>
-
-              <p>
-                Số frame được giao:
-                <span
+                ></td>
+                <td
                   th:text="${frameCounts != null ? (frameCounts.get(s.id) ?: 0) : 0}"
-                ></span>
-              </p>
+                ></td>
+                <td class="assistant-task-note">Đã nộp, đang chờ duyệt.</td>
+                <td>
+                  <div class="assistant-task-actions">
+                    <button
+                      type="button"
+                      class="project-action-btn series-chapter-btn"
+                      th:data-submission-id="${s.id}"
+                      onclick="viewKanbanScript(this)"
+                    >
+                      <i class="fa-solid fa-book-open"></i>
+                      Kịch bản
+                    </button>
+                  </div>
+                </td>
+              </tr>
 
-              <div class="kanban-actions-row">
-                <button
-                  type="button"
-                  th:data-submission-id="${s.id}"
-                  onclick="viewKanbanScript(this)"
-                >
-                  📖 Kịch bản
-                </button>
-              </div>
-            </div>
-          </div>
+              <tr th:each="s : ${done}">
+                <td>
+                  <span class="task-status-pill status-done">
+                    <span></span>
+                    Hoàn thành
+                  </span>
+                </td>
+                <td>
+                  <strong
+                    th:text="${s.pageId.chapter.series.seriesName}"
+                  ></strong>
+                  <small>
+                    Chapter
+                    <span th:text="${s.pageId.chapter.chapterNumber}"></span>
+                  </small>
+                </td>
+                <td>Trang <span th:text="${s.pageId.pageNumber}"></span></td>
+                <td>
+                  <span th:switch="${s.pageId.pageType}">
+                    <span th:case="'cover'">Trang bìa</span>
+                    <span th:case="'action'">Trang hành động</span>
+                    <span th:case="'rest'">Trang nghỉ</span>
+                    <span th:case="'info'">Trang thông tin</span>
+                    <span th:case="'end'">Trang cuối</span>
+                    <span th:case="*">Trang</span>
+                  </span>
+                </td>
+                <td
+                  th:text="${#temporals.format(s.deadline, 'dd/MM/yyyy HH:mm')}"
+                ></td>
+                <td
+                  th:text="${frameCounts != null ? (frameCounts.get(s.id) ?: 0) : 0}"
+                ></td>
+                <td class="assistant-task-note">Đã hoàn thành.</td>
+                <td>
+                  <div class="assistant-task-actions">
+                    <button
+                      type="button"
+                      class="project-action-btn series-chapter-btn"
+                      th:data-submission-id="${s.id}"
+                      onclick="viewKanbanScript(this)"
+                    >
+                      <i class="fa-solid fa-book-open"></i>
+                      Kịch bản
+                    </button>
+                  </div>
+                </td>
+              </tr>
 
-          <div>
-            <h3>🟢 Hoàn thành</h3>
-
-            <div th:each="s : ${done}" class="kanban-card done-bg">
-              <b th:text="${s.pageId.chapter.series.seriesName}"></b>
-
-              <p>
-                Chapter
-                <span th:text="${s.pageId.chapter.chapterNumber}"></span> -
-                Trang <span th:text="${s.pageId.pageNumber}"></span>
-              </p>
-            </div>
-          </div>
+              <tr
+                th:if="${#lists.isEmpty(todo) and #lists.isEmpty(waiting) and #lists.isEmpty(done)}"
+              >
+                <td colspan="8" class="ptab-sub-desc">
+                  Chưa có công việc nào được giao.
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <!-- Modal xem kịch bản + note frame ngay từ danh sách công việc -->
         <div id="kanbanScriptModalOverlay" class="u-inline-style-033">
-          <div class="u-inline-style-034">
-            <h3 class="u-inline-style-035">📖 Kịch bản &amp; Note công việc</h3>
+          <div class="u-inline-style-034 assistant-script-modal">
+            <div class="assistant-script-modal-head">
+              <h3 class="u-inline-style-035">
+                📖 Kịch bản &amp; Note công việc
+              </h3>
+              <button
+                type="button"
+                class="modal-close-btn"
+                aria-label="Đóng"
+                onclick="document.getElementById('kanbanScriptModalOverlay').style.display='none'"
+              >
+                ×
+              </button>
+            </div>
 
             <h4>Kịch bản chapter</h4>
             <p id="kanbanChapterScript" class="u-inline-style-036"></p>

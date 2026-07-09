@@ -1812,17 +1812,36 @@
     <script th:src="@{/js/chat.js}"></script>
 
     <script>
-      function openTab(tabId) {
+      function openTab(tabId, options = {}) {
+        const shouldResetProject = options.resetProject !== false;
+        const shouldNormalizeRoute = options.normalizeRoute !== false;
         var tabPanes = document.getElementsByClassName("tab-pane");
         for (var i = 0; i < tabPanes.length; i++) {
           tabPanes[i].classList.remove("active");
         }
         document.getElementById(tabId).classList.add("active");
+
+        if (tabId !== "tab-project" && shouldNormalizeRoute) {
+          normalizeMangakaRoute();
+        }
+
         if (tabId === "tab-assistant") {
           loadAssistantTasks();
         }
-        if (tabId === "tab-project" && isProjectListRoute()) {
-          restoreProjectSeriesView();
+        if (tabId === "tab-project" && shouldResetProject) {
+          restoreProjectSeriesView(true);
+        } else if (tabId === "tab-project" && isProjectListRoute()) {
+          restoreProjectSeriesView(false);
+        }
+      }
+
+      function normalizeMangakaRoute() {
+        if (
+          !isProjectListRoute() &&
+          window.history &&
+          window.history.pushState
+        ) {
+          window.history.pushState({ tab: "mangaka" }, "", "/manga/mangaka");
         }
       }
 
@@ -1844,12 +1863,39 @@
           pageView.style.display = viewName === "page" ? "block" : "none";
       }
 
-      function restoreProjectSeriesView() {
+      function restoreProjectSeriesView(updateRoute = true) {
+        if (updateRoute) normalizeMangakaRoute();
         showProjectView("series");
 
         if (typeof loadMySeriesList === "function") {
           loadMySeriesList();
         }
+      }
+
+      function navigateProjectSeries(seriesId) {
+        if (!seriesId) return;
+        if (window.history && window.history.pushState) {
+          window.history.pushState(
+            { projectView: "series", seriesId },
+            "",
+            `/manga/mangaka/myseries/${seriesId}`,
+          );
+        }
+        openTab("tab-project", { resetProject: false, normalizeRoute: false });
+        loadSeriesView(seriesId);
+      }
+
+      function navigateProjectChapter(seriesId, chapterId) {
+        if (!seriesId || !chapterId) return;
+        if (window.history && window.history.pushState) {
+          window.history.pushState(
+            { projectView: "chapter", seriesId, chapterId },
+            "",
+            `/manga/mangaka/myseries/${seriesId}/${chapterId}`,
+          );
+        }
+        openTab("tab-project", { resetProject: false, normalizeRoute: false });
+        loadChapterView(seriesId, chapterId);
       }
 
       // ===== QUẢN LÝ TRỢ LÝ =====
@@ -2901,7 +2947,7 @@
           const cid = pageEditMatch[2];
           const pid = pageEditMatch[3];
 
-          openTab("tab-draw");
+          openTab("tab-draw", { normalizeRoute: false });
 
           fetch(`/manga/mangaka/myseries/${sid}/${cid}/${pid}/edit/data`)
             .then((r) => r.json())
@@ -2942,7 +2988,7 @@
         } else if (submissionEditMatch) {
           const subId = submissionEditMatch[1];
 
-          openTab("tab-draw");
+          openTab("tab-draw", { normalizeRoute: false });
 
           fetch(`/manga/mangaka/submission/${subId}/data`)
             .then((r) => r.json())
@@ -2983,11 +3029,17 @@
         } else if (chapterMatch) {
           const sid = chapterMatch[1];
           const cid = chapterMatch[2];
-          openTab("tab-project");
+          openTab("tab-project", {
+            resetProject: false,
+            normalizeRoute: false,
+          });
           loadChapterView(sid, cid);
         } else if (seriesMatch) {
           const sid = seriesMatch[1];
-          openTab("tab-project");
+          openTab("tab-project", {
+            resetProject: false,
+            normalizeRoute: false,
+          });
           loadSeriesView(sid);
         } else {
           loadMySeriesList();
@@ -3033,7 +3085,7 @@
                   </td>
                   <td>${statusMap[s.status] || s.status}</td>
                   <td>${s.startDate || ""}</td>
-                  <td><a href="/manga/mangaka/myseries/${s.id}" class="project-action-btn series-chapter-btn"><i class="fa-solid fa-book-open"></i> Xem chapter</a></td>
+                  <td><a href="/manga/mangaka/myseries/${s.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectSeries('${s.id}')"><i class="fa-solid fa-book-open"></i> Xem chapter</a></td>
                 </tr>`;
               });
             }
@@ -3053,7 +3105,7 @@
             let html = `
               <h3>Chapter của series: ${series.seriesName}</h3>
               <div class="chapter-toolbar">
-                <button type="button" class="project-action-btn" onclick="loadMySeriesList()">
+                <button type="button" class="project-action-btn" onclick="restoreProjectSeriesView(true)">
                   <i class="fa-solid fa-arrow-left"></i>
                   Quay lại
                 </button>
@@ -3100,7 +3152,7 @@
                   <td>${chapterStatusMap[c.status] || c.status}</td>
                   <td>${comment}</td>
                   <td>
-                    <a href="/manga/mangaka/myseries/${sid}/${c.id}" class="project-action-btn series-chapter-btn"><i class="fa-solid fa-file-lines"></i> Xem trang</a>
+                    <a href="/manga/mangaka/myseries/${sid}/${c.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectChapter('${sid}','${c.id}')"><i class="fa-solid fa-file-lines"></i> Xem trang</a>
                     ${finishBadge}${passBadge}
                   </td>
                 </tr>`;
@@ -3186,7 +3238,7 @@
               const hasScript = !!(
                 chapter.script && chapter.script.trim() !== ""
               );
-              html += `<a href="/manga/mangaka/myseries/${sid}" class="project-action-btn"><i class="fa-solid fa-arrow-left"></i> Quay lại danh sách chapter</a>`;
+              html += `<a href="/manga/mangaka/myseries/${sid}" class="project-action-btn" onclick="event.preventDefault(); navigateProjectSeries('${sid}')"><i class="fa-solid fa-arrow-left"></i> Quay lại danh sách chapter</a>`;
               html += `<button type="button" class="project-action-btn" onclick="openChapterScriptModal()">${hasScript ? '<i class="fa-solid fa-pen-to-square"></i> Sửa kịch bản' : '<i class="fa-solid fa-file-pen"></i> Tạo kịch bản'}</button>`;
               html += `<button type="button" class="project-action-btn project-action-primary" onclick="openAddPageModal('${sid}','${cid}')"><i class="fa-solid fa-plus"></i> Thêm trang mới</button>`;
               if (pages.length > 0) {

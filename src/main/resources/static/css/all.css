@@ -2966,3 +2966,149 @@ body:has(.topnav:has(.btn-icon:focus-visible)) .page-shell {
     width: min(620px, calc(100vw - 2rem));
   }
 }
+
+/* Assistant task table and floating script modal */
+.assistant-task-table-wrap {
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(16, 19, 27, 0.72);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22);
+}
+
+.assistant-task-table {
+  min-width: 1120px;
+  margin: 0;
+}
+
+.assistant-task-table td {
+  vertical-align: middle;
+}
+
+.assistant-task-table strong,
+.assistant-task-table small {
+  display: block;
+}
+
+.assistant-task-table small {
+  margin-top: 0.18rem;
+  color: var(--app-muted);
+  font-weight: 700;
+}
+
+.task-status-pill {
+  display: inline-flex;
+  min-width: 112px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 999px;
+  padding: 0.38rem 0.62rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.task-status-pill > span {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+}
+
+.status-doing {
+  color: #ffd7c2;
+  background: rgba(255, 118, 76, 0.1);
+}
+
+.status-doing > span {
+  background: #ff7a45;
+  box-shadow: 0 0 16px rgba(255, 122, 69, 0.45);
+}
+
+.status-waiting {
+  color: #cfe1ff;
+  background: rgba(96, 165, 250, 0.1);
+}
+
+.status-waiting > span {
+  background: #60a5fa;
+  box-shadow: 0 0 16px rgba(96, 165, 250, 0.45);
+}
+
+.status-done {
+  color: #c8f8df;
+  background: rgba(61, 220, 151, 0.1);
+}
+
+.status-done > span {
+  background: #3ddc97;
+  box-shadow: 0 0 16px rgba(61, 220, 151, 0.45);
+}
+
+.assistant-task-note {
+  max-width: 260px;
+  color: var(--app-muted);
+  white-space: normal;
+}
+
+.assistant-task-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.assistant-task-actions .project-action-btn {
+  min-height: 36px;
+  padding: 0.45rem 0.68rem;
+}
+
+#kanbanScriptModalOverlay {
+  position: fixed !important;
+  top: var(--app-header-height);
+  right: 0;
+  bottom: 0;
+  left: var(--app-sidebar-width);
+  z-index: 3400;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1.25rem;
+  background: rgba(4, 5, 8, 0.72);
+  backdrop-filter: blur(14px);
+}
+
+#kanbanScriptModalOverlay .assistant-script-modal {
+  width: min(620px, calc(100vw - var(--app-sidebar-width) - 2rem));
+  max-height: calc(100dvh - var(--app-header-height) - 2.5rem);
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #24272f, #171b24);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
+}
+
+.assistant-script-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.assistant-script-modal-head h3 {
+  margin: 0;
+}
+
+#kanbanFrameNotesList > div {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+@media (max-width: 900px) {
+  #kanbanScriptModalOverlay {
+    left: 0;
+  }
+
+  #kanbanScriptModalOverlay .assistant-script-modal {
+    width: min(620px, calc(100vw - 2rem));
+  }
+}

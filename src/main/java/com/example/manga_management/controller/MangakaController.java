@@ -381,7 +381,23 @@ public class MangakaController {
 
             long count = seriesRepository.count();
             String seriesId = String.format("SER%03d", count + 1);
-            String fileName = seriesId + ".pdf";
+            String originalName = fileBookJacket.getOriginalFilename();
+            String extension = "";
+            if (originalName != null && originalName.lastIndexOf('.') >= 0) {
+                extension = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
+            }
+            String contentType = fileBookJacket.getContentType();
+            boolean validImage = ".png".equals(extension) || ".jpg".equals(extension) || ".jpeg".equals(extension)
+                    || "image/png".equals(contentType) || "image/jpeg".equals(contentType);
+            if (!validImage) {
+                result.put("status", "error");
+                result.put("message", "Ảnh bìa chỉ hỗ trợ file PNG, JPG hoặc JPEG!");
+                return result;
+            }
+            if (extension.isBlank()) {
+                extension = "image/png".equals(contentType) ? ".png" : ".jpg";
+            }
+            String fileName = seriesId + extension;
             fileBookJacket.transferTo(uploadPath.resolve(fileName).toFile());
 
             Series series = new Series();

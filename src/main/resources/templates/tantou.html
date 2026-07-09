@@ -88,6 +88,8 @@
                  ========================================================== -->
       <li>
         <button
+          aria-label="Duyệt Chapter"
+          data-nav-label="Duyệt Chapter"
           type="button"
           class="btn-icon"
           onclick="openTab('tab-chapter-review')"
@@ -98,6 +100,8 @@
       </li>
       <li>
         <button
+          aria-label="Quản lý Mangaka"
+          data-nav-label="Quản lý Mangaka"
           type="button"
           class="btn-icon"
           onclick="openTab('tab-manage-mangaka'); mmLoadMangakas();"
@@ -110,17 +114,34 @@
                  ========================================================== -->
 
       <li>
-        <button type="button" class="btn-icon" onclick="openTab('tab-home')">
+        <button
+          title="Trang chủ"
+          aria-label="Trang chủ"
+          data-nav-label="Trang chủ"
+          type="button"
+          class="btn-icon"
+          onclick="openTab('tab-home')"
+        >
           <i class="fa-solid fa-house"></i>
         </button>
       </li>
       <li>
-        <button type="button" class="btn-icon" onclick="openTab('tab-project')">
+        <button
+          title="Dự án"
+          aria-label="Dự án"
+          data-nav-label="Dự án"
+          type="button"
+          class="btn-icon"
+          onclick="openTab('tab-project')"
+        >
           <i class="fa-solid fa-folder-open"></i>
         </button>
       </li>
       <li>
         <button
+          title="Đề xuất"
+          aria-label="Đề xuất"
+          data-nav-label="Đề xuất"
           type="button"
           class="btn-icon"
           onclick="openTab('tab-proposal')"
@@ -130,6 +151,9 @@
       </li>
       <li>
         <button
+          title="Trợ lý"
+          aria-label="Trợ lý"
+          data-nav-label="Trợ lý"
           type="button"
           class="btn-icon"
           onclick="openTab('tab-assistant')"
@@ -138,12 +162,21 @@
         </button>
       </li>
       <li>
-        <button type="button" class="btn-icon" onclick="openTab('tab-other')">
+        <button
+          title="Khác"
+          aria-label="Khác"
+          data-nav-label="Khác"
+          type="button"
+          class="btn-icon"
+          onclick="openTab('tab-other')"
+        >
           <i class="fa-solid fa-hashtag"></i>
         </button>
       </li>
       <li class="u-inline-style-001">
         <button
+          aria-label="Tin nhắn"
+          data-nav-label="Tin nhắn"
           type="button"
           class="btn-icon"
           onclick="openTab('tab-chat')"

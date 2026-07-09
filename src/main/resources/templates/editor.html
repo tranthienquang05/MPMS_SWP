@@ -83,17 +83,34 @@
 
     <ul class="topnav">
       <li>
-        <button type="button" class="btn-icon" onclick="openTab('tab-home')">
+        <button
+          title="Trang chủ"
+          aria-label="Trang chủ"
+          data-nav-label="Trang chủ"
+          type="button"
+          class="btn-icon"
+          onclick="openTab('tab-home')"
+        >
           <i class="fa-solid fa-house"></i>
         </button>
       </li>
       <li>
-        <button type="button" class="btn-icon" onclick="openTab('tab-project')">
+        <button
+          title="Dự án"
+          aria-label="Dự án"
+          data-nav-label="Dự án"
+          type="button"
+          class="btn-icon"
+          onclick="openTab('tab-project')"
+        >
           <i class="fa-solid fa-folder-open"></i>
         </button>
       </li>
       <li>
         <button
+          title="Trợ lý"
+          aria-label="Trợ lý"
+          data-nav-label="Trợ lý"
           type="button"
           class="btn-icon"
           onclick="openTab('tab-assistant')"
@@ -102,12 +119,21 @@
         </button>
       </li>
       <li>
-        <button type="button" class="btn-icon" onclick="openTab('tab-other')">
+        <button
+          title="Khác"
+          aria-label="Khác"
+          data-nav-label="Khác"
+          type="button"
+          class="btn-icon"
+          onclick="openTab('tab-other')"
+        >
           <i class="fa-solid fa-hashtag"></i>
         </button>
       </li>
       <li class="u-inline-style-001">
         <button
+          aria-label="Tin nhắn"
+          data-nav-label="Tin nhắn"
           type="button"
           class="btn-icon"
           onclick="openTab('tab-chat')"
@@ -267,7 +293,7 @@
               <input
                 type="text"
                 id="chatInput"
-                placeholder="Nh?p tin nh?n..."
+                placeholder="Nhập tin nhắn..."
                 disabled
               />
               <button type="button" id="chatSendBtn" disabled>
@@ -336,7 +362,7 @@
                             <td>${p.seriesName}</td>
                             <td>
                                 ${p.filePath ? `<a href="${p.filePath}" class="btn-link" target="_blank"><i class="fa-solid fa-file-pdf"></i> Bản thảo</a><br>` : ""}
-                                ${p.fileOfTantou ? `<a href="${p.fileOfTantou}" class="btn-link" target="_blank"><i class="fa-solid fa-file-lines"></i> H? so d? xu?t</a>` : ""}
+                                ${p.fileOfTantou ? `<a href="${p.fileOfTantou}" class="btn-link" target="_blank"><i class="fa-solid fa-file-lines"></i> Hồ sơ đề xuất</a>` : ""}
                             </td>
                             <td>${voteProgress}</td>
                             <td>
@@ -352,7 +378,7 @@
           })
           .catch(() => {
             document.getElementById("proposalVoteBody").innerHTML =
-              '<tr><td colspan="6" class="u-inline-style-049">L?i t?i d? li?u</td></tr>';
+              '<tr><td colspan="6" class="u-inline-style-049">Lỗi tải dữ liệu</td></tr>';
           });
       }
 
@@ -370,18 +396,18 @@
           .then((data) => {
             if (data.status === "success") {
               const msgEl = document.getElementById("voteMessage");
-              msgEl.textContent = "? " + data.message;
+              msgEl.textContent = "✅ " + data.message;
               msgEl.style.display = "block";
               setTimeout(() => (msgEl.style.display = "none"), 3000);
               loadVoteProposals();
             } else {
               const errEl = document.getElementById("voteError");
-              errEl.textContent = "L?i: " + data.message;
+              errEl.textContent = "Lỗi: " + data.message;
               errEl.style.display = "block";
               setTimeout(() => (errEl.style.display = "none"), 3000);
             }
           })
-          .catch((err) => alert("L?i: " + err.message));
+          .catch((err) => alert("Lỗi: " + err.message));
       }
 
       function loadAll() {
@@ -487,11 +513,11 @@
                   "<button onclick=\"castSessionVote('" +
                   s.sessionId +
                   "','stop')\" " +
-                  'class="vote-action-btn vote-action-stop">Vote D?ng</button>' +
+                  'class="vote-action-btn vote-action-stop">Vote Dừng</button>' +
                   "<button onclick=\"castSessionVote('" +
                   s.sessionId +
                   "','keep')\" " +
-                  'class="vote-action-btn vote-action-keep">Vote Gi?</button>';
+                  'class="vote-action-btn vote-action-keep">Vote Giữ</button>';
               } else {
                 actionBtn =
                   "<button onclick=\"castSessionVote('" +
@@ -539,7 +565,7 @@
         };
         if (
           !confirm(
-            "B?n ch?c ch?n mu?n vote " +
+            "Bạn chắc chắn muốn vote " +
               (labels[voteChoice] || voteChoice) +
               "?",
           )

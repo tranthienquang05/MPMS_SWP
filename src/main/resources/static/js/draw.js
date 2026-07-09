@@ -1252,20 +1252,13 @@ function appendChatMessage(role, content, isImage) {
   const list = document.getElementById("chatHistoryList");
   if (!list) return;
   const msgDiv = document.createElement("div");
-  msgDiv.style.cssText =
-    "padding: 8px; border-radius: 6px; font-size: 13px; max-width: 90%; word-break: break-word;";
+  msgDiv.className = "manga-chat-message";
 
   if (role === "user") {
-    msgDiv.style.background = "var(--ps-primary)";
-    msgDiv.style.color = "white";
-    msgDiv.style.alignSelf = "flex-end";
-    msgDiv.style.marginLeft = "auto";
+    msgDiv.classList.add("is-user");
     msgDiv.textContent = content;
   } else {
-    msgDiv.style.background = "var(--ps-bg-alt)";
-    msgDiv.style.color = "var(--ps-text-main)";
-    msgDiv.style.alignSelf = "flex-start";
-    msgDiv.style.border = "1px solid var(--ps-border)";
+    msgDiv.classList.add("is-ai");
 
     if (isImage) {
       msgDiv.innerHTML = `<img src="${content}" style="max-width:100%; border-radius:4px; margin-bottom:8px;" />
@@ -1412,62 +1405,165 @@ if (btnSubmitSubmission) {
 }
 
 // Đặt toàn bộ vào một khối IIFE độc lập để tránh xung đột biến hệ thống
+// Khối tác vụ trang: mở modal, lưu đúng page/submission và tránh lỗi thiếu submissionId.
 (() => {
-  const btnToolbar = document.getElementById("btnEditSubmission");
+  const actionButton = document.getElementById("btnEditSubmission");
+  const btnModalLoadPage = document.getElementById("btnModalLoadPage");
+  const btnModalDownload = document.getElementById("btnModalDownload");
+  const btnModalSaveArtwork = document.getElementById("btnModalSaveArtwork");
+  const btnConfirmEdit = document.getElementById("btnConfirmEdit");
+  const btnLoadPageLegacy = document.getElementById("btnLoadPage");
+  const btnDownloadLegacy = document.getElementById("btnDownload");
 
-  // Mangaka nhấn nút "Cập nhật" → lưu file trực tiếp rồi redirect về trang chapter
-  if (btnToolbar) {
-    btnToolbar.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+  function getDrawContext() {
+    const pageId =
+      btnSavePage?.dataset.pageId || actionButton?.dataset.pageId || "";
+    const submissionId =
+      actionButton?.dataset.submissionId ||
+      btnSavePage?.dataset.submissionId ||
+      "";
+    const returnUrl =
+      actionButton?.dataset.returnUrl || btnSavePage?.dataset.returnUrl || "";
 
-      const submissionId = btnToolbar.dataset.submissionId;
-      if (!submissionId) {
-        alert("Không tìm thấy mã số bài nộp (submissionId)!");
-        return;
+    return { pageId, submissionId, returnUrl };
+  }
+
+  function setButtonLoading(button, loading, label) {
+    if (!button) return;
+    button.disabled = loading;
+    if (loading) {
+      button.dataset.originalHtml = button.innerHTML;
+      button.innerHTML =
+        '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+    } else {
+      button.innerHTML =
+        label || button.dataset.originalHtml || button.innerHTML;
+    }
+  }
+
+  async function saveArtwork(button, options = {}) {
+    const { pageId, submissionId, returnUrl } = getDrawContext();
+
+    if (!pageId && !submissionId) {
+      alert("Không tìm thấy mã trang hoặc mã bài nộp để lưu bản vẽ!");
+      return null;
+    }
+
+    const endpoint = submissionId
+      ? `/api/submission/${submissionId}/savefile`
+      : `/api/page/${pageId}/savefile`;
+    const base64 = flattenAllLayers().toDataURL("image/png");
+
+    setButtonLoading(button, true);
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64 }),
+      });
+      const data = await res.json();
+
+      if (data.status !== "success") {
+        throw new Error(data.message || "Không thể lưu bản vẽ.");
       }
 
-      const returnUrl = btnToolbar.dataset.returnUrl;
-      const base64 = flattenAllLayers().toDataURL("image/png");
+      if (button) {
+        button.innerHTML = '<i class="fa-solid fa-check"></i> Đã lưu';
+      }
 
-      btnToolbar.disabled = true;
-      btnToolbar.innerHTML =
-        '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
-
-      try {
-        const res = await fetch(`/api/submission/${submissionId}/savefile`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: base64 }),
-        });
-
-        const data = await res.json();
-
-        if (data.status === "success") {
-          btnToolbar.innerHTML = '<i class="fa-solid fa-check"></i> Đã lưu!';
+      if (options.redirect !== false) {
+        const nextUrl = returnUrl || data.redirectUrl;
+        if (nextUrl) {
           setTimeout(() => {
-            if (returnUrl) {
-              window.location.href = returnUrl;
-            } else if (data.redirectUrl) {
-              window.location.href = data.redirectUrl;
-            } else {
-              window.location.href = "/manga/mangaka";
-            }
-          }, 1000);
-        } else {
-          alert("❌ " + data.message);
-          btnToolbar.innerHTML =
-            '<i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật';
-          btnToolbar.disabled = false;
+            window.location.href = nextUrl;
+          }, 700);
         }
-      } catch (err) {
-        alert("❌ Lỗi: " + err.message);
-        btnToolbar.innerHTML =
-          '<i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật';
-        btnToolbar.disabled = false;
+      }
+
+      return data;
+    } catch (err) {
+      alert("Lỗi: " + err.message);
+      return null;
+    } finally {
+      setTimeout(() => setButtonLoading(button, false), 700);
+    }
+  }
+
+  async function updateSubmissionMeta(button) {
+    const { submissionId } = getDrawContext();
+    if (!submissionId) return { status: "skipped" };
+
+    const status = document.getElementById("subStatus")?.value || "unfinish";
+    const comment = document.getElementById("subComment")?.value || "";
+    const body = new URLSearchParams({ status, comment });
+
+    const res = await fetch(
+      `/manga/mangaka/submission/${submissionId}/submit/data`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        },
+        body,
+      },
+    );
+    const data = await res.json();
+
+    if (data.status !== "success") {
+      throw new Error(data.message || "Không thể cập nhật trạng thái bài nộp.");
+    }
+
+    return data;
+  }
+
+  function openActionModal(e) {
+    e?.preventDefault();
+    e?.stopPropagation();
+    const modal = document.getElementById("editSubmissionModal");
+    if (modal) {
+      modal.style.display = "flex";
+    }
+  }
+
+  actionButton?.addEventListener("click", openActionModal);
+
+  btnModalLoadPage?.addEventListener("click", () => btnLoadPageLegacy?.click());
+  btnModalDownload?.addEventListener("click", () => btnDownloadLegacy?.click());
+  btnModalSaveArtwork?.addEventListener("click", (e) =>
+    saveArtwork(e.currentTarget, { redirect: false }),
+  );
+
+  btnConfirmEdit?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const button = e.currentTarget;
+    const saved = await saveArtwork(button, { redirect: false });
+    if (!saved) return;
+
+    try {
+      await updateSubmissionMeta(button);
+      button.innerHTML = '<i class="fa-solid fa-check"></i> Hoàn tất';
+      closeEditSubmissionModal();
+
+      const { returnUrl } = getDrawContext();
+      const nextUrl = returnUrl || saved.redirectUrl;
+      if (nextUrl) {
+        setTimeout(() => {
+          window.location.href = nextUrl;
+        }, 650);
+      }
+    } catch (err) {
+      alert("Lỗi: " + err.message);
+    }
+  });
+
+  document
+    .getElementById("editSubmissionModal")
+    ?.addEventListener("click", (e) => {
+      if (e.target.id === "editSubmissionModal") {
+        closeEditSubmissionModal();
       }
     });
-  }
 })();
 
 // Hàm hỗ trợ đóng modal nhanh khi người dùng bấm nút Hủy

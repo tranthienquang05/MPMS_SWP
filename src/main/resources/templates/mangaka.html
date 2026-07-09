@@ -97,17 +97,34 @@
       <!-- Thanh điều hướng -->
       <ul class="topnav">
         <li>
-          <button type="button" class="btn-icon" onclick="openTab('tab-home')">
+          <button
+            title="Trang chủ"
+            aria-label="Trang chủ"
+            data-nav-label="Trang chủ"
+            type="button"
+            class="btn-icon"
+            onclick="openTab('tab-home')"
+          >
             <i class="fa-solid fa-house"></i>
           </button>
         </li>
         <li>
-          <button type="button" class="btn-icon" onclick="openTab('tab-draw')">
+          <button
+            title="Bảng vẽ"
+            aria-label="Bảng vẽ"
+            data-nav-label="Bảng vẽ"
+            type="button"
+            class="btn-icon"
+            onclick="openTab('tab-draw')"
+          >
             <i class="fa-solid fa-brush"></i>
           </button>
         </li>
         <li>
           <button
+            title="Dự án"
+            aria-label="Dự án"
+            data-nav-label="Dự án"
             type="button"
             class="btn-icon"
             onclick="openTab('tab-project')"
@@ -117,6 +134,9 @@
         </li>
         <li>
           <button
+            title="Đề xuất"
+            aria-label="Đề xuất"
+            data-nav-label="Đề xuất"
             type="button"
             class="btn-icon"
             onclick="openTab('tab-proposal')"
@@ -126,6 +146,9 @@
         </li>
         <li>
           <button
+            title="Trợ lý"
+            aria-label="Trợ lý"
+            data-nav-label="Trợ lý"
             type="button"
             class="btn-icon"
             onclick="openTab('tab-assistant')"
@@ -134,12 +157,21 @@
           </button>
         </li>
         <li>
-          <button type="button" class="btn-icon" onclick="openTab('tab-other')">
+          <button
+            title="Khác"
+            aria-label="Khác"
+            data-nav-label="Khác"
+            type="button"
+            class="btn-icon"
+            onclick="openTab('tab-other')"
+          >
             <i class="fa-solid fa-hashtag"></i>
           </button>
         </li>
         <li class="u-inline-style-001">
           <button
+            aria-label="Tin nhắn"
+            data-nav-label="Tin nhắn"
             type="button"
             class="btn-icon"
             onclick="openTab('tab-chat')"
@@ -428,14 +460,14 @@
 
                 <button
                   type="button"
-                  class="btn-ai-support-top approve u-inline-style-002"
+                  class="btn-ai-support-top approve u-inline-style-002 draw-hidden-action"
                   id="btnSavePage"
                 >
                   <i class="fa-solid fa-floppy-disk"></i> Lưu trang
                 </button>
                 <button
                   type="button"
-                  class="btn-ai-support-top primary"
+                  class="btn-ai-support-top primary draw-hidden-action"
                   id="btnLoadPage"
                   th:if="${page != null}"
                 >
@@ -447,7 +479,7 @@
 
                 <button
                   type="button"
-                  class="btn-ai-support-top"
+                  class="btn-ai-support-top draw-hidden-action"
                   id="btnDownload"
                 >
                   <i class="fa-solid fa-download"></i>
@@ -516,11 +548,20 @@
                 </div>
                 <div id="layerList"></div>
               </div>
-              <div class="panel-section">
-                <div class="panel-section-header">Manga Chat</div>
+              <div class="panel-section manga-chat-panel">
+                <div class="panel-section-header manga-chat-header">
+                  <span>
+                    <i class="fa-solid fa-comments"></i>
+                    Manga Chat
+                  </span>
+                  <span class="manga-chat-status">AI hỗ trợ</span>
+                </div>
                 <div class="chat-history-list" id="chatHistoryList"></div>
                 <div class="chat-input-area">
-                  <div id="chatImagePreview" class="u-inline-style-061">
+                  <div
+                    id="chatImagePreview"
+                    class="u-inline-style-061 manga-chat-preview"
+                  >
                     <img
                       id="chatImgPrevSrc"
                       src=""
@@ -530,18 +571,20 @@
                       type="button"
                       onclick="removeChatImage()"
                       class="u-inline-style-063"
+                      aria-label="Xóa ảnh đính kèm"
                     >
                       &times;
                     </button>
                   </div>
-                  <div class="u-inline-style-064">
+                  <div class="manga-chat-composer u-inline-style-064">
                     <button
                       type="button"
-                      class="btn-icon u-inline-style-065"
+                      class="btn-icon u-inline-style-065 manga-chat-attach"
                       onclick="
                         document.getElementById('chatImageInput').click()
                       "
                       title="Đính kèm ảnh"
+                      aria-label="Đính kèm ảnh"
                     >
                       <i class="fa-solid fa-image"></i>
                     </button>
@@ -555,20 +598,21 @@
                     <input
                       type="text"
                       id="chatTextInput"
-                      placeholder="Nhắn cho trợ lý..."
+                      placeholder="Nhắn cho trợ lý AI..."
                       onkeydown="
                         if (event.key === 'Enter' && !event.shiftKey) {
                           event.preventDefault();
                           sendChatMessage();
                         }
                       "
-                      class="u-inline-style-066"
+                      class="u-inline-style-066 manga-chat-input"
                     />
                     <button
                       type="button"
-                      class="btn-submit u-inline-style-067"
+                      class="btn-submit u-inline-style-067 manga-chat-send"
                       onclick="sendChatMessage()"
                       id="btnSendChat"
+                      aria-label="Gửi tin nhắn"
                     >
                       <i class="fa-solid fa-paper-plane"></i>
                     </button>
@@ -583,12 +627,42 @@
                   class="btn-ai-support-top primary"
                   id="btnEditSubmission"
                 >
-                  <i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật
+                  <i class="fa-solid fa-sliders"></i> Tác vụ trang
                 </button>
 
                 <div id="editSubmissionModal">
                   <div class="modal-content-box">
-                    <h3>Cập nhật Bài nộp</h3>
+                    <div class="draw-modal-header">
+                      <div>
+                        <span class="draw-modal-kicker">Canvas workflow</span>
+                        <h3>Tác vụ trang</h3>
+                      </div>
+                      <button
+                        type="button"
+                        class="draw-modal-close"
+                        onclick="closeEditSubmissionModal()"
+                        aria-label="Đóng"
+                      >
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+
+                    <div class="draw-action-grid">
+                      <button type="button" id="btnModalLoadPage">
+                        <i class="fa-solid fa-upload"></i>
+                        <span>Upload file</span>
+                      </button>
+                      <button type="button" id="btnModalDownload">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Download file</span>
+                      </button>
+                      <button type="button" id="btnModalSaveArtwork">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Lưu bản vẽ</span>
+                      </button>
+                    </div>
+
+                    <div class="draw-modal-divider"></div>
 
                     <div class="form-item">
                       <label>Trạng thái:</label>
@@ -635,6 +709,57 @@
           <div id="project-view-series"></div>
           <div id="project-view-chapter" class="u-inline-style-002"></div>
           <div id="project-view-page" class="u-inline-style-002"></div>
+
+          <div
+            id="createChapterModalOverlay"
+            class="u-inline-style-002"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="createChapterModalTitle"
+          >
+            <div class="modal-box create-chapter-modal">
+              <div class="modal-header">
+                <h4 id="createChapterModalTitle">Tạo chapter mới</h4>
+                <button
+                  type="button"
+                  class="modal-close-btn"
+                  aria-label="Đóng"
+                  onclick="closeCreateChapterModal()"
+                >
+                  ×
+                </button>
+              </div>
+              <form
+                id="formCreateChapter"
+                class="create-chapter-form"
+                onsubmit="submitCreateChapter(window._currentCreateChapterSeriesId); return false;"
+              >
+                <label for="txtChapterName">Tên chapter mới</label>
+                <input
+                  type="text"
+                  id="txtChapterName"
+                  placeholder="Nhập tên chapter mới"
+                  autocomplete="off"
+                  required
+                />
+                <p class="chapter-modal-hint">
+                  Deadline của chapter sẽ luôn là thứ 7.
+                </p>
+                <div class="modal-footer">
+                  <button
+                    type="button"
+                    class="btn-modal-cancel"
+                    onclick="closeCreateChapterModal()"
+                  >
+                    Hủy
+                  </button>
+                  <button type="submit" class="btn-modal-confirm">
+                    Xác nhận
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
 
           <div id="assignModalOverlay" class="u-inline-style-002">
             <div class="modal-box">
@@ -960,7 +1085,21 @@
           <!-- Modal Tạo trang mới -->
           <div id="addPageModalOverlay" class="u-inline-style-073">
             <div class="modal-box u-inline-style-079">
-              <h4>Tạo trang mới</h4>
+              <div class="modal-header add-page-modal-header">
+                <h4>Tạo trang mới</h4>
+                <button
+                  type="button"
+                  class="modal-close-btn"
+                  aria-label="Đóng"
+                  onclick="
+                    document.getElementById(
+                      'addPageModalOverlay',
+                    ).style.display = 'none'
+                  "
+                >
+                  ×
+                </button>
+              </div>
               <label>Thể loại trang:</label>
               <select id="addPageType" class="u-inline-style-080">
                 <option value="cover">Trang bìa</option>
@@ -999,7 +1138,7 @@
                   onclick="confirmAddPage()"
                   class="btn-submit u-inline-style-078"
                 >
-                  Tạo trang
+                  Xác nhận tạo trang mới
                 </button>
               </div>
             </div>
@@ -1479,11 +1618,11 @@
                   ></textarea>
                 </div>
                 <div class="form-group-block">
-                  <label>Bìa sách (.pdf):</label>
+                  <label>Ảnh bìa sách (.png, .jpg, .jpeg):</label>
                   <input
                     type="file"
                     id="modalBookJacket"
-                    accept=".pdf"
+                    accept="image/png,image/jpeg,.png,.jpg,.jpeg"
                     required
                     class="input-file-jacket"
                   />
@@ -2228,7 +2367,16 @@
           return;
         }
         if (!file) {
-          alert("Vui lòng chọn file bìa sách!");
+          alert("Vui lòng chọn ảnh bìa sách!");
+          return;
+        }
+        const allowedCoverTypes = ["image/png", "image/jpeg"];
+        const allowedCoverExt = /\.(png|jpe?g)$/i;
+        if (
+          !allowedCoverTypes.includes(file.type) &&
+          !allowedCoverExt.test(file.name)
+        ) {
+          alert("Ảnh bìa chỉ hỗ trợ file PNG, JPG hoặc JPEG!");
           return;
         }
 
@@ -2344,6 +2492,15 @@
         if (startModalOverlay) {
           startModalOverlay.addEventListener("click", function (e) {
             if (e.target === startModalOverlay) closeStartSeriesModal();
+          });
+        }
+
+        const createChapterOverlay = document.getElementById(
+          "createChapterModalOverlay",
+        );
+        if (createChapterOverlay) {
+          createChapterOverlay.addEventListener("click", function (e) {
+            if (e.target === createChapterOverlay) closeCreateChapterModal();
           });
         }
 
@@ -2754,7 +2911,17 @@
                 if (btn) {
                   btn.dataset.pageId = data.page.id;
                   btn.dataset.savedPath = data.page.filePath || "";
+                  btn.dataset.returnUrl = `/manga/mangaka/myseries/${sid}/${cid}`;
                   btn.style.display = "";
+
+                  const actionBtn =
+                    document.getElementById("btnEditSubmission");
+                  if (actionBtn) {
+                    actionBtn.dataset.pageId = data.page.id;
+                    actionBtn.dataset.savedPath = data.page.filePath || "";
+                    actionBtn.dataset.returnUrl = `/manga/mangaka/myseries/${sid}/${cid}`;
+                    actionBtn.style.display = "";
+                  }
 
                   // 👇 THÊM: load ảnh đã lưu lên canvas
                   if (data.page.filePath) {
@@ -2787,6 +2954,13 @@
                   btn.dataset.savedPath = data.submission.filePath || "";
                   btn.dataset.returnUrl = data.returnUrl || "";
                   btn.style.display = "";
+
+                  const saveBtn = document.getElementById("btnSavePage");
+                  if (saveBtn) {
+                    saveBtn.dataset.submissionId = data.submission.id;
+                    saveBtn.dataset.savedPath = data.submission.filePath || "";
+                    saveBtn.dataset.returnUrl = data.returnUrl || "";
+                  }
 
                   // 👇 THÊM: load ảnh đã lưu lên canvas
                   if (data.submission.filePath) {
@@ -2836,6 +3010,10 @@
               html += `<tr><td colspan="4" class="ptab-sub-desc">Bạn chưa có series nào đang hoạt động.</td></tr>`;
             } else {
               list.forEach((s) => {
+                const coverPath = s.bookJacket || "";
+                const coverHtml = coverPath
+                  ? `<img src="${coverPath}?t=${Date.now()}" alt="Bìa ${s.seriesName}" class="series-cover-thumb" />`
+                  : `<span class="series-cover-thumb series-cover-empty"><i class="fa-solid fa-image"></i></span>`;
                 const statusMap = {
                   unfinish:
                     '<span class="badge-status-approved">Đang thực hiện</span>',
@@ -2847,10 +3025,15 @@
                     '<span class="badge-status-passed">Đã khen thưởng</span>',
                 };
                 html += `<tr>
-                  <td>${s.seriesName}</td>
+                  <td>
+                    <div class="series-title-cell">
+                      ${coverHtml}
+                      <span>${s.seriesName}</span>
+                    </div>
+                  </td>
                   <td>${statusMap[s.status] || s.status}</td>
                   <td>${s.startDate || ""}</td>
-                  <td><a href="/manga/mangaka/myseries/${s.id}" class="btn-link">Xem chapter</a></td>
+                  <td><a href="/manga/mangaka/myseries/${s.id}" class="project-action-btn series-chapter-btn"><i class="fa-solid fa-book-open"></i> Xem chapter</a></td>
                 </tr>`;
               });
             }
@@ -2869,12 +3052,17 @@
             const chapters = data.chapters || [];
             let html = `
               <h3>Chapter của series: ${series.seriesName}</h3>
-              <a href="/manga/mangaka"><button type="button" class="btn-icon">Quay lại</button></a>
-              <form id="formCreateChapter" class="u-inline-style-123">
-                <input type="text" id="txtChapterName" placeholder="Tên chapter mới" required />
-                <button type="button" onclick="submitCreateChapter('${series.id}')">Tạo Chapter</button>
-                <span class="u-inline-style-124">Deadline sẽ luôn là thứ 7.</span>
-              </form>
+              <div class="chapter-toolbar">
+                <button type="button" class="project-action-btn" onclick="loadMySeriesList()">
+                  <i class="fa-solid fa-arrow-left"></i>
+                  Quay lại
+                </button>
+                <button type="button" class="project-action-btn project-action-primary" onclick="openCreateChapterModal('${series.id}')">
+                  <i class="fa-solid fa-plus"></i>
+                  Tạo chapter mới
+                </button>
+                <span class="chapter-toolbar-note">Deadline sẽ luôn là thứ 7.</span>
+              </div>
               <table class="data-table u-inline-style-122">
                 <thead><tr>
                   <th>Số chương</th><th>Tên Chapter</th><th>Deadline</th>
@@ -2897,14 +3085,22 @@
                   c.status === "pass"
                     ? `<span class="badge-status-passed u-inline-style-125">✅ Đã duyệt</span>`
                     : "";
+                const chapterStatusMap = {
+                  unfinish:
+                    '<span class="badge-status-approved">Đang vẽ</span>',
+                  finish:
+                    '<span class="badge-status-waiting">Chờ BTV duyệt</span>',
+                  pass: '<span class="badge-status-passed">Đã duyệt</span>',
+                  stopped: '<span class="badge-status-rejected">Đã dừng</span>',
+                };
                 html += `<tr>
                   <td>${c.chapterNumber}</td>
                   <td>${c.chapterName}</td>
                   <td>${deadline}</td>
-                  <td>${c.status}</td>
+                  <td>${chapterStatusMap[c.status] || c.status}</td>
                   <td>${comment}</td>
                   <td>
-                    <a href="/manga/mangaka/myseries/${sid}/${c.id}" class="btn-link">Xem trang</a>
+                    <a href="/manga/mangaka/myseries/${sid}/${c.id}" class="project-action-btn series-chapter-btn"><i class="fa-solid fa-file-lines"></i> Xem trang</a>
                     ${finishBadge}${passBadge}
                   </td>
                 </tr>`;
@@ -2916,10 +3112,33 @@
           });
       }
 
+      function openCreateChapterModal(seriesId) {
+        window._currentCreateChapterSeriesId = seriesId;
+        const modal = document.getElementById("createChapterModalOverlay");
+        const input = document.getElementById("txtChapterName");
+        if (!modal || !input) return;
+        input.value = "";
+        modal.style.display = "flex";
+        setTimeout(() => input.focus(), 80);
+      }
+
+      function closeCreateChapterModal() {
+        const modal = document.getElementById("createChapterModalOverlay");
+        const input = document.getElementById("txtChapterName");
+        if (modal) modal.style.display = "none";
+        if (input) input.value = "";
+      }
+
       function submitCreateChapter(seriesId) {
-        const name = document.getElementById("txtChapterName").value.trim();
+        const input = document.getElementById("txtChapterName");
+        const name = input ? input.value.trim() : "";
+        if (!seriesId) {
+          alert("Không tìm thấy series để tạo chapter!");
+          return;
+        }
         if (!name) {
           alert("Vui lòng nhập tên chapter!");
+          if (input) input.focus();
           return;
         }
         fetch(`/manga/mangaka/myseries/${seriesId}/createchapter/data`, {
@@ -2931,6 +3150,7 @@
           .then((data) => {
             if (data.status === "success") {
               alert("✅ " + data.message);
+              closeCreateChapterModal();
               loadSeriesView(seriesId);
             } else {
               alert("❌ " + data.message);
@@ -2960,15 +3180,15 @@
               <p class="ptab-sub-desc u-inline-style-127">
                 Deadline: <strong>${chapter.deadline || "Chưa đặt deadline"}</strong>
               </p>
-              <a href="/manga/mangaka/myseries/${sid}" class="project-action-btn">← Quay lại danh sách chapter</a>
-              <div class="u-inline-style-128">`;
+              <div class="chapter-page-toolbar">`;
 
             if (chapter.status === "unfinish") {
               const hasScript = !!(
                 chapter.script && chapter.script.trim() !== ""
               );
-              html += `<button type="button" class="project-action-btn" onclick="openChapterScriptModal()">${hasScript ? "✏️ Sửa kịch bản" : "📝 Tạo kịch bản"}</button>`;
-              html += `<button type="button" class="project-action-btn" onclick="submitAddPage('${sid}','${cid}')">+ Thêm trang mới</button>`;
+              html += `<a href="/manga/mangaka/myseries/${sid}" class="project-action-btn"><i class="fa-solid fa-arrow-left"></i> Quay lại danh sách chapter</a>`;
+              html += `<button type="button" class="project-action-btn" onclick="openChapterScriptModal()">${hasScript ? '<i class="fa-solid fa-pen-to-square"></i> Sửa kịch bản' : '<i class="fa-solid fa-file-pen"></i> Tạo kịch bản'}</button>`;
+              html += `<button type="button" class="project-action-btn project-action-primary" onclick="openAddPageModal('${sid}','${cid}')"><i class="fa-solid fa-plus"></i> Thêm trang mới</button>`;
               if (pages.length > 0) {
                 html += `<button type="button" class="btn-action primary btn-submit-chapter u-inline-style-129"
                           data-chapter-id="${chapter.id}">
@@ -2995,7 +3215,7 @@
 
                 // Nút mở để vẽ
                 if (chapter.status === "unfinish" && p.status === "unfinish") {
-                  actions += `<a href="/manga/mangaka/myseries/${sid}/${cid}/${p.id}/edit">Mở để vẽ</a>`;
+                  actions += `<a href="/manga/mangaka/myseries/${sid}/${cid}/${p.id}/edit" class="page-action-btn page-action-draw"><i class="fa-solid fa-pen-nib"></i> Mở để vẽ</a>`;
                 }
 
                 // Nút hoàn thành
@@ -3003,8 +3223,7 @@
                   p.status === "unfinish" ||
                   (p.status === "done" && sub && sub.status === "finish")
                 ) {
-                  actions += `<button type="button" class="btn-action approve btn-finish-page u-inline-style-131""
-                                data-page-id="${p.id}">✅ Hoàn thành</button>`;
+                  actions += `<button type="button" class="page-action-btn page-action-finish btn-finish-page" data-page-id="${p.id}"><i class="fa-solid fa-check"></i> Hoàn thành</button>`;
                 }
 
                 // Badge status
@@ -3056,9 +3275,7 @@
                   p.status === "unfinish" ||
                   (p.status === "done" && sub && sub.status === "finish");
                 if (chapter.status === "unfinish" && canAssignNewRound) {
-                  actions += `<button type="button" class="btn-assign-task btn-open-assign"
-                                data-page-id="${p.id}">
-                                <i class="fa-solid fa-user-plus"></i> Giao việc</button>`;
+                  actions += `<button type="button" class="page-action-btn page-action-assign btn-assign-task btn-open-assign" data-page-id="${p.id}"><i class="fa-solid fa-user-plus"></i> Giao việc</button>`;
                 }
 
                 const pageTypeLabels = {
@@ -3088,7 +3305,7 @@
           });
       }
 
-      function submitAddPage(sid, cid) {
+      function openAddPageModal(sid, cid) {
         // Chapter phải có kịch bản thì mới được tạo trang mới
         if (!window._chapterScript || window._chapterScript.trim() === "") {
           alert(

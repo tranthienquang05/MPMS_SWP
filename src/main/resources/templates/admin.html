@@ -43,6 +43,9 @@
     <ul class="topnav">
       <li>
         <button
+          title="Tài khoản"
+          aria-label="Tài khoản"
+          data-nav-label="Tài khoản"
           type="button"
           class="btn-icon"
           onclick="openTab('tab-accounts')"
@@ -52,6 +55,9 @@
       </li>
       <li>
         <button
+          title="Phân quyền"
+          aria-label="Phân quyền"
+          data-nav-label="Phân quyền"
           type="button"
           class="btn-icon"
           onclick="openTab('tab-relations')"
@@ -60,17 +66,33 @@
         </button>
       </li>
       <li>
-        <button type="button" class="btn-icon" onclick="openTab('tab-vote')">
+        <button
+          title="Bình chọn"
+          aria-label="Bình chọn"
+          data-nav-label="Bình chọn"
+          type="button"
+          class="btn-icon"
+          onclick="openTab('tab-vote')"
+        >
           <i class="icon-vote"></i>
         </button>
       </li>
       <li>
-        <button type="button" class="btn-icon" onclick="openTab('tab-history')">
+        <button
+          title="Lịch sử"
+          aria-label="Lịch sử"
+          data-nav-label="Lịch sử"
+          type="button"
+          class="btn-icon"
+          onclick="openTab('tab-history')"
+        >
           <i class="icon-history"></i>
         </button>
       </li>
       <li class="u-inline-style-001">
         <button
+          aria-label="Tin nhắn"
+          data-nav-label="Tin nhắn"
           type="button"
           class="btn-icon"
           onclick="openTab('tab-chat')"
@@ -82,6 +104,8 @@
       </li>
       <li>
         <button
+          aria-label="Import Excel"
+          data-nav-label="Import Excel"
           type="button"
           class="btn-icon"
           onclick="openTab('tab-import')"

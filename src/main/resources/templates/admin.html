@@ -89,6 +89,18 @@
           <i class="icon-history"></i>
         </button>
       </li>
+      <li>
+        <button
+          title="Xuất bản"
+          aria-label="Xuất bản"
+          data-nav-label="Xuất bản"
+          type="button"
+          class="btn-icon"
+          onclick="openTab('tab-publish')"
+        >
+          <i class="fa-solid fa-upload"></i>
+        </button>
+      </li>
       <li class="u-inline-style-001">
         <button
           aria-label="Tin nhắn"
@@ -347,6 +359,28 @@
             <tbody id="vote-sessions-tbody">
               <tr>
                 <td colspan="6" class="text-center-muted">Đang tải...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tab-publish" class="tab-pane">
+        <h2>Xuất bản chapter</h2>
+        <div class="section-card">
+          <h3>Chapter đã được Tantou duyệt, chờ xuất bản</h3>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Series</th>
+                <th>Chapter</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="publish-chapters-tbody">
+              <tr>
+                <td colspan="3" class="text-center-muted">Đang tải...</td>
               </tr>
             </tbody>
           </table>
@@ -728,6 +762,63 @@
         if (id === "tab-relations") loadRelations();
         if (id === "tab-vote") loadVoteSessionsAdmin();
         if (id === "tab-history") initHistoryTab();
+        if (id === "tab-publish") loadPendingPublishChapters();
+      }
+
+      // ════════════════════════════════════════════
+      // XUẤT BẢN CHAPTER
+      // ════════════════════════════════════════════
+      async function loadPendingPublishChapters() {
+        const tbody = document.getElementById("publish-chapters-tbody");
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center-muted">Đang tải...</td></tr>`;
+        try {
+          const res = await fetch("/manga/system-admin/chapters/pending-publish");
+          const data = await res.json();
+          if (data.status !== "success") {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center-muted">${data.message || "Lỗi tải dữ liệu"}</td></tr>`;
+            return;
+          }
+          const chapters = data.chapters || [];
+          if (chapters.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center-muted">Không có chapter nào chờ xuất bản.</td></tr>`;
+            return;
+          }
+          tbody.innerHTML = chapters
+            .map(
+              (c) => `
+                <tr>
+                  <td>${c.seriesName}</td>
+                  <td>Chapter ${c.chapterNumber} - ${c.chapterName}</td>
+                  <td>
+                    <button class="btn-sm btn-primary" onclick="publishChapter('${c.id}')">
+                      <i class="fa-solid fa-upload"></i>Xuất bản
+                    </button>
+                  </td>
+                </tr>
+              `,
+            )
+            .join("");
+        } catch (err) {
+          tbody.innerHTML = `<tr><td colspan="3" class="text-center-muted">Lỗi: ${err.message}</td></tr>`;
+        }
+      }
+
+      async function publishChapter(chapterId) {
+        if (!confirm("Xác nhận xuất bản chapter này?")) return;
+        try {
+          const res = await fetch(`/manga/system-admin/chapters/${chapterId}/publish`, {
+            method: "POST",
+          });
+          const data = await res.json();
+          if (data.status === "success") {
+            alert(data.message);
+            loadPendingPublishChapters();
+          } else {
+            alert("Lỗi: " + data.message);
+          }
+        } catch (err) {
+          alert("Lỗi: " + err.message);
+        }
       }
 
       function updateFileName() {

@@ -29,6 +29,9 @@ public class Proposal {
     @Column(name = "SeriesName", nullable = false, length = 30)
     private String seriesName;
 
+    @Column(name = "Genre", length = 50)
+    private String genre;
+
     @Column(name = "FilePath", length = 60)
     private String filePath;
 

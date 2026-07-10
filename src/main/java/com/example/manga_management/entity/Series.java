@@ -41,6 +41,9 @@ public class Series {
     @Column(name = "Description", length = 255)
     private String description;
 
+    @Column(name = "Genre", length = 50)
+    private String genre;
+
     @Column(name = "StartDate")
     private LocalDate startDate;
 

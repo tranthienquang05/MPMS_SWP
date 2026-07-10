@@ -63,6 +63,8 @@
                 th:each="note : ${myNotifications}"
                 class="notification-item"
                 th:classappend="${!note.isRead} ? ' unread' : ''"
+                th:data-id="${note.id}"
+                th:data-link="${note.link}"
               >
                 <span th:text="${note.content}"></span>
                 <span
@@ -1372,6 +1374,7 @@
                       type="button"
                       th:data-proposal-id="${p.id}"
                       th:data-series-name="${p.seriesName}"
+                      th:data-genre="${p.genre}"
                       onclick="openResubmitModal(this)"
                       class="btn-resubmit-proposal"
                     >
@@ -1483,6 +1486,19 @@
                 </div>
                 <div class="mb-3">
                   <label class="form-label fw-bold form-label-dark"
+                    >Thể loại:</label
+                  >
+                  <input
+                    type="text"
+                    id="newGenre"
+                    class="form-control"
+                    list="genreOptions"
+                    maxlength="50"
+                    placeholder="Chọn trong danh sách hoặc tự nhập..."
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-bold form-label-dark"
                     >Tệp bản thảo (.pdf):</label
                   >
                   <input
@@ -1502,6 +1518,15 @@
               </div>
             </div>
           </div>
+
+          <datalist id="genreOptions">
+            <option value="Shonen"></option>
+            <option value="Shojo"></option>
+            <option value="Seinen"></option>
+            <option value="Josei"></option>
+            <option value="Fantasy"></option>
+            <option value="Dark Fantasy"></option>
+          </datalist>
 
           <div
             id="resubmitModalOverlay"
@@ -1524,6 +1549,19 @@
                     class="form-control"
                     maxlength="30"
                     required
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-bold form-label-dark"
+                    >Thể loại:</label
+                  >
+                  <input
+                    type="text"
+                    id="resubmitGenre"
+                    class="form-control"
+                    list="genreOptions"
+                    maxlength="50"
+                    placeholder="Chọn trong danh sách hoặc tự nhập..."
                   />
                 </div>
                 <div class="mb-3">
@@ -1615,6 +1653,19 @@
                 >
                   Xác nhận
                 </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="seriesInfoModalOverlay" class="modal-overlay u-inline-style-002">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="seriesInfoTitle">Thông tin series</h5>
+                <button type="button" onclick="closeSeriesInfoModal()">X</button>
+              </div>
+              <div class="modal-body" id="seriesInfoBody">Đang tải...</div>
+              <div class="modal-footer">
+                <button type="button" onclick="closeSeriesInfoModal()">Đóng</button>
               </div>
             </div>
           </div>
@@ -2156,9 +2207,12 @@
           return;
         }
 
+        const genre = document.getElementById("newGenre").value.trim();
+
         const formData = new FormData();
         formData.append("mangakaId", mangakaId);
         formData.append("txtSeriesName", seriesName);
+        formData.append("genre", genre);
         formData.append("fileManuscript", file);
 
         fetch("/manga/mangaka/submit-proposal", {
@@ -2252,6 +2306,8 @@
           btn.dataset.proposalId;
         document.getElementById("resubmitSeriesName").value =
           btn.dataset.seriesName;
+        document.getElementById("resubmitGenre").value =
+          btn.dataset.genre || "";
         document.getElementById("resubmitModalOverlay").style.display = "flex";
       }
 
@@ -2328,9 +2384,12 @@
           return;
         }
 
+        const genre = document.getElementById("resubmitGenre").value.trim();
+
         const formData = new FormData();
         formData.append("proposalId", proposalId);
         formData.append("txtSeriesName", seriesName);
+        formData.append("genre", genre);
         formData.append("fileManuscript", file);
 
         fetch("/manga/mangaka/resubmit-proposal", {
@@ -2551,6 +2610,35 @@
                 });
             });
           }
+
+          dropdown.querySelectorAll(".notification-item").forEach((item) => {
+            item.addEventListener("click", (e) => {
+              e.stopPropagation();
+              const id = item.dataset.id;
+              const link = item.dataset.link;
+              item.classList.remove("unread");
+              if (id) {
+                fetch(`/notification/${id}/read`, { method: "POST" })
+                  .then((res) => res.json())
+                  .then((data) => {
+                    if (data.status === "success") {
+                      const stillUnread =
+                        dropdown.querySelectorAll(".notification-item.unread").length;
+                      const badge = btnNoti.querySelector(".badge");
+                      if (badge) {
+                        if (stillUnread > 0) badge.textContent = stillUnread;
+                        else badge.remove();
+                      }
+                    }
+                  })
+                  .finally(() => {
+                    if (link) window.location.href = link;
+                  });
+              } else if (link) {
+                window.location.href = link;
+              }
+            });
+          });
 
           document.addEventListener("click", () => {
             dropdown.classList.remove("show");
@@ -3011,6 +3099,74 @@
         }
       }
 
+      const chapterStatLabels = {
+        total: "Tổng số chapter",
+        unfinish: "Đang thực hiện",
+        waitingReview: "Chờ BTV duyệt",
+        pass: "Đã duyệt",
+        published: "Đã xuất bản",
+      };
+
+      function renderSeriesInfoBody(data) {
+        const s = data.series || {};
+        const p = data.proposal || {};
+        const stats = data.chapterStats || {};
+        const statRows = Object.keys(chapterStatLabels)
+          .map(
+            (key) =>
+              `<li>${chapterStatLabels[key]}: <b>${stats[key] ?? 0}</b></li>`,
+          )
+          .join("");
+
+        return `
+          <p><strong>Tên series:</strong> ${s.seriesName || "—"}</p>
+          <p><strong>Thể loại:</strong> ${s.genre || "Chưa cập nhật"}</p>
+          <p><strong>Mô tả:</strong> ${s.description || "—"}</p>
+          <p><strong>Trạng thái:</strong> ${s.status || "—"}</p>
+          <p><strong>Ngày bắt đầu:</strong> ${s.startDate || "—"}</p>
+          <hr>
+          <p><strong>Đề xuất gốc (proposal):</strong></p>
+          <ul>
+            <li>Mã đề xuất: ${p.id || "—"}</li>
+            <li>Điểm biên tập viên chấm: ${p.editorScore != null ? Number(p.editorScore).toFixed(2) : "Chưa chấm"}</li>
+            <li>Nhận xét: ${p.comment || "Không có"}</li>
+          </ul>
+          <hr>
+          <p><strong>Số liệu chapter:</strong></p>
+          <ul>${statRows}</ul>
+          <hr>
+          <p><strong>Tổng lượt xem:</strong> ${data.totalViews ?? 0}</p>
+          <p><strong>Tổng lượt vote:</strong> ${data.totalVotes ?? 0}</p>
+          <p><strong>Lượt thích / không thích:</strong> ${data.totalLikes ?? 0} / ${data.totalDislikes ?? 0}</p>
+        `;
+      }
+
+      function openSeriesInfoModal(seriesId) {
+        const overlay = document.getElementById("seriesInfoModalOverlay");
+        const body = document.getElementById("seriesInfoBody");
+        body.innerHTML = "Đang tải...";
+        overlay.style.display = "flex";
+
+        fetch(`/api/series/${seriesId}/info`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status !== "success") {
+              body.innerHTML = `<p>Lỗi: ${data.message}</p>`;
+              return;
+            }
+            document.getElementById("seriesInfoTitle").textContent =
+              "Thông tin series: " + (data.series.seriesName || "");
+            body.innerHTML = renderSeriesInfoBody(data);
+          })
+          .catch((err) => {
+            body.innerHTML = `<p>Lỗi: ${err.message}</p>`;
+          });
+      }
+
+      function closeSeriesInfoModal() {
+        document.getElementById("seriesInfoModalOverlay").style.display = "none";
+      }
+
       function loadMySeriesList() {
         fetch("/manga/mangaka/data")
           .then((r) => r.json())
@@ -3050,7 +3206,10 @@
                   </td>
                   <td>${statusMap[s.status] || s.status}</td>
                   <td>${s.startDate || ""}</td>
-                  <td><a href="/manga/mangaka/myseries/${s.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectSeries('${s.id}')">Xem chapter</a></td>
+                  <td>
+                    <a href="/manga/mangaka/myseries/${s.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectSeries('${s.id}')">Xem chapter</a>
+                    <button type="button" class="project-action-btn" onclick="openSeriesInfoModal('${s.id}')">Xem thông tin</button>
+                  </td>
                 </tr>`;
               });
             }
@@ -3104,6 +3263,8 @@
                   finish:
                     '<span class="badge-status-waiting">Chờ BTV duyệt</span>',
                   pass: '<span class="badge-status-passed">Đã duyệt</span>',
+                  published:
+                    '<span class="badge-status-passed">Đã xuất bản</span>',
                   stopped: '<span class="badge-status-rejected">Đã dừng</span>',
                 };
                 html += `<tr>

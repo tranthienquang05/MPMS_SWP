@@ -100,7 +100,10 @@ public class PageController {
             Files.write(filePath, imageBytes);
 
             page.setFilePath("/MangaPage/" + fileName);
-            page.setStatus("unfinish");
+            // Không ép status về "unfinish" ở đây — nếu trang đã có task
+            // (intask/done/finish), lưu bản vẽ (vd sửa lại sau khi duyệt) không
+            // được phép làm mất trạng thái đó. Trang mới tạo vốn đã "unfinish"
+            // sẵn nên không cần set lại.
             mangaPageRepository.save(page);
 
             String chapterId = page.getChapter().getId();

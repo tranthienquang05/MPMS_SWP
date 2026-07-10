@@ -13,6 +13,8 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
 
     List<Chapter> findBySeries(Series series);
 
+    List<Chapter> findByStatus(String status);
+
     List<Chapter> findByStatusAndDeadlineBefore(String status, LocalDate deadline);
 
     List<Chapter> findBySeriesId(String seriesId);

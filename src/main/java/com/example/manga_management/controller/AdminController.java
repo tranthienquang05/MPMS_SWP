@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,6 +45,7 @@ public class AdminController {
     private final ProposalRepository proposalRepository;
     private final ChapterRepository chapterRepository;
     private final LikeResultRepository likeResultRepository;
+    private final PublicDateRepository publicDateRepository;
 
     public AdminController(UserRepository userRepository,
             MangakaRepository mangakaRepository,
@@ -59,7 +61,8 @@ public class AdminController {
             NotificationRepository notificationRepository,
             ProposalRepository proposalRepository,
             ChapterRepository chapterRepository,
-            LikeResultRepository likeResultRepository) {
+            LikeResultRepository likeResultRepository,
+            PublicDateRepository publicDateRepository) {
         this.userRepository = userRepository;
         this.mangakaRepository = mangakaRepository;
         this.assistantRepository = assistantRepository;
@@ -75,6 +78,7 @@ public class AdminController {
         this.proposalRepository = proposalRepository;
         this.chapterRepository = chapterRepository;
         this.likeResultRepository = likeResultRepository;
+        this.publicDateRepository = publicDateRepository;
     }
 
     @GetMapping("")
@@ -137,6 +141,71 @@ public class AdminController {
         }
         result.put("assistants", assistantList);
 
+        return result;
+    }
+
+    @GetMapping("/chapters/pending-publish")
+    @ResponseBody
+    public Map<String, Object> getChaptersPendingPublish(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"admin".equalsIgnoreCase(user.getRole())) {
+            result.put("status", "error");
+            result.put("message", "Không có quyền truy cập");
+            return result;
+        }
+
+        List<Map<String, Object>> chapters = new ArrayList<>();
+        for (Chapter c : chapterRepository.findByStatus("pass")) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", c.getId());
+            item.put("chapterName", c.getChapterName());
+            item.put("chapterNumber", c.getChapterNumber());
+            item.put("seriesId", c.getSeries().getId());
+            item.put("seriesName", c.getSeries().getSeriesName());
+            chapters.add(item);
+        }
+
+        result.put("status", "success");
+        result.put("chapters", chapters);
+        return result;
+    }
+
+    @PostMapping("/chapters/{chapterId}/publish")
+    @ResponseBody
+    public Map<String, Object> publishChapter(@PathVariable String chapterId, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"admin".equalsIgnoreCase(user.getRole())) {
+            result.put("status", "error");
+            result.put("message", "Không có quyền truy cập");
+            return result;
+        }
+
+        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+        if (chapter == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy chapter: " + chapterId);
+            return result;
+        }
+        if (!"pass".equals(chapter.getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Chỉ có thể xuất bản chapter đã được Tantou duyệt (trạng thái 'pass')");
+            return result;
+        }
+
+        chapter.setStatus("published");
+        chapterRepository.save(chapter);
+
+        long publicCount = publicDateRepository.count();
+        PublicDate publicDate = new PublicDate();
+        publicDate.setId(String.format("PUB%03d", publicCount + 1));
+        publicDate.setChapter(chapter);
+        publicDate.setDatePublic(LocalDate.now());
+        publicDateRepository.save(publicDate);
+
+        result.put("status", "success");
+        result.put("message", "Đã xuất bản chapter '" + chapter.getChapterName() + "'!");
         return result;
     }
 

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 import java.util.HashMap;
@@ -317,6 +319,48 @@ public class TantouController {
 
         result.put("status", "success");
         result.put("data", data);
+        return result;
+    }
+
+    @Operation(summary = "Tantou sửa deadline chapter chưa nộp (deadline phải là thứ 7)")
+    @PostMapping("/chapters/{chapterId}/deadline")
+    @ResponseBody
+    public Map<String, Object> updateChapterDeadline(@PathVariable String chapterId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deadline,
+            HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập!");
+            return result;
+        }
+
+        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+        if (chapter == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy chapter: " + chapterId);
+            return result;
+        }
+
+        if (!"unfinish".equals(chapter.getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Chỉ có thể sửa deadline khi chapter chưa được nộp (trạng thái 'unfinish')!");
+            return result;
+        }
+
+        if (deadline.getDayOfWeek() != DayOfWeek.SATURDAY) {
+            result.put("status", "error");
+            result.put("message", "Deadline phải là ngày thứ 7!");
+            return result;
+        }
+
+        chapter.setDeadline(deadline);
+        chapterRepository.save(chapter);
+
+        result.put("status", "success");
+        result.put("message", "Đã cập nhật deadline chapter '" + chapter.getChapterName() + "'!");
         return result;
     }
 }

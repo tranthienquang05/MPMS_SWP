@@ -20,9 +20,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.manga_management.entity.Chapter;
+import com.example.manga_management.entity.LikeResult;
+import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.Series;
 import com.example.manga_management.repository.ChapterRepository;
+import com.example.manga_management.repository.LikeResultRepository;
 import com.example.manga_management.repository.SeriesRepository;
+import com.example.manga_management.repository.SeriesVoteRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,6 +40,10 @@ public class SeriesController {
     private SeriesRepository seriesRepository;
     @Autowired
     private ChapterRepository chapterRepository;
+    @Autowired
+    private SeriesVoteRepository seriesVoteRepository;
+    @Autowired
+    private LikeResultRepository likeResultRepository;
 
     @GetMapping
     @Operation(summary = "[SWAGGER] Lấy danh sách tất cả series")
@@ -87,6 +95,67 @@ public class SeriesController {
 
         result.put("status", "success");
         result.put("series", series);
+        return result;
+    }
+
+    @GetMapping("/{seriesId}/info")
+    @Operation(summary = "Xem toàn bộ thông tin series: proposal, thể loại, vote, view, số chapter")
+    @ResponseBody
+    public Map<String, Object> getSeriesInfo(@PathVariable String seriesId) {
+        Map<String, Object> result = new HashMap<>();
+
+        Series series = seriesRepository.findById(seriesId).orElse(null);
+        if (series == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy series: " + seriesId);
+            return result;
+        }
+
+        Proposal proposal = series.getProposal();
+        Map<String, Object> proposalInfo = new HashMap<>();
+        if (proposal != null) {
+            proposalInfo.put("id", proposal.getId());
+            proposalInfo.put("genre", proposal.getGenre());
+            proposalInfo.put("editorScore", proposal.getEditorScore());
+            proposalInfo.put("comment", proposal.getComment());
+            proposalInfo.put("createdAt", proposal.getCreatedAt());
+            proposalInfo.put("mangakaName",
+                    proposal.getMangaka() != null && proposal.getMangaka().getUser() != null
+                            ? proposal.getMangaka().getUser().getFullname()
+                            : null);
+        }
+
+        List<Chapter> chapters = chapterRepository.findBySeriesId(seriesId);
+        int totalViews = chapters.stream().mapToInt(Chapter::getViewCount).sum();
+        Map<String, Long> chapterStats = new HashMap<>();
+        chapterStats.put("total", (long) chapters.size());
+        chapterStats.put("unfinish", chapters.stream().filter(c -> "unfinish".equals(c.getStatus())).count());
+        chapterStats.put("waitingReview", chapters.stream().filter(c -> "finish".equals(c.getStatus())).count());
+        chapterStats.put("pass", chapters.stream().filter(c -> "pass".equals(c.getStatus())).count());
+        chapterStats.put("published", chapters.stream().filter(c -> "published".equals(c.getStatus())).count());
+
+        long totalVotes = seriesVoteRepository.countBySeries_Id(seriesId);
+        List<LikeResult> likeResults = likeResultRepository.findBySeries_Id(seriesId);
+        int totalLikes = likeResults.stream().mapToInt(LikeResult::getLikeNumber).sum();
+        int totalDislikes = likeResults.stream().mapToInt(LikeResult::getDislikeNumber).sum();
+
+        Map<String, Object> seriesInfo = new HashMap<>();
+        seriesInfo.put("id", series.getId());
+        seriesInfo.put("seriesName", series.getSeriesName());
+        seriesInfo.put("description", series.getDescription());
+        seriesInfo.put("genre", series.getGenre());
+        seriesInfo.put("status", series.getStatus());
+        seriesInfo.put("startDate", series.getStartDate());
+        seriesInfo.put("bookJacket", series.getBookJacket());
+
+        result.put("status", "success");
+        result.put("series", seriesInfo);
+        result.put("proposal", proposalInfo);
+        result.put("chapterStats", chapterStats);
+        result.put("totalViews", totalViews);
+        result.put("totalVotes", totalVotes);
+        result.put("totalLikes", totalLikes);
+        result.put("totalDislikes", totalDislikes);
         return result;
     }
 

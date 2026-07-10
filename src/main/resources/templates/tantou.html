@@ -51,6 +51,8 @@
               th:each="note : ${myNotifications}"
               class="notification-item"
               th:classappend="${!note.isRead} ? ' unread' : ''"
+              th:data-id="${note.id}"
+              th:data-link="${note.link}"
             >
               <span th:text="${note.content}"></span>
               <span
@@ -244,6 +246,19 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <div id="seriesInfoModalOverlay" class="modal-overlay u-inline-style-002">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="seriesInfoTitle">Thông tin series</h5>
+              <button type="button" onclick="closeSeriesInfoModal()">X</button>
+            </div>
+            <div class="modal-body" id="seriesInfoBody">Đang tải...</div>
+            <div class="modal-footer">
+              <button type="button" onclick="closeSeriesInfoModal()">Đóng</button>
+            </div>
+          </div>
         </div>
 
         <div
@@ -601,6 +616,35 @@
                 });
             });
           }
+
+          dropdown.querySelectorAll(".notification-item").forEach((item) => {
+            item.addEventListener("click", (e) => {
+              e.stopPropagation();
+              const id = item.dataset.id;
+              const link = item.dataset.link;
+              item.classList.remove("unread");
+              if (id) {
+                fetch(`/notification/${id}/read`, { method: "POST" })
+                  .then((res) => res.json())
+                  .then((data) => {
+                    if (data.status === "success") {
+                      const stillUnread =
+                        dropdown.querySelectorAll(".notification-item.unread").length;
+                      const badge = btnNoti.querySelector(".badge");
+                      if (badge) {
+                        if (stillUnread > 0) badge.textContent = stillUnread;
+                        else badge.remove();
+                      }
+                    }
+                  })
+                  .finally(() => {
+                    if (link) window.location.href = link;
+                  });
+              } else if (link) {
+                window.location.href = link;
+              }
+            });
+          });
 
           document.addEventListener("click", () => {
             dropdown.classList.remove("show");
@@ -993,6 +1037,74 @@
         if (screenNumber === 1) mmLoadMangakas();
       }
 
+      const chapterStatLabels = {
+        total: "Tổng số chapter",
+        unfinish: "Đang thực hiện",
+        waitingReview: "Chờ BTV duyệt",
+        pass: "Đã duyệt",
+        published: "Đã xuất bản",
+      };
+
+      function renderSeriesInfoBody(data) {
+        const s = data.series || {};
+        const p = data.proposal || {};
+        const stats = data.chapterStats || {};
+        const statRows = Object.keys(chapterStatLabels)
+          .map(
+            (key) =>
+              `<li>${chapterStatLabels[key]}: <b>${stats[key] ?? 0}</b></li>`,
+          )
+          .join("");
+
+        return `
+          <p><strong>Tên series:</strong> ${s.seriesName || "—"}</p>
+          <p><strong>Thể loại:</strong> ${s.genre || "Chưa cập nhật"}</p>
+          <p><strong>Mô tả:</strong> ${s.description || "—"}</p>
+          <p><strong>Trạng thái:</strong> ${s.status || "—"}</p>
+          <p><strong>Ngày bắt đầu:</strong> ${s.startDate || "—"}</p>
+          <hr>
+          <p><strong>Đề xuất gốc (proposal):</strong></p>
+          <ul>
+            <li>Mã đề xuất: ${p.id || "—"}</li>
+            <li>Điểm biên tập viên chấm: ${p.editorScore != null ? Number(p.editorScore).toFixed(2) : "Chưa chấm"}</li>
+            <li>Nhận xét: ${p.comment || "Không có"}</li>
+          </ul>
+          <hr>
+          <p><strong>Số liệu chapter:</strong></p>
+          <ul>${statRows}</ul>
+          <hr>
+          <p><strong>Tổng lượt xem:</strong> ${data.totalViews ?? 0}</p>
+          <p><strong>Tổng lượt vote:</strong> ${data.totalVotes ?? 0}</p>
+          <p><strong>Lượt thích / không thích:</strong> ${data.totalLikes ?? 0} / ${data.totalDislikes ?? 0}</p>
+        `;
+      }
+
+      function openSeriesInfoModal(seriesId) {
+        const overlay = document.getElementById("seriesInfoModalOverlay");
+        const body = document.getElementById("seriesInfoBody");
+        body.innerHTML = "Đang tải...";
+        overlay.style.display = "flex";
+
+        fetch(`/api/series/${seriesId}/info`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status !== "success") {
+              body.innerHTML = `<p>Lỗi: ${data.message}</p>`;
+              return;
+            }
+            document.getElementById("seriesInfoTitle").textContent =
+              "Thông tin series: " + (data.series.seriesName || "");
+            body.innerHTML = renderSeriesInfoBody(data);
+          })
+          .catch((err) => {
+            body.innerHTML = `<p>Lỗi: ${err.message}</p>`;
+          });
+      }
+
+      function closeSeriesInfoModal() {
+        document.getElementById("seriesInfoModalOverlay").style.display = "none";
+      }
+
       function mmLoadMangakas() {
         fetch("/manga/tantou/my-mangakas")
           .then((r) => r.json())
@@ -1050,7 +1162,10 @@
                     <td>${s.status}</td>
                     <td>${s.startDate || "—"}</td>
                     <td>${s.viewCount}</td>
-                    <td><button class="btn-action primary u-inline-style-049" onclick="mmViewChapters('${s.seriesId}', '${s.seriesName.replace(/'/g, "\\'")}')">Xem Chapter</button></td>
+                    <td>
+                      <button class="btn-action primary u-inline-style-049" onclick="mmViewChapters('${s.seriesId}', '${s.seriesName.replace(/'/g, "\\'")}')">Xem Chapter</button>
+                      <button class="btn-action primary" onclick="openSeriesInfoModal('${s.seriesId}')">Xem thông tin</button>
+                    </td>
                   </tr>
                 `,
                   )
@@ -1087,11 +1202,16 @@
                       .replace(/'/g, "\\'")
                       .replace(/"/g, "&quot;")
                       .replace(/\n/g, "\\n");
+                    const deadlineCell =
+                      c.status === "unfinish"
+                        ? `<input type="date" id="mm-deadline-${c.id}" value="${c.deadline || ""}" />
+                           <button class="btn-action primary" onclick="mmSaveDeadline('${c.id}')">Lưu</button>`
+                        : c.deadline || "—";
                     return `
                   <tr>
                     <td>${c.chapterNumber}</td>
                     <td>${c.chapterName}</td>
-                    <td>${c.deadline || "—"}</td>
+                    <td>${deadlineCell}</td>
                     <td>${c.status}</td>
                     <td>${c.viewCount || 0}</td>
                     <td><button class="btn-action primary" onclick="mmViewPages('${c.id}', 'Chapter ${c.chapterNumber}: ${c.chapterName.replace(/'/g, "\\'")}', '${scriptEscaped}')">Xem Trang</button></td>
@@ -1104,6 +1224,40 @@
               tbody.innerHTML = `<tr><td colspan="6" class="u-inline-style-049">Lỗi: ${res.message}</td></tr>`;
             }
           });
+      }
+
+      function mmSaveDeadline(chapterId) {
+        const input = document.getElementById("mm-deadline-" + chapterId);
+        const value = input ? input.value : "";
+        if (!value) {
+          alert("Vui lòng chọn ngày!");
+          return;
+        }
+        const picked = new Date(value + "T00:00:00");
+        if (picked.getDay() !== 6) {
+          alert("Deadline phải là ngày thứ 7!");
+          return;
+        }
+        fetch("/manga/tantou/chapters/" + chapterId + "/deadline", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "deadline=" + encodeURIComponent(value),
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status === "success") {
+              alert(data.message);
+              mmViewChapters(
+                mmCurrentSeriesId,
+                document
+                  .getElementById("mm-s3-title")
+                  .textContent.replace("Danh sách Chapter của ", ""),
+              );
+            } else {
+              alert("Lỗi: " + data.message);
+            }
+          })
+          .catch((err) => alert("Lỗi: " + err.message));
       }
 
       function mmViewPages(chapterId, chapterTitle, script) {

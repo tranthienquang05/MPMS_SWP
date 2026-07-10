@@ -141,6 +141,7 @@ public class MangakaController {
     @ResponseBody
     public Map<String, String> handleSubmitting(@RequestParam(required = false) String mangakaId, Model model,
             @RequestParam String txtSeriesName,
+            @RequestParam(required = false) String genre,
             @Parameter(description = "Manuscript file") @RequestPart MultipartFile fileManuscript,
             HttpSession session) {
 
@@ -209,6 +210,7 @@ public class MangakaController {
             proposal.setId(nextId);
             proposal.setMangaka(currentMangaka);
             proposal.setSeriesName(txtSeriesName.trim());
+            proposal.setGenre(genre != null ? genre.trim() : null);
             proposal.setFilePath("/proposal/" + shortFileName);
             proposal.setStatus("new");
             proposalRepository.save(proposal);
@@ -232,6 +234,7 @@ public class MangakaController {
     @ResponseBody
     public Map<String, String> resubmitProposal(@RequestParam("proposalId") String proposalId,
             @RequestParam("txtSeriesName") String txtSeriesName,
+            @RequestParam(required = false) String genre,
             @RequestParam("fileManuscript") MultipartFile fileManuscript) {
 
         Map<String, String> result = new HashMap<>();
@@ -292,6 +295,7 @@ public class MangakaController {
             fileManuscript.transferTo(uploadPath.resolve(fileName).toFile());
 
             proposal.setSeriesName(txtSeriesName.trim());
+            proposal.setGenre(genre != null ? genre.trim() : null);
             proposal.setFilePath("/proposal/" + fileName);
             proposal.setStatus("new");
             proposal.setComment(null);
@@ -405,6 +409,7 @@ public class MangakaController {
             series.setProposal(proposal);
             series.setSeriesName(txtSeriesName);
             series.setDescription(txtDescription);
+            series.setGenre(proposal.getGenre());
             series.setBookJacket("/bookjackets/" + fileName);
             series.setStartDate(LocalDate.now());
             series.setStatus("unfinish");

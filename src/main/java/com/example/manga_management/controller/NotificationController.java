@@ -3,6 +3,7 @@ package com.example.manga_management.controller;
 import com.example.manga_management.entity.Notification;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.NotificationRepository;
+import com.example.manga_management.service.NotificationService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -25,6 +26,9 @@ public class NotificationController {
     @Autowired
     private NotificationRepository noteRepo;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @ModelAttribute
     public void addNotificationsToModel(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
@@ -37,6 +41,20 @@ public class NotificationController {
             model.addAttribute("myNotifications", notifications);
             model.addAttribute("unreadCount", notifications.stream().filter(n -> !n.isRead()).count());
         }
+    }
+
+    @PostMapping("/notification/{id}/read")
+    @ResponseBody
+    public Map<String, Object> markOneRead(@PathVariable Long id, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            return result;
+        }
+        boolean ok = notificationService.markRead(id, user);
+        result.put("status", ok ? "success" : "error");
+        return result;
     }
 
     @PostMapping("/notification/read-all")

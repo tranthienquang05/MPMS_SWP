@@ -24,19 +24,22 @@ public class RankingController {
     private final SeriesVoteRepository seriesVoteRepository;
     private final SeriesRepository seriesRepository;
     private final LikeResultRepository likeResultRepository;
+    private final NotificationController notificationController;
 
     public RankingController(RankingRepository rankingRepository,
             BoardRepository boardRepository,
             VoteSessionRepository voteSessionRepository,
             SeriesVoteRepository seriesVoteRepository,
             SeriesRepository seriesRepository,
-            LikeResultRepository likeResultRepository) {
+            LikeResultRepository likeResultRepository,
+            NotificationController notificationController) {
         this.rankingRepository = rankingRepository;
         this.boardRepository = boardRepository;
         this.voteSessionRepository = voteSessionRepository;
         this.seriesVoteRepository = seriesVoteRepository;
         this.seriesRepository = seriesRepository;
         this.likeResultRepository = likeResultRepository;
+        this.notificationController = notificationController;
     }
 
     // ===== 1. API ranking =====
@@ -84,21 +87,23 @@ public class RankingController {
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (VoteSession vs : sessions) {
-            String sid = vs.getSeries().getId();
-            LocalDate since = vs.getCreatedAt();
-            String positiveChoice = vs.getVoteType().equals("stop") ? "stop" : "reward";
+            String positiveChoice = switch (vs.getVoteType()) {
+                case "stop" -> "stop";
+                case "defense" -> "approve";
+                default -> "reward";
+            };
 
-            long voted = rankingRepository.countSeriesVoteSince(sid, since);
-            long positive = rankingRepository.countSeriesVoteByChoiceSince(sid, positiveChoice, since);
+            long voted = rankingRepository.countSeriesVoteBySession(vs.getId());
+            long positive = rankingRepository.countSeriesVoteByChoiceAndSession(vs.getId(), positiveChoice);
             boolean alreadyVoted = boardId != null &&
-                    rankingRepository.countSeriesVoteByBoardSince(sid, boardId, since) > 0;
+                    rankingRepository.countSeriesVoteByBoardAndSession(vs.getId(), boardId) > 0;
 
             double percent = (totalBoards > 0 && voted >= totalBoards)
                     ? (positive * 100.0 / totalBoards) : 0;
 
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("sessionId", vs.getId());
-            map.put("seriesId", sid);
+            map.put("seriesId", vs.getSeries().getId());
             map.put("seriesName", vs.getSeries().getSeriesName());
             map.put("voteType", vs.getVoteType());
             map.put("sessionStatus", vs.getStatus());
@@ -112,6 +117,9 @@ public class RankingController {
             map.put("positiveVotes", positive);
             map.put("percent", Math.round(percent));
             map.put("alreadyVoted", alreadyVoted);
+            map.put("reason", vs.getReason());
+            map.put("defenseFilePath", vs.getDefenseFilePath());
+            map.put("defenseNote", vs.getDefenseNote());
             boolean isCreator = !vs.isAutoCreated() && boardId != null
                     && vs.getCreatedBy() != null
                     && vs.getCreatedBy().getId().equals(boardId);
@@ -126,6 +134,7 @@ public class RankingController {
     public Map<String, Object> castSessionVote(
             @RequestParam String sessionId,
             @RequestParam String voteChoice,
+            @RequestParam(required = false) String content,
             HttpSession session) {
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -159,14 +168,17 @@ public class RankingController {
             return response;
         }
 
-        String seriesId = vs.getSeries().getId();
-        LocalDate since = vs.getCreatedAt();
-
         // Validate lựa chọn theo loại vote
         if (vs.getVoteType().equals("stop")) {
             if (!voteChoice.equals("stop") && !voteChoice.equals("keep")) {
                 response.put("success", false);
                 response.put("message", "Lựa chọn không hợp lệ (stop hoặc keep)!");
+                return response;
+            }
+        } else if (vs.getVoteType().equals("defense")) {
+            if (!voteChoice.equals("approve") && !voteChoice.equals("reject")) {
+                response.put("success", false);
+                response.put("message", "Lựa chọn không hợp lệ (approve hoặc reject)!");
                 return response;
             }
         } else {
@@ -177,7 +189,7 @@ public class RankingController {
             }
         }
 
-        if (rankingRepository.countSeriesVoteByBoardSince(seriesId, board.getId(), since) > 0) {
+        if (rankingRepository.countSeriesVoteByBoardAndSession(vs.getId(), board.getId()) > 0) {
             response.put("success", false);
             response.put("message", "Bạn đã vote trong phiên này rồi!");
             return response;
@@ -185,16 +197,22 @@ public class RankingController {
 
         // Đếm trước khi save để tránh lỗi JPA flush timing
         long totalBoards = boardRepository.count();
-        String positiveChoice = vs.getVoteType().equals("stop") ? "stop" : "reward";
-        long votedBefore = rankingRepository.countSeriesVoteSince(seriesId, since);
-        long positiveBefore = rankingRepository.countSeriesVoteByChoiceSince(seriesId, positiveChoice, since);
+        String positiveChoice = switch (vs.getVoteType()) {
+            case "stop" -> "stop";
+            case "defense" -> "approve";
+            default -> "reward";
+        };
+        long votedBefore = rankingRepository.countSeriesVoteBySession(vs.getId());
+        long positiveBefore = rankingRepository.countSeriesVoteByChoiceAndSession(vs.getId(), positiveChoice);
 
         SeriesVote sv = new SeriesVote();
         sv.setID(generateSvoteId());
         sv.setSeries(vs.getSeries());
         sv.setBoard(board);
+        sv.setSession(vs);
         sv.setVote(voteChoice);
         sv.setVoteDate(LocalDate.now());
+        sv.setContent(content);
         seriesVoteRepository.save(sv);
 
         long voted = votedBefore + 1;
@@ -217,11 +235,36 @@ public class RankingController {
         Series series = vs.getSeries();
         if (vs.getVoteType().equals("stop")) {
             if (percent >= 60) {
-                series.setStatus("stopped");
+                series.setStatus("pending_cancel");
                 seriesRepository.save(series);
-                response.put("message", "⚠️ Tất cả board đã vote. Series bị DỪNG! (" + Math.round(percent) + "% đồng ý dừng)");
+                notifySeriesStakeholders(series,
+                        "⚠️ Series '" + series.getSeriesName() + "' đã bị vote dừng (" + Math.round(percent)
+                                + "% đồng ý). Vui lòng nộp hồ sơ bảo vệ nếu muốn tiếp tục.",
+                        "/manga/mangaka");
+                response.put("message", "⚠️ Tất cả board đã vote. Series chuyển sang chờ hồ sơ bảo vệ! ("
+                        + Math.round(percent) + "% đồng ý dừng)");
             } else {
                 response.put("message", "Tất cả board đã vote. Kết quả: " + Math.round(percent) + "% vote dừng → Series tiếp tục.");
+            }
+        } else if (vs.getVoteType().equals("defense")) {
+            if (percent >= 60) {
+                series.setStatus("unfinish");
+                seriesRepository.save(series);
+                notifySeriesStakeholders(series,
+                        "✅ Hồ sơ bảo vệ của series '" + series.getSeriesName()
+                                + "' đã được hội đồng thông qua (" + Math.round(percent)
+                                + "% đồng ý). Series được tiếp tục hoạt động bình thường.",
+                        "/manga/mangaka");
+                response.put("message", "✅ Hồ sơ bảo vệ được thông qua! Series tiếp tục hoạt động.");
+            } else {
+                series.setStatus("stopped");
+                seriesRepository.save(series);
+                notifySeriesStakeholders(series,
+                        "❌ Hồ sơ bảo vệ của series '" + series.getSeriesName()
+                                + "' không được hội đồng thông qua (" + Math.round(percent)
+                                + "% đồng ý). Series bị DỪNG.",
+                        "/manga/mangaka");
+                response.put("message", "❌ Hồ sơ bảo vệ không đủ phiếu đồng ý. Series bị dừng.");
             }
         } else {
             if (percent >= 60) {
@@ -233,6 +276,23 @@ public class RankingController {
             }
         }
         return response;
+    }
+
+    /**
+     * Báo cho cả mangaka sở hữu series và tantou phụ trách khi có kết quả vote
+     * ảnh hưởng tới trạng thái series (dừng chờ bảo vệ, hồ sơ bảo vệ đậu/rớt).
+     */
+    private void notifySeriesStakeholders(Series series, String content, String mangakaLink) {
+        if (series.getProposal() == null || series.getProposal().getMangaka() == null) {
+            return;
+        }
+        Mangaka mangaka = series.getProposal().getMangaka();
+        if (mangaka.getUser() != null) {
+            notificationController.send(null, mangaka.getUser().getId(), content, mangakaLink);
+        }
+        if (mangaka.getEditor() != null && mangaka.getEditor().getUser() != null) {
+            notificationController.send(null, mangaka.getEditor().getUser().getId(), content, "/manga/tantou");
+        }
     }
 
     // ===== 6. Reset toàn bộ vote để demo(http://localhost:8080/manga/ranking/reset-vote) =====

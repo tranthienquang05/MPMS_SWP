@@ -174,6 +174,13 @@ public class PageController {
                 return result;
             }
 
+            if (page.getChapter().getSeries() != null
+                    && "pending_cancel".equals(page.getChapter().getSeries().getStatus())) {
+                result.put("status", "error");
+                result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!");
+                return result;
+            }
+
             if ("finish".equals(page.getStatus())) {
                 result.put("status", "error");
                 result.put("message", "Trang này đã được đánh dấu hoàn thành");
@@ -313,6 +320,12 @@ public class PageController {
             result.put("message", "Không tìm thấy trang!");
             return result;
         }
+        if (page.getChapter() != null && page.getChapter().getSeries() != null
+                && "pending_cancel".equals(page.getChapter().getSeries().getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!");
+            return result;
+        }
         if ("finish".equals(page.getStatus())) {
             result.put("status", "error");
             result.put("message", "Trang đã hoàn thành rồi!");
@@ -350,6 +363,12 @@ public class PageController {
         if (page == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy trang!");
+            return result;
+        }
+        if (page.getChapter() != null && page.getChapter().getSeries() != null
+                && "pending_cancel".equals(page.getChapter().getSeries().getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!");
             return result;
         }
 
@@ -444,6 +463,13 @@ public class PageController {
             if (page.getChapter() == null || !"unfinish".equals(page.getChapter().getStatus())) {
                 result.put("status", "error");
                 result.put("message", "Chỉ có thể giao lại khi chapter đang ở trạng thái unfinish");
+                return result;
+            }
+
+            if (page.getChapter().getSeries() != null
+                    && "pending_cancel".equals(page.getChapter().getSeries().getStatus())) {
+                result.put("status", "error");
+                result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!");
                 return result;
             }
 

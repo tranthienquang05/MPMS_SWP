@@ -23,10 +23,13 @@ import com.example.manga_management.entity.Chapter;
 import com.example.manga_management.entity.LikeResult;
 import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.Series;
+import com.example.manga_management.entity.SeriesVote;
+import com.example.manga_management.entity.VoteSession;
 import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.LikeResultRepository;
 import com.example.manga_management.repository.SeriesRepository;
 import com.example.manga_management.repository.SeriesVoteRepository;
+import com.example.manga_management.repository.VoteSessionRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,6 +47,8 @@ public class SeriesController {
     private SeriesVoteRepository seriesVoteRepository;
     @Autowired
     private LikeResultRepository likeResultRepository;
+    @Autowired
+    private VoteSessionRepository voteSessionRepository;
 
     @GetMapping
     @Operation(summary = "[SWAGGER] Lấy danh sách tất cả series")
@@ -139,6 +144,40 @@ public class SeriesController {
         int totalLikes = likeResults.stream().mapToInt(LikeResult::getLikeNumber).sum();
         int totalDislikes = likeResults.stream().mapToInt(LikeResult::getDislikeNumber).sum();
 
+        // Lịch sử các phiên vote (stop/reward/defense) — hiện lý do + hồ sơ bảo vệ
+        List<Map<String, Object>> voteSessions = voteSessionRepository
+                .findBySeriesIdOrderByCreatedAtDesc(seriesId)
+                .stream()
+                .map(vs -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("sessionId", vs.getId());
+                    map.put("voteType", vs.getVoteType());
+                    map.put("status", vs.getStatus());
+                    map.put("createdAt", vs.getCreatedAt());
+                    map.put("reason", vs.getReason());
+                    map.put("defenseFilePath", vs.getDefenseFilePath());
+                    map.put("defenseNote", vs.getDefenseNote());
+                    return map;
+                })
+                .toList();
+
+        // Nhận xét của từng thành viên hội đồng khi vote (giống comment vote proposal)
+        List<Map<String, Object>> voteComments = seriesVoteRepository
+                .findBySeries_IdOrderByVoteDateDesc(seriesId)
+                .stream()
+                .map(sv -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("boardName",
+                            sv.getBoard() != null && sv.getBoard().getUser() != null
+                                    ? sv.getBoard().getUser().getFullname()
+                                    : "—");
+                    map.put("vote", sv.getVote());
+                    map.put("content", sv.getContent());
+                    map.put("voteDate", sv.getVoteDate());
+                    return map;
+                })
+                .toList();
+
         Map<String, Object> seriesInfo = new HashMap<>();
         seriesInfo.put("id", series.getId());
         seriesInfo.put("seriesName", series.getSeriesName());
@@ -156,6 +195,8 @@ public class SeriesController {
         result.put("totalVotes", totalVotes);
         result.put("totalLikes", totalLikes);
         result.put("totalDislikes", totalDislikes);
+        result.put("voteSessions", voteSessions);
+        result.put("voteComments", voteComments);
         return result;
     }
 

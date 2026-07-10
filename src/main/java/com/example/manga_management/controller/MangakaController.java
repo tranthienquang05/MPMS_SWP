@@ -496,6 +496,11 @@ public class MangakaController {
             result.put("message", "Không tìm thấy series: " + seriesId);
             return result;
         }
+        if ("pending_cancel".equals(series.getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể tạo chapter mới!");
+            return result;
+        }
         try {
             Optional<Chapter> lastChapter = chapterRepository.findTopByOrderByIdDesc();
             int maxId = 0;
@@ -565,6 +570,12 @@ public class MangakaController {
         if (chapter == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy chapter: " + chapterId);
+            return result;
+        }
+
+        if (chapter.getSeries() != null && "pending_cancel".equals(chapter.getSeries().getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!");
             return result;
         }
 

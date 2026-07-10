@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 
 public interface RankingRepository extends JpaRepository<LikeResult, String> {
@@ -63,22 +62,20 @@ public interface RankingRepository extends JpaRepository<LikeResult, String> {
     @Query(value = "SELECT DISTINCT SeriesID, SeriesName, Status FROM series ORDER BY SeriesID ASC", nativeQuery = true)
     List<Object[]> findAllSeriesDistinct();
 
-    @Query("SELECT COUNT(sv) FROM SeriesVote sv " +
-           "WHERE sv.series.id = :seriesId AND sv.voteDate >= :since")
-    long countSeriesVoteSince(@Param("seriesId") String seriesId,
-                              @Param("since") LocalDate since);
+    // Đếm theo đúng SessionID (không theo ngày) để tránh đếm nhầm phiếu của
+    // phiên vote khác cho cùng series diễn ra cùng ngày (vd stop + defense).
+    @Query("SELECT COUNT(sv) FROM SeriesVote sv WHERE sv.session.id = :sessionId")
+    long countSeriesVoteBySession(@Param("sessionId") String sessionId);
 
     @Query("SELECT COUNT(sv) FROM SeriesVote sv " +
-           "WHERE sv.series.id = :seriesId AND sv.board.id = :boardId AND sv.voteDate >= :since")
-    long countSeriesVoteByBoardSince(@Param("seriesId") String seriesId,
-                                     @Param("boardId") String boardId,
-                                     @Param("since") LocalDate since);
+           "WHERE sv.session.id = :sessionId AND sv.board.id = :boardId")
+    long countSeriesVoteByBoardAndSession(@Param("sessionId") String sessionId,
+                                          @Param("boardId") String boardId);
 
     @Query("SELECT COUNT(sv) FROM SeriesVote sv " +
-           "WHERE sv.series.id = :seriesId AND sv.vote = :voteChoice AND sv.voteDate >= :since")
-    long countSeriesVoteByChoiceSince(@Param("seriesId") String seriesId,
-                                      @Param("voteChoice") String voteChoice,
-                                      @Param("since") LocalDate since);
+           "WHERE sv.session.id = :sessionId AND sv.vote = :voteChoice")
+    long countSeriesVoteByChoiceAndSession(@Param("sessionId") String sessionId,
+                                           @Param("voteChoice") String voteChoice);
 
     @Query(value = "SELECT Status FROM series WHERE SeriesID = :seriesId LIMIT 1", nativeQuery = true)
     String getSeriesStatus(@Param("seriesId") String seriesId);

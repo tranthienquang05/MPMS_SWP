@@ -71,6 +71,12 @@ public class ChapterController {
             return result;
         }
 
+        if (chapter.getSeries() != null && "pending_cancel".equals(chapter.getSeries().getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!");
+            return result;
+        }
+
         String script = body.get("script");
         if (script == null || script.trim().isEmpty()) {
             result.put("status", "error");

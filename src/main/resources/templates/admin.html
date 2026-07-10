@@ -695,6 +695,16 @@
           </select>
         </div>
 
+        <div class="field" id="cv-reason-field">
+          <label id="cv-reason-label">Lý do <span class="text-danger-span">*</span></label>
+          <textarea
+            id="cv-reason"
+            rows="3"
+            maxlength="500"
+            placeholder="Vd: 3 tháng liên tiếp tỉ lệ xem tệ..."
+          ></textarea>
+        </div>
+
         <div class="modal-footer">
           <button
             class="btn-sm btn-cancel"
@@ -1496,6 +1506,7 @@
 
       function openCreateVoteModalAdmin() {
         document.getElementById("cv-voteType").value = "stop";
+        document.getElementById("cv-reason").value = "";
         updateVoteTypeHintAdmin();
         // Load series list
         fetch("/manga/system-admin/ranking/all-series")
@@ -1525,22 +1536,30 @@
       function updateVoteTypeHintAdmin() {
         const type = document.getElementById("cv-voteType").value;
         const hint = document.getElementById("cv-voteType-hint");
+        const reasonLabel = document.getElementById("cv-reason-label");
         if (type === "stop") {
           hint.textContent =
             "Nếu ≥ 60% board đồng ý → Series sẽ bị DỪNG phát hành.";
           hint.style.color = "#e74c3c";
+          reasonLabel.innerHTML = 'Lý do <span class="text-danger-span">*</span>';
         } else {
           hint.textContent =
             "Nếu ≥ 60% board đồng ý → Series sẽ được KHEN THƯỞNG.";
           hint.style.color = "#f59e0b";
+          reasonLabel.textContent = "Lý do (không bắt buộc)";
         }
       }
 
       function submitCreateVoteSessionAdmin() {
         const seriesId = document.getElementById("cv-seriesId").value;
         const voteType = document.getElementById("cv-voteType").value;
+        const reason = document.getElementById("cv-reason").value.trim();
         if (!seriesId) {
           showToast("Vui lòng chọn series", "error");
+          return;
+        }
+        if (voteType === "stop" && !reason) {
+          showToast("Vui lòng nhập lý do tạo phiên vote dừng series", "error");
           return;
         }
 
@@ -1549,7 +1568,9 @@
             "/manga/system-admin/ranking/create-session?seriesId=" +
               seriesId +
               "&voteType=" +
-              voteType,
+              voteType +
+              "&reason=" +
+              encodeURIComponent(reason),
             { method: "POST" },
           )
             .then((r) => r.json())

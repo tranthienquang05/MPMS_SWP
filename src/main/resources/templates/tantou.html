@@ -191,7 +191,25 @@
         th:classappend="${message == null} ? 'active' : ''"
       >
         <h2>Trang chủ</h2>
-        <p>Tính năng đang phát triển...</p>
+
+        <div class="section-card">
+          <h3>Series đang chờ hồ sơ bảo vệ</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Series</th>
+                <th>Mangaka</th>
+                <th>Lý do bị vote dừng</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="pendingCancelTbody">
+              <tr>
+                <td colspan="4" class="u-inline-style-048">Đang tải...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Tab project content -->
@@ -552,6 +570,29 @@
         <div class="modal-body" id="seriesInfoBody">Đang tải...</div>
         <div class="modal-footer">
           <button type="button" onclick="closeSeriesInfoModal()">Đóng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal nộp hồ sơ bảo vệ series pending_cancel — đặt ngoài mọi tab-pane -->
+    <div id="submitDefenseModalOverlay" class="modal-overlay u-inline-style-002">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5>Nộp hồ sơ bảo vệ</h5>
+          <button type="button" onclick="closeSubmitDefenseModal()">X</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="defenseSeriesId" />
+          <p id="defenseSeriesNameLabel"></p>
+          <label class="form-label fw-bold form-label-dark">File hồ sơ (.pdf):</label>
+          <input type="file" id="defenseFileInput" class="form-control" accept=".pdf" />
+          <label class="form-label fw-bold form-label-dark" style="margin-top:10px;">Ghi chú:</label>
+          <textarea id="defenseNoteInput" rows="4" maxlength="500" class="form-control"
+            placeholder="Giải trình / kế hoạch cải thiện..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" onclick="closeSubmitDefenseModal()">Hủy</button>
+          <button type="button" onclick="submitDefense()">Nộp hồ sơ</button>
         </div>
       </div>
     </div>
@@ -1004,10 +1045,19 @@
         published: "Đã xuất bản",
       };
 
+      const voteSessionTypeLabels = {
+        stop: "Vote dừng series",
+        reward: "Vote khen thưởng",
+        defense: "Hồ sơ bảo vệ",
+      };
+
       function renderSeriesInfoBody(data) {
         const s = data.series || {};
         const p = data.proposal || {};
         const stats = data.chapterStats || {};
+        const sessions = data.voteSessions || [];
+        const comments = data.voteComments || [];
+
         const statRows = Object.keys(chapterStatLabels)
           .map(
             (key) =>
@@ -1015,26 +1065,61 @@
           )
           .join("");
 
+        const sessionsHtml = sessions.length
+          ? sessions
+              .map((vs) => {
+                const label = voteSessionTypeLabels[vs.voteType] || vs.voteType;
+                const statusLabel = vs.status === "active" ? "Đang mở" : "Đã đóng";
+                const reasonLine = vs.reason ? `<div>Lý do: ${vs.reason}</div>` : "";
+                const defenseLine = vs.defenseFilePath
+                  ? `<div><a href="${vs.defenseFilePath}" target="_blank">Hồ sơ bảo vệ (PDF)</a></div>`
+                  : "";
+                const defenseNoteLine = vs.defenseNote ? `<div>Ghi chú: ${vs.defenseNote}</div>` : "";
+                return `<div class="series-info-vote-item">
+                  <b>${label}</b> — ${statusLabel} (${vs.createdAt || "—"})
+                  ${reasonLine}${defenseLine}${defenseNoteLine}
+                </div>`;
+              })
+              .join("")
+          : "<p>Chưa có phiên vote nào.</p>";
+
+        const commentsHtml = comments.length
+          ? comments
+              .map(
+                (c) =>
+                  `<li>${c.boardName} (${c.vote}): ${c.content || "(không có nhận xét)"}</li>`,
+              )
+              .join("")
+          : "<li>Chưa có nhận xét nào từ hội đồng.</li>";
+
         return `
+          <h4>Thông tin chung</h4>
           <p><strong>Tên series:</strong> ${s.seriesName || "—"}</p>
           <p><strong>Thể loại:</strong> ${s.genre || "Chưa cập nhật"}</p>
           <p><strong>Mô tả:</strong> ${s.description || "—"}</p>
           <p><strong>Trạng thái:</strong> ${s.status || "—"}</p>
           <p><strong>Ngày bắt đầu:</strong> ${s.startDate || "—"}</p>
           <hr>
-          <p><strong>Đề xuất gốc (proposal):</strong></p>
+          <h4>Đề xuất gốc (proposal)</h4>
           <ul>
             <li>Mã đề xuất: ${p.id || "—"}</li>
             <li>Điểm biên tập viên chấm: ${p.editorScore != null ? Number(p.editorScore).toFixed(2) : "Chưa chấm"}</li>
             <li>Nhận xét: ${p.comment || "Không có"}</li>
           </ul>
           <hr>
-          <p><strong>Số liệu chapter:</strong></p>
+          <h4>Số liệu chapter</h4>
           <ul>${statRows}</ul>
           <hr>
+          <h4>Thống kê</h4>
           <p><strong>Tổng lượt xem:</strong> ${data.totalViews ?? 0}</p>
           <p><strong>Tổng lượt vote:</strong> ${data.totalVotes ?? 0}</p>
           <p><strong>Lượt thích / không thích:</strong> ${data.totalLikes ?? 0} / ${data.totalDislikes ?? 0}</p>
+          <hr>
+          <h4>Lịch sử vote hội đồng</h4>
+          ${sessionsHtml}
+          <hr>
+          <h4>Nhận xét từng thành viên hội đồng</h4>
+          <ul>${commentsHtml}</ul>
         `;
       }
 
@@ -1184,6 +1269,87 @@
             }
           });
       }
+
+      // ==========================================
+      // Series đang chờ hồ sơ bảo vệ (pending_cancel)
+      // ==========================================
+      function loadPendingCancelSeries() {
+        const tbody = document.getElementById("pendingCancelTbody");
+        if (!tbody) return;
+        fetch("/manga/tantou/pending-cancel-series")
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status !== "success") {
+              tbody.innerHTML = `<tr><td colspan="4" class="u-inline-style-049">Lỗi: ${data.message}</td></tr>`;
+              return;
+            }
+            const list = data.data || [];
+            if (list.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="4" class="u-inline-style-048">Không có series nào đang chờ hồ sơ bảo vệ.</td></tr>`;
+              return;
+            }
+            tbody.innerHTML = list
+              .map((s) => {
+                const actionBtn = s.hasActiveDefense
+                  ? `<span class="u-inline-style-048">Đã nộp, chờ hội đồng bỏ phiếu</span>`
+                  : `<button class="btn-action primary" onclick="openSubmitDefenseModal('${s.seriesId}', '${(s.seriesName || "").replace(/'/g, "\\'")}')">Nộp hồ sơ bảo vệ</button>`;
+                return `<tr>
+                  <td>${s.seriesName}</td>
+                  <td>${s.mangakaName || "—"}</td>
+                  <td>${s.reason || "—"}</td>
+                  <td>${actionBtn}</td>
+                </tr>`;
+              })
+              .join("");
+          })
+          .catch((err) => {
+            tbody.innerHTML = `<tr><td colspan="4" class="u-inline-style-049">Lỗi: ${err.message}</td></tr>`;
+          });
+      }
+
+      function openSubmitDefenseModal(seriesId, seriesName) {
+        document.getElementById("defenseSeriesId").value = seriesId;
+        document.getElementById("defenseSeriesNameLabel").textContent = "Series: " + seriesName;
+        document.getElementById("defenseFileInput").value = "";
+        document.getElementById("defenseNoteInput").value = "";
+        document.getElementById("submitDefenseModalOverlay").style.display = "flex";
+      }
+
+      function closeSubmitDefenseModal() {
+        document.getElementById("submitDefenseModalOverlay").style.display = "none";
+      }
+
+      function submitDefense() {
+        const seriesId = document.getElementById("defenseSeriesId").value;
+        const file = document.getElementById("defenseFileInput").files[0];
+        const note = document.getElementById("defenseNoteInput").value.trim();
+        if (!file) {
+          alert("Vui lòng chọn file PDF hồ sơ bảo vệ!");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("fileDefense", file);
+        formData.append("note", note);
+
+        fetch(`/manga/tantou/series/${seriesId}/submit-defense`, {
+          method: "POST",
+          body: formData,
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.status === "success") {
+              alert(data.message);
+              closeSubmitDefenseModal();
+              loadPendingCancelSeries();
+            } else {
+              alert("Lỗi: " + data.message);
+            }
+          })
+          .catch((err) => alert("Lỗi: " + err.message));
+      }
+
+      document.addEventListener("DOMContentLoaded", loadPendingCancelSeries);
 
       function mmSaveDeadline(chapterId) {
         const input = document.getElementById("mm-deadline-" + chapterId);

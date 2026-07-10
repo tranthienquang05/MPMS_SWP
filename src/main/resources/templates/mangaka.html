@@ -3066,10 +3066,19 @@
         published: "Đã xuất bản",
       };
 
+      const voteSessionTypeLabels = {
+        stop: "Vote dừng series",
+        reward: "Vote khen thưởng",
+        defense: "Hồ sơ bảo vệ",
+      };
+
       function renderSeriesInfoBody(data) {
         const s = data.series || {};
         const p = data.proposal || {};
         const stats = data.chapterStats || {};
+        const sessions = data.voteSessions || [];
+        const comments = data.voteComments || [];
+
         const statRows = Object.keys(chapterStatLabels)
           .map(
             (key) =>
@@ -3077,26 +3086,61 @@
           )
           .join("");
 
+        const sessionsHtml = sessions.length
+          ? sessions
+              .map((vs) => {
+                const label = voteSessionTypeLabels[vs.voteType] || vs.voteType;
+                const statusLabel = vs.status === "active" ? "Đang mở" : "Đã đóng";
+                const reasonLine = vs.reason ? `<div>Lý do: ${vs.reason}</div>` : "";
+                const defenseLine = vs.defenseFilePath
+                  ? `<div><a href="${vs.defenseFilePath}" target="_blank">Hồ sơ bảo vệ (PDF)</a></div>`
+                  : "";
+                const defenseNoteLine = vs.defenseNote ? `<div>Ghi chú: ${vs.defenseNote}</div>` : "";
+                return `<div class="series-info-vote-item">
+                  <b>${label}</b> — ${statusLabel} (${vs.createdAt || "—"})
+                  ${reasonLine}${defenseLine}${defenseNoteLine}
+                </div>`;
+              })
+              .join("")
+          : "<p>Chưa có phiên vote nào.</p>";
+
+        const commentsHtml = comments.length
+          ? comments
+              .map(
+                (c) =>
+                  `<li>${c.boardName} (${c.vote}): ${c.content || "(không có nhận xét)"}</li>`,
+              )
+              .join("")
+          : "<li>Chưa có nhận xét nào từ hội đồng.</li>";
+
         return `
+          <h4>Thông tin chung</h4>
           <p><strong>Tên series:</strong> ${s.seriesName || "—"}</p>
           <p><strong>Thể loại:</strong> ${s.genre || "Chưa cập nhật"}</p>
           <p><strong>Mô tả:</strong> ${s.description || "—"}</p>
           <p><strong>Trạng thái:</strong> ${s.status || "—"}</p>
           <p><strong>Ngày bắt đầu:</strong> ${s.startDate || "—"}</p>
           <hr>
-          <p><strong>Đề xuất gốc (proposal):</strong></p>
+          <h4>Đề xuất gốc (proposal)</h4>
           <ul>
             <li>Mã đề xuất: ${p.id || "—"}</li>
             <li>Điểm biên tập viên chấm: ${p.editorScore != null ? Number(p.editorScore).toFixed(2) : "Chưa chấm"}</li>
             <li>Nhận xét: ${p.comment || "Không có"}</li>
           </ul>
           <hr>
-          <p><strong>Số liệu chapter:</strong></p>
+          <h4>Số liệu chapter</h4>
           <ul>${statRows}</ul>
           <hr>
+          <h4>Thống kê</h4>
           <p><strong>Tổng lượt xem:</strong> ${data.totalViews ?? 0}</p>
           <p><strong>Tổng lượt vote:</strong> ${data.totalVotes ?? 0}</p>
           <p><strong>Lượt thích / không thích:</strong> ${data.totalLikes ?? 0} / ${data.totalDislikes ?? 0}</p>
+          <hr>
+          <h4>Lịch sử vote hội đồng</h4>
+          ${sessionsHtml}
+          <hr>
+          <h4>Nhận xét từng thành viên hội đồng</h4>
+          <ul>${commentsHtml}</ul>
         `;
       }
 
@@ -3185,12 +3229,22 @@
             if (data.status !== "success") return;
             const series = data.series;
             const chapters = data.chapters || [];
+            const isPendingCancel = series.status === "pending_cancel";
+            const pendingCancelBanner = isPendingCancel
+              ? `<div class="pending-cancel-banner">
+                   ⚠️ Series này đã bị hội đồng vote dừng và đang chờ hồ sơ bảo vệ từ biên tập viên.
+                   Mọi thao tác trên chapter chưa hoàn thành đều bị khoá cho đến khi có kết quả.
+                 </div>`
+              : "";
             let html = `
               <h3>Chapter của series: ${series.seriesName}</h3>
+              ${pendingCancelBanner}
               <div class="chapter-toolbar">
                 <button type="button" class="project-action-btn" onclick="restoreProjectSeriesView(true)">Quay lại
                 </button>
-                <button type="button" class="project-action-btn project-action-primary" onclick="openCreateChapterModal('${series.id}')">Tạo chapter mới
+                <button type="button" class="project-action-btn project-action-primary"
+                  ${isPendingCancel ? "disabled" : ""}
+                  onclick="${isPendingCancel ? "alert('Series đang chờ hồ sơ bảo vệ, không thể tạo chapter mới!')" : `openCreateChapterModal('${series.id}')`}">Tạo chapter mới
                 </button>
                 <span class="chapter-toolbar-note">Deadline sẽ luôn là thứ 7.</span>
               </div>
@@ -3226,6 +3280,12 @@
                     '<span class="badge-status-passed">Đã xuất bản</span>',
                   stopped: '<span class="badge-status-rejected">Đã dừng</span>',
                 };
+                const chapterLocked = isPendingCancel && c.status === "unfinish";
+                const viewPagesBtn = chapterLocked
+                  ? `<button type="button" class="project-action-btn series-chapter-btn project-action-locked"
+                        onclick="alert('Series đang ở trạng thái pending_cancel và chapter này đang bị khoá, không thể mở!')">🔒 Đã khoá</button>`
+                  : `<a href="/manga/mangaka/myseries/${sid}/${c.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectChapter('${sid}','${c.id}')">Xem trang</a>`;
+
                 html += `<tr>
                   <td>${c.chapterNumber}</td>
                   <td>${c.chapterName}</td>
@@ -3233,7 +3293,7 @@
                   <td>${chapterStatusMap[c.status] || c.status}</td>
                   <td>${comment}</td>
                   <td>
-                    <a href="/manga/mangaka/myseries/${sid}/${c.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectChapter('${sid}','${c.id}')">Xem trang</a>
+                    ${viewPagesBtn}
                     ${finishBadge}${passBadge}
                   </td>
                 </tr>`;

@@ -503,6 +503,7 @@ public class AdminController {
     public Map<String, Object> createVoteSession(
             @RequestParam String seriesId,
             @RequestParam String voteType,
+            @RequestParam(required = false) String reason,
             HttpSession session) {
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -532,6 +533,17 @@ public class AdminController {
             response.put("message", "Series này đã có kết quả vote, không thể tạo phiên mới!");
             return response;
         }
+        if ("pending_cancel".equals(seriesStatus)) {
+            response.put("success", false);
+            response.put("message", "Series đang trong diện xem xét dừng (chờ hồ sơ bảo vệ), không thể tạo phiên vote mới!");
+            return response;
+        }
+
+        if ("stop".equals(voteType) && (reason == null || reason.isBlank())) {
+            response.put("success", false);
+            response.put("message", "Vui lòng nhập lý do khi tạo phiên vote dừng series!");
+            return response;
+        }
 
         if (voteSessionRepository.existsBySeriesIdAndStatus(seriesId, "active")) {
             response.put("success", false);
@@ -555,6 +567,7 @@ public class AdminController {
         vs.setStatus("active");
         vs.setCreatedAt(LocalDate.now());
         vs.setAutoCreated(false);
+        vs.setReason(reason != null ? reason.trim() : null);
         voteSessionRepository.save(vs);
 
         response.put("success", true);
@@ -605,6 +618,7 @@ public class AdminController {
                 String seriesStatus = seriesOpt.get().getStatus();
 
                 if ("stopped".equals(seriesStatus) || "rewarded".equals(seriesStatus)
+                        || "pending_cancel".equals(seriesStatus)
                         || voteSessionRepository.existsBySeriesIdAndVoteType(sid, "stop")) {
                     skippedNames.add(sname);
                     continue;
@@ -618,6 +632,7 @@ public class AdminController {
                 vs.setStatus("active");
                 vs.setCreatedAt(LocalDate.now());
                 vs.setAutoCreated(false);
+                vs.setReason("Nằm trong 3 series có lượt vote thấp nhất kỳ xếp hạng đang chọn.");
                 voteSessionRepository.save(vs);
                 createdNames.add(sname);
             }

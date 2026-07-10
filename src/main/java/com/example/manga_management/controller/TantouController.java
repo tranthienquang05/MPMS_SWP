@@ -26,11 +26,13 @@ import com.example.manga_management.entity.Mangaka;
 import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.TantoEditor;
 import com.example.manga_management.entity.User;
+import com.example.manga_management.entity.VoteSession;
 import com.example.manga_management.repository.ProposalRepository;
 import com.example.manga_management.repository.TantoEditorRepository;
 import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.SeriesRepository;
 import com.example.manga_management.repository.ChapterRepository;
+import com.example.manga_management.repository.VoteSessionRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpSession;
@@ -45,14 +47,17 @@ public class TantouController {
     private final MangakaRepository mangakaRepository;
     private final SeriesRepository seriesRepository;
     private final ChapterRepository chapterRepository;
+    private final VoteSessionRepository voteSessionRepository;
 
     public TantouController(ProposalRepository proposalRepository, TantoEditorRepository tantoEditorRepository,
             NotificationController notificationController, MangakaRepository mangakaRepository,
-            SeriesRepository seriesRepository, ChapterRepository chapterRepository) {
+            SeriesRepository seriesRepository, ChapterRepository chapterRepository,
+            VoteSessionRepository voteSessionRepository) {
         this.proposalRepository = proposalRepository;
         this.tantoEditorRepository = tantoEditorRepository;
         this.notificationController = notificationController;
         this.mangakaRepository = mangakaRepository;
+        this.voteSessionRepository = voteSessionRepository;
         this.seriesRepository = seriesRepository;
         this.chapterRepository = chapterRepository;
     }
@@ -362,5 +367,143 @@ public class TantouController {
         result.put("status", "success");
         result.put("message", "Đã cập nhật deadline chapter '" + chapter.getChapterName() + "'!");
         return result;
+    }
+
+    @Operation(summary = "Danh sách series đang chờ hồ sơ bảo vệ (pending_cancel) của các mangaka do tantou này phụ trách")
+    @GetMapping("/pending-cancel-series")
+    @ResponseBody
+    public Map<String, Object> getPendingCancelSeries(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập!");
+            return result;
+        }
+
+        TantoEditor editor = tantoEditorRepository.findByUser(user).orElse(null);
+        if (editor == null) {
+            result.put("status", "error");
+            result.put("message", "Không phải Tanto Editor!");
+            return result;
+        }
+
+        List<Series> list = seriesRepository.findByStatusAndProposal_Mangaka_Editor_Id("pending_cancel", editor.getId());
+        List<Map<String, Object>> data = list.stream().map(s -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("seriesId", s.getId());
+            map.put("seriesName", s.getSeriesName());
+            map.put("mangakaName", s.getProposal().getMangaka().getUser().getFullname());
+
+            VoteSession stopSession = voteSessionRepository
+                    .findFirstBySeriesIdAndVoteTypeAndStatus(s.getId(), "stop", "closed").orElse(null);
+            map.put("reason", stopSession != null ? stopSession.getReason() : null);
+
+            boolean hasActiveDefense = voteSessionRepository.existsBySeriesIdAndVoteType(s.getId(), "defense")
+                    && voteSessionRepository.findFirstBySeriesIdAndVoteTypeAndStatus(s.getId(), "defense", "active")
+                            .isPresent();
+            map.put("hasActiveDefense", hasActiveDefense);
+            return map;
+        }).collect(Collectors.toList());
+
+        result.put("status", "success");
+        result.put("data", data);
+        return result;
+    }
+
+    @Operation(summary = "Tantou nộp hồ sơ bảo vệ (PDF + ghi chú) cho series đang pending_cancel")
+    @PostMapping(value = "/series/{seriesId}/submit-defense", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseBody
+    public Map<String, String> submitDefense(@PathVariable String seriesId,
+            @RequestParam(required = false) String note,
+            @RequestPart MultipartFile fileDefense,
+            HttpSession session) {
+        Map<String, String> result = new HashMap<>();
+
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập!");
+            return result;
+        }
+
+        Series series = seriesRepository.findById(seriesId).orElse(null);
+        if (series == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy series: " + seriesId);
+            return result;
+        }
+
+        if (!"pending_cancel".equals(series.getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Series này không ở trạng thái chờ hồ sơ bảo vệ!");
+            return result;
+        }
+
+        if (voteSessionRepository.existsBySeriesIdAndStatus(seriesId, "active")) {
+            result.put("status", "error");
+            result.put("message", "Series này đã có hồ sơ bảo vệ đang chờ hội đồng bỏ phiếu!");
+            return result;
+        }
+
+        if (fileDefense.isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng chọn file PDF hồ sơ bảo vệ!");
+            return result;
+        }
+
+        String fileName = fileDefense.getOriginalFilename();
+        if (fileName == null || !fileName.toLowerCase().endsWith(".pdf")) {
+            result.put("status", "error");
+            result.put("message", "Chỉ được phép tải lên file PDF!");
+            return result;
+        }
+
+        try {
+            String workingDir = System.getProperty("user.dir");
+            String uploadDir = workingDir + File.separator + "src" + File.separator + "main" + File.separator
+                    + "resources" + File.separator + "static" + File.separator + "series-defense" + File.separator;
+
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            String sessionId = generateSessionId();
+            String savedFileName = sessionId + ".pdf";
+            fileDefense.transferTo(uploadPath.resolve(savedFileName).toFile());
+
+            VoteSession vs = new VoteSession();
+            vs.setId(sessionId);
+            vs.setSeries(series);
+            vs.setCreatedBy(null);
+            vs.setVoteType("defense");
+            vs.setStatus("active");
+            vs.setCreatedAt(LocalDate.now());
+            vs.setAutoCreated(false);
+            vs.setDefenseFilePath("/series-defense/" + savedFileName);
+            vs.setDefenseNote(note != null ? note.trim() : null);
+            voteSessionRepository.save(vs);
+
+            notificationController.send("board", null,
+                    "Series '" + series.getSeriesName() + "' đã nộp hồ sơ bảo vệ, cần bỏ phiếu!",
+                    "/manga/editor");
+
+            result.put("status", "success");
+            result.put("sessionId", sessionId);
+            result.put("message", "Đã nộp hồ sơ bảo vệ, chờ hội đồng bỏ phiếu!");
+        } catch (IOException e) {
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
+        }
+        return result;
+    }
+
+    private String generateSessionId() {
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+        java.util.Random rand = new java.util.Random();
+        StringBuilder sb = new StringBuilder("VS");
+        for (int i = 0; i < 4; i++) sb.append(chars.charAt(rand.nextInt(chars.length())));
+        return sb.toString();
     }
 }

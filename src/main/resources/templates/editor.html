@@ -477,9 +477,24 @@
               var typeLabel =
                 s.voteType === "stop"
                   ? '<span class="u-inline-style-053">Đồng ý</span>'
-                  : '<span class="u-inline-style-054">Khen thưởng</span>';
+                  : s.voteType === "defense"
+                    ? '<span class="u-inline-style-053">Bảo vệ</span>'
+                    : '<span class="u-inline-style-054">Khen thưởng</span>';
 
               var progress = s.voted + "/" + s.totalBoards + " đã vote";
+
+              var infoHtml = "";
+              if (s.voteType === "stop" && s.reason) {
+                infoHtml = "<div>Lý do: " + s.reason + "</div>";
+              } else if (s.voteType === "defense") {
+                infoHtml =
+                  (s.defenseFilePath
+                    ? '<a href="' +
+                      s.defenseFilePath +
+                      '" target="_blank" class="btn-link">Hồ sơ bảo vệ (PDF)</a><br>'
+                    : "") +
+                  (s.defenseNote ? "<div>Ghi chú: " + s.defenseNote + "</div>" : "");
+              }
 
               var actionBtn;
               if (s.sessionStatus === "closed") {
@@ -492,6 +507,11 @@
                     stopPct2 >= 60
                       ? '<span class="u-inline-style-055">Đã đồng ý</span>'
                       : '<span class="u-inline-style-056">Được giữ</span>';
+                } else if (s.voteType === "defense") {
+                  actionBtn =
+                    stopPct2 >= 60
+                      ? '<span class="u-inline-style-055">Hồ sơ được duyệt</span>'
+                      : '<span class="u-inline-style-056">Hồ sơ bị từ chối</span>';
                 } else {
                   actionBtn =
                     stopPct2 >= 60
@@ -502,6 +522,10 @@
                 actionBtn = '<span class="u-inline-style-059">Đã vote</span>';
               } else if (s.voteType === "stop") {
                 actionBtn =
+                  '<textarea id="vote-comment-' +
+                  s.sessionId +
+                  '" placeholder="Nhận xét của bạn..." class="u-inline-style-051"></textarea>' +
+                  "<div class=\"u-inline-style-052\">" +
                   "<button onclick=\"castSessionVote('" +
                   s.sessionId +
                   "','stop')\" " +
@@ -509,9 +533,27 @@
                   "<button onclick=\"castSessionVote('" +
                   s.sessionId +
                   "','keep')\" " +
-                  'class="vote-action-btn vote-action-keep">Vote Giữ</button>';
+                  'class="vote-action-btn vote-action-keep">Vote Giữ</button></div>';
+              } else if (s.voteType === "defense") {
+                actionBtn =
+                  '<textarea id="vote-comment-' +
+                  s.sessionId +
+                  '" placeholder="Nhận xét của bạn..." class="u-inline-style-051"></textarea>' +
+                  "<div class=\"u-inline-style-052\">" +
+                  "<button onclick=\"castSessionVote('" +
+                  s.sessionId +
+                  "','approve')\" " +
+                  'class="vote-action-btn vote-action-reward">Duyệt hồ sơ</button>' +
+                  "<button onclick=\"castSessionVote('" +
+                  s.sessionId +
+                  "','reject')\" " +
+                  'class="vote-action-btn vote-action-against">Từ chối</button></div>';
               } else {
                 actionBtn =
+                  '<textarea id="vote-comment-' +
+                  s.sessionId +
+                  '" placeholder="Nhận xét của bạn..." class="u-inline-style-051"></textarea>' +
+                  "<div class=\"u-inline-style-052\">" +
                   "<button onclick=\"castSessionVote('" +
                   s.sessionId +
                   "','reward')\" " +
@@ -519,7 +561,7 @@
                   "<button onclick=\"castSessionVote('" +
                   s.sessionId +
                   "','against')\" " +
-                  'class="vote-action-btn vote-action-against">Không đồng ý</button>';
+                  'class="vote-action-btn vote-action-against">Không đồng ý</button></div>';
               }
               tbody.innerHTML +=
                 "<tr>" +
@@ -530,7 +572,9 @@
                 s.seriesName +
                 '<br><small class="u-inline-style-060">' +
                 s.seriesId +
-                "</small></td>" +
+                "</small>" +
+                (infoHtml ? '<div class="u-inline-style-060">' + infoHtml + "</div>" : "") +
+                "</td>" +
                 '<td class="u-inline-style-019">' +
                 typeLabel +
                 "</td>" +
@@ -554,6 +598,8 @@
           keep: "GIỮ",
           reward: "ĐỒNG Ý KHEN THƯỞNG",
           against: "KHÔNG ĐỒNG Ý",
+          approve: "DUYỆT HỒ SƠ BẢO VỆ",
+          reject: "TỪ CHỐI HỒ SƠ BẢO VỆ",
         };
         if (
           !confirm(
@@ -564,11 +610,16 @@
         )
           return;
 
+        var content =
+          document.getElementById("vote-comment-" + sessionId)?.value || "";
+
         fetch(
           "/manga/ranking/cast-session-vote?sessionId=" +
             sessionId +
             "&voteChoice=" +
-            voteChoice,
+            voteChoice +
+            "&content=" +
+            encodeURIComponent(content),
           { method: "POST" },
         )
           .then((res) => res.json())

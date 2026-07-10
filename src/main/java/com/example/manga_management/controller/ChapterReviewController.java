@@ -68,6 +68,12 @@ public class ChapterReviewController {
             return result;
         }
 
+        if (chapter.getSeries() != null && "pending_cancel".equals(chapter.getSeries().getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể submit lúc này!");
+            return result;
+        }
+
 // Kiểm tra chapter phải có trang
         List<MangaPage> pages = mangaPageRepository.findByChapterId(chapterId);
         if (pages.isEmpty()) {

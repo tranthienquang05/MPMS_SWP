@@ -64,14 +64,6 @@
               Không có thông báo
             </div>
 
-            <div
-              class="notification-actions"
-              th:if="${not #lists.isEmpty(myNotifications)}"
-            >
-              <button type="button" class="mark-read-all">
-                Đánh dấu đã đọc
-              </button>
-            </div>
           </div>
         </div>
 
@@ -595,53 +587,19 @@
           btnNoti.addEventListener("click", (e) => {
             e.stopPropagation();
             dropdown.classList.toggle("show");
-          });
 
-          const markReadAllBtn = dropdown.querySelector(".mark-read-all");
-          if (markReadAllBtn) {
-            markReadAllBtn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              fetch("/notification/read-all", { method: "POST" })
-                .then((res) => res.json())
-                .then((data) => {
-                  if (data.status === "success") {
-                    const badge = btnNoti.querySelector(".badge");
-                    if (badge) badge.remove();
-                    document
-                      .querySelectorAll(".notification-item.unread")
-                      .forEach((el) => el.classList.remove("unread"));
-                  }
-                });
-            });
-          }
-
-          dropdown.querySelectorAll(".notification-item").forEach((item) => {
-            item.addEventListener("click", (e) => {
-              e.stopPropagation();
-              const id = item.dataset.id;
-              const link = item.dataset.link;
-              item.classList.remove("unread");
-              if (id) {
-                fetch(`/notification/${id}/read`, { method: "POST" })
-                  .then((res) => res.json())
-                  .then((data) => {
-                    if (data.status === "success") {
-                      const stillUnread =
-                        dropdown.querySelectorAll(".notification-item.unread").length;
-                      const badge = btnNoti.querySelector(".badge");
-                      if (badge) {
-                        if (stillUnread > 0) badge.textContent = stillUnread;
-                        else badge.remove();
-                      }
-                    }
-                  })
-                  .finally(() => {
-                    if (link) window.location.href = link;
-                  });
-              } else if (link) {
-                window.location.href = link;
-              }
-            });
+            // Bấm chuông là đánh dấu tất cả thông báo đã đọc luôn
+            fetch("/notification/read-all", { method: "POST" })
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.status === "success") {
+                  const badge = btnNoti.querySelector(".badge");
+                  if (badge) badge.remove();
+                  document
+                    .querySelectorAll(".notification-item.unread")
+                    .forEach((el) => el.classList.remove("unread"));
+                }
+              });
           });
 
           document.addEventListener("click", () => {

@@ -38,14 +38,18 @@ public class AssistantController {
 
     private final FrameTaskRepository frameTaskRepository;
 
+    private final NotificationController notificationController;
+
     public AssistantController(AssistantRepository assistantRepository,
             SubmissionRepository submissionRepository,
             MangaPageRepository mangaPageRepository,
-            FrameTaskRepository frameTaskRepository) {
+            FrameTaskRepository frameTaskRepository,
+            NotificationController notificationController) {
         this.assistantRepository = assistantRepository;
         this.submissionRepository = submissionRepository;
         this.mangaPageRepository = mangaPageRepository;
         this.frameTaskRepository = frameTaskRepository;
+        this.notificationController = notificationController;
     }
 
     /**
@@ -293,6 +297,20 @@ public class AssistantController {
         // Đổi page sang done
         submission.getPageId().setStatus("done");
         mangaPageRepository.save(submission.getPageId());
+
+        // Báo cho mangaka biết trợ lý đã nộp bài, đang chờ duyệt
+        var chapter = submission.getPageId().getChapter();
+        if (chapter != null && chapter.getSeries() != null
+                && chapter.getSeries().getProposal() != null
+                && chapter.getSeries().getProposal().getMangaka() != null) {
+            String mangakaUserId = chapter.getSeries().getProposal().getMangaka().getUser().getId();
+            String seriesId = chapter.getSeries().getId();
+            notificationController.send(null, mangakaUserId,
+                    "Trợ lý " + assistant.getUser().getFullname() + " đã nộp bài trang "
+                            + submission.getPageId().getPageNumber() + " (Chapter " + chapter.getChapterNumber()
+                            + " - " + chapter.getSeries().getSeriesName() + "), đang chờ bạn duyệt.",
+                    "/manga/mangaka/myseries/" + seriesId + "/" + chapter.getId());
+        }
 
         return Map.of("status", "success", "message", "Nộp bài thành công");
     }

@@ -26,4 +26,6 @@ public interface ProposalRepository extends JpaRepository<Proposal, String> {
     List<Proposal> findByStatusInAndMangaka_Id(List<String> statuses, String mangakaId);
 
     List<Proposal> findByMangaka_Editor_IdOrderByCreatedAtDesc(String editorId);
+
+    List<Proposal> findByStatusAndRevisionDeadlineBefore(String status, LocalDateTime deadline);
 }

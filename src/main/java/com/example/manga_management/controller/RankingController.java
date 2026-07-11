@@ -65,7 +65,9 @@ public class RankingController {
             map.put("rank", i + 1);
             map.put("seriesId", row[0]);
             map.put("seriesName", row[1]);
-            map.put("totalVotes", row[2]);
+            map.put("totalView", row[2]);
+            map.put("totalLike", row[3]);
+            map.put("totalDislike", row[4]);
             result.add(map);
         }
         return result;

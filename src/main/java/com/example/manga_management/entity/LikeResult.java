@@ -25,6 +25,9 @@ public class LikeResult {
     @Column(nullable = false, columnDefinition = "integer default 0")
     private Integer dislikeNumber = 0;
 
+    @Column(name = "viewCount", nullable = false, columnDefinition = "integer default 0")
+    private Integer viewCount = 0;
+
     @Column(nullable = false)
     private Integer month;
 

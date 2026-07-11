@@ -243,7 +243,9 @@
                 <th>Hạng</th>
                 <th>Mã Series</th>
                 <th>Tên Series</th>
-                <th>Tổng Phiếu</th>
+                <th>Lượt xem</th>
+                <th>Like</th>
+                <th>Dislike</th>
               </tr>
             </thead>
             <tbody id="rankingBody"></tbody>
@@ -2170,7 +2172,13 @@
                 item.seriesName +
                 "</td>" +
                 '<td class="u-inline-style-019">' +
-                item.totalVotes +
+                item.totalView +
+                "</td>" +
+                '<td class="u-inline-style-019">' +
+                item.totalLike +
+                "</td>" +
+                '<td class="u-inline-style-019">' +
+                item.totalDislike +
                 "</td>" +
                 "</tr>";
             });
@@ -3058,6 +3066,14 @@
         }
       }
 
+      function formatChapterDeadline(iso) {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return iso;
+        const pad = (n) => n.toString().padStart(2, "0");
+        return `${pad(d.getHours())}:${pad(d.getMinutes())} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+      }
+
       const chapterStatLabels = {
         total: "Tổng số chapter",
         unfinish: "Đang thực hiện",
@@ -3077,7 +3093,6 @@
         const p = data.proposal || {};
         const stats = data.chapterStats || {};
         const sessions = data.voteSessions || [];
-        const comments = data.voteComments || [];
 
         const statRows = Object.keys(chapterStatLabels)
           .map(
@@ -3096,22 +3111,17 @@
                   ? `<div><a href="${vs.defenseFilePath}" target="_blank">Hồ sơ bảo vệ (PDF)</a></div>`
                   : "";
                 const defenseNoteLine = vs.defenseNote ? `<div>Ghi chú: ${vs.defenseNote}</div>` : "";
+                const resultLine =
+                  vs.status === "closed" && vs.totalBoards != null
+                    ? `<div>Kết quả: ${vs.votedCount}/${vs.totalBoards} đã vote — ${vs.positivePercent}% đồng ý (${vs.passed ? "Đạt" : "Không đạt"})</div>`
+                    : "";
                 return `<div class="series-info-vote-item">
                   <b>${label}</b> — ${statusLabel} (${vs.createdAt || "—"})
-                  ${reasonLine}${defenseLine}${defenseNoteLine}
+                  ${reasonLine}${defenseLine}${defenseNoteLine}${resultLine}
                 </div>`;
               })
               .join("")
           : "<p>Chưa có phiên vote nào.</p>";
-
-        const commentsHtml = comments.length
-          ? comments
-              .map(
-                (c) =>
-                  `<li>${c.boardName} (${c.vote}): ${c.content || "(không có nhận xét)"}</li>`,
-              )
-              .join("")
-          : "<li>Chưa có nhận xét nào từ hội đồng.</li>";
 
         return `
           <h4>Thông tin chung</h4>
@@ -3138,9 +3148,6 @@
           <hr>
           <h4>Lịch sử vote hội đồng</h4>
           ${sessionsHtml}
-          <hr>
-          <h4>Nhận xét từng thành viên hội đồng</h4>
-          <ul>${commentsHtml}</ul>
         `;
       }
 
@@ -3258,7 +3265,7 @@
               html += `<tr><td colspan="6" class="ptab-sub-desc">Series này chưa có chapter nào.</td></tr>`;
             } else {
               chapters.forEach((c) => {
-                const deadline = c.deadline || "—";
+                const deadline = formatChapterDeadline(c.deadline);
                 const comment = c.tantouComment
                   ? `<span class="tantou-comment-text">${c.tantouComment}</span>`
                   : `<span class="tantou-comment-empty">—</span>`;
@@ -3449,7 +3456,7 @@
             let html = `
               <div id="mangaka-meta" data-mangaka-id="${mangakaId}" class="u-inline-style-126"></div>
               <h3>Danh sách trang — Chapter: ${chapter.chapterName}</h3>
-              <p class="ptab-sub-desc u-inline-style-127">Deadline: <strong>${chapter.deadline || "Chưa đặt deadline"}</strong>
+              <p class="ptab-sub-desc u-inline-style-127">Deadline: <strong>${chapter.deadline ? formatChapterDeadline(chapter.deadline) : "Chưa đặt deadline"}</strong>
               </p>
               <div class="chapter-page-toolbar">`;
 

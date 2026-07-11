@@ -969,12 +969,14 @@ public class AdminController {
         }
 
         try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
-            Sheet viewSheet = workbook.getSheet("ViewCount");
+            // Lượt xem giờ nằm chung với like/dislike theo từng series-tháng-năm,
+            // nên chỉ còn 1 sheet duy nhất: LikeDislike (SeriesID, Month, Year,
+            // ViewCount, LikeNumber, DislikeNumber).
             Sheet likeSheet = workbook.getSheet("LikeDislike");
-            
-            if (viewSheet == null || likeSheet == null) {
+
+            if (likeSheet == null) {
                 result.put("status", "error");
-                result.put("message", "File phải có đủ 2 sheet: 'ViewCount' và 'LikeDislike'");
+                result.put("message", "File phải có sheet 'LikeDislike'");
                 return result;
             }
 
@@ -983,55 +985,18 @@ public class AdminController {
             // ============================================
             // BƯỚC 1: VALIDATE TOÀN BỘ FILE
             // ============================================
-            
-            // Validate sheet ViewCount
-            for (Row row : viewSheet) {
-                if (row.getRowNum() == 0) continue; // Skip header
-
-                String chapterId = getCellStringValue(row.getCell(0));
-                String viewStr = getCellStringValue(row.getCell(1));
-
-                if (chapterId.isEmpty() && viewStr.isEmpty()) continue; // Skip empty rows
-                
-                if (chapterId.isEmpty()) {
-                    errors.add("Sheet ViewCount, dòng " + (row.getRowNum() + 1) + ": ChapterID không được để trống");
-                } else {
-                    Optional<Chapter> chapterOpt = chapterRepository.findById(chapterId);
-                    if (chapterOpt.isEmpty()) {
-                        errors.add("Sheet ViewCount, dòng " + (row.getRowNum() + 1) + ": ChapterID '" + chapterId + "' không tồn tại");
-                    }
-                }
-
-                if (viewStr.isEmpty()) {
-                    errors.add("Sheet ViewCount, dòng " + (row.getRowNum() + 1) + ": ViewCount không được để trống");
-                } else {
-                    try {
-                        double parsed = Double.parseDouble(viewStr.replace(",", ""));
-                        if (parsed % 1 != 0) {
-                            errors.add("Sheet ViewCount, dòng " + (row.getRowNum() + 1) + ": ViewCount phải là số nguyên");
-                        } else {
-                            int viewCount = (int) parsed;
-                            if (viewCount < 0) {
-                                errors.add("Sheet ViewCount, dòng " + (row.getRowNum() + 1) + ": ViewCount không được âm");
-                            }
-                        }
-                    } catch (NumberFormatException e) {
-                        errors.add("Sheet ViewCount, dòng " + (row.getRowNum() + 1) + ": ViewCount phải là số nguyên");
-                    }
-                }
-            }
-
-            // Validate sheet LikeDislike
             for (Row row : likeSheet) {
                 if (row.getRowNum() == 0) continue; // Skip header
 
                 String seriesId = getCellStringValue(row.getCell(0));
                 String monthStr = getCellStringValue(row.getCell(1));
                 String yearStr = getCellStringValue(row.getCell(2));
-                String likeStr = getCellStringValue(row.getCell(3));
-                String dislikeStr = getCellStringValue(row.getCell(4));
+                String viewStr = getCellStringValue(row.getCell(3));
+                String likeStr = getCellStringValue(row.getCell(4));
+                String dislikeStr = getCellStringValue(row.getCell(5));
 
-                if (seriesId.isEmpty() && monthStr.isEmpty() && yearStr.isEmpty() && likeStr.isEmpty() && dislikeStr.isEmpty()) continue;
+                if (seriesId.isEmpty() && monthStr.isEmpty() && yearStr.isEmpty()
+                        && viewStr.isEmpty() && likeStr.isEmpty() && dislikeStr.isEmpty()) continue;
 
                 if (seriesId.isEmpty()) {
                     errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": SeriesID không được để trống");
@@ -1078,41 +1043,9 @@ public class AdminController {
                     }
                 }
 
-                if (likeStr.isEmpty()) {
-                    errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": LikeNumber không được để trống");
-                } else {
-                    try {
-                        double parsed = Double.parseDouble(likeStr.replace(",", ""));
-                        if (parsed % 1 != 0) {
-                            errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": LikeNumber phải là số nguyên");
-                        } else {
-                            int likes = (int) parsed;
-                            if (likes < 0) {
-                                errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": LikeNumber không được âm");
-                            }
-                        }
-                    } catch (NumberFormatException e) {
-                        errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": LikeNumber phải là số nguyên");
-                    }
-                }
-
-                if (dislikeStr.isEmpty()) {
-                    errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": DislikeNumber không được để trống");
-                } else {
-                    try {
-                        double parsed = Double.parseDouble(dislikeStr.replace(",", ""));
-                        if (parsed % 1 != 0) {
-                            errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": DislikeNumber phải là số nguyên");
-                        } else {
-                            int dislikes = (int) parsed;
-                            if (dislikes < 0) {
-                                errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": DislikeNumber không được âm");
-                            }
-                        }
-                    } catch (NumberFormatException e) {
-                        errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": DislikeNumber phải là số nguyên");
-                    }
-                }
+                validateNonNegativeInt(viewStr, "ViewCount", row.getRowNum(), errors);
+                validateNonNegativeInt(likeStr, "LikeNumber", row.getRowNum(), errors);
+                validateNonNegativeInt(dislikeStr, "DislikeNumber", row.getRowNum(), errors);
             }
 
             if (!errors.isEmpty()) {
@@ -1124,39 +1057,28 @@ public class AdminController {
             // ============================================
             // BƯỚC 2: LƯU VÀO DB NẾU VALIDATE PASS
             // ============================================
-            int updatedViewCount = 0;
-            for (Row row : viewSheet) {
-                if (row.getRowNum() == 0) continue;
-                String chapterId = getCellStringValue(row.getCell(0));
-                String viewStr = getCellStringValue(row.getCell(1));
-                if (chapterId.isEmpty() && viewStr.isEmpty()) continue;
-                
-                int viewCount = (int) Double.parseDouble(viewStr.replace(",", ""));
-                
-                Chapter chapter = chapterRepository.findById(chapterId).get();
-                chapter.setViewCount(viewCount);
-                chapterRepository.save(chapter);
-                updatedViewCount++;
-            }
-
             int updatedLikeCount = 0;
             for (Row row : likeSheet) {
                 if (row.getRowNum() == 0) continue;
                 String seriesId = getCellStringValue(row.getCell(0));
                 String monthStr = getCellStringValue(row.getCell(1));
                 String yearStr = getCellStringValue(row.getCell(2));
-                String likeStr = getCellStringValue(row.getCell(3));
-                String dislikeStr = getCellStringValue(row.getCell(4));
-                if (seriesId.isEmpty() && monthStr.isEmpty() && yearStr.isEmpty() && likeStr.isEmpty() && dislikeStr.isEmpty()) continue;
+                String viewStr = getCellStringValue(row.getCell(3));
+                String likeStr = getCellStringValue(row.getCell(4));
+                String dislikeStr = getCellStringValue(row.getCell(5));
+                if (seriesId.isEmpty() && monthStr.isEmpty() && yearStr.isEmpty()
+                        && viewStr.isEmpty() && likeStr.isEmpty() && dislikeStr.isEmpty()) continue;
 
                 int month = (int) Double.parseDouble(monthStr.replace(",", ""));
                 int year = (int) Double.parseDouble(yearStr.replace(",", ""));
+                int views = (int) Double.parseDouble(viewStr.replace(",", ""));
                 int likes = (int) Double.parseDouble(likeStr.replace(",", ""));
                 int dislikes = (int) Double.parseDouble(dislikeStr.replace(",", ""));
 
                 Optional<LikeResult> lrOpt = likeResultRepository.findBySeriesIdAndMonthAndYear(seriesId, month, year);
                 if (lrOpt.isPresent()) {
                     LikeResult lr = lrOpt.get();
+                    lr.setViewCount(views);
                     lr.setLikeNumber(likes);
                     lr.setDislikeNumber(dislikes);
                     likeResultRepository.save(lr);
@@ -1165,6 +1087,7 @@ public class AdminController {
                     lr.setId(UUID.randomUUID().toString().substring(0, 7));
                     Series series = seriesRepository.findById(seriesId).get();
                     lr.setSeries(series);
+                    lr.setViewCount(views);
                     lr.setLikeNumber(likes);
                     lr.setDislikeNumber(dislikes);
                     lr.setMonth(month);
@@ -1175,7 +1098,7 @@ public class AdminController {
             }
 
             result.put("status", "success");
-            result.put("message", "Import thành công " + updatedViewCount + " dòng chapter view, " + updatedLikeCount + " dòng like/dislike");
+            result.put("message", "Import thành công " + updatedLikeCount + " dòng view/like/dislike");
         } catch (Exception e) {
             e.printStackTrace();
             result.put("status", "error");
@@ -1183,6 +1106,24 @@ public class AdminController {
         }
 
         return result;
+    }
+
+    /** Validate 1 ô phải là số nguyên >= 0, thêm lỗi vào danh sách nếu sai. */
+    private void validateNonNegativeInt(String value, String fieldName, int rowNum, List<String> errors) {
+        if (value.isEmpty()) {
+            errors.add("Sheet LikeDislike, dòng " + (rowNum + 1) + ": " + fieldName + " không được để trống");
+            return;
+        }
+        try {
+            double parsed = Double.parseDouble(value.replace(",", ""));
+            if (parsed % 1 != 0) {
+                errors.add("Sheet LikeDislike, dòng " + (rowNum + 1) + ": " + fieldName + " phải là số nguyên");
+            } else if ((int) parsed < 0) {
+                errors.add("Sheet LikeDislike, dòng " + (rowNum + 1) + ": " + fieldName + " không được âm");
+            }
+        } catch (NumberFormatException e) {
+            errors.add("Sheet LikeDislike, dòng " + (rowNum + 1) + ": " + fieldName + " phải là số nguyên");
+        }
     }
 
     private String getCellStringValue(org.apache.poi.ss.usermodel.Cell cell) {
@@ -1216,29 +1157,22 @@ public class AdminController {
     @GetMapping("/download-template")
     public org.springframework.http.ResponseEntity<byte[]> downloadTemplate() {
         try (Workbook workbook = new XSSFWorkbook()) {
-            Sheet viewSheet = workbook.createSheet("ViewCount");
-            Row vcHeaderRow = viewSheet.createRow(0);
-            vcHeaderRow.createCell(0).setCellValue("ChapterID");
-            vcHeaderRow.createCell(1).setCellValue("ViewCount");
-            
-            Row vcDataRow = viewSheet.createRow(1);
-            vcDataRow.createCell(0).setCellValue("CPT0001");
-            vcDataRow.createCell(1).setCellValue(1500);
-
             Sheet likeSheet = workbook.createSheet("LikeDislike");
             Row ldHeaderRow = likeSheet.createRow(0);
             ldHeaderRow.createCell(0).setCellValue("SeriesID");
             ldHeaderRow.createCell(1).setCellValue("Month");
             ldHeaderRow.createCell(2).setCellValue("Year");
-            ldHeaderRow.createCell(3).setCellValue("LikeNumber");
-            ldHeaderRow.createCell(4).setCellValue("DislikeNumber");
-            
+            ldHeaderRow.createCell(3).setCellValue("ViewCount");
+            ldHeaderRow.createCell(4).setCellValue("LikeNumber");
+            ldHeaderRow.createCell(5).setCellValue("DislikeNumber");
+
             Row ldDataRow = likeSheet.createRow(1);
             ldDataRow.createCell(0).setCellValue("SER001");
             ldDataRow.createCell(1).setCellValue(1);
             ldDataRow.createCell(2).setCellValue(2026);
-            ldDataRow.createCell(3).setCellValue(1000);
-            ldDataRow.createCell(4).setCellValue(200);
+            ldDataRow.createCell(3).setCellValue(15000);
+            ldDataRow.createCell(4).setCellValue(1000);
+            ldDataRow.createCell(5).setCellValue(200);
 
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
             workbook.write(out);

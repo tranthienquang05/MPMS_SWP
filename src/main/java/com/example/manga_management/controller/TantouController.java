@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -48,11 +47,13 @@ public class TantouController {
     private final SeriesRepository seriesRepository;
     private final ChapterRepository chapterRepository;
     private final VoteSessionRepository voteSessionRepository;
+    private final com.example.manga_management.repository.LikeResultRepository likeResultRepository;
 
     public TantouController(ProposalRepository proposalRepository, TantoEditorRepository tantoEditorRepository,
             NotificationController notificationController, MangakaRepository mangakaRepository,
             SeriesRepository seriesRepository, ChapterRepository chapterRepository,
-            VoteSessionRepository voteSessionRepository) {
+            VoteSessionRepository voteSessionRepository,
+            com.example.manga_management.repository.LikeResultRepository likeResultRepository) {
         this.proposalRepository = proposalRepository;
         this.tantoEditorRepository = tantoEditorRepository;
         this.notificationController = notificationController;
@@ -60,6 +61,7 @@ public class TantouController {
         this.voteSessionRepository = voteSessionRepository;
         this.seriesRepository = seriesRepository;
         this.chapterRepository = chapterRepository;
+        this.likeResultRepository = likeResultRepository;
     }
 
     @GetMapping("")
@@ -315,9 +317,9 @@ public class TantouController {
             map.put("seriesName", s.getSeriesName());
             map.put("status", s.getStatus());
             map.put("startDate", s.getStartDate());
-            
-            List<Chapter> chapters = chapterRepository.findBySeriesId(s.getId());
-            int totalView = chapters.stream().mapToInt(Chapter::getViewCount).sum();
+
+            int totalView = likeResultRepository.findBySeries_Id(s.getId())
+                    .stream().mapToInt(com.example.manga_management.entity.LikeResult::getViewCount).sum();
             map.put("viewCount", totalView);
             return map;
         }).collect(Collectors.toList());
@@ -327,11 +329,11 @@ public class TantouController {
         return result;
     }
 
-    @Operation(summary = "Tantou sửa deadline chapter chưa nộp (deadline phải là thứ 7)")
+    @Operation(summary = "Tantou sửa deadline chapter chưa nộp (kèm giờ, không được ở quá khứ)")
     @PostMapping("/chapters/{chapterId}/deadline")
     @ResponseBody
     public Map<String, Object> updateChapterDeadline(@PathVariable String chapterId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate deadline,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime deadline,
             HttpSession session) {
         Map<String, Object> result = new HashMap<>();
 
@@ -355,9 +357,9 @@ public class TantouController {
             return result;
         }
 
-        if (deadline.getDayOfWeek() != DayOfWeek.SATURDAY) {
+        if (!deadline.isAfter(LocalDateTime.now())) {
             result.put("status", "error");
-            result.put("message", "Deadline phải là ngày thứ 7!");
+            result.put("message", "Deadline phải sau thời điểm hiện tại, không được đặt vào quá khứ!");
             return result;
         }
 

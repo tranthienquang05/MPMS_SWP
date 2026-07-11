@@ -312,12 +312,14 @@
                 <th>Hạng</th>
                 <th>Mã Series</th>
                 <th>Tên Series</th>
-                <th>Tổng phiếu</th>
+                <th>Lượt xem</th>
+                <th>Like</th>
+                <th>Dislike</th>
               </tr>
             </thead>
             <tbody id="vote-ranking-tbody">
               <tr>
-                <td colspan="4" class="text-center-muted">
+                <td colspan="6" class="text-center-muted">
                   Bấm "Xem ranking" để tải dữ liệu.
                 </td>
               </tr>
@@ -910,10 +912,10 @@
       }
 
       function openModal(id) {
-        document.getElementById(id).classList.add("open");
+        document.getElementById(id).classList.add("show");
       }
       function closeModal(id) {
-        document.getElementById(id).classList.remove("open");
+        document.getElementById(id).classList.remove("show");
       }
 
       function badgeHtml(role) {
@@ -1414,7 +1416,7 @@
             const tbody = document.getElementById("vote-ranking-tbody");
             if (!data || data.length === 0) {
               tbody.innerHTML =
-                '<tr><td colspan="4" class="u-inline-style-016">Không có dữ liệu</td></tr>';
+                '<tr><td colspan="6" class="u-inline-style-016">Không có dữ liệu</td></tr>';
               return;
             }
             const medals = ["🥇", "🥈", "🥉"];
@@ -1425,7 +1427,9 @@
                             <td class="u-inline-style-019">${medal}${item.rank}</td>
                             <td class="u-inline-style-019">${item.seriesId}</td>
                             <td>${item.seriesName}</td>
-                            <td class="u-inline-style-019">${item.totalVotes}</td>
+                            <td class="u-inline-style-019">${item.totalView}</td>
+                            <td class="u-inline-style-019">${item.totalLike}</td>
+                            <td class="u-inline-style-019">${item.totalDislike}</td>
                         </tr>`;
               })
               .join("");

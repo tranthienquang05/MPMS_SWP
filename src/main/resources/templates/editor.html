@@ -201,7 +201,9 @@
                 <th>Hạng</th>
                 <th>Mã Series</th>
                 <th>Tên Series</th>
-                <th>Tổng Phiếu</th>
+                <th>Lượt xem</th>
+                <th>Like</th>
+                <th>Dislike</th>
               </tr>
             </thead>
             <tbody id="rankingBody"></tbody>
@@ -449,7 +451,13 @@
                 item.seriesName +
                 "</td>" +
                 '<td class="u-inline-style-019">' +
-                item.totalVotes +
+                item.totalView +
+                "</td>" +
+                '<td class="u-inline-style-019">' +
+                item.totalLike +
+                "</td>" +
+                '<td class="u-inline-style-019">' +
+                item.totalDislike +
                 "</td>" +
                 "</tr>";
             });
@@ -461,7 +469,12 @@
       function loadActiveSessions() {
         fetch("/manga/ranking/active-sessions")
           .then((res) => res.json())
-          .then((data) => {
+          .then((rawData) => {
+            // Chỉ hiện phiên đang mở (chưa đủ vote) — phiên đã đóng/đã vote xong
+            // không cần hiện lại trong bảng này nữa.
+            var data = (rawData || []).filter(
+              (s) => s.sessionStatus === "active",
+            );
             var tbody = document.getElementById("activeSessionsBody");
             var table = document.getElementById("activeSessionsTable");
             var empty = document.getElementById("activeSessionsEmpty");

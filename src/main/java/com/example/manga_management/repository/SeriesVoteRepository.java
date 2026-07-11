@@ -16,4 +16,8 @@ public interface SeriesVoteRepository extends JpaRepository<SeriesVote, String> 
     List<SeriesVote> findByBoard_User_IdOrderByVoteDateDesc(String userId);
 
     List<SeriesVote> findBySeries_IdOrderByVoteDateDesc(String seriesId);
+
+    long countBySession_Id(String sessionId);
+
+    long countBySession_IdAndVote(String sessionId, String vote);
 }

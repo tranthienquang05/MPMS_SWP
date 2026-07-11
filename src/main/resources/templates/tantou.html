@@ -487,7 +487,6 @@
                 <th>Tên</th>
                 <th>Deadline</th>
                 <th>Trạng thái</th>
-                <th>Lượt xem</th>
                 <th>Hành động</th>
               </tr>
             </thead>
@@ -1056,7 +1055,6 @@
         const p = data.proposal || {};
         const stats = data.chapterStats || {};
         const sessions = data.voteSessions || [];
-        const comments = data.voteComments || [];
 
         const statRows = Object.keys(chapterStatLabels)
           .map(
@@ -1075,22 +1073,17 @@
                   ? `<div><a href="${vs.defenseFilePath}" target="_blank">Hồ sơ bảo vệ (PDF)</a></div>`
                   : "";
                 const defenseNoteLine = vs.defenseNote ? `<div>Ghi chú: ${vs.defenseNote}</div>` : "";
+                const resultLine =
+                  vs.status === "closed" && vs.totalBoards != null
+                    ? `<div>Kết quả: ${vs.votedCount}/${vs.totalBoards} đã vote — ${vs.positivePercent}% đồng ý (${vs.passed ? "Đạt" : "Không đạt"})</div>`
+                    : "";
                 return `<div class="series-info-vote-item">
                   <b>${label}</b> — ${statusLabel} (${vs.createdAt || "—"})
-                  ${reasonLine}${defenseLine}${defenseNoteLine}
+                  ${reasonLine}${defenseLine}${defenseNoteLine}${resultLine}
                 </div>`;
               })
               .join("")
           : "<p>Chưa có phiên vote nào.</p>";
-
-        const commentsHtml = comments.length
-          ? comments
-              .map(
-                (c) =>
-                  `<li>${c.boardName} (${c.vote}): ${c.content || "(không có nhận xét)"}</li>`,
-              )
-              .join("")
-          : "<li>Chưa có nhận xét nào từ hội đồng.</li>";
 
         return `
           <h4>Thông tin chung</h4>
@@ -1117,9 +1110,6 @@
           <hr>
           <h4>Lịch sử vote hội đồng</h4>
           ${sessionsHtml}
-          <hr>
-          <h4>Nhận xét từng thành viên hội đồng</h4>
-          <ul>${commentsHtml}</ul>
         `;
       }
 
@@ -1226,7 +1216,7 @@
         document.getElementById("mm-s3-title").textContent =
           "Danh sách Chapter của " + seriesName;
         document.getElementById("mm-chapter-list").innerHTML =
-          '<tr><td colspan="6" class="u-inline-style-019">Đang tải...</td></tr>';
+          '<tr><td colspan="5" class="u-inline-style-019">Đang tải...</td></tr>';
         mmGoToScreen(3);
 
         fetch("/manga/mangaka/myseries/" + seriesId + "/data")
@@ -1236,7 +1226,7 @@
             if (res.status === "success") {
               if (!res.chapters || res.chapters.length === 0) {
                 tbody.innerHTML =
-                  '<tr><td colspan="6" class="u-inline-style-019">Series này chưa có chapter nào.</td></tr>';
+                  '<tr><td colspan="5" class="u-inline-style-019">Series này chưa có chapter nào.</td></tr>';
               } else {
                 tbody.innerHTML = res.chapters
                   .map((c) => {
@@ -1248,16 +1238,15 @@
                       .replace(/\n/g, "\\n");
                     const deadlineCell =
                       c.status === "unfinish"
-                        ? `<input type="date" id="mm-deadline-${c.id}" value="${c.deadline || ""}" />
+                        ? `<input type="datetime-local" id="mm-deadline-${c.id}" value="${c.deadline ? c.deadline.substring(0, 16) : ""}" />
                            <button class="btn-action primary" onclick="mmSaveDeadline('${c.id}')">Lưu</button>`
-                        : c.deadline || "—";
+                        : formatChapterDeadline(c.deadline);
                     return `
                   <tr>
                     <td>${c.chapterNumber}</td>
                     <td>${c.chapterName}</td>
                     <td>${deadlineCell}</td>
                     <td>${c.status}</td>
-                    <td>${c.viewCount || 0}</td>
                     <td><button class="btn-action primary" onclick="mmViewPages('${c.id}', 'Chapter ${c.chapterNumber}: ${c.chapterName.replace(/'/g, "\\'")}', '${scriptEscaped}')">Xem Trang</button></td>
                   </tr>
                   `;
@@ -1265,7 +1254,7 @@
                   .join("");
               }
             } else {
-              tbody.innerHTML = `<tr><td colspan="6" class="u-inline-style-049">Lỗi: ${res.message}</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="5" class="u-inline-style-049">Lỗi: ${res.message}</td></tr>`;
             }
           });
       }
@@ -1351,16 +1340,24 @@
 
       document.addEventListener("DOMContentLoaded", loadPendingCancelSeries);
 
+      function formatChapterDeadline(iso) {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return iso;
+        const pad = (n) => n.toString().padStart(2, "0");
+        return `${pad(d.getHours())}:${pad(d.getMinutes())} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+      }
+
       function mmSaveDeadline(chapterId) {
         const input = document.getElementById("mm-deadline-" + chapterId);
         const value = input ? input.value : "";
         if (!value) {
-          alert("Vui lòng chọn ngày!");
+          alert("Vui lòng chọn ngày giờ!");
           return;
         }
-        const picked = new Date(value + "T00:00:00");
-        if (picked.getDay() !== 6) {
-          alert("Deadline phải là ngày thứ 7!");
+        const picked = new Date(value);
+        if (picked <= new Date()) {
+          alert("Deadline phải sau thời điểm hiện tại, không được đặt vào quá khứ!");
           return;
         }
         fetch("/manga/tantou/chapters/" + chapterId + "/deadline", {

@@ -1,8 +1,6 @@
 package com.example.manga_management.controller;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +21,7 @@ import com.example.manga_management.entity.Chapter;
 import com.example.manga_management.entity.LikeResult;
 import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.Series;
-import com.example.manga_management.entity.SeriesVote;
-import com.example.manga_management.entity.VoteSession;
+import com.example.manga_management.repository.BoardRepository;
 import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.LikeResultRepository;
 import com.example.manga_management.repository.SeriesRepository;
@@ -49,6 +46,8 @@ public class SeriesController {
     private LikeResultRepository likeResultRepository;
     @Autowired
     private VoteSessionRepository voteSessionRepository;
+    @Autowired
+    private BoardRepository boardRepository;
 
     @GetMapping
     @Operation(summary = "[SWAGGER] Lấy danh sách tất cả series")
@@ -131,7 +130,6 @@ public class SeriesController {
         }
 
         List<Chapter> chapters = chapterRepository.findBySeriesId(seriesId);
-        int totalViews = chapters.stream().mapToInt(Chapter::getViewCount).sum();
         Map<String, Long> chapterStats = new HashMap<>();
         chapterStats.put("total", (long) chapters.size());
         chapterStats.put("unfinish", chapters.stream().filter(c -> "unfinish".equals(c.getStatus())).count());
@@ -140,11 +138,15 @@ public class SeriesController {
         chapterStats.put("published", chapters.stream().filter(c -> "published".equals(c.getStatus())).count());
 
         long totalVotes = seriesVoteRepository.countBySeries_Id(seriesId);
+        // Lượt xem / like / dislike đều lấy từ LikeResult (cộng dồn mọi tháng/năm)
         List<LikeResult> likeResults = likeResultRepository.findBySeries_Id(seriesId);
+        int totalViews = likeResults.stream().mapToInt(LikeResult::getViewCount).sum();
         int totalLikes = likeResults.stream().mapToInt(LikeResult::getLikeNumber).sum();
         int totalDislikes = likeResults.stream().mapToInt(LikeResult::getDislikeNumber).sum();
 
-        // Lịch sử các phiên vote (stop/reward/defense) — hiện lý do + hồ sơ bảo vệ
+        // Lịch sử các phiên vote (stop/reward/defense) — hiện lý do + hồ sơ bảo vệ +
+        // kết quả (số phiếu đồng ý / tổng board) cho phiên đã đóng
+        long totalBoards = boardRepository.count();
         List<Map<String, Object>> voteSessions = voteSessionRepository
                 .findBySeriesIdOrderByCreatedAtDesc(seriesId)
                 .stream()
@@ -157,23 +159,21 @@ public class SeriesController {
                     map.put("reason", vs.getReason());
                     map.put("defenseFilePath", vs.getDefenseFilePath());
                     map.put("defenseNote", vs.getDefenseNote());
-                    return map;
-                })
-                .toList();
 
-        // Nhận xét của từng thành viên hội đồng khi vote (giống comment vote proposal)
-        List<Map<String, Object>> voteComments = seriesVoteRepository
-                .findBySeries_IdOrderByVoteDateDesc(seriesId)
-                .stream()
-                .map(sv -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("boardName",
-                            sv.getBoard() != null && sv.getBoard().getUser() != null
-                                    ? sv.getBoard().getUser().getFullname()
-                                    : "—");
-                    map.put("vote", sv.getVote());
-                    map.put("content", sv.getContent());
-                    map.put("voteDate", sv.getVoteDate());
+                    if ("closed".equals(vs.getStatus())) {
+                        String positiveChoice = switch (vs.getVoteType()) {
+                            case "stop" -> "stop";
+                            case "defense" -> "approve";
+                            default -> "reward";
+                        };
+                        long votedInSession = seriesVoteRepository.countBySession_Id(vs.getId());
+                        long positiveInSession = seriesVoteRepository.countBySession_IdAndVote(vs.getId(), positiveChoice);
+                        long percent = totalBoards > 0 ? Math.round(positiveInSession * 100.0 / totalBoards) : 0;
+                        map.put("votedCount", votedInSession);
+                        map.put("totalBoards", totalBoards);
+                        map.put("positivePercent", percent);
+                        map.put("passed", percent >= 60);
+                    }
                     return map;
                 })
                 .toList();
@@ -196,7 +196,6 @@ public class SeriesController {
         result.put("totalLikes", totalLikes);
         result.put("totalDislikes", totalDislikes);
         result.put("voteSessions", voteSessions);
-        result.put("voteComments", voteComments);
         return result;
     }
 
@@ -333,11 +332,4 @@ public class SeriesController {
     //     }
     //     return result;
     // }
-    private LocalDate resolveNextSaturday(Series series) {
-        Optional<Chapter> latest = chapterRepository.findTopBySeriesOrderByChapterNumberDesc(series);
-        if (latest.isPresent() && latest.get().getDeadline() != null) {
-            return latest.get().getDeadline().plusWeeks(1);
-        }
-        return LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY));
-    }
 }

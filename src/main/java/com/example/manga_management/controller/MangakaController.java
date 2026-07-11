@@ -7,6 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
 import java.util.List;
@@ -432,12 +434,13 @@ public class MangakaController {
         return result;
     }
 
-    private LocalDate resolveNextSaturday(Series series) {
+    private LocalDateTime resolveNextSaturday(Series series) {
         Optional<Chapter> latest = chapterRepository.findTopBySeriesOrderByChapterNumberDesc(series);
         if (latest.isPresent() && latest.get().getDeadline() != null) {
             return latest.get().getDeadline().plusWeeks(1);
         }
-        return LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY));
+        LocalDate nextSaturday = LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY));
+        return LocalDateTime.of(nextSaturday, LocalTime.of(23, 59));
     }
 
     @Operation(summary = "[SWAGGER] Lấy dữ liệu dashboard của Mangaka")

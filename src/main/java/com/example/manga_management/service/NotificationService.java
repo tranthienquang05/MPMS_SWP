@@ -4,14 +4,15 @@ import com.example.manga_management.entity.Assistant;
 import com.example.manga_management.entity.Chapter;
 import com.example.manga_management.entity.MangaPage;
 import com.example.manga_management.entity.Notification;
+import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.Submission;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.AssistantRepository;
 import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.NotificationRepository;
+import com.example.manga_management.repository.ProposalRepository;
 import com.example.manga_management.repository.SubmissionRepository;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,7 @@ public class NotificationService {
     private final AssistantRepository assistantRepository;
     private final MangaPageRepository mangaPageRepository;
     private final ChapterRepository chapterRepository;
+    private final ProposalRepository proposalRepository;
 
     public List<Notification> getInbox(User user) {
         if (user == null) {
@@ -167,8 +169,8 @@ public class NotificationService {
     @Transactional
     @Scheduled(fixedDelay = 60_000)
     public void autoFinishOverdueChapters() {
-        LocalDate today = LocalDate.now();
-        List<Chapter> overdueChapters = chapterRepository.findByStatusAndDeadlineBefore("unfinish", today);
+        LocalDateTime now = LocalDateTime.now();
+        List<Chapter> overdueChapters = chapterRepository.findByStatusAndDeadlineBefore("unfinish", now);
 
         for (Chapter chapter : overdueChapters) {
             List<MangaPage> pages = mangaPageRepository.findByChapter(chapter);
@@ -194,6 +196,32 @@ public class NotificationService {
 
                 page.setStatus("finish");
                 mangaPageRepository.save(page);
+            }
+        }
+    }
+
+    /**
+     * Proposal đang ở trạng thái "revision" (tantou yêu cầu sửa) mà quá hạn
+     * revisionDeadline vẫn chưa nộp lại thì tự động khoá (locked) — mangaka
+     * không nộp lại kịp thì coi như bị từ chối vĩnh viễn.
+     */
+    @Transactional
+    @Scheduled(fixedDelay = 60_000)
+    public void autoLockOverdueRevisionProposals() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Proposal> overdueProposals = proposalRepository.findByStatusAndRevisionDeadlineBefore("revision", now);
+
+        for (Proposal proposal : overdueProposals) {
+            proposal.setStatus("locked");
+            proposalRepository.save(proposal);
+
+            if (proposal.getMangaka() != null && proposal.getMangaka().getUser() != null) {
+                sendToUser(proposal.getMangaka().getUser().getId(),
+                        "Đề xuất \"" + proposal.getSeriesName()
+                                + "\" đã quá hạn nộp lại sau khi yêu cầu chỉnh sửa nên bị từ chối tự động.",
+                        "/manga/mangaka/my-projects",
+                        TYPE_GENERIC,
+                        "proposal-auto-lock:" + proposal.getId());
             }
         }
     }

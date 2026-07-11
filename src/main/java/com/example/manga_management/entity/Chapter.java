@@ -1,6 +1,6 @@
 package com.example.manga_management.entity;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -35,8 +35,8 @@ public class Chapter {
     @Column(name = "Chapternumber")
     private Integer chapterNumber;
 
-    @Column(name = "Deadline")
-    private LocalDate deadline;
+    @Column(name = "Deadline", columnDefinition = "DATETIME")
+    private LocalDateTime deadline;
 
     @Column(nullable = false, length = 20)
     private String status;
@@ -46,7 +46,4 @@ public class Chapter {
 
     @Column(name = "Script", length = 3000)
     private String script;
-
-    @Column(nullable = false, columnDefinition = "integer default 0")
-    private Integer viewCount = 0;
 }

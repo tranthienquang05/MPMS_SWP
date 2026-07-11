@@ -1,6 +1,6 @@
 package com.example.manga_management.repository;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,7 +15,7 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
 
     List<Chapter> findByStatus(String status);
 
-    List<Chapter> findByStatusAndDeadlineBefore(String status, LocalDate deadline);
+    List<Chapter> findByStatusAndDeadlineBefore(String status, LocalDateTime deadline);
 
     List<Chapter> findBySeriesId(String seriesId);
 

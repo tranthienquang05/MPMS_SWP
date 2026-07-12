@@ -80,7 +80,7 @@ public class MangakaController {
         this.proposalService = proposalService;
     }
 
-    @GetMapping({""})
+    @GetMapping({ "" })
     public String mangakaPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if (user == null) {
@@ -353,7 +353,6 @@ public class MangakaController {
         return result;
     }
 
-
     @Operation(summary = "[SWAGGER] Khởi động series từ proposal đã được duyệt")
     @PostMapping(value = "/start-series", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
@@ -562,6 +561,90 @@ public class MangakaController {
         return result;
     }
 
+    @Operation(summary = "[SWAGGER] Sửa ảnh bìa sách cho series đã có")
+    @PostMapping(value = "/myseries/{seriesId}/edit-jacket", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseBody
+    public Map<String, Object> editSeriesJacket(@PathVariable String seriesId,
+            @RequestPart MultipartFile fileBookJacket,
+            HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập");
+            return result;
+        }
+
+        Series series = seriesRepository.findById(seriesId).orElse(null);
+        if (series == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy series: " + seriesId);
+            return result;
+        }
+
+        // Chỉ mangaka sở hữu series mới được sửa ảnh bìa
+        Mangaka owner = series.getProposal() != null ? series.getProposal().getMangaka() : null;
+        if (owner == null || owner.getUser() == null || !owner.getUser().getId().equals(user.getId())) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền sửa ảnh bìa series này!");
+            return result;
+        }
+
+        if (fileBookJacket.isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng chọn file ảnh bìa mới!");
+            return result;
+        }
+
+        try {
+            String uploadDir = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
+                    + File.separator + "resources" + File.separator + "static" + File.separator + "bookjackets"
+                    + File.separator;
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            String originalName = fileBookJacket.getOriginalFilename();
+            String extension = "";
+            if (originalName != null && originalName.lastIndexOf('.') >= 0) {
+                extension = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
+            }
+            String contentType = fileBookJacket.getContentType();
+            boolean validImage = ".png".equals(extension) || ".jpg".equals(extension) || ".jpeg".equals(extension)
+                    || "image/png".equals(contentType) || "image/jpeg".equals(contentType);
+            if (!validImage) {
+                result.put("status", "error");
+                result.put("message", "Ảnh bìa chỉ hỗ trợ file PNG, JPG hoặc JPEG!");
+                return result;
+            }
+            if (extension.isBlank()) {
+                extension = "image/png".equals(contentType) ? ".png" : ".jpg";
+            }
+
+            // Xóa file bìa cũ (nếu có, kể cả khác đuôi file) để tránh rác
+            if (series.getBookJacket() != null) {
+                Path oldFile = Paths.get(uploadDir + Paths.get(series.getBookJacket()).getFileName());
+                Files.deleteIfExists(oldFile);
+            }
+
+            String fileName = seriesId + extension;
+            fileBookJacket.transferTo(uploadPath.resolve(fileName).toFile());
+
+            series.setBookJacket("/bookjackets/" + fileName);
+            seriesRepository.save(series);
+
+            result.put("status", "success");
+            result.put("message", "Đã cập nhật ảnh bìa!");
+            result.put("bookJacket", series.getBookJacket());
+        } catch (IOException e) {
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
+        }
+        return result;
+    }
+
     @Operation(summary = "[SWAGGER] Thêm trang mới vào chapter")
     @PostMapping("/myseries/{seriesId}/{chapterId}/addpage/data")
     @ResponseBody
@@ -634,6 +717,82 @@ public class MangakaController {
             result.put("pageId", pageId);
             result.put("pageNumber", nextNum);
             result.put("message", "Thêm trang thành công!");
+        } catch (Exception e) {
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
+        }
+        return result;
+    }
+
+    @Operation(summary = "[SWAGGER] Xóa trang trong chapter (chỉ khi trang chưa giao việc và chưa hoàn thành)")
+    @PostMapping("/myseries/{sid}/{cid}/{pid}/delete-page")
+    @ResponseBody
+    public Map<String, Object> deletePage(@PathVariable String sid, @PathVariable String cid,
+            @PathVariable String pid, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập");
+            return result;
+        }
+
+        MangaPage page = mangaPageRepository.findById(pid).orElse(null);
+        if (page == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy trang: " + pid);
+            return result;
+        }
+
+        Chapter chapter = page.getChapter();
+        if (chapter == null || !chapter.getId().equals(cid)) {
+            result.put("status", "error");
+            result.put("message", "Trang không thuộc chapter này!");
+            return result;
+        }
+
+        if (chapter.getSeries() != null && chapter.getSeries().isLocked()) {
+            result.put("status", "error");
+            result.put("message", chapter.getSeries().getLockMessage());
+            return result;
+        }
+
+
+        String pageStatus = page.getStatus();
+
+        // Trang đang được giao việc cho assistant (đang có task dở)
+        if ("intask".equals(pageStatus)) {
+            result.put("status", "error");
+            result.put("message", "Trang này đang được giao cho trợ lý, không thể xóa!");
+            return result;
+        }
+
+        // Trợ lý đã nộp bài, đang chờ mangaka duyệt
+        if ("done".equals(pageStatus)) {
+            result.put("status", "error");
+            result.put("message", "Trang này đang chờ duyệt bài trợ lý nộp, không thể xóa!");
+            return result;
+        }
+
+        // Trang đã được đánh dấu hoàn thành
+        if ("finish".equals(pageStatus)) {
+            result.put("status", "error");
+            result.put("message", "Trang này đã được đánh dấu hoàn thành, không thể xóa!");
+            return result;
+        }
+
+
+        // Tới đây pageStatus chỉ còn có thể là "unfinish" → cho phép xóa
+        try {
+            List<Submission> subs = submissionRepository.findByPageIdId(pid);
+            if (!subs.isEmpty()) {
+                submissionRepository.deleteAll(subs);
+            }
+            mangaPageRepository.delete(page);
+
+            result.put("status", "success");
+            result.put("message", "Đã xóa trang thành công!");
         } catch (Exception e) {
             result.put("status", "error");
             result.put("message", "Lỗi hệ thống: " + e.getMessage());

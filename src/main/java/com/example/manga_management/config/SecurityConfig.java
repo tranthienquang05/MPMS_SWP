@@ -32,6 +32,7 @@ public class SecurityConfig {
                         .requestMatchers("/manga/assistant/**").hasRole("ASSISTANT")
                         .requestMatchers("/manga/tantou/**").hasRole("TANTOU")
                         .requestMatchers("/manga/editor/**").hasRole("BOARD")
+                        .requestMatchers("/api/account/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(

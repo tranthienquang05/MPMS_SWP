@@ -35,4 +35,7 @@ public class User {
 
     @Column(name = "Profile", length = 255)
     private String profile;
+
+    @Column(name = "EmailVerified", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    private boolean emailVerified = false;
 }

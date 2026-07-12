@@ -73,6 +73,10 @@
           </div>
         </div>
 
+        <button type="button" class="btn-icon" id="btnChangePassword" aria-label="Đổi mật khẩu" onclick="openChangePasswordModal()" title="Đổi mật khẩu">
+          <i class="fa-solid fa-key"></i>
+        </button>
+
         <a th:href="@{/login/logout}">
           <button type="button" class="btn-icon" aria-label="Logout">
             <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -1271,5 +1275,155 @@
       }
     </script>
     <script src="/js/ui-alert.js" th:src="@{/js/ui-alert.js}"></script>
+
+    <!-- ===== Change Password Modal ===== -->
+    <div id="changePasswordModalOverlay" class="app-floating-modal" style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
+      <div class="modal-box" style="width:min(440px,100%); max-height:calc(100dvh - var(--app-header-height,72px) - 2.5rem); overflow:auto;">
+        <!-- Step 1: Gửi OTP -->
+        <div id="cpStep1">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+            <h4 style="margin:0;">Đổi mật khẩu</h4>
+            <button type="button" class="modal-close-btn" onclick="closeChangePasswordModal()">×</button>
+          </div>
+          <p style="color:var(--app-muted); margin-bottom:1rem;">Mã OTP sẽ được gửi tới email của bạn để xác thực.</p>
+          <div id="cpStep1Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+          <button type="button" class="btn-primary" style="width:100%;" id="btnSendOtp" onclick="cpSendOtp()">Gửi mã OTP</button>
+        </div>
+        <!-- Step 2: Nhập OTP -->
+        <div id="cpStep2" style="display:none;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+            <h4 style="margin:0;">Nhập mã OTP</h4>
+            <button type="button" class="modal-close-btn" onclick="closeChangePasswordModal()">×</button>
+          </div>
+          <p style="color:var(--app-muted); margin-bottom:1rem;">Mã OTP đã được gửi tới email của bạn. Có hiệu lực 5 phút.</p>
+          <input type="text" id="cpOtpInput" placeholder="Nhập mã 6 số..." maxlength="6" style="margin-bottom:0.75rem;" />
+          <div id="cpStep2Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+          <div style="display:flex; gap:0.75rem;">
+            <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="cpGoStep(1)">Quay lại</button>
+            <button type="button" class="btn-modal-confirm" style="flex:1;" onclick="cpVerifyOtp()">Xác nhận</button>
+          </div>
+        </div>
+        <!-- Step 3: Đổi mật khẩu -->
+        <div id="cpStep3" style="display:none;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+            <h4 style="margin:0;">Mật khẩu mới</h4>
+            <button type="button" class="modal-close-btn" onclick="closeChangePasswordModal()">×</button>
+          </div>
+          <input type="password" id="cpNewPassword" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)" style="margin-bottom:0.75rem;" />
+          <input type="password" id="cpConfirmPassword" placeholder="Nhập lại mật khẩu mới" style="margin-bottom:0.75rem;" />
+          <div id="cpStep3Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+          <button type="button" class="btn-primary" style="width:100%;" onclick="cpChangePassword()">Xác nhận đổi mật khẩu</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    function openChangePasswordModal() {
+      cpGoStep(1);
+      document.getElementById('changePasswordModalOverlay').style.display = 'flex';
+    }
+    function closeChangePasswordModal() {
+      document.getElementById('changePasswordModalOverlay').style.display = 'none';
+      cpGoStep(1);
+      ['cpOtpInput','cpNewPassword','cpConfirmPassword'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      ['cpStep1Error','cpStep2Error','cpStep3Error'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+    }
+    function cpGoStep(step) {
+      ['cpStep1','cpStep2','cpStep3'].forEach((id, i) => {
+        document.getElementById(id).style.display = (i + 1 === step) ? 'block' : 'none';
+      });
+    }
+    async function cpSendOtp() {
+      const btn = document.getElementById('btnSendOtp');
+      const errEl = document.getElementById('cpStep1Error');
+      btn.disabled = true;
+      btn.textContent = 'Đang gửi...';
+      errEl.style.display = 'none';
+      try {
+        const res = await fetch('/api/account/send-otp', { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'success') {
+          cpGoStep(2);
+        } else {
+          errEl.textContent = data.message || 'Lỗi gửi OTP';
+          errEl.style.display = 'block';
+        }
+      } catch(e) {
+        errEl.textContent = 'Lỗi kết nối';
+        errEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Gửi mã OTP';
+      }
+    }
+    async function cpVerifyOtp() {
+      const otp = document.getElementById('cpOtpInput').value.trim();
+      const errEl = document.getElementById('cpStep2Error');
+      errEl.style.display = 'none';
+      if (!otp || otp.length !== 6) {
+        errEl.textContent = 'Vui lòng nhập đủ 6 số';
+        errEl.style.display = 'block';
+        return;
+      }
+      try {
+        const res = await fetch('/api/account/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ otp })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          cpGoStep(3);
+        } else {
+          errEl.textContent = data.message || 'OTP không đúng';
+          errEl.style.display = 'block';
+        }
+      } catch(e) {
+        errEl.textContent = 'Lỗi kết nối';
+        errEl.style.display = 'block';
+      }
+    }
+    async function cpChangePassword() {
+      const newPass = document.getElementById('cpNewPassword').value;
+      const confirmPass = document.getElementById('cpConfirmPassword').value;
+      const errEl = document.getElementById('cpStep3Error');
+      errEl.style.display = 'none';
+      if (!newPass || newPass.length < 6) {
+        errEl.textContent = 'Mật khẩu phải có ít nhất 6 ký tự';
+        errEl.style.display = 'block';
+        return;
+      }
+      if (newPass !== confirmPass) {
+        errEl.textContent = 'Mật khẩu nhập lại không khớp';
+        errEl.style.display = 'block';
+        return;
+      }
+      try {
+        const res = await fetch('/api/account/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newPassword: newPass, confirmPassword: confirmPass })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          closeChangePasswordModal();
+          alert('Đổi mật khẩu thành công!');
+        } else {
+          errEl.textContent = data.message || 'Lỗi đổi mật khẩu';
+          errEl.style.display = 'block';
+        }
+      } catch(e) {
+        errEl.textContent = 'Lỗi kết nối';
+        errEl.style.display = 'block';
+      }
+    }
+    </script>
+
   </body>
 </html>

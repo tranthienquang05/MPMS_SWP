@@ -71,9 +71,9 @@ public class ChapterController {
             return result;
         }
 
-        if (chapter.getSeries() != null && "pending_cancel".equals(chapter.getSeries().getStatus())) {
+        if (chapter.getSeries() != null && chapter.getSeries().isLocked()) {
             result.put("status", "error");
-            result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!");
+            result.put("message", chapter.getSeries().getLockMessage());
             return result;
         }
 

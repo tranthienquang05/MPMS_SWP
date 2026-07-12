@@ -175,9 +175,9 @@ public class PageController {
             }
 
             if (page.getChapter().getSeries() != null
-                    && "pending_cancel".equals(page.getChapter().getSeries().getStatus())) {
+                    && page.getChapter().getSeries().isLocked()) {
                 result.put("status", "error");
-                result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!");
+                result.put("message", page.getChapter().getSeries().getLockMessage());
                 return result;
             }
 
@@ -321,9 +321,9 @@ public class PageController {
             return result;
         }
         if (page.getChapter() != null && page.getChapter().getSeries() != null
-                && "pending_cancel".equals(page.getChapter().getSeries().getStatus())) {
+                && page.getChapter().getSeries().isLocked()) {
             result.put("status", "error");
-            result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!");
+            result.put("message", page.getChapter().getSeries().getLockMessage());
             return result;
         }
         if ("finish".equals(page.getStatus())) {
@@ -366,9 +366,9 @@ public class PageController {
             return result;
         }
         if (page.getChapter() != null && page.getChapter().getSeries() != null
-                && "pending_cancel".equals(page.getChapter().getSeries().getStatus())) {
+                && page.getChapter().getSeries().isLocked()) {
             result.put("status", "error");
-            result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!");
+            result.put("message", page.getChapter().getSeries().getLockMessage());
             return result;
         }
 
@@ -467,9 +467,9 @@ public class PageController {
             }
 
             if (page.getChapter().getSeries() != null
-                    && "pending_cancel".equals(page.getChapter().getSeries().getStatus())) {
+                    && page.getChapter().getSeries().isLocked()) {
                 result.put("status", "error");
-                result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!");
+                result.put("message", page.getChapter().getSeries().getLockMessage());
                 return result;
             }
 

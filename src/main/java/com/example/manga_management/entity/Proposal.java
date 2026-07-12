@@ -51,6 +51,10 @@ public class Proposal {
     @Column(name = "CreatedAt", updatable = false)
     private LocalDateTime createdAt;
 
+    /** Thời điểm tantou duyệt / yêu cầu sửa / từ chối đề xuất này. */
+    @Column(name = "ReviewedAt")
+    private LocalDateTime reviewedAt;
+
     // Quan hệ OneToOne với Series
     // mappedBy trỏ tới tên biến 'proposal' trong entity Series
     @OneToOne(mappedBy = "proposal", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

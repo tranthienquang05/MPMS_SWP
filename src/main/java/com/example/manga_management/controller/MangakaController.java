@@ -499,9 +499,9 @@ public class MangakaController {
             result.put("message", "Không tìm thấy series: " + seriesId);
             return result;
         }
-        if ("pending_cancel".equals(series.getStatus())) {
+        if (series.isLocked()) {
             result.put("status", "error");
-            result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể tạo chapter mới!");
+            result.put("message", series.getLockMessage());
             return result;
         }
         try {
@@ -576,9 +576,9 @@ public class MangakaController {
             return result;
         }
 
-        if (chapter.getSeries() != null && "pending_cancel".equals(chapter.getSeries().getStatus())) {
+        if (chapter.getSeries() != null && chapter.getSeries().isLocked()) {
             result.put("status", "error");
-            result.put("message", "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!");
+            result.put("message", chapter.getSeries().getLockMessage());
             return result;
         }
 

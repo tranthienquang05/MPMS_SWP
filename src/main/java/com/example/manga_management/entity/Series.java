@@ -49,4 +49,24 @@ public class Series {
 
     @Column(name = "Status", nullable = false, length = 20)
     private String status;
+
+    /**
+     * Series bị khoá thao tác: đang chờ hồ sơ bảo vệ (pending_cancel) hoặc đã bị
+     * dừng hẳn (stopped). Lúc này không được tạo chapter, tạo trang, giao việc,
+     * duyệt bài hay submit chapter.
+     */
+    public boolean isLocked() {
+        return "pending_cancel".equals(status) || "stopped".equals(status);
+    }
+
+    /** Lý do bị khoá, dùng làm message trả về cho client. */
+    public String getLockMessage() {
+        if ("pending_cancel".equals(status)) {
+            return "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!";
+        }
+        if ("stopped".equals(status)) {
+            return "Series đã bị dừng phát hành, không thể thao tác!";
+        }
+        return null;
+    }
 }

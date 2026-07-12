@@ -545,17 +545,11 @@ public class AdminController {
             return response;
         }
 
+        // Chỉ chặn khi series đang có phiên vote MỞ. Phiên cũ đã đóng (vd series
+        // từng bị vote dừng nhưng bảo vệ thành công) thì sau này vẫn được xét lại.
         if (voteSessionRepository.existsBySeriesIdAndStatus(seriesId, "active")) {
             response.put("success", false);
             response.put("message", "Series này đang có phiên vote đang mở rồi! Phải đóng phiên hiện tại trước.");
-            return response;
-        }
-
-        if (voteSessionRepository.existsBySeriesIdAndVoteType(seriesId, voteType)) {
-            response.put("success", false);
-            response.put("message", "Series này đã từng có phiên vote "
-                    + (voteType.equals("stop") ? "dừng" : "khen thưởng")
-                    + " rồi, không thể tạo lại!");
             return response;
         }
 
@@ -617,9 +611,11 @@ public class AdminController {
                 if (seriesOpt.isEmpty()) continue;
                 String seriesStatus = seriesOpt.get().getStatus();
 
+                // Bỏ qua series đã có kết quả cuối, đang chờ bảo vệ, hoặc đang có
+                // phiên vote mở. Phiên cũ đã đóng thì vẫn được xét dừng lại.
                 if ("stopped".equals(seriesStatus) || "rewarded".equals(seriesStatus)
                         || "pending_cancel".equals(seriesStatus)
-                        || voteSessionRepository.existsBySeriesIdAndVoteType(sid, "stop")) {
+                        || voteSessionRepository.existsBySeriesIdAndStatus(sid, "active")) {
                     skippedNames.add(sname);
                     continue;
                 }
@@ -732,174 +728,127 @@ public class AdminController {
             return result;
         }
 
+        // Lịch sử HOẠT ĐỘNG = những việc chính user này ĐÃ LÀM (kèm mốc thời gian
+        // thật của hành động). Không lấy Notification vì đó là tin nhắn user NHẬN
+        // được, không phải hành động do user thực hiện.
         List<Map<String, Object>> activities = new ArrayList<>();
         String role = target.getRole() != null ? target.getRole().toLowerCase() : "";
 
-        // 1. Board: vote proposal (EditorialVote)
+        // 1. Board: bỏ phiếu bản thảo / bỏ phiếu series / tạo phiên vote
         if ("board".equals(role)) {
             for (EditorialVote ev : editorialVoteRepository.findByBoard_User_IdOrderByVoteDateDesc(userId)) {
-                Map<String, Object> a = new LinkedHashMap<>();
-                a.put("timestamp", ev.getVoteDate() != null ? ev.getVoteDate().toString() : "");
-                a.put("type", "vote-proposal");
-                a.put("icon", "fa-file-circle-check");
-                String label = "pass".equalsIgnoreCase(ev.getVote()) ? "✅ Chấp thuận" : "❌ Bác bỏ";
-                a.put("description", "Bỏ phiếu " + label + " bản thảo "
-                        + (ev.getProposal() != null ? ev.getProposal().getSeriesName() : "") + " ("
-                        + (ev.getProposal() != null ? ev.getProposal().getId() : "") + ")");
-                activities.add(a);
+                String label = "pass".equalsIgnoreCase(ev.getVote()) ? "chấp thuận" : "bác bỏ";
+                addActivity(activities, ev.getVoteDate(), "vote-proposal", "fa-file-circle-check",
+                        "Đã bỏ phiếu " + label + " bản thảo \""
+                                + (ev.getProposal() != null ? ev.getProposal().getSeriesName() : "—") + "\"");
             }
 
-            // Board: vote series (SeriesVote)
             for (SeriesVote sv : seriesVoteRepository.findByBoard_User_IdOrderByVoteDateDesc(userId)) {
-                Map<String, Object> a = new LinkedHashMap<>();
-                a.put("timestamp", sv.getVoteDate() != null ? sv.getVoteDate().toString() : "");
-                a.put("type", "vote-series");
-                a.put("icon", "fa-square-poll-vertical");
-                String choice = sv.getVote() == null ? "" : sv.getVote();
-                String label = switch (choice.toLowerCase()) {
-                    case "stop" -> "🚫 Dừng";
-                    case "keep" -> "✅ Giữ";
-                    case "reward" -> "🏆 Đồng ý khen thưởng";
-                    case "against" -> "❌ Không đồng ý";
+                String choice = sv.getVote() == null ? "" : sv.getVote().toLowerCase();
+                String label = switch (choice) {
+                    case "stop" -> "đồng ý dừng";
+                    case "keep" -> "giữ lại";
+                    case "reward" -> "đồng ý khen thưởng";
+                    case "against" -> "không đồng ý khen thưởng";
+                    // Phiên bảo vệ (defense) dùng approve/reject
+                    case "approve" -> "chấp nhận hồ sơ bảo vệ";
+                    case "reject" -> "bác bỏ hồ sơ bảo vệ";
                     default -> choice;
                 };
-                a.put("description", "Vote " + label + " cho series "
-                        + (sv.getSeries() != null ? sv.getSeries().getSeriesName() : "") + " ("
-                        + (sv.getSeries() != null ? sv.getSeries().getId() : "") + ")");
-                activities.add(a);
+                addActivity(activities, sv.getVoteDate(), "vote-series", "fa-square-poll-vertical",
+                        "Đã bỏ phiếu " + label + " cho series \""
+                                + (sv.getSeries() != null ? sv.getSeries().getSeriesName() : "—") + "\"");
             }
 
-            // Board: tạo phiên vote (VoteSession.createdBy)
             for (VoteSession vs : voteSessionRepository.findByCreatedBy_User_IdOrderByCreatedAtDesc(userId)) {
-                Map<String, Object> a = new LinkedHashMap<>();
-                a.put("timestamp", vs.getCreatedAt() != null ? vs.getCreatedAt().toString() : "");
-                a.put("type", "create-session");
-                a.put("icon", "fa-plus-square");
                 String t = "stop".equalsIgnoreCase(vs.getVoteType()) ? "dừng" : "khen thưởng";
-                a.put("description", "Tạo phiên vote " + t + " " + vs.getId() + " cho series "
-                        + (vs.getSeries() != null ? vs.getSeries().getSeriesName() : ""));
-                activities.add(a);
+                addActivity(activities, vs.getCreatedAt(), "create-session", "fa-plus-square",
+                        "Đã tạo phiên vote " + t + " cho series \""
+                                + (vs.getSeries() != null ? vs.getSeries().getSeriesName() : "—") + "\"");
             }
         }
 
-        // 2. Mangaka: tạo / nộp proposal + giao task + chấp nhận submit
+        // 2. Mangaka: nộp bản thảo, khởi động series, giao việc, duyệt bài trợ lý
         if ("mangaka".equals(role)) {
             Optional<Mangaka> mgkOpt = mangakaRepository.findByUserId(userId);
             if (mgkOpt.isPresent()) {
                 String mangakaId = mgkOpt.get().getId();
 
-                // 2a. Proposal (bản thảo)
                 for (Proposal p : proposalRepository.findByMangaka_Id(mangakaId)) {
-                    Map<String, Object> a = new LinkedHashMap<>();
-                    a.put("timestamp", p.getCreatedAt() != null ? p.getCreatedAt().toString() : "");
-                    a.put("type", "proposal");
-                    a.put("icon", "fa-file-pen");
-                    String statusLabel = switch (p.getStatus() != null ? p.getStatus().toLowerCase() : "") {
-                        case "pending" -> "⏳ Chờ duyệt";
-                        case "approved" -> "✅ Đã duyệt";
-                        case "rejected" -> "❌ Bị từ chối";
-                        case "resubmit" -> "🔄 Cần chỉnh sửa";
-                        default -> p.getStatus() != null ? p.getStatus() : "";
-                    };
-                    a.put("description", "Bản thảo \"" + p.getSeriesName() + "\" (" + p.getId()
-                            + ") — " + statusLabel);
-                    activities.add(a);
+                    addActivity(activities, p.getCreatedAt(), "proposal", "fa-file-pen",
+                            "Đã nộp bản thảo \"" + p.getSeriesName() + "\"");
                 }
 
-                // 2b. Giao task + chấp nhận submit (qua Submission của các assistant)
+                for (Series s : seriesRepository.findByProposal_Mangaka_Id(mangakaId)) {
+                    addActivity(activities, s.getStartDate(), "start-series", "fa-rocket",
+                            "Đã khởi động series \"" + s.getSeriesName() + "\"");
+                }
+
                 for (Submission s : submissionRepository.findByAssistant_Mangaka_IdOrderByCreatedAtDesc(mangakaId)) {
                     String assistantName = s.getAssistant() != null && s.getAssistant().getUser() != null
                             ? s.getAssistant().getUser().getFullname() : "—";
-                    String pageInfo = "";
-                    if (s.getPageId() != null) {
-                        MangaPage pg = s.getPageId();
-                        String chapterName = pg.getChapter() != null ? pg.getChapter().getChapterName() : "—";
-                        pageInfo = "trang " + (pg.getPageNumber() != null ? pg.getPageNumber() : s.getId())
-                                + " (" + chapterName + ")";
-                    }
+                    String pageInfo = describePage(s);
 
-                    // Giao task: dùng createdAt
-                    if (s.getCreatedAt() != null) {
-                        Map<String, Object> a = new LinkedHashMap<>();
-                        a.put("timestamp", s.getCreatedAt().toString());
-                        a.put("type", "assign-task");
-                        a.put("icon", "fa-list-check");
-                        a.put("description", "Giao " + pageInfo + " cho " + assistantName
-                                + " (deadline " + (s.getDeadline() != null ? s.getDeadline().toString() : "—") + ")");
-                        activities.add(a);
-                    }
+                    addActivity(activities, s.getCreatedAt(), "assign-task", "fa-list-check",
+                            "Đã giao việc " + pageInfo + " cho " + assistantName);
 
-                    // Chấp nhận submit: dùng approvedAt
-                    if (s.getApprovedAt() != null) {
-                        Map<String, Object> a = new LinkedHashMap<>();
-                        a.put("timestamp", s.getApprovedAt().toString());
-                        a.put("type", "approve-task");
-                        a.put("icon", "fa-circle-check");
-                        a.put("description", "Duyệt bài " + pageInfo + " của " + assistantName);
-                        activities.add(a);
-                    }
+                    addActivity(activities, s.getApprovedAt(), "approve-task", "fa-circle-check",
+                            "Đã duyệt bài " + pageInfo + " của " + assistantName);
                 }
             }
         }
 
-        // 3. Assistant: nhận / nộp task (Submission)
+        // 3. Assistant: được giao việc + nộp bài
         if ("assistant".equals(role)) {
             Optional<Assistant> astOpt = assistantRepository.findByUserId(userId);
             if (astOpt.isPresent()) {
                 for (Submission s : submissionRepository.findByAssistant_Id(astOpt.get().getId())) {
-                    Map<String, Object> a = new LinkedHashMap<>();
-                    a.put("timestamp", s.getCreatedAt() != null ? s.getCreatedAt().toString() : "");
-                    a.put("type", "submission");
-                    a.put("icon", "fa-list-check");
-                    String statusLabel = switch (s.getStatus() != null ? s.getStatus().toLowerCase() : "") {
-                        case "pending" -> "⏳ Chờ nộp";
-                        case "submitted" -> "📤 Đã nộp";
-                        case "approved" -> "✅ Đã duyệt";
-                        case "rejected" -> "❌ Bị từ chối";
-                        case "late" -> "🕐 Nộp trễ";
-                        default -> s.getStatus() != null ? s.getStatus() : "";
-                    };
-                    a.put("description", "Task " + s.getId()
-                            + " (deadline " + (s.getDeadline() != null ? s.getDeadline().toString() : "—")
-                            + ") — " + statusLabel);
-                    activities.add(a);
+                    String pageInfo = describePage(s);
+
+                    addActivity(activities, s.getCreatedAt(), "receive-task", "fa-inbox",
+                            "Được giao việc " + pageInfo
+                                    + (s.getDeadline() != null ? " (deadline " + s.getDeadline() + ")" : ""));
+
+                    addActivity(activities, s.getSubmittedAt(), "submit-task", "fa-paper-plane",
+                            "Đã nộp bài " + pageInfo);
                 }
             }
         }
 
-        // 4. TantoEditor: quản lý proposal của các mangaka trực thuộc
+        // 4. Tantou: duyệt / yêu cầu sửa / từ chối / nộp bản thảo lên hội đồng
         if ("tantou".equals(role)) {
             Optional<TantoEditor> editorOpt = tantoEditorRepository.findByUserId(userId);
             if (editorOpt.isPresent()) {
                 for (Proposal p : proposalRepository.findByMangaka_Editor_IdOrderByCreatedAtDesc(editorOpt.get().getId())) {
-                    Map<String, Object> a = new LinkedHashMap<>();
-                    a.put("timestamp", p.getCreatedAt() != null ? p.getCreatedAt().toString() : "");
-                    a.put("type", "manage-proposal");
-                    a.put("icon", "fa-file-circle-check");
-                    String statusLabel = switch (p.getStatus() != null ? p.getStatus().toLowerCase() : "") {
-                        case "pending" -> "⏳ Chờ duyệt";
-                        case "approved" -> "✅ Đã duyệt";
-                        case "rejected" -> "❌ Bị từ chối";
-                        case "resubmit" -> "🔄 Cần chỉnh sửa";
-                        default -> p.getStatus() != null ? p.getStatus() : "";
-                    };
+                    if (p.getReviewedAt() == null) {
+                        continue; // chưa xử lý bản thảo này thì không phải hoạt động của tantou
+                    }
                     String mangakaName = p.getMangaka() != null && p.getMangaka().getUser() != null
                             ? p.getMangaka().getUser().getFullname() : "—";
-                    a.put("description", "Bản thảo \"" + p.getSeriesName() + "\" (" + p.getId()
-                            + ") của " + mangakaName + " — " + statusLabel);
-                    activities.add(a);
+                    String action = switch (p.getStatus() != null ? p.getStatus().toLowerCase() : "") {
+                        case "approved" -> "Đã duyệt";
+                        case "revision" -> "Đã yêu cầu chỉnh sửa";
+                        case "locked" -> "Đã từ chối";
+                        case "board_check", "passed", "started" -> "Đã nộp lên hội đồng";
+                        default -> "Đã xử lý";
+                    };
+                    addActivity(activities, p.getReviewedAt(), "review-proposal", "fa-file-circle-check",
+                            action + " bản thảo \"" + p.getSeriesName() + "\" của " + mangakaName);
                 }
             }
         }
 
-        // 5. Notification — áp dụng cho mọi role (đã có createdAt LocalDateTime)
-        for (Notification n : notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)) {
-            Map<String, Object> a = new LinkedHashMap<>();
-            a.put("timestamp", n.getCreatedAt() != null ? n.getCreatedAt().toString() : "");
-            a.put("type", "notification");
-            a.put("icon", "fa-bell");
-            a.put("description", n.getContent());
-            activities.add(a);
+        // 5. Admin: xuất bản chapter
+        if ("admin".equals(role)) {
+            for (PublicDate pd : publicDateRepository.findAll()) {
+                if (pd.getChapter() == null) {
+                    continue;
+                }
+                String seriesName = pd.getChapter().getSeries() != null
+                        ? pd.getChapter().getSeries().getSeriesName() : "—";
+                addActivity(activities, pd.getDatePublic(), "publish-chapter", "fa-upload",
+                        "Đã xuất bản chapter \"" + pd.getChapter().getChapterName() + "\" (series " + seriesName + ")");
+            }
         }
 
         // Sort theo timestamp DESC (chuỗi rỗng đẩy xuống cuối)
@@ -925,6 +874,34 @@ public class AdminController {
         result.put("user", userInfo);
         result.put("activities", activities);
         return result;
+    }
+
+    /**
+     * Thêm 1 dòng hoạt động. Bỏ qua nếu chưa có mốc thời gian (nghĩa là hành
+     * động đó chưa xảy ra, vd bài chưa nộp thì không có submittedAt).
+     */
+    private void addActivity(List<Map<String, Object>> activities, Object timestamp,
+            String type, String icon, String description) {
+        if (timestamp == null) {
+            return;
+        }
+        Map<String, Object> a = new LinkedHashMap<>();
+        a.put("timestamp", timestamp.toString());
+        a.put("type", type);
+        a.put("icon", icon);
+        a.put("description", description);
+        activities.add(a);
+    }
+
+    /** Mô tả trang của 1 submission, vd: trang 3 (chapter "Chuong 1"). */
+    private String describePage(Submission s) {
+        if (s.getPageId() == null) {
+            return "task " + s.getId();
+        }
+        MangaPage pg = s.getPageId();
+        String chapterName = pg.getChapter() != null ? pg.getChapter().getChapterName() : "—";
+        return "trang " + (pg.getPageNumber() != null ? pg.getPageNumber() : "?")
+                + " (chapter \"" + chapterName + "\")";
     }
 
     // ── Helper ────────────────────────────────────────────────────

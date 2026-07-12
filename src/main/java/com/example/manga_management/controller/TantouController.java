@@ -137,6 +137,7 @@ public class TantouController {
 
         p.setComment(comment);
         p.setEditorScore(score);
+        p.setReviewedAt(LocalDateTime.now());
 
         switch (action) {
             case "approve" -> {

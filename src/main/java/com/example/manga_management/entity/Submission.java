@@ -44,4 +44,8 @@ public class Submission {
 
     @Column(name = "ApprovedAt")
     private LocalDateTime approvedAt;
+
+    /** Thời điểm trợ lý nộp bài (kể cả tự động nộp do quá hạn). */
+    @Column(name = "SubmittedAt")
+    private LocalDateTime submittedAt;
 }

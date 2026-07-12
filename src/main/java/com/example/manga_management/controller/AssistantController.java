@@ -293,6 +293,7 @@ public class AssistantController {
         }
 
         submission.setStatus("done");
+        submission.setSubmittedAt(java.time.LocalDateTime.now());
         submissionRepository.save(submission);
         // Đổi page sang done
         submission.getPageId().setStatus("done");

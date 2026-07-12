@@ -3,6 +3,7 @@ package com.example.manga_management.service;
 import com.example.manga_management.entity.Assistant;
 import com.example.manga_management.entity.Chapter;
 import com.example.manga_management.entity.MangaPage;
+import com.example.manga_management.entity.Mangaka;
 import com.example.manga_management.entity.Notification;
 import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.Submission;
@@ -30,6 +31,7 @@ public class NotificationService {
     private static final String TYPE_DEADLINE_OVERDUE = "DEADLINE_OVERDUE";
     private static final String TYPE_AUTO_SUBMIT = "AUTO_SUBMIT";
     private static final String TYPE_CHAPTER_OVERDUE_CANCEL = "CHAPTER_OVERDUE_CANCEL";
+    private static final String TYPE_CHAPTER_AUTO_SUBMIT = "CHAPTER_AUTO_SUBMIT";
 
     private final NotificationRepository notificationRepository;
     private final SubmissionRepository submissionRepository;
@@ -143,6 +145,7 @@ public class NotificationService {
 
         for (Submission submission : overdueList) {
             submission.setStatus("done");
+            submission.setSubmittedAt(now);
             submissionRepository.save(submission);
 
             if (submission.getPageId() != null) {
@@ -163,8 +166,12 @@ public class NotificationService {
     }
 
     /**
-     * Chapter quá hạn nộp: mọi trang chưa "finish" sẽ tự động bị đánh dấu hoàn
-     * thành. Nếu trang đang có task "intask" thì hủy task đó và báo cho tantou.
+     * Chapter quá hạn nộp: mọi trang chưa "finish" bị tự động đánh dấu hoàn
+     * thành, task đang làm dở bị hủy (báo tantou), và chapter tự động được nộp
+     * lên BTV (status "finish" — giống hệt khi mangaka bấm "Submit lên BTV").
+     *
+     * Chapter chưa có trang nào thì không nộp được (giống luật submit thủ công),
+     * để nguyên "unfinish" cho mangaka tự xử lý.
      */
     @Transactional
     @Scheduled(fixedDelay = 60_000)
@@ -174,6 +181,10 @@ public class NotificationService {
 
         for (Chapter chapter : overdueChapters) {
             List<MangaPage> pages = mangaPageRepository.findByChapter(chapter);
+            if (pages.isEmpty()) {
+                continue;
+            }
+
             for (MangaPage page : pages) {
                 if ("finish".equals(page.getStatus())) {
                     continue;
@@ -197,6 +208,39 @@ public class NotificationService {
                 page.setStatus("finish");
                 mangaPageRepository.save(page);
             }
+
+            // Tự động nộp chapter lên BTV
+            chapter.setStatus("finish");
+            chapterRepository.save(chapter);
+            notifyChapterAutoSubmitted(chapter);
+        }
+    }
+
+    /** Báo cho tantou phụ trách + mangaka biết chapter đã bị tự động nộp do quá hạn. */
+    private void notifyChapterAutoSubmitted(Chapter chapter) {
+        if (chapter.getSeries() == null || chapter.getSeries().getProposal() == null
+                || chapter.getSeries().getProposal().getMangaka() == null) {
+            return;
+        }
+        Mangaka mangaka = chapter.getSeries().getProposal().getMangaka();
+        String seriesName = chapter.getSeries().getSeriesName();
+
+        if (mangaka.getEditor() != null && mangaka.getEditor().getUser() != null) {
+            sendToUser(mangaka.getEditor().getUser().getId(),
+                    "Chapter '" + chapter.getChapterName() + "' của series '" + seriesName
+                            + "' đã quá hạn và được tự động nộp, đang chờ bạn duyệt.",
+                    "/manga/tantou",
+                    TYPE_CHAPTER_AUTO_SUBMIT,
+                    chapter.getId());
+        }
+
+        if (mangaka.getUser() != null) {
+            sendToUser(mangaka.getUser().getId(),
+                    "Chapter '" + chapter.getChapterName() + "' của series '" + seriesName
+                            + "' đã quá hạn nên được tự động nộp lên biên tập viên.",
+                    "/manga/mangaka",
+                    TYPE_CHAPTER_AUTO_SUBMIT,
+                    chapter.getId() + ":mangaka");
         }
     }
 

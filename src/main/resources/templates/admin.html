@@ -1521,9 +1521,20 @@
               return;
             }
             const sel = document.getElementById("cv-seriesId");
-            const items = (data.series || []).sort((a, b) =>
-              a.id.localeCompare(b.id),
-            );
+            // Series đã stopped/rewarded/pending_cancel thì không tạo vote được nữa,
+            // loại luôn khỏi dropdown để admin không chọn nhầm rồi bị báo lỗi.
+            const items = (data.series || [])
+              .filter(
+                (s) =>
+                  s.status !== "stopped" &&
+                  s.status !== "rewarded" &&
+                  s.status !== "pending_cancel",
+              )
+              .sort((a, b) => a.id.localeCompare(b.id));
+            if (items.length === 0) {
+              showToast("Không còn series nào có thể tạo phiên vote", "error");
+              return;
+            }
             sel.innerHTML =
               '<option value="">-- Chọn series --</option>' +
               items
@@ -1534,7 +1545,10 @@
                 })
                 .join("");
             openModal("modal-create-vote");
-          });
+          })
+          .catch((err) =>
+            showToast("Lỗi tải danh sách series: " + err.message, "error"),
+          );
       }
 
       function updateVoteTypeHintAdmin() {
@@ -1584,10 +1598,11 @@
                 closeModal("modal-create-vote");
                 loadVoteSessionsAdmin();
               }
-            });
+            })
+            .catch((err) => showToast("Lỗi tạo phiên vote: " + err.message, "error"));
         };
 
-        // Vote dừng: kiểm tra top 5 cảnh báo
+        // Vote dừng: cảnh báo nếu series đang trong TOP 5 lượt xem cao
         if (voteType === "stop") {
           const year = new Date().getFullYear();
           fetch("/manga/ranking?month=0&year=" + year)
@@ -1600,12 +1615,15 @@
                 !confirm(
                   'Series "' +
                     inTop5.seriesName +
-                    '" đang trong TOP 5 có lượt yêu thích cao. Bạn có chắc muốn tạo vote dừng?',
+                    '" đang trong TOP 5 có lượt xem cao. Bạn có chắc muốn tạo vote dừng?',
                 )
               )
                 return;
               doCreate();
-            });
+            })
+            // Không lấy được ranking thì vẫn cho tạo vote (cảnh báo top5 chỉ là phụ),
+            // tránh trường hợp bấm nút mà không có gì xảy ra.
+            .catch(() => doCreate());
         } else {
           doCreate();
         }

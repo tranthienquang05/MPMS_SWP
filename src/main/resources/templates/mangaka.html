@@ -3236,22 +3236,33 @@
             if (data.status !== "success") return;
             const series = data.series;
             const chapters = data.chapters || [];
+            // Series bị khoá thao tác: chờ hồ sơ bảo vệ (pending_cancel) hoặc đã dừng hẳn (stopped)
             const isPendingCancel = series.status === "pending_cancel";
-            const pendingCancelBanner = isPendingCancel
+            const isStopped = series.status === "stopped";
+            const isLocked = isPendingCancel || isStopped;
+            const lockMessage = isPendingCancel
+              ? "Series đang chờ hồ sơ bảo vệ, không thể thao tác lúc này!"
+              : "Series đã bị dừng phát hành, không thể thao tác!";
+            const lockBanner = isPendingCancel
               ? `<div class="pending-cancel-banner">
                    ⚠️ Series này đã bị hội đồng vote dừng và đang chờ hồ sơ bảo vệ từ biên tập viên.
                    Mọi thao tác trên chapter chưa hoàn thành đều bị khoá cho đến khi có kết quả.
                  </div>`
-              : "";
+              : isStopped
+                ? `<div class="pending-cancel-banner">
+                     🛑 Series này đã bị hội đồng quyết định DỪNG phát hành.
+                     Mọi thao tác trên chapter chưa hoàn thành đều bị khoá vĩnh viễn.
+                   </div>`
+                : "";
             let html = `
               <h3>Chapter của series: ${series.seriesName}</h3>
-              ${pendingCancelBanner}
+              ${lockBanner}
               <div class="chapter-toolbar">
                 <button type="button" class="project-action-btn" onclick="restoreProjectSeriesView(true)">Quay lại
                 </button>
                 <button type="button" class="project-action-btn project-action-primary"
-                  ${isPendingCancel ? "disabled" : ""}
-                  onclick="${isPendingCancel ? "alert('Series đang chờ hồ sơ bảo vệ, không thể tạo chapter mới!')" : `openCreateChapterModal('${series.id}')`}">Tạo chapter mới
+                  ${isLocked ? "disabled" : ""}
+                  onclick="${isLocked ? `alert('${lockMessage}')` : `openCreateChapterModal('${series.id}')`}">Tạo chapter mới
                 </button>
                 <span class="chapter-toolbar-note">Deadline sẽ luôn là thứ 7.</span>
               </div>
@@ -3287,10 +3298,10 @@
                     '<span class="badge-status-passed">Đã xuất bản</span>',
                   stopped: '<span class="badge-status-rejected">Đã dừng</span>',
                 };
-                const chapterLocked = isPendingCancel && c.status === "unfinish";
+                const chapterLocked = isLocked && c.status === "unfinish";
                 const viewPagesBtn = chapterLocked
                   ? `<button type="button" class="project-action-btn series-chapter-btn project-action-locked"
-                        onclick="alert('Series đang ở trạng thái pending_cancel và chapter này đang bị khoá, không thể mở!')">🔒 Đã khoá</button>`
+                        onclick="alert('${lockMessage}')">🔒 Đã khoá</button>`
                   : `<a href="/manga/mangaka/myseries/${sid}/${c.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectChapter('${sid}','${c.id}')">Xem trang</a>`;
 
                 html += `<tr>

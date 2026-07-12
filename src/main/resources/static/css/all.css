@@ -700,6 +700,41 @@ tr:hover td {
   background: rgba(239, 68, 68, 0.11);
 }
 
+/* Toast thông báo (#toast) — phải nổi TRÊN modal (z-index modal = 1200),
+   nếu không thông báo lỗi sẽ bị modal che mất và người dùng tưởng nút hỏng. */
+#toast {
+  position: fixed;
+  top: calc(var(--app-header-height) + 1rem);
+  right: 1.2rem;
+  z-index: 2400;
+  display: none;
+  max-width: min(420px, calc(100vw - 2.4rem));
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: rgba(25, 29, 39, 0.97);
+  box-shadow: var(--app-shadow);
+  padding: 0.85rem 1rem;
+  color: var(--app-text);
+  font-size: 0.92rem;
+  line-height: 1.4;
+  backdrop-filter: blur(14px);
+}
+
+#toast.show {
+  display: block;
+  animation: modalIn 200ms ease both;
+}
+
+#toast.success {
+  border-color: rgba(61, 220, 151, 0.45);
+  background: rgba(24, 48, 40, 0.97);
+}
+
+#toast.error {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(56, 26, 28, 0.97);
+}
+
 .chat-layout,
 .chat-shell {
   display: grid;

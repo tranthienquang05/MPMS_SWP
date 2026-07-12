@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
 import java.util.*;
 import java.io.InputStream;
-import java.util.UUID;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -417,6 +416,12 @@ public class AdminController {
                 return result;
             }
 
+            if ("intask".equalsIgnoreCase(assistant.getStatus())) {
+                result.put("status", "error");
+                result.put("message", "Assistant này đang có task từ Mangaka, Vui lòng thử lại sau!");
+                return result;
+            }
+
             assistant.setMangaka(mangaka);
             assistantRepository.save(assistant);
 
@@ -468,7 +473,7 @@ public class AdminController {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  QUẢN LÝ VOTE SERIES (Admin tạo phiên, Board cast vote)
+    // QUẢN LÝ VOTE SERIES (Admin tạo phiên, Board cast vote)
     // ════════════════════════════════════════════════════════════
 
     // Lấy danh sách series cho dropdown khi tạo phiên
@@ -535,7 +540,8 @@ public class AdminController {
         }
         if ("pending_cancel".equals(seriesStatus)) {
             response.put("success", false);
-            response.put("message", "Series đang trong diện xem xét dừng (chờ hồ sơ bảo vệ), không thể tạo phiên vote mới!");
+            response.put("message",
+                    "Series đang trong diện xem xét dừng (chờ hồ sơ bảo vệ), không thể tạo phiên vote mới!");
             return response;
         }
 
@@ -608,7 +614,8 @@ public class AdminController {
                 String sname = (String) rows.get(i)[1];
 
                 Optional<Series> seriesOpt = seriesRepository.findById(sid);
-                if (seriesOpt.isEmpty()) continue;
+                if (seriesOpt.isEmpty())
+                    continue;
                 String seriesStatus = seriesOpt.get().getStatus();
 
                 // Bỏ qua series đã có kết quả cuối, đang chờ bảo vệ, hoặc đang có
@@ -659,12 +666,13 @@ public class AdminController {
         String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
         Random rand = new Random();
         StringBuilder sb = new StringBuilder("VS");
-        for (int i = 0; i < 4; i++) sb.append(chars.charAt(rand.nextInt(chars.length())));
+        for (int i = 0; i < 4; i++)
+            sb.append(chars.charAt(rand.nextInt(chars.length())));
         return sb.toString();
     }
 
     // ════════════════════════════════════════════════════════════
-    //  LỊCH SỬ HOẠT ĐỘNG USER (Admin xem)
+    // LỊCH SỬ HOẠT ĐỘNG USER (Admin xem)
     // ════════════════════════════════════════════════════════════
 
     // Search user theo keyword (fullname / username / email / id)
@@ -690,7 +698,8 @@ public class AdminController {
                     || (u.getFullname() != null && u.getFullname().toLowerCase().contains(kw))
                     || (u.getUsername() != null && u.getUsername().toLowerCase().contains(kw))
                     || (u.getEmail() != null && u.getEmail().toLowerCase().contains(kw));
-            if (!match) continue;
+            if (!match)
+                continue;
 
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("id", u.getId());
@@ -786,7 +795,8 @@ public class AdminController {
 
                 for (Submission s : submissionRepository.findByAssistant_Mangaka_IdOrderByCreatedAtDesc(mangakaId)) {
                     String assistantName = s.getAssistant() != null && s.getAssistant().getUser() != null
-                            ? s.getAssistant().getUser().getFullname() : "—";
+                            ? s.getAssistant().getUser().getFullname()
+                            : "—";
                     String pageInfo = describePage(s);
 
                     addActivity(activities, s.getCreatedAt(), "assign-task", "fa-list-check",
@@ -819,12 +829,14 @@ public class AdminController {
         if ("tantou".equals(role)) {
             Optional<TantoEditor> editorOpt = tantoEditorRepository.findByUserId(userId);
             if (editorOpt.isPresent()) {
-                for (Proposal p : proposalRepository.findByMangaka_Editor_IdOrderByCreatedAtDesc(editorOpt.get().getId())) {
+                for (Proposal p : proposalRepository
+                        .findByMangaka_Editor_IdOrderByCreatedAtDesc(editorOpt.get().getId())) {
                     if (p.getReviewedAt() == null) {
                         continue; // chưa xử lý bản thảo này thì không phải hoạt động của tantou
                     }
                     String mangakaName = p.getMangaka() != null && p.getMangaka().getUser() != null
-                            ? p.getMangaka().getUser().getFullname() : "—";
+                            ? p.getMangaka().getUser().getFullname()
+                            : "—";
                     String action = switch (p.getStatus() != null ? p.getStatus().toLowerCase() : "") {
                         case "approved" -> "Đã duyệt";
                         case "revision" -> "Đã yêu cầu chỉnh sửa";
@@ -845,7 +857,8 @@ public class AdminController {
                     continue;
                 }
                 String seriesName = pd.getChapter().getSeries() != null
-                        ? pd.getChapter().getSeries().getSeriesName() : "—";
+                        ? pd.getChapter().getSeries().getSeriesName()
+                        : "—";
                 addActivity(activities, pd.getDatePublic(), "publish-chapter", "fa-upload",
                         "Đã xuất bản chapter \"" + pd.getChapter().getChapterName() + "\" (series " + seriesName + ")");
             }
@@ -855,11 +868,16 @@ public class AdminController {
         activities.sort((a, b) -> {
             String ta = (String) a.get("timestamp");
             String tb = (String) b.get("timestamp");
-            if (ta == null) ta = "";
-            if (tb == null) tb = "";
-            if (ta.isEmpty() && tb.isEmpty()) return 0;
-            if (ta.isEmpty()) return 1;
-            if (tb.isEmpty()) return -1;
+            if (ta == null)
+                ta = "";
+            if (tb == null)
+                tb = "";
+            if (ta.isEmpty() && tb.isEmpty())
+                return 0;
+            if (ta.isEmpty())
+                return 1;
+            if (tb.isEmpty())
+                return -1;
             return tb.compareTo(ta);
         });
 
@@ -963,7 +981,8 @@ public class AdminController {
             // BƯỚC 1: VALIDATE TOÀN BỘ FILE
             // ============================================
             for (Row row : likeSheet) {
-                if (row.getRowNum() == 0) continue; // Skip header
+                if (row.getRowNum() == 0)
+                    continue; // Skip header
 
                 String seriesId = getCellStringValue(row.getCell(0));
                 String monthStr = getCellStringValue(row.getCell(1));
@@ -973,14 +992,16 @@ public class AdminController {
                 String dislikeStr = getCellStringValue(row.getCell(5));
 
                 if (seriesId.isEmpty() && monthStr.isEmpty() && yearStr.isEmpty()
-                        && viewStr.isEmpty() && likeStr.isEmpty() && dislikeStr.isEmpty()) continue;
+                        && viewStr.isEmpty() && likeStr.isEmpty() && dislikeStr.isEmpty())
+                    continue;
 
                 if (seriesId.isEmpty()) {
                     errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": SeriesID không được để trống");
                 } else {
                     Optional<Series> seriesOpt = seriesRepository.findById(seriesId);
                     if (seriesOpt.isEmpty()) {
-                        errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": SeriesID '" + seriesId + "' không tồn tại");
+                        errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": SeriesID '" + seriesId
+                                + "' không tồn tại");
                     }
                 }
 
@@ -990,11 +1011,13 @@ public class AdminController {
                     try {
                         double parsed = Double.parseDouble(monthStr.replace(",", ""));
                         if (parsed % 1 != 0) {
-                            errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": Month phải là số nguyên");
+                            errors.add(
+                                    "Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": Month phải là số nguyên");
                         } else {
                             int month = (int) parsed;
                             if (month < 1 || month > 12) {
-                                errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": Month = " + month + " không hợp lệ (phải từ 1-12)");
+                                errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": Month = " + month
+                                        + " không hợp lệ (phải từ 1-12)");
                             }
                         }
                     } catch (NumberFormatException e) {
@@ -1012,7 +1035,8 @@ public class AdminController {
                         } else {
                             int year = (int) parsed;
                             if (year <= 2000) {
-                                errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": Year = " + year + " không hợp lệ (phải > 2000)");
+                                errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": Year = " + year
+                                        + " không hợp lệ (phải > 2000)");
                             }
                         }
                     } catch (NumberFormatException e) {
@@ -1036,7 +1060,8 @@ public class AdminController {
             // ============================================
             int updatedLikeCount = 0;
             for (Row row : likeSheet) {
-                if (row.getRowNum() == 0) continue;
+                if (row.getRowNum() == 0)
+                    continue;
                 String seriesId = getCellStringValue(row.getCell(0));
                 String monthStr = getCellStringValue(row.getCell(1));
                 String yearStr = getCellStringValue(row.getCell(2));
@@ -1044,7 +1069,8 @@ public class AdminController {
                 String likeStr = getCellStringValue(row.getCell(4));
                 String dislikeStr = getCellStringValue(row.getCell(5));
                 if (seriesId.isEmpty() && monthStr.isEmpty() && yearStr.isEmpty()
-                        && viewStr.isEmpty() && likeStr.isEmpty() && dislikeStr.isEmpty()) continue;
+                        && viewStr.isEmpty() && likeStr.isEmpty() && dislikeStr.isEmpty())
+                    continue;
 
                 int month = (int) Double.parseDouble(monthStr.replace(",", ""));
                 int year = (int) Double.parseDouble(yearStr.replace(",", ""));
@@ -1104,13 +1130,15 @@ public class AdminController {
     }
 
     private String getCellStringValue(org.apache.poi.ss.usermodel.Cell cell) {
-        if (cell == null) return "";
+        if (cell == null)
+            return "";
         org.apache.poi.ss.usermodel.DataFormatter formatter = new org.apache.poi.ss.usermodel.DataFormatter();
         return formatter.formatCellValue(cell).trim();
     }
 
     private int getCellIntValue(org.apache.poi.ss.usermodel.Cell cell) {
-        if (cell == null) return 0;
+        if (cell == null)
+            return 0;
         if (cell.getCellType() == org.apache.poi.ss.usermodel.CellType.NUMERIC) {
             return (int) cell.getNumericCellValue();
         } else if (cell.getCellType() == org.apache.poi.ss.usermodel.CellType.FORMULA) {
@@ -1122,7 +1150,8 @@ public class AdminController {
         } else {
             org.apache.poi.ss.usermodel.DataFormatter formatter = new org.apache.poi.ss.usermodel.DataFormatter();
             String val = formatter.formatCellValue(cell).trim();
-            if (val.isEmpty()) return 0;
+            if (val.isEmpty())
+                return 0;
             try {
                 return (int) Double.parseDouble(val); // Handle cases like "1.0"
             } catch (NumberFormatException e) {
@@ -1156,9 +1185,11 @@ public class AdminController {
 
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.add("Content-Disposition", "attachment; filename=template_import_manga.xlsx");
-            return new org.springframework.http.ResponseEntity<>(out.toByteArray(), headers, org.springframework.http.HttpStatus.OK);
+            return new org.springframework.http.ResponseEntity<>(out.toByteArray(), headers,
+                    org.springframework.http.HttpStatus.OK);
         } catch (Exception e) {
-            return new org.springframework.http.ResponseEntity<>(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
+            return new org.springframework.http.ResponseEntity<>(
+                    org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

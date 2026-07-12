@@ -10,9 +10,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SubmissionRepository extends JpaRepository<Submission, String> {
     Optional<Submission> findTopByOrderByIdDesc();
+
     boolean existsByPageIdIdAndStatus(
-        String pageId,
-        String status);
+            String pageId,
+            String status);
 
     // 1 trang có thể có nhiều submission theo thời gian (nhiều vòng giao việc
     // khác nhau, cho nhiều assistant khác nhau) — luôn lấy bản mới nhất làm task
@@ -25,14 +26,15 @@ public interface SubmissionRepository extends JpaRepository<Submission, String> 
 
     List<Submission> findByStatusAndDeadlineBefore(String status, LocalDateTime deadline);
 
-
     List<Submission> findByAssistant_IdAndStatus(
-        String assistantId,
-        String status);
+            String assistantId,
+            String status);
 
     List<Submission> findByAssistant_Id(String id);
 
     List<Submission> findByAssistant_Mangaka_IdOrderByCreatedAtDesc(String mangakaId);
 
     List<Submission> findByAssistant_Mangaka_IdAndStatus(String mangakaId, String status);
+
+    List<Submission> findByPageIdId(String pageId); 
 }

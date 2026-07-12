@@ -1,803 +1,675 @@
 <!doctype html>
 <html lang="vi" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Quản trị viên</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="../static/css/all.css"
-      th:href="@{/css/all.css}"
-    />
-    <link
-      rel="stylesheet"
-      href="../static/css/icon.css"
-      th:href="@{/css/icon.css}"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-  </head>
 
-  <body th:attr="data-user-id=${currentUserId}">
-    <div class="header">
-      <div class="logo">
-        <div class="brand-stack">
-          <span class="brand-word">SANKYUU</span>
-          <p class="name">Quản trị viên hệ thống</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <a th:href="@{/login/logout}">
-          <button type="button" class="btn-icon" aria-label="Logout">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-          </button>
-        </a>
+<head>
+  <meta charset="UTF-8" />
+  <title>Quản trị viên</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="../static/css/all.css" th:href="@{/css/all.css}" />
+  <link rel="stylesheet" href="../static/css/icon.css" th:href="@{/css/icon.css}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body th:attr="data-user-id=${currentUserId}">
+  <div class="header">
+    <div class="logo">
+      <div class="brand-stack">
+        <span class="brand-word">SANKYUU</span>
+        <p class="name">Quản trị viên hệ thống</p>
       </div>
     </div>
-
-    <ul class="topnav">
-      <li>
-        <button
-          title="Tài khoản"
-          aria-label="Tài khoản"
-          data-nav-label="Tài khoản"
-          type="button"
-          class="btn-icon"
-          onclick="openTab('tab-accounts')"
-        >
-          <i class="icon-3user"></i>
+    <div class="header-actions">
+      <a th:href="@{/login/logout}">
+        <button type="button" class="btn-icon" aria-label="Logout">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
         </button>
-      </li>
-      <li>
-        <button
-          title="Phân quyền"
-          aria-label="Phân quyền"
-          data-nav-label="Phân quyền"
-          type="button"
-          class="btn-icon"
-          onclick="openTab('tab-relations')"
-        >
-          <i class="icon-link"></i>
-        </button>
-      </li>
-      <li>
-        <button
-          title="Bình chọn"
-          aria-label="Bình chọn"
-          data-nav-label="Bình chọn"
-          type="button"
-          class="btn-icon"
-          onclick="openTab('tab-vote')"
-        >
-          <i class="icon-vote"></i>
-        </button>
-      </li>
-      <li>
-        <button
-          title="Lịch sử"
-          aria-label="Lịch sử"
-          data-nav-label="Lịch sử"
-          type="button"
-          class="btn-icon"
-          onclick="openTab('tab-history')"
-        >
-          <i class="icon-history"></i>
-        </button>
-      </li>
-      <li>
-        <button
-          title="Xuất bản"
-          aria-label="Xuất bản"
-          data-nav-label="Xuất bản"
-          type="button"
-          class="btn-icon"
-          onclick="openTab('tab-publish')"
-        >
-          <i class="fa-solid fa-upload"></i>
-        </button>
-      </li>
-      <li class="u-inline-style-001">
-        <button
-          aria-label="Tin nhắn"
-          data-nav-label="Tin nhắn"
-          type="button"
-          class="btn-icon"
-          onclick="openTab('tab-chat')"
-          title="Tin nhắn"
-        >
-          <i class="icon-chat"></i>
-        </button>
-        <span id="chatTabBadge" class="badge u-inline-style-002"></span>
-      </li>
-      <li>
-        <button
-          aria-label="Import Excel"
-          data-nav-label="Import Excel"
-          type="button"
-          class="btn-icon"
-          onclick="openTab('tab-import')"
-          title="Import Excel"
-        >
-          <i class="fa-solid fa-file-excel"></i>
-        </button>
-      </li>
-    </ul>
+      </a>
+    </div>
+  </div>
 
-    <div id="toast"></div>
-    <!-- Tab content -->
-    <div class="flex-container">
-      <!-- Tab quản lý -->
-      <div id="tab-accounts" class="tab-pane active">
-        <h2>Tài khoản</h2>
-        <div class="section-card">
-          <h3><i class="icon-3user"></i>Quản lý tài khoản</h3>
+  <ul class="topnav">
+    <li>
+      <button title="Tài khoản" aria-label="Tài khoản" data-nav-label="Tài khoản" type="button" class="btn-icon"
+        onclick="openTab('tab-accounts')">
+        <i class="icon-3user"></i>
+      </button>
+    </li>
+    <li>
+      <button title="Phân quyền" aria-label="Phân quyền" data-nav-label="Phân quyền" type="button" class="btn-icon"
+        onclick="openTab('tab-relations')">
+        <i class="icon-link"></i>
+      </button>
+    </li>
+    <li>
+      <button title="Bình chọn" aria-label="Bình chọn" data-nav-label="Bình chọn" type="button" class="btn-icon"
+        onclick="openTab('tab-vote')">
+        <i class="icon-vote"></i>
+      </button>
+    </li>
+    <li>
+      <button title="Lịch sử" aria-label="Lịch sử" data-nav-label="Lịch sử" type="button" class="btn-icon"
+        onclick="openTab('tab-history')">
+        <i class="icon-history"></i>
+      </button>
+    </li>
+    <li>
+      <button title="Xuất bản" aria-label="Xuất bản" data-nav-label="Xuất bản" type="button" class="btn-icon"
+        onclick="openTab('tab-publish')">
+        <i class="fa-solid fa-upload"></i>
+      </button>
+    </li>
+    <li class="u-inline-style-001">
+      <button aria-label="Tin nhắn" data-nav-label="Tin nhắn" type="button" class="btn-icon"
+        onclick="openTab('tab-chat')" title="Tin nhắn">
+        <i class="icon-chat"></i>
+      </button>
+      <span id="chatTabBadge" class="badge u-inline-style-002"></span>
+    </li>
+    <li>
+      <button aria-label="Import Excel" data-nav-label="Import Excel" type="button" class="btn-icon"
+        onclick="openTab('tab-import')" title="Import Excel">
+        <i class="fa-solid fa-file-excel"></i>
+      </button>
+    </li>
+  </ul>
 
-          <div class="form-inline mb-10">
-            <div class="field">
-              <label>Lọc theo vai trò</label>
-              <select id="filter-role" onchange="loadAccounts()">
-                <option value="">Tất cả</option>
-                <option value="admin">Admin</option>
-                <option value="mangaka">Mangaka</option>
-                <option value="assistant">Assistant</option>
-                <option value="tantou">Tantou</option>
-                <option value="board">Board</option>
-              </select>
-            </div>
-            <div class="flex-end-layout">
-              <button class="btn-sm btn-primary" onclick="openCreateModal()">
-                <i class="icon-plus"></i>Tạo tài khoản
-              </button>
-            </div>
+  <div id="toast"></div>
+  <!-- Tab content -->
+  <div class="flex-container">
+    <!-- Tab quản lý -->
+    <div id="tab-accounts" class="tab-pane active">
+      <h2>Tài khoản</h2>
+      <div class="section-card">
+        <h3><i class="icon-3user"></i>Quản lý tài khoản</h3>
+
+        <div class="form-inline mb-10">
+          <div class="field">
+            <label>Lọc theo vai trò</label>
+            <select id="filter-role" onchange="loadAccounts()">
+              <option value="">Tất cả</option>
+              <option value="admin">Admin</option>
+              <option value="mangaka">Mangaka</option>
+              <option value="assistant">Assistant</option>
+              <option value="tantou">Tantou</option>
+              <option value="board">Board</option>
+            </select>
           </div>
-
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Họ tên</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Vai trò</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody id="accounts-tbody">
-              <tr>
-                <td colspan="6" class="text-center-muted">Đang tải...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="tab-relations" class="tab-pane">
-        <h2>Phân công</h2>
-        <div class="section-card">
-          <h3><i class="icon-link"></i>Tantou phụ trách Mangaka</h3>
-
-          <div class="form-inline">
-            <div class="field">
-              <label>Mangaka</label>
-              <select id="rel-mangaka-tanto-mgk"></select>
-            </div>
-            <div class="field">
-              <label>Tantou Editor</label>
-              <select id="rel-mangaka-tanto-ed"></select>
-            </div>
-            <div class="flex-end-layout">
-              <button class="btn-sm btn-primary" onclick="assignMangakaTanto()">
-                <i class="icon-check"></i>Phân công
-              </button>
-            </div>
-          </div>
-
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Mangaka</th>
-                <th>Tantou Editor</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="rel-mt-tbody">
-              <tr>
-                <td colspan="3" class="text-center-muted">Đang tải...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="section-card">
-          <h3><i class="icon-link"></i>Assistant làm việc với Mangaka</h3>
-
-          <div class="form-inline">
-            <div class="field">
-              <label>Assistant</label>
-              <select id="rel-asst-mgk-asst"></select>
-            </div>
-            <div class="field">
-              <label>Mangaka</label>
-              <select id="rel-asst-mgk-mgk"></select>
-            </div>
-            <div class="flex-end-layout">
-              <button
-                class="btn-sm btn-primary"
-                onclick="assignAssistantMangaka()"
-              >
-                <i class="icon-check"></i>Phân công
-              </button>
-            </div>
-          </div>
-
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Assistant</th>
-                <th>Mangaka</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="rel-am-tbody">
-              <tr>
-                <td colspan="3" class="text-center-muted">Đang tải...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="tab-vote" class="tab-pane">
-        <h2>Tạo vote</h2>
-        <div class="section-card">
-          <h3>Bảng xếp hạng series</h3>
-
-          <div class="form-inline">
-            <div class="field">
-              <label>Tháng</label>
-              <select
-                id="vote-rank-month"
-                onchange="if(this.value!='0') document.getElementById('vote-rank-quarter').value='0'"
-              >
-                <option value="0">-- Cả năm --</option>
-                <option value="1">Tháng 1</option>
-                <option value="2">Tháng 2</option>
-                <option value="3">Tháng 3</option>
-                <option value="4">Tháng 4</option>
-                <option value="5">Tháng 5</option>
-                <option value="6">Tháng 6</option>
-                <option value="7">Tháng 7</option>
-                <option value="8">Tháng 8</option>
-                <option value="9">Tháng 9</option>
-                <option value="10">Tháng 10</option>
-                <option value="11">Tháng 11</option>
-                <option value="12">Tháng 12</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Quý</label>
-              <select
-                id="vote-rank-quarter"
-                onchange="if(this.value!='0') document.getElementById('vote-rank-month').value='0'"
-              >
-                <option value="0">-- Tất cả --</option>
-                <option value="1">Quý 1 (T1-T3)</option>
-                <option value="2">Quý 2 (T4-T6)</option>
-                <option value="3">Quý 3 (T7-T9)</option>
-                <option value="4">Quý 4 (T10-T12)</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Năm</label>
-              <select id="vote-rank-year">
-                <option value="2026">2026</option>
-                <option value="2025">2025</option>
-              </select>
-            </div>
-            <div class="flex-end-layout">
-              <button class="btn-sm btn-primary" onclick="loadVoteRanking()">
-                <i class="icon-glass"></i>Xem ranking
-              </button>
-            </div>
-          </div>
-
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Hạng</th>
-                <th>Mã Series</th>
-                <th>Tên Series</th>
-                <th>Lượt xem</th>
-                <th>Like</th>
-                <th>Dislike</th>
-              </tr>
-            </thead>
-            <tbody id="vote-ranking-tbody">
-              <tr>
-                <td colspan="6" class="text-center-muted">
-                  Bấm "Xem ranking" để tải dữ liệu.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="section-card">
-          <h3>Phiên vote đang mở</h3>
-
-          <div class="form-inline mb-10">
-            <div class="flex-wrap-layout">
-              <button
-                class="btn-sm btn-danger"
-                onclick="createBottomVoteSessionsAdmin()"
-              >
-                <i class="icon-danger"></i>Tạo vote hủy 3 series tệ nhất năm
-              </button>
-              <button
-                class="btn-sm btn-primary"
-                onclick="openCreateVoteModalAdmin()"
-              >
-                <i class="icon-plus"></i>Tự chọn tạo vote
-              </button>
-            </div>
-          </div>
-
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Phiên</th>
-                <th>Series</th>
-                <th>Loại Vote</th>
-                <th>Người Tạo</th>
-                <th>Tiến Độ</th>
-                <th>Kết Quả</th>
-              </tr>
-            </thead>
-            <tbody id="vote-sessions-tbody">
-              <tr>
-                <td colspan="6" class="text-center-muted">Đang tải...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="tab-publish" class="tab-pane">
-        <h2>Xuất bản chapter</h2>
-        <div class="section-card">
-          <h3>Chapter đã được Tantou duyệt, chờ xuất bản</h3>
-
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Series</th>
-                <th>Chapter</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody id="publish-chapters-tbody">
-              <tr>
-                <td colspan="3" class="text-center-muted">Đang tải...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="tab-history" class="tab-pane">
-        <h2>Lịch sử hoạt động</h2>
-        <div class="section-card">
-          <h3>Tra cứu người dùng</h3>
-
-          <div class="form-inline">
-            <div class="field">
-              <label>Lọc theo họ tên / username / email / ID</label>
-              <input
-                id="history-search-input"
-                placeholder="Gõ keyword để thu hẹp danh sách..."
-              />
-            </div>
-            <div class="flex-end-layout">
-              <button class="btn-sm btn-primary" onclick="searchUsersHistory()">
-                <i class="icon-glass"></i>Tải lại
-              </button>
-            </div>
-          </div>
-
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Họ tên</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Vai trò</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody id="history-users-tbody">
-              <tr>
-                <td colspan="6" class="text-center-muted">Đang tải...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="tab-chat" class="tab-pane">
-        <h2>Tin nhắn</h2>
-        <div class="chat-layout">
-          <div class="chat-contact-list" id="chatContactList">
-            <div class="chat-empty">Đang tải danh sách liên hệ...</div>
-          </div>
-          <div class="chat-thread">
-            <div class="chat-thread-header" id="chatThreadHeader">
-              Chọn một liên hệ để bắt đầu trò chuyện
-            </div>
-            <div class="chat-messages" id="chatMessages"></div>
-            <div class="chat-input-bar">
-              <input
-                type="text"
-                id="chatInput"
-                placeholder="Nhập tin nhắn..."
-                disabled
-              />
-              <button type="button" id="chatSendBtn" disabled></button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tab Import Excel -->
-      <div id="tab-import" class="tab-pane">
-        <h2>Import dữ liệu Excel</h2>
-        <div class="section-card">
-          <h3>Upload file Excel (.xlsx)</h3>
-          <p class="text-muted-small">
-            Tải lên file Excel để cập nhật số lượt xem của Chapter và phiếu
-            Like/Dislike.
-          </p>
-          <div class="u-inline-style-003">
-            <input
-              type="file"
-              id="excel-file"
-              accept=".xlsx"
-              onchange="updateFileName()"
-              class="u-inline-style-002"
-            />
-            <button
-              class="btn-sm btn-cancel"
-              onclick="document.getElementById('excel-file').click()"
-            >
-              Chọn file
-            </button>
-            <span id="excel-file-name" class="u-inline-style-004"
-              >Chưa chọn file nào</span
-            >
-          </div>
-
-          <div class="form-inline mb-10">
-            <button class="btn-sm btn-primary" onclick="uploadExcel()">
-              Tải lên và Xử lý
+          <div class="flex-end-layout">
+            <button class="btn-sm btn-primary" onclick="openCreateModal()">
+              <i class="icon-plus"></i>Tạo tài khoản
             </button>
           </div>
-
-          <div id="import-result" class="u-inline-style-005"></div>
         </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Họ tên</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Vai trò</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="accounts-tbody">
+            <tr>
+              <td colspan="6" class="text-center-muted">Đang tải...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <div id="modal-create" class="modal-overlay">
-      <div class="modal-box">
-        <h3>Tạo tài khoản mới</h3>
+    <div id="tab-relations" class="tab-pane">
+      <h2>Phân công</h2>
+      <div class="section-card">
+        <h3><i class="icon-link"></i>Tantou phụ trách Mangaka</h3>
 
-        <div class="field">
-          <label>Họ tên <span class="text-danger-span">*</span></label>
-          <input id="c-fullname" placeholder="Nguyễn Văn A" />
-        </div>
-        <div class="field">
-          <label>Username <span class="text-danger-span">*</span></label>
-          <input id="c-username" placeholder="username123" />
-        </div>
-        <div class="field">
-          <label>Email <span class="text-danger-span">*</span></label>
-          <input id="c-email" type="email" placeholder="email@example.com" />
-        </div>
-        <div class="field">
-          <label>Password <span class="text-danger-span">*</span></label>
-          <input id="c-password" type="password" placeholder="••••••••" />
-        </div>
-        <div class="field">
-          <label>Vai trò <span class="text-danger-span">*</span></label>
-          <select id="c-role" onchange="onRoleChange()">
-            <option value="">-- Chọn vai trò --</option>
-            <option value="admin">Admin</option>
-            <option value="mangaka">Mangaka</option>
-            <option value="assistant">Assistant</option>
-            <option value="tantou">Tantou</option>
-            <option value="board">Board</option>
-          </select>
-        </div>
-
-        <div id="extra-mangaka">
+        <div class="form-inline">
           <div class="field">
-            <label
-              >Phụ trách bởi Tantou Editor
-              <span class="text-danger-span">*</span></label
-            >
-            <select id="c-editorId"></select>
+            <label>Mangaka</label>
+            <select id="rel-mangaka-tanto-mgk"></select>
+          </div>
+          <div class="field">
+            <label>Tantou Editor</label>
+            <select id="rel-mangaka-tanto-ed"></select>
+          </div>
+          <div class="flex-end-layout">
+            <button class="btn-sm btn-primary" onclick="assignMangakaTanto()">
+              <i class="icon-check"></i>Phân công
+            </button>
           </div>
         </div>
 
-        <div id="extra-assistant">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Mangaka</th>
+              <th>Tantou Editor</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="rel-mt-tbody">
+            <tr>
+              <td colspan="3" class="text-center-muted">Đang tải...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-card">
+        <h3><i class="icon-link"></i>Assistant làm việc với Mangaka</h3>
+
+        <div class="form-inline">
           <div class="field">
-            <label
-              >Làm việc với Mangaka
-              <span class="text-danger-span">*</span></label
-            >
-            <select id="c-mangakaId"></select>
+            <label>Assistant</label>
+            <select id="rel-asst-mgk-asst"></select>
           </div>
           <div class="field">
-            <label>Lương mỗi task (VNĐ)</label>
-            <input
-              id="c-salaryPerTask"
-              type="number"
-              placeholder="0"
-              value="0"
-            />
+            <label>Mangaka</label>
+            <select id="rel-asst-mgk-mgk"></select>
+          </div>
+          <div class="flex-end-layout">
+            <button class="btn-sm btn-primary" onclick="assignAssistantMangaka()">
+              <i class="icon-check"></i>Phân công
+            </button>
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button
-            class="btn-sm btn-cancel"
-            onclick="closeModal('modal-create')"
-          >
-            Hủy
-          </button>
-          <button class="btn-sm btn-primary" onclick="createAccount()">
-            Tạo
-          </button>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Assistant</th>
+              <th>Mangaka</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="rel-am-tbody">
+            <tr>
+              <td colspan="3" class="text-center-muted">Đang tải...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-vote" class="tab-pane">
+      <h2>Tạo vote</h2>
+      <div class="section-card">
+        <h3>Bảng xếp hạng series</h3>
+
+        <div class="form-inline">
+          <div class="field">
+            <label>Tháng</label>
+            <select id="vote-rank-month"
+              onchange="if(this.value!='0') document.getElementById('vote-rank-quarter').value='0'">
+              <option value="0">-- Cả năm --</option>
+              <option value="1">Tháng 1</option>
+              <option value="2">Tháng 2</option>
+              <option value="3">Tháng 3</option>
+              <option value="4">Tháng 4</option>
+              <option value="5">Tháng 5</option>
+              <option value="6">Tháng 6</option>
+              <option value="7">Tháng 7</option>
+              <option value="8">Tháng 8</option>
+              <option value="9">Tháng 9</option>
+              <option value="10">Tháng 10</option>
+              <option value="11">Tháng 11</option>
+              <option value="12">Tháng 12</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Quý</label>
+            <select id="vote-rank-quarter"
+              onchange="if(this.value!='0') document.getElementById('vote-rank-month').value='0'">
+              <option value="0">-- Tất cả --</option>
+              <option value="1">Quý 1 (T1-T3)</option>
+              <option value="2">Quý 2 (T4-T6)</option>
+              <option value="3">Quý 3 (T7-T9)</option>
+              <option value="4">Quý 4 (T10-T12)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Năm</label>
+            <select id="vote-rank-year">
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+            </select>
+          </div>
+          <div class="flex-end-layout">
+            <button class="btn-sm btn-primary" onclick="loadVoteRanking()">
+              <i class="icon-glass"></i>Xem ranking
+            </button>
+          </div>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Hạng</th>
+              <th>Mã Series</th>
+              <th>Tên Series</th>
+              <th>Lượt xem</th>
+              <th>Like</th>
+              <th>Dislike</th>
+            </tr>
+          </thead>
+          <tbody id="vote-ranking-tbody">
+            <tr>
+              <td colspan="6" class="text-center-muted">
+                Bấm "Xem ranking" để tải dữ liệu.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-card">
+        <h3>Phiên vote đang mở</h3>
+
+        <div class="form-inline mb-10">
+          <div class="flex-wrap-layout">
+            <button class="btn-sm btn-danger" onclick="createBottomVoteSessionsAdmin()">
+              <i class="icon-danger"></i>Tạo vote hủy 3 series tệ nhất năm
+            </button>
+            <button class="btn-sm btn-primary" onclick="openCreateVoteModalAdmin()">
+              <i class="icon-plus"></i>Tự chọn tạo vote
+            </button>
+          </div>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Phiên</th>
+              <th>Series</th>
+              <th>Loại Vote</th>
+              <th>Người Tạo</th>
+              <th>Tiến Độ</th>
+              <th>Kết Quả</th>
+            </tr>
+          </thead>
+          <tbody id="vote-sessions-tbody">
+            <tr>
+              <td colspan="6" class="text-center-muted">Đang tải...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-publish" class="tab-pane">
+      <h2>Xuất bản chapter</h2>
+      <div class="section-card">
+        <h3>Chapter đã được Tantou duyệt, chờ xuất bản</h3>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Series</th>
+              <th>Chapter</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="publish-chapters-tbody">
+            <tr>
+              <td colspan="3" class="text-center-muted">Đang tải...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-history" class="tab-pane">
+      <h2>Lịch sử hoạt động</h2>
+      <div class="section-card">
+        <h3>Tra cứu người dùng</h3>
+
+        <div class="form-inline">
+          <div class="field">
+            <label>Lọc theo họ tên / username / email / ID</label>
+            <input id="history-search-input" placeholder="Gõ keyword để thu hẹp danh sách..." />
+          </div>
+          <div class="flex-end-layout">
+            <button class="btn-sm btn-primary" onclick="searchUsersHistory()">
+              <i class="icon-glass"></i>Tải lại
+            </button>
+          </div>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Họ tên</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Vai trò</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="history-users-tbody">
+            <tr>
+              <td colspan="6" class="text-center-muted">Đang tải...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-chat" class="tab-pane">
+      <h2>Tin nhắn</h2>
+      <div class="chat-layout">
+        <div class="chat-contact-list" id="chatContactList">
+          <div class="chat-empty">Đang tải danh sách liên hệ...</div>
+        </div>
+        <div class="chat-thread">
+          <div class="chat-thread-header" id="chatThreadHeader">
+            Chọn một liên hệ để bắt đầu trò chuyện
+          </div>
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-bar">
+            <input type="text" id="chatInput" placeholder="Nhập tin nhắn..." disabled />
+            <button type="button" id="chatSendBtn" disabled></button>
+          </div>
         </div>
       </div>
     </div>
 
-    <div id="modal-edit" class="modal-overlay">
-      <div class="modal-box">
-        <h3>Sửa tài khoản</h3>
-
-        <input type="hidden" id="e-id" />
-        <div class="field">
-          <label>Họ tên</label>
-          <input id="e-fullname" />
-        </div>
-        <div class="field">
-          <label>Username</label>
-          <input id="e-username" />
-        </div>
-        <div class="field">
-          <label>Email</label>
-          <input id="e-email" type="email" />
-        </div>
-        <div class="field">
-          <label
-            >Password
-            <span class="text-muted-small">(để trống = giữ nguyên)</span></label
-          >
-          <input id="e-password" type="password" placeholder="••••••••" />
-        </div>
-
-        <div class="modal-footer">
-          <button class="btn-sm btn-cancel" onclick="closeModal('modal-edit')">
-            Hủy
+    <!-- Tab Import Excel -->
+    <div id="tab-import" class="tab-pane">
+      <h2>Import dữ liệu Excel</h2>
+      <div class="section-card">
+        <h3>Upload file Excel (.xlsx)</h3>
+        <p class="text-muted-small">
+          Tải lên file Excel để cập nhật số lượt xem của Chapter và phiếu
+          Like/Dislike.
+        </p>
+        <div class="u-inline-style-003">
+          <input type="file" id="excel-file" accept=".xlsx" onchange="updateFileName()" class="u-inline-style-002" />
+          <button class="btn-sm btn-cancel" onclick="document.getElementById('excel-file').click()">
+            Chọn file
           </button>
-          <button class="btn-sm btn-primary" onclick="saveEdit()">Lưu</button>
+          <span id="excel-file-name" class="u-inline-style-004">Chưa chọn file nào</span>
         </div>
+
+        <div class="form-inline mb-10">
+          <button class="btn-sm btn-primary" onclick="uploadExcel()">
+            Tải lên và Xử lý
+          </button>
+        </div>
+
+        <div id="import-result" class="u-inline-style-005"></div>
       </div>
     </div>
+  </div>
 
-    <div id="modal-delete" class="modal-overlay">
-      <div class="modal-box modal-width-360">
-        <h3>Xác nhận xóa</h3>
-        <p id="delete-confirm-msg" class="p-delete-msg"></p>
-        <p class="text-muted-small">Hành động này không thể hoàn tác.</p>
-        <input type="hidden" id="delete-id" />
-        <div class="modal-footer">
-          <button
-            class="btn-sm btn-cancel"
-            onclick="closeModal('modal-delete')"
-          >
-            Hủy
-          </button>
-          <button class="btn-sm btn-danger" onclick="confirmDelete()">
-            Xóa
-          </button>
+  <div id="modal-create" class="modal-overlay">
+    <div class="modal-box">
+      <h3>Tạo tài khoản mới</h3>
+
+      <div class="field">
+        <label>Họ tên <span class="text-danger-span">*</span></label>
+        <input id="c-fullname" placeholder="Nguyễn Văn A" />
+      </div>
+      <div class="field">
+        <label>Username <span class="text-danger-span">*</span></label>
+        <input id="c-username" placeholder="username123" />
+      </div>
+      <div class="field">
+        <label>Email <span class="text-danger-span">*</span></label>
+        <input id="c-email" type="email" placeholder="email@example.com" />
+      </div>
+      <div class="field">
+        <label>Password <span class="text-danger-span">*</span></label>
+        <input id="c-password" type="password" placeholder="••••••••" />
+      </div>
+      <div class="field">
+        <label>Vai trò <span class="text-danger-span">*</span></label>
+        <select id="c-role" onchange="onRoleChange()">
+          <option value="">-- Chọn vai trò --</option>
+          <option value="admin">Admin</option>
+          <option value="mangaka">Mangaka</option>
+          <option value="assistant">Assistant</option>
+          <option value="tantou">Tantou</option>
+          <option value="board">Board</option>
+        </select>
+      </div>
+
+      <div id="extra-mangaka">
+        <div class="field">
+          <label>Phụ trách bởi Tantou Editor
+            <span class="text-danger-span">*</span></label>
+          <select id="c-editorId"></select>
         </div>
       </div>
-    </div>
 
-    <div id="modal-change-tanto" class="modal-overlay">
-      <div class="modal-box modal-width-380">
-        <h3>Đổi Tantou Editor</h3>
-        <input type="hidden" id="ct-mangakaId" />
+      <div id="extra-assistant">
         <div class="field">
-          <label>Mangaka</label>
-          <input id="ct-mangaka-name" disabled class="input-disabled-muted" />
+          <label>Làm việc với Mangaka
+            <span class="text-danger-span">*</span></label>
+          <select id="c-mangakaId"></select>
         </div>
         <div class="field">
-          <label
-            >Tantou Editor mới <span class="text-danger-span">*</span></label
-          >
-          <select id="ct-editorId"></select>
-        </div>
-        <div class="modal-footer">
-          <button
-            class="btn-sm btn-cancel"
-            onclick="closeModal('modal-change-tanto')"
-          >
-            Hủy
-          </button>
-          <button class="btn-sm btn-primary" onclick="confirmChangeTanto()">
-            Lưu
-          </button>
+          <label>Lương mỗi task (VNĐ)</label>
+          <input id="c-salaryPerTask" type="number" placeholder="0" value="0" />
         </div>
       </div>
-    </div>
 
-    <div id="modal-change-mangaka" class="modal-overlay">
-      <div class="modal-box modal-width-380">
-        <h3>Đổi Mangaka</h3>
-        <input type="hidden" id="cm-assistantId" />
-        <div class="field">
-          <label>Assistant</label>
-          <input id="cm-assistant-name" disabled class="input-disabled-muted" />
-        </div>
-        <div class="field">
-          <label>Mangaka mới <span class="text-danger-span">*</span></label>
-          <select id="cm-mangakaId"></select>
-        </div>
-        <div class="modal-footer">
-          <button
-            class="btn-sm btn-cancel"
-            onclick="closeModal('modal-change-mangaka')"
-          >
-            Hủy
-          </button>
-          <button class="btn-sm btn-primary" onclick="confirmChangeMangaka()">
-            Lưu
-          </button>
-        </div>
+      <div class="modal-footer">
+        <button class="btn-sm btn-cancel" onclick="closeModal('modal-create')">
+          Hủy
+        </button>
+        <button class="btn-sm btn-primary" onclick="createAccount()">
+          Tạo
+        </button>
       </div>
     </div>
+  </div>
 
-    <div id="modal-create-vote" class="modal-overlay">
-      <div class="modal-box">
-        <h3>Tạo phiên vote mới</h3>
+  <div id="modal-edit" class="modal-overlay">
+    <div class="modal-box">
+      <h3>Sửa tài khoản</h3>
 
-        <div class="field">
-          <label>Loại vote <span class="text-danger-span">*</span></label>
-          <select id="cv-voteType" onchange="updateVoteTypeHintAdmin()">
-            <option value="stop">Vote Dừng Series</option>
-            <option value="reward">Vote Khen Thưởng Series</option>
-          </select>
-          <p id="cv-voteType-hint" class="text-hint-stop">
-            Nếu ≥ 60% board đồng ý → Series sẽ bị DỪNG phát hành.
-          </p>
-        </div>
+      <input type="hidden" id="e-id" />
+      <div class="field">
+        <label>Họ tên</label>
+        <input id="e-fullname" />
+      </div>
+      <div class="field">
+        <label>Username</label>
+        <input id="e-username" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input id="e-email" type="email" />
+      </div>
+      <div class="field">
+        <label>Password
+          <span class="text-muted-small">(để trống = giữ nguyên)</span></label>
+        <input id="e-password" type="password" placeholder="••••••••" />
+      </div>
 
-        <div class="field">
-          <label>Chọn series <span class="text-danger-span">*</span></label>
-          <select id="cv-seriesId">
-            <option value="">-- Đang tải... --</option>
-          </select>
-        </div>
-
-        <div class="field" id="cv-reason-field">
-          <label id="cv-reason-label">Lý do <span class="text-danger-span">*</span></label>
-          <textarea
-            id="cv-reason"
-            rows="3"
-            maxlength="500"
-            placeholder="Vd: 3 tháng liên tiếp tỉ lệ xem tệ..."
-          ></textarea>
-        </div>
-
-        <div class="modal-footer">
-          <button
-            class="btn-sm btn-cancel"
-            onclick="closeModal('modal-create-vote')"
-          >
-            Hủy
-          </button>
-          <button
-            class="btn-sm btn-primary"
-            onclick="submitCreateVoteSessionAdmin()"
-          >
-            Tạo Vote
-          </button>
-        </div>
+      <div class="modal-footer">
+        <button class="btn-sm btn-cancel" onclick="closeModal('modal-edit')">
+          Hủy
+        </button>
+        <button class="btn-sm btn-primary" onclick="saveEdit()">Lưu</button>
       </div>
     </div>
+  </div>
 
-    <div id="modal-activity" class="modal-overlay">
-      <div class="modal-box modal-box-wide">
-        <h3>Lịch sử hoạt động: <span id="activity-user-name"></span></h3>
-        <p id="activity-user-info" class="text-muted-info"></p>
-
-        <div class="activity-list-container">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th class="col-time">Thời gian</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody id="activity-tbody"></tbody>
-          </table>
-        </div>
-
-        <div class="modal-footer">
-          <button
-            class="btn-sm btn-cancel"
-            onclick="closeModal('modal-activity')"
-          >
-            Đóng
-          </button>
-        </div>
+  <div id="modal-delete" class="modal-overlay">
+    <div class="modal-box modal-width-360">
+      <h3>Xác nhận xóa</h3>
+      <p id="delete-confirm-msg" class="p-delete-msg"></p>
+      <p class="text-muted-small">Hành động này không thể hoàn tác.</p>
+      <input type="hidden" id="delete-id" />
+      <div class="modal-footer">
+        <button class="btn-sm btn-cancel" onclick="closeModal('modal-delete')">
+          Hủy
+        </button>
+        <button class="btn-sm btn-danger" onclick="confirmDelete()">
+          Xóa
+        </button>
       </div>
     </div>
-    <script
-      defer
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    ></script>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+  <div id="modal-change-tanto" class="modal-overlay">
+    <div class="modal-box modal-width-380">
+      <h3>Đổi Tantou Editor</h3>
+      <input type="hidden" id="ct-mangakaId" />
+      <div class="field">
+        <label>Mangaka</label>
+        <input id="ct-mangaka-name" disabled class="input-disabled-muted" />
+      </div>
+      <div class="field">
+        <label>Tantou Editor mới <span class="text-danger-span">*</span></label>
+        <select id="ct-editorId"></select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-sm btn-cancel" onclick="closeModal('modal-change-tanto')">
+          Hủy
+        </button>
+        <button class="btn-sm btn-primary" onclick="confirmChangeTanto()">
+          Lưu
+        </button>
+      </div>
+    </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <div id="modal-change-mangaka" class="modal-overlay">
+    <div class="modal-box modal-width-380">
+      <h3>Đổi Mangaka</h3>
+      <input type="hidden" id="cm-assistantId" />
+      <div class="field">
+        <label>Assistant</label>
+        <input id="cm-assistant-name" disabled class="input-disabled-muted" />
+      </div>
+      <div class="field">
+        <label>Mangaka mới <span class="text-danger-span">*</span></label>
+        <select id="cm-mangakaId"></select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-sm btn-cancel" onclick="closeModal('modal-change-mangaka')">
+          Hủy
+        </button>
+        <button class="btn-sm btn-primary" onclick="confirmChangeMangaka()">
+          Lưu
+        </button>
+      </div>
+    </div>
+  </div>
 
-    <script th:src="@{/js/chat.js}"></script>
+  <div id="modal-create-vote" class="modal-overlay">
+    <div class="modal-box">
+      <h3>Tạo phiên vote mới</h3>
 
-    <script>
-      // ════════════════════════════════════════════
-      // UTILS
-      // ════════════════════════════════════════════
-      function openTab(id) {
-        document
-          .querySelectorAll(".tab-pane")
-          .forEach((p) => p.classList.remove("active"));
-        document.getElementById(id).classList.add("active");
-        if (id === "tab-relations") loadRelations();
-        if (id === "tab-vote") loadVoteSessionsAdmin();
-        if (id === "tab-history") initHistoryTab();
-        if (id === "tab-publish") loadPendingPublishChapters();
-      }
+      <div class="field">
+        <label>Loại vote <span class="text-danger-span">*</span></label>
+        <select id="cv-voteType" onchange="updateVoteTypeHintAdmin()">
+          <option value="stop">Vote Dừng Series</option>
+          <option value="reward">Vote Khen Thưởng Series</option>
+        </select>
+        <p id="cv-voteType-hint" class="text-hint-stop">
+          Nếu ≥ 60% board đồng ý → Series sẽ bị DỪNG phát hành.
+        </p>
+      </div>
 
-      // ════════════════════════════════════════════
-      // XUẤT BẢN CHAPTER
-      // ════════════════════════════════════════════
-      async function loadPendingPublishChapters() {
-        const tbody = document.getElementById("publish-chapters-tbody");
-        tbody.innerHTML = `<tr><td colspan="3" class="text-center-muted">Đang tải...</td></tr>`;
-        try {
-          const res = await fetch("/manga/system-admin/chapters/pending-publish");
-          const data = await res.json();
-          if (data.status !== "success") {
-            tbody.innerHTML = `<tr><td colspan="3" class="text-center-muted">${data.message || "Lỗi tải dữ liệu"}</td></tr>`;
-            return;
-          }
-          const chapters = data.chapters || [];
-          if (chapters.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" class="text-center-muted">Không có chapter nào chờ xuất bản.</td></tr>`;
-            return;
-          }
-          tbody.innerHTML = chapters
-            .map(
-              (c) => `
+      <div class="field">
+        <label>Chọn series <span class="text-danger-span">*</span></label>
+        <select id="cv-seriesId">
+          <option value="">-- Đang tải... --</option>
+        </select>
+      </div>
+
+      <div class="field" id="cv-reason-field">
+        <label id="cv-reason-label">Lý do <span class="text-danger-span">*</span></label>
+        <textarea id="cv-reason" rows="3" maxlength="500"
+          placeholder="Vd: 3 tháng liên tiếp tỉ lệ xem tệ..."></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-sm btn-cancel" onclick="closeModal('modal-create-vote')">
+          Hủy
+        </button>
+        <button class="btn-sm btn-primary" onclick="submitCreateVoteSessionAdmin()">
+          Tạo Vote
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-activity" class="modal-overlay">
+    <div class="modal-box modal-box-wide">
+      <h3>Lịch sử hoạt động: <span id="activity-user-name"></span></h3>
+      <p id="activity-user-info" class="text-muted-info"></p>
+
+      <div class="activity-list-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-time">Thời gian</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="activity-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-sm btn-cancel" onclick="closeModal('modal-activity')">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+
+  <script th:src="@{/js/chat.js}"></script>
+
+  <script>
+    // ════════════════════════════════════════════
+    // UTILS
+    // ════════════════════════════════════════════
+    function openTab(id) {
+      document
+        .querySelectorAll(".tab-pane")
+        .forEach((p) => p.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      if (id === "tab-relations") loadRelations();
+      if (id === "tab-vote") loadVoteSessionsAdmin();
+      if (id === "tab-history") initHistoryTab();
+      if (id === "tab-publish") loadPendingPublishChapters();
+    }
+
+    // ════════════════════════════════════════════
+    // XUẤT BẢN CHAPTER
+    // ════════════════════════════════════════════
+    async function loadPendingPublishChapters() {
+      const tbody = document.getElementById("publish-chapters-tbody");
+      tbody.innerHTML = `<tr><td colspan="3" class="text-center-muted">Đang tải...</td></tr>`;
+      try {
+        const res = await fetch("/manga/system-admin/chapters/pending-publish");
+        const data = await res.json();
+        if (data.status !== "success") {
+          tbody.innerHTML = `<tr><td colspan="3" class="text-center-muted">${data.message || "Lỗi tải dữ liệu"}</td></tr>`;
+          return;
+        }
+        const chapters = data.chapters || [];
+        if (chapters.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" class="text-center-muted">Không có chapter nào chờ xuất bản.</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = chapters
+          .map(
+            (c) => `
                 <tr>
                   <td>${c.seriesName}</td>
                   <td>Chapter ${c.chapterNumber} - ${c.chapterName}</td>
@@ -808,172 +680,174 @@
                   </td>
                 </tr>
               `,
-            )
-            .join("");
-        } catch (err) {
-          tbody.innerHTML = `<tr><td colspan="3" class="text-center-muted">Lỗi: ${err.message}</td></tr>`;
-        }
+          )
+          .join("");
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center-muted">Lỗi: ${err.message}</td></tr>`;
       }
+    }
 
-      async function publishChapter(chapterId) {
-        if (!confirm("Xác nhận xuất bản chapter này?")) return;
-        try {
-          const res = await fetch(`/manga/system-admin/chapters/${chapterId}/publish`, {
-            method: "POST",
-          });
-          const data = await res.json();
-          if (data.status === "success") {
-            alert(data.message);
-            loadPendingPublishChapters();
-          } else {
-            alert("Lỗi: " + data.message);
-          }
-        } catch (err) {
-          alert("Lỗi: " + err.message);
-        }
-      }
-
-      function updateFileName() {
-        const fileInput = document.getElementById("excel-file");
-        const fileNameSpan = document.getElementById("excel-file-name");
-        if (fileInput.files.length > 0) {
-          fileNameSpan.textContent = fileInput.files[0].name;
-        } else {
-          fileNameSpan.textContent = "Chưa chọn file nào";
-        }
-      }
-
-      async function uploadExcel() {
-        const fileInput = document.getElementById("excel-file");
-        const resultDiv = document.getElementById("import-result");
-
-        if (fileInput.files.length === 0) {
-          showToast("Vui lòng chọn file Excel trước", "error");
-          return;
-        }
-
-        const file = fileInput.files[0];
-        const formData = new FormData();
-        formData.append("file", file);
-
-        resultDiv.style.display = "block";
-        resultDiv.innerHTML =
-          '<span class="u-inline-style-011">Đang xử lý...</span>';
-
-        try {
-          const res = await fetch("/manga/system-admin/import-excel", {
-            method: "POST",
-            body: formData,
-          });
-          const data = await res.json();
-
-          if (data.status === "success") {
-            showToast(data.message, "success");
-            resultDiv.innerHTML =
-              '<span class="u-inline-style-012">' + data.message + "</span>";
-          } else {
-            if (
-              data.errors &&
-              Array.isArray(data.errors) &&
-              data.errors.length > 0
-            ) {
-              showToast("Import thất bại, xem chi tiết lỗi bên dưới", "error");
-              let html =
-                '<div class="u-inline-style-013"><b>Có ' +
-                data.errors.length +
-                ' lỗi cần sửa:</b><ul class="u-inline-style-014">';
-              data.errors.forEach((err) => {
-                html += '<li class="u-inline-style-015">' + err + "</li>";
-              });
-              html += "</ul></div>";
-              resultDiv.innerHTML = html;
-            } else {
-              showToast(data.message, "error");
-              resultDiv.innerHTML =
-                '<span class="u-inline-style-013">' +
-                (data.message || "Lỗi không xác định") +
-                "</span>";
-            }
-          }
-        } catch (e) {
-          showToast("Lỗi kết nối", "error");
-          resultDiv.innerHTML =
-            '<span class="u-inline-style-013">Lỗi kết nối: ' +
-            e.message +
-            "</span>";
-        }
-      }
-
-      function showToast(msg, type = "success") {
-        const t = document.getElementById("toast");
-        t.textContent = (type === "success" ? "" : "") + msg;
-        t.className = "show " + type;
-        setTimeout(() => (t.className = ""), 3000);
-      }
-
-      function openModal(id) {
-        document.getElementById(id).classList.add("show");
-      }
-      function closeModal(id) {
-        document.getElementById(id).classList.remove("show");
-      }
-
-      function badgeHtml(role) {
-        return `<span class="badge-role badge-${role}">${role}</span>`;
-      }
-
-      function fillSelect(
-        selId,
-        items,
-        valKey,
-        labelKey,
-        placeholder = "-- Chọn --",
-      ) {
-        const sel = document.getElementById(selId);
-        sel.innerHTML =
-          `<option value="">${placeholder}</option>` +
-          items
-            .map((i) => `<option value="${i[valKey]}">${i[labelKey]}</option>`)
-            .join("");
-      }
-
-      // ════════════════════════════════════════════
-      // STATE
-      // ════════════════════════════════════════════
-      let allData = {};
-
-      // ════════════════════════════════════════════
-      // LOAD DỮ LIỆU
-      // ════════════════════════════════════════════
-      async function loadData() {
-        const res = await fetch("/manga/system-admin/data");
+    async function publishChapter(chapterId) {
+      if (!confirm("Xác nhận xuất bản chapter này?")) return;
+      try {
+        const res = await fetch(`/manga/system-admin/chapters/${chapterId}/publish`, {
+          method: "POST",
+        });
         const data = await res.json();
-        if (data.status !== "success") {
-          showToast(data.message, "error");
-          return;
+        if (data.status === "success") {
+          alert(data.message);
+          loadPendingPublishChapters();
+        } else {
+          alert("Lỗi: " + data.message);
         }
-        allData = data;
-        renderAccounts(data.allUsers);
+      } catch (err) {
+        alert("Lỗi: " + err.message);
+      }
+    }
+
+    function updateFileName() {
+      const fileInput = document.getElementById("excel-file");
+      const fileNameSpan = document.getElementById("excel-file-name");
+      if (fileInput.files.length > 0) {
+        fileNameSpan.textContent = fileInput.files[0].name;
+      } else {
+        fileNameSpan.textContent = "Chưa chọn file nào";
+      }
+    }
+
+    async function uploadExcel() {
+      const fileInput = document.getElementById("excel-file");
+      const resultDiv = document.getElementById("import-result");
+
+      if (fileInput.files.length === 0) {
+        showToast("Vui lòng chọn file Excel trước", "error");
+        return;
       }
 
-      function loadAccounts() {
-        const role = document.getElementById("filter-role").value;
-        const list = role
-          ? (allData.allUsers || []).filter((u) => u.role === role)
-          : allData.allUsers || [];
-        renderAccounts(list);
-      }
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append("file", file);
 
-      function renderAccounts(users) {
-        const tbody = document.getElementById("accounts-tbody");
-        if (!users || users.length === 0) {
-          tbody.innerHTML =
-            '<tr><td colspan="6" class="u-inline-style-016">Không có tài khoản</td></tr>';
-          return;
+      resultDiv.style.display = "block";
+      resultDiv.innerHTML =
+        '<span class="u-inline-style-011">Đang xử lý...</span>';
+
+      try {
+        const res = await fetch("/manga/system-admin/import-excel", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (data.status === "success") {
+          showToast(data.message, "success");
+          resultDiv.innerHTML =
+            '<span class="u-inline-style-012">' + data.message + "</span>";
+        } else {
+          if (
+            data.errors &&
+            Array.isArray(data.errors) &&
+            data.errors.length > 0
+          ) {
+            showToast("Import thất bại, xem chi tiết lỗi bên dưới", "error");
+            let html =
+              '<div class="u-inline-style-013"><b>Có ' +
+              data.errors.length +
+              ' lỗi cần sửa:</b><ul class="u-inline-style-014">';
+            data.errors.forEach((err) => {
+              html += '<li class="u-inline-style-015">' + err + "</li>";
+            });
+            html += "</ul></div>";
+            resultDiv.innerHTML = html;
+          } else {
+            showToast(data.message, "error");
+            resultDiv.innerHTML =
+              '<span class="u-inline-style-013">' +
+              (data.message || "Lỗi không xác định") +
+              "</span>";
+          }
         }
-        tbody.innerHTML = users
-          .map(
-            (u) => `
+      } catch (e) {
+        showToast("Lỗi kết nối", "error");
+        resultDiv.innerHTML =
+          '<span class="u-inline-style-013">Lỗi kết nối: ' +
+          e.message +
+          "</span>";
+      }
+    }
+
+    function showToast(msg, type = "success") {
+      const t = document.getElementById("toast");
+      t.textContent = (type === "success" ? "" : "") + msg;
+      t.className = "show " + type;
+      setTimeout(() => (t.className = ""), 3000);
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add("show");
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("show");
+    }
+
+    function badgeHtml(role) {
+      return `<span class="badge-role badge-${role}">${role}</span>`;
+    }
+
+    function fillSelect(
+      selId,
+      items,
+      valKey,
+      labelKey,
+      placeholder = "-- Chọn --",
+    ) {
+      const sel = document.getElementById(selId);
+      sel.innerHTML =
+        `<option value="">${placeholder}</option>` +
+        items
+          .map((i) => `<option value="${i[valKey]}">${i[labelKey]}</option>`)
+          .join("");
+    }
+
+    // ════════════════════════════════════════════
+    // STATE
+    // ════════════════════════════════════════════
+    let allData = {};
+
+    // ════════════════════════════════════════════
+    // LOAD DỮ LIỆU
+    // ════════════════════════════════════════════
+    async function loadData() {
+      const res = await fetch("/manga/system-admin/data");
+      const data = await res.json();
+      if (data.status !== "success") {
+        showToast(data.message, "error");
+        return;
+      }
+      allData = data;
+      renderAccounts(data.allUsers);
+    }
+
+    function loadAccounts() {
+      const role = document.getElementById("filter-role").value;
+      const list = role
+        ? (allData.allUsers || []).filter(
+          (u) => (u.role || "").toLowerCase() === role.toLowerCase(),
+        )
+        : allData.allUsers || [];
+      renderAccounts(list);
+    }
+
+    function renderAccounts(users) {
+      const tbody = document.getElementById("accounts-tbody");
+      if (!users || users.length === 0) {
+        tbody.innerHTML =
+          '<tr><td colspan="6" class="u-inline-style-016">Không có tài khoản</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users
+        .map(
+          (u) => `
             <tr>
                 <td class="u-inline-style-017">${u.id}</td>
                 <td>${u.fullname}</td>
@@ -987,231 +861,231 @@
                     </button>
                 </td>
             </tr>`,
-          )
-          .join("");
+        )
+        .join("");
+    }
+
+    // ════════════════════════════════════════════
+    // TẠO TÀI KHOẢN
+    // ════════════════════════════════════════════
+    function openCreateModal() {
+      ["c-fullname", "c-username", "c-email", "c-password"].forEach(
+        (id) => (document.getElementById(id).value = ""),
+      );
+      document.getElementById("c-role").value = "";
+      document.getElementById("extra-mangaka").style.display = "none";
+      document.getElementById("extra-assistant").style.display = "none";
+
+      // FIX: dùng tantoEditors để lấy đúng profile ID thay vì user ID
+      const editors = (allData.tantoEditors || []).map((e) => ({
+        id: e.id,
+        fullname: e.user?.fullname ?? e.id,
+      }));
+      const mgks = (allData.mangakas || []).map((m) => ({
+        id: m.id,
+        fullname: m.user?.fullname ?? m.id,
+      }));
+
+      fillSelect(
+        "c-editorId",
+        editors,
+        "id",
+        "fullname",
+        "-- Chọn Tantou Editor --",
+      );
+      fillSelect("c-mangakaId", mgks, "id", "fullname", "-- Chọn Mangaka --");
+
+      openModal("modal-create");
+    }
+
+    function onRoleChange() {
+      const role = document.getElementById("c-role").value;
+      document.getElementById("extra-mangaka").style.display =
+        role === "mangaka" ? "block" : "none";
+      document.getElementById("extra-assistant").style.display =
+        role === "assistant" ? "block" : "none";
+    }
+
+    async function createAccount() {
+      const body = {
+        fullname: document.getElementById("c-fullname").value.trim(),
+        username: document.getElementById("c-username").value.trim(),
+        email: document.getElementById("c-email").value.trim(),
+        password: document.getElementById("c-password").value.trim(),
+        role: document.getElementById("c-role").value,
+      };
+
+      if (
+        !body.fullname ||
+        !body.username ||
+        !body.email ||
+        !body.password ||
+        !body.role
+      ) {
+        showToast("Vui lòng điền đầy đủ thông tin bắt buộc", "error");
+        return;
       }
 
-      // ════════════════════════════════════════════
-      // TẠO TÀI KHOẢN
-      // ════════════════════════════════════════════
-      function openCreateModal() {
-        ["c-fullname", "c-username", "c-email", "c-password"].forEach(
-          (id) => (document.getElementById(id).value = ""),
-        );
-        document.getElementById("c-role").value = "";
-        document.getElementById("extra-mangaka").style.display = "none";
-        document.getElementById("extra-assistant").style.display = "none";
-
-        // FIX: dùng tantoEditors để lấy đúng profile ID thay vì user ID
-        const editors = (allData.tantoEditors || []).map((e) => ({
-          id: e.id,
-          fullname: e.user?.fullname ?? e.id,
-        }));
-        const mgks = (allData.mangakas || []).map((m) => ({
-          id: m.id,
-          fullname: m.user?.fullname ?? m.id,
-        }));
-
-        fillSelect(
-          "c-editorId",
-          editors,
-          "id",
-          "fullname",
-          "-- Chọn Tantou Editor --",
-        );
-        fillSelect("c-mangakaId", mgks, "id", "fullname", "-- Chọn Mangaka --");
-
-        openModal("modal-create");
-      }
-
-      function onRoleChange() {
-        const role = document.getElementById("c-role").value;
-        document.getElementById("extra-mangaka").style.display =
-          role === "mangaka" ? "block" : "none";
-        document.getElementById("extra-assistant").style.display =
-          role === "assistant" ? "block" : "none";
-      }
-
-      async function createAccount() {
-        const body = {
-          fullname: document.getElementById("c-fullname").value.trim(),
-          username: document.getElementById("c-username").value.trim(),
-          email: document.getElementById("c-email").value.trim(),
-          password: document.getElementById("c-password").value.trim(),
-          role: document.getElementById("c-role").value,
-        };
-
-        if (
-          !body.fullname ||
-          !body.username ||
-          !body.email ||
-          !body.password ||
-          !body.role
-        ) {
-          showToast("Vui lòng điền đầy đủ thông tin bắt buộc", "error");
+      if (body.role === "mangaka") {
+        body.editorId = document.getElementById("c-editorId").value;
+        if (!body.editorId) {
+          showToast("Vui lòng chọn Tantou Editor", "error");
           return;
         }
-
-        if (body.role === "mangaka") {
-          body.editorId = document.getElementById("c-editorId").value;
-          if (!body.editorId) {
-            showToast("Vui lòng chọn Tantou Editor", "error");
-            return;
-          }
-        }
-        if (body.role === "assistant") {
-          body.mangakaId = document.getElementById("c-mangakaId").value;
-          body.salaryPerTask =
-            document.getElementById("c-salaryPerTask").value || "0";
-          if (!body.mangakaId) {
-            showToast("Vui lòng chọn Mangaka", "error");
-            return;
-          }
-        }
-
-        const res = await fetch("/manga/system-admin/accounts/create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        const data = await res.json();
-
-        if (data.status === "success") {
-          showToast("Tạo tài khoản thành công");
-          closeModal("modal-create");
-          await loadData();
-        } else {
-          showToast(data.message, "error");
-        }
       }
-
-      // ════════════════════════════════════════════
-      // SỬA TÀI KHOẢN
-      // ════════════════════════════════════════════
-      function openEditModal(id, fullname, username, email) {
-        document.getElementById("e-id").value = id;
-        document.getElementById("e-fullname").value = fullname;
-        document.getElementById("e-username").value = username;
-        document.getElementById("e-email").value = email;
-        document.getElementById("e-password").value = "";
-        openModal("modal-edit");
-      }
-
-      async function saveEdit() {
-        const body = {
-          id: document.getElementById("e-id").value,
-          fullname: document.getElementById("e-fullname").value.trim(),
-          username: document.getElementById("e-username").value.trim(),
-          email: document.getElementById("e-email").value.trim(),
-        };
-        const pw = document.getElementById("e-password").value.trim();
-        if (pw) body.password = pw;
-
-        const res = await fetch("/manga/system-admin/accounts/update", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        const data = await res.json();
-
-        if (data.status === "success") {
-          showToast("Cập nhật thành công");
-          closeModal("modal-edit");
-          await loadData();
-        } else {
-          showToast(data.message, "error");
-        }
-      }
-
-      // ════════════════════════════════════════════
-      // XÓA TÀI KHOẢN
-      // ════════════════════════════════════════════
-      function openDeleteModal(id, fullname) {
-        document.getElementById("delete-id").value = id;
-        document.getElementById("delete-confirm-msg").textContent =
-          `Bạn có chắc muốn xóa tài khoản "${fullname}"?`;
-        openModal("modal-delete");
-      }
-
-      async function confirmDelete() {
-        const id = document.getElementById("delete-id").value;
-        const res = await fetch("/manga/system-admin/accounts/delete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id }),
-        });
-        const data = await res.json();
-
-        if (data.status === "success") {
-          showToast("Đã xóa tài khoản");
-          closeModal("modal-delete");
-          await loadData();
-        } else {
-          showToast(data.message, "error");
-        }
-      }
-
-      // ════════════════════════════════════════════
-      // QUAN HỆ
-      // ════════════════════════════════════════════
-      function loadRelations() {
-        const mgks = (allData.mangakas || []).map((m) => ({
-          id: m.id,
-          fullname: m.user?.fullname ?? m.id,
-        }));
-        const assts = (allData.assistants || []).map((a) => ({
-          id: a.id,
-          fullname: a.user?.fullname ?? a.id,
-        }));
-        const eds = (allData.tantoEditors || []).map((e) => ({
-          id: e.id,
-          fullname: e.user?.fullname ?? e.id,
-        }));
-
-        fillSelect(
-          "rel-mangaka-tanto-mgk",
-          mgks,
-          "id",
-          "fullname",
-          "-- Chọn Mangaka --",
-        );
-        fillSelect(
-          "rel-mangaka-tanto-ed",
-          eds,
-          "id",
-          "fullname",
-          "-- Chọn Tantou Editor --",
-        );
-        fillSelect(
-          "rel-asst-mgk-asst",
-          assts,
-          "id",
-          "fullname",
-          "-- Chọn Assistant --",
-        );
-        fillSelect(
-          "rel-asst-mgk-mgk",
-          mgks,
-          "id",
-          "fullname",
-          "-- Chọn Mangaka --",
-        );
-
-        renderRelMT();
-        renderRelAM();
-      }
-
-      function renderRelMT() {
-        const tbody = document.getElementById("rel-mt-tbody");
-        const mgks = allData.mangakas || [];
-        if (!mgks.length) {
-          tbody.innerHTML =
-            '<tr><td colspan="3" class="u-inline-style-016">Chưa có dữ liệu</td></tr>';
+      if (body.role === "assistant") {
+        body.mangakaId = document.getElementById("c-mangakaId").value;
+        body.salaryPerTask =
+          document.getElementById("c-salaryPerTask").value || "0";
+        if (!body.mangakaId) {
+          showToast("Vui lòng chọn Mangaka", "error");
           return;
         }
-        tbody.innerHTML = mgks
-          .map(
-            (m) => `
+      }
+
+      const res = await fetch("/manga/system-admin/accounts/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        showToast("Tạo tài khoản thành công");
+        closeModal("modal-create");
+        await loadData();
+      } else {
+        showToast(data.message, "error");
+      }
+    }
+
+    // ════════════════════════════════════════════
+    // SỬA TÀI KHOẢN
+    // ════════════════════════════════════════════
+    function openEditModal(id, fullname, username, email) {
+      document.getElementById("e-id").value = id;
+      document.getElementById("e-fullname").value = fullname;
+      document.getElementById("e-username").value = username;
+      document.getElementById("e-email").value = email;
+      document.getElementById("e-password").value = "";
+      openModal("modal-edit");
+    }
+
+    async function saveEdit() {
+      const body = {
+        id: document.getElementById("e-id").value,
+        fullname: document.getElementById("e-fullname").value.trim(),
+        username: document.getElementById("e-username").value.trim(),
+        email: document.getElementById("e-email").value.trim(),
+      };
+      const pw = document.getElementById("e-password").value.trim();
+      if (pw) body.password = pw;
+
+      const res = await fetch("/manga/system-admin/accounts/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        showToast("Cập nhật thành công");
+        closeModal("modal-edit");
+        await loadData();
+      } else {
+        showToast(data.message, "error");
+      }
+    }
+
+    // ════════════════════════════════════════════
+    // XÓA TÀI KHOẢN
+    // ════════════════════════════════════════════
+    function openDeleteModal(id, fullname) {
+      document.getElementById("delete-id").value = id;
+      document.getElementById("delete-confirm-msg").textContent =
+        `Bạn có chắc muốn xóa tài khoản "${fullname}"?`;
+      openModal("modal-delete");
+    }
+
+    async function confirmDelete() {
+      const id = document.getElementById("delete-id").value;
+      const res = await fetch("/manga/system-admin/accounts/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        showToast("Đã xóa tài khoản");
+        closeModal("modal-delete");
+        await loadData();
+      } else {
+        showToast(data.message, "error");
+      }
+    }
+
+    // ════════════════════════════════════════════
+    // QUAN HỆ
+    // ════════════════════════════════════════════
+    function loadRelations() {
+      const mgks = (allData.mangakas || []).map((m) => ({
+        id: m.id,
+        fullname: m.user?.fullname ?? m.id,
+      }));
+      const assts = (allData.assistants || []).map((a) => ({
+        id: a.id,
+        fullname: a.user?.fullname ?? a.id,
+      }));
+      const eds = (allData.tantoEditors || []).map((e) => ({
+        id: e.id,
+        fullname: e.user?.fullname ?? e.id,
+      }));
+
+      fillSelect(
+        "rel-mangaka-tanto-mgk",
+        mgks,
+        "id",
+        "fullname",
+        "-- Chọn Mangaka --",
+      );
+      fillSelect(
+        "rel-mangaka-tanto-ed",
+        eds,
+        "id",
+        "fullname",
+        "-- Chọn Tantou Editor --",
+      );
+      fillSelect(
+        "rel-asst-mgk-asst",
+        assts,
+        "id",
+        "fullname",
+        "-- Chọn Assistant --",
+      );
+      fillSelect(
+        "rel-asst-mgk-mgk",
+        mgks,
+        "id",
+        "fullname",
+        "-- Chọn Mangaka --",
+      );
+
+      renderRelMT();
+      renderRelAM();
+    }
+
+    function renderRelMT() {
+      const tbody = document.getElementById("rel-mt-tbody");
+      const mgks = allData.mangakas || [];
+      if (!mgks.length) {
+        tbody.innerHTML =
+          '<tr><td colspan="3" class="u-inline-style-016">Chưa có dữ liệu</td></tr>';
+        return;
+      }
+      tbody.innerHTML = mgks
+        .map(
+          (m) => `
             <tr>
                 <td>${m.user?.fullname ?? "—"}</td>
                 <td>${m.editor?.user?.fullname ?? "—"}</td>
@@ -1222,21 +1096,21 @@
                     </button>
                 </td>
             </tr>`,
-          )
-          .join("");
-      }
+        )
+        .join("");
+    }
 
-      function renderRelAM() {
-        const tbody = document.getElementById("rel-am-tbody");
-        const assts = allData.assistants || [];
-        if (!assts.length) {
-          tbody.innerHTML =
-            '<tr><td colspan="3" class="u-inline-style-016">Chưa có dữ liệu</td></tr>';
-          return;
-        }
-        tbody.innerHTML = assts
-          .map(
-            (a) => `
+    function renderRelAM() {
+      const tbody = document.getElementById("rel-am-tbody");
+      const assts = allData.assistants || [];
+      if (!assts.length) {
+        tbody.innerHTML =
+          '<tr><td colspan="3" class="u-inline-style-016">Chưa có dữ liệu</td></tr>';
+        return;
+      }
+      tbody.innerHTML = assts
+        .map(
+          (a) => `
             <tr>
                 <td>${a.user?.fullname ?? "—"}</td>
                 <td>${a.mangaka?.user?.fullname ?? "—"}</td>
@@ -1247,183 +1121,183 @@
                     </button>
                 </td>
             </tr>`,
-          )
-          .join("");
-      }
-
-      // Gán Mangaka ↔ Tantou (từ form dropdown phía trên bảng)
-      async function assignMangakaTanto() {
-        const mangakaId = document.getElementById(
-          "rel-mangaka-tanto-mgk",
-        ).value;
-        const editorId = document.getElementById("rel-mangaka-tanto-ed").value;
-        if (!mangakaId || !editorId) {
-          showToast("Vui lòng chọn đủ 2 trường", "error");
-          return;
-        }
-
-        const res = await fetch("/manga/system-admin/assign/mangaka-tanto", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mangakaId, editorId }),
-        });
-        const data = await res.json();
-        if (data.status === "success") {
-          showToast("Gán thành công");
-          await loadData();
-          renderRelMT();
-        } else {
-          showToast(data.message, "error");
-        }
-      }
-
-      // Gán Assistant ↔ Mangaka (từ form dropdown phía trên bảng)
-      async function assignAssistantMangaka() {
-        const assistantId = document.getElementById("rel-asst-mgk-asst").value;
-        const mangakaId = document.getElementById("rel-asst-mgk-mgk").value;
-        if (!assistantId || !mangakaId) {
-          showToast("Vui lòng chọn đủ 2 trường", "error");
-          return;
-        }
-
-        const res = await fetch(
-          "/manga/system-admin/assign/assistant-mangaka",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ assistantId, mangakaId }),
-          },
-        );
-        const data = await res.json();
-        if (data.status === "success") {
-          showToast("Gán thành công");
-          await loadData();
-          renderRelAM();
-        } else {
-          showToast(data.message, "error");
-        }
-      }
-
-      // FIX: Mở modal đổi Tantou (thay prompt())
-      function openChangeTantoModal(mangakaId, mangakaName) {
-        document.getElementById("ct-mangakaId").value = mangakaId;
-        document.getElementById("ct-mangaka-name").value = mangakaName;
-
-        const eds = (allData.tantoEditors || []).map((e) => ({
-          id: e.id,
-          fullname: e.user?.fullname ?? e.id,
-        }));
-        fillSelect(
-          "ct-editorId",
-          eds,
-          "id",
-          "fullname",
-          "-- Chọn Tantou Editor --",
-        );
-
-        openModal("modal-change-tanto");
-      }
-
-      async function confirmChangeTanto() {
-        const mangakaId = document.getElementById("ct-mangakaId").value;
-        const editorId = document.getElementById("ct-editorId").value;
-        if (!editorId) {
-          showToast("Vui lòng chọn Tantou Editor", "error");
-          return;
-        }
-
-        const res = await fetch("/manga/system-admin/assign/mangaka-tanto", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mangakaId, editorId }),
-        });
-        const data = await res.json();
-        if (data.status === "success") {
-          showToast("Cập nhật thành công");
-          closeModal("modal-change-tanto");
-          await loadData();
-          renderRelMT();
-        } else {
-          showToast(data.message, "error");
-        }
-      }
-
-      // FIX: Mở modal đổi Mangaka (thay prompt())
-      function openChangeMangakaModal(assistantId, assistantName) {
-        document.getElementById("cm-assistantId").value = assistantId;
-        document.getElementById("cm-assistant-name").value = assistantName;
-
-        const mgks = (allData.mangakas || []).map((m) => ({
-          id: m.id,
-          fullname: m.user?.fullname ?? m.id,
-        }));
-        fillSelect(
-          "cm-mangakaId",
-          mgks,
-          "id",
-          "fullname",
-          "-- Chọn Mangaka --",
-        );
-
-        openModal("modal-change-mangaka");
-      }
-
-      async function confirmChangeMangaka() {
-        const assistantId = document.getElementById("cm-assistantId").value;
-        const mangakaId = document.getElementById("cm-mangakaId").value;
-        if (!mangakaId) {
-          showToast("Vui lòng chọn Mangaka", "error");
-          return;
-        }
-
-        const res = await fetch(
-          "/manga/system-admin/assign/assistant-mangaka",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ assistantId, mangakaId }),
-          },
-        );
-        const data = await res.json();
-        if (data.status === "success") {
-          showToast("Cập nhật thành công");
-          closeModal("modal-change-mangaka");
-          await loadData();
-          renderRelAM();
-        } else {
-          showToast(data.message, "error");
-        }
-      }
-
-      // ════════════════════════════════════════════
-      // QUẢN LÝ VOTE SERIES
-      // ════════════════════════════════════════════
-
-      function loadVoteRanking() {
-        const month = document.getElementById("vote-rank-month").value;
-        const quarter = document.getElementById("vote-rank-quarter").value;
-        const year = document.getElementById("vote-rank-year").value;
-        fetch(
-          "/manga/ranking?month=" +
-            month +
-            "&quarter=" +
-            quarter +
-            "&year=" +
-            year,
         )
-          .then((r) => r.json())
-          .then((data) => {
-            const tbody = document.getElementById("vote-ranking-tbody");
-            if (!data || data.length === 0) {
-              tbody.innerHTML =
-                '<tr><td colspan="6" class="u-inline-style-016">Không có dữ liệu</td></tr>';
-              return;
-            }
-            const medals = ["🥇", "🥈", "🥉"];
-            tbody.innerHTML = data
-              .map((item) => {
-                const medal = item.rank <= 3 ? medals[item.rank - 1] + " " : "";
-                return `<tr>
+        .join("");
+    }
+
+    // Gán Mangaka ↔ Tantou (từ form dropdown phía trên bảng)
+    async function assignMangakaTanto() {
+      const mangakaId = document.getElementById(
+        "rel-mangaka-tanto-mgk",
+      ).value;
+      const editorId = document.getElementById("rel-mangaka-tanto-ed").value;
+      if (!mangakaId || !editorId) {
+        showToast("Vui lòng chọn đủ 2 trường", "error");
+        return;
+      }
+
+      const res = await fetch("/manga/system-admin/assign/mangaka-tanto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mangakaId, editorId }),
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        showToast("Gán thành công");
+        await loadData();
+        renderRelMT();
+      } else {
+        showToast(data.message, "error");
+      }
+    }
+
+    // Gán Assistant ↔ Mangaka (từ form dropdown phía trên bảng)
+    async function assignAssistantMangaka() {
+      const assistantId = document.getElementById("rel-asst-mgk-asst").value;
+      const mangakaId = document.getElementById("rel-asst-mgk-mgk").value;
+      if (!assistantId || !mangakaId) {
+        showToast("Vui lòng chọn đủ 2 trường", "error");
+        return;
+      }
+
+      const res = await fetch(
+        "/manga/system-admin/assign/assistant-mangaka",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ assistantId, mangakaId }),
+        },
+      );
+      const data = await res.json();
+      if (data.status === "success") {
+        showToast("Gán thành công");
+        await loadData();
+        renderRelAM();
+      } else {
+        showToast(data.message, "error");
+      }
+    }
+
+    // FIX: Mở modal đổi Tantou (thay prompt())
+    function openChangeTantoModal(mangakaId, mangakaName) {
+      document.getElementById("ct-mangakaId").value = mangakaId;
+      document.getElementById("ct-mangaka-name").value = mangakaName;
+
+      const eds = (allData.tantoEditors || []).map((e) => ({
+        id: e.id,
+        fullname: e.user?.fullname ?? e.id,
+      }));
+      fillSelect(
+        "ct-editorId",
+        eds,
+        "id",
+        "fullname",
+        "-- Chọn Tantou Editor --",
+      );
+
+      openModal("modal-change-tanto");
+    }
+
+    async function confirmChangeTanto() {
+      const mangakaId = document.getElementById("ct-mangakaId").value;
+      const editorId = document.getElementById("ct-editorId").value;
+      if (!editorId) {
+        showToast("Vui lòng chọn Tantou Editor", "error");
+        return;
+      }
+
+      const res = await fetch("/manga/system-admin/assign/mangaka-tanto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mangakaId, editorId }),
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        showToast("Cập nhật thành công");
+        closeModal("modal-change-tanto");
+        await loadData();
+        renderRelMT();
+      } else {
+        showToast(data.message, "error");
+      }
+    }
+
+    // FIX: Mở modal đổi Mangaka (thay prompt())
+    function openChangeMangakaModal(assistantId, assistantName) {
+      document.getElementById("cm-assistantId").value = assistantId;
+      document.getElementById("cm-assistant-name").value = assistantName;
+
+      const mgks = (allData.mangakas || []).map((m) => ({
+        id: m.id,
+        fullname: m.user?.fullname ?? m.id,
+      }));
+      fillSelect(
+        "cm-mangakaId",
+        mgks,
+        "id",
+        "fullname",
+        "-- Chọn Mangaka --",
+      );
+
+      openModal("modal-change-mangaka");
+    }
+
+    async function confirmChangeMangaka() {
+      const assistantId = document.getElementById("cm-assistantId").value;
+      const mangakaId = document.getElementById("cm-mangakaId").value;
+      if (!mangakaId) {
+        showToast("Vui lòng chọn Mangaka", "error");
+        return;
+      }
+
+      const res = await fetch(
+        "/manga/system-admin/assign/assistant-mangaka",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ assistantId, mangakaId }),
+        },
+      );
+      const data = await res.json();
+      if (data.status === "success") {
+        showToast("Cập nhật thành công");
+        closeModal("modal-change-mangaka");
+        await loadData();
+        renderRelAM();
+      } else {
+        showToast(data.message, "error");
+      }
+    }
+
+    // ════════════════════════════════════════════
+    // QUẢN LÝ VOTE SERIES
+    // ════════════════════════════════════════════
+
+    function loadVoteRanking() {
+      const month = document.getElementById("vote-rank-month").value;
+      const quarter = document.getElementById("vote-rank-quarter").value;
+      const year = document.getElementById("vote-rank-year").value;
+      fetch(
+        "/manga/ranking?month=" +
+        month +
+        "&quarter=" +
+        quarter +
+        "&year=" +
+        year,
+      )
+        .then((r) => r.json())
+        .then((data) => {
+          const tbody = document.getElementById("vote-ranking-tbody");
+          if (!data || data.length === 0) {
+            tbody.innerHTML =
+              '<tr><td colspan="6" class="u-inline-style-016">Không có dữ liệu</td></tr>';
+            return;
+          }
+          const medals = ["🥇", "🥈", "🥉"];
+          tbody.innerHTML = data
+            .map((item) => {
+              const medal = item.rank <= 3 ? medals[item.rank - 1] + " " : "";
+              return `<tr>
                             <td class="u-inline-style-019">${medal}${item.rank}</td>
                             <td class="u-inline-style-019">${item.seriesId}</td>
                             <td>${item.seriesName}</td>
@@ -1431,49 +1305,49 @@
                             <td class="u-inline-style-019">${item.totalLike}</td>
                             <td class="u-inline-style-019">${item.totalDislike}</td>
                         </tr>`;
-              })
-              .join("");
-          });
-      }
+            })
+            .join("");
+        });
+    }
 
-      function loadVoteSessionsAdmin() {
-        fetch("/manga/ranking/active-sessions")
-          .then((r) => r.json())
-          .then((data) => {
-            const tbody = document.getElementById("vote-sessions-tbody");
-            if (!data || data.length === 0) {
-              tbody.innerHTML =
-                '<tr><td colspan="6" class="u-inline-style-016">Chưa có phiên vote nào</td></tr>';
-              return;
-            }
-            tbody.innerHTML = data
-              .map((s) => {
-                const typeLabel =
-                  s.voteType === "stop"
-                    ? '<span class="u-inline-style-020">Dừng</span>'
-                    : '<span class="u-inline-style-021">Khen Thưởng</span>';
-                const progress = s.voted + "/" + s.totalBoards + " đã vote";
-                let result;
-                if (s.sessionStatus === "closed") {
-                  const pct =
-                    s.totalBoards > 0
-                      ? Math.round((s.positiveVotes / s.totalBoards) * 100)
-                      : 0;
-                  if (s.voteType === "stop") {
-                    result =
-                      pct >= 60
-                        ? '<span class="u-inline-style-022">Đã DỪNG</span>'
-                        : '<span class="u-inline-style-023">Được Giữ</span>';
-                  } else {
-                    result =
-                      pct >= 60
-                        ? '<span class="u-inline-style-024">Được Khen Thưởng</span>'
-                        : '<span class="u-inline-style-025">Không Khen Thưởng</span>';
-                  }
+    function loadVoteSessionsAdmin() {
+      fetch("/manga/ranking/active-sessions")
+        .then((r) => r.json())
+        .then((data) => {
+          const tbody = document.getElementById("vote-sessions-tbody");
+          if (!data || data.length === 0) {
+            tbody.innerHTML =
+              '<tr><td colspan="6" class="u-inline-style-016">Chưa có phiên vote nào</td></tr>';
+            return;
+          }
+          tbody.innerHTML = data
+            .map((s) => {
+              const typeLabel =
+                s.voteType === "stop"
+                  ? '<span class="u-inline-style-020">Dừng</span>'
+                  : '<span class="u-inline-style-021">Khen Thưởng</span>';
+              const progress = s.voted + "/" + s.totalBoards + " đã vote";
+              let result;
+              if (s.sessionStatus === "closed") {
+                const pct =
+                  s.totalBoards > 0
+                    ? Math.round((s.positiveVotes / s.totalBoards) * 100)
+                    : 0;
+                if (s.voteType === "stop") {
+                  result =
+                    pct >= 60
+                      ? '<span class="u-inline-style-022">Đã DỪNG</span>'
+                      : '<span class="u-inline-style-023">Được Giữ</span>';
                 } else {
-                  result = '<span class="u-inline-style-026">Đang mở</span>';
+                  result =
+                    pct >= 60
+                      ? '<span class="u-inline-style-024">Được Khen Thưởng</span>'
+                      : '<span class="u-inline-style-025">Không Khen Thưởng</span>';
                 }
-                return `<tr>
+              } else {
+                result = '<span class="u-inline-style-026">Đang mở</span>';
+              }
+              return `<tr>
                             <td class="u-inline-style-027">${s.sessionId}</td>
                             <td>${s.seriesName}<br><small class="u-inline-style-028">${s.seriesId}</small></td>
                             <td class="u-inline-style-019">${typeLabel}</td>
@@ -1481,210 +1355,210 @@
                             <td class="u-inline-style-019">${progress}</td>
                             <td class="u-inline-style-019">${result}</td>
                         </tr>`;
+            })
+            .join("");
+        });
+    }
+
+    function createBottomVoteSessionsAdmin() {
+      if (!confirm("Phiên vote cho 3 series cuối sẽ được khởi tạo.")) return;
+      const month = document.getElementById("vote-rank-month").value;
+      const quarter = document.getElementById("vote-rank-quarter").value;
+      const year = document.getElementById("vote-rank-year").value;
+      fetch(
+        "/manga/system-admin/ranking/create-bottom-sessions?month=" +
+        month +
+        "&quarter=" +
+        quarter +
+        "&year=" +
+        year,
+        { method: "POST" },
+      )
+        .then((r) => r.json())
+        .then((data) => {
+          showToast(data.message, data.success ? "success" : "error");
+          if (data.success) loadVoteSessionsAdmin();
+        })
+        .catch(() => showToast("Lỗi khi tạo phiên vote", "error"));
+    }
+
+    function openCreateVoteModalAdmin() {
+      document.getElementById("cv-voteType").value = "stop";
+      document.getElementById("cv-reason").value = "";
+      updateVoteTypeHintAdmin();
+      // Load series list
+      fetch("/manga/system-admin/ranking/all-series")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.status !== "success") {
+            showToast(data.message, "error");
+            return;
+          }
+          const sel = document.getElementById("cv-seriesId");
+          // Series đã stopped/rewarded/pending_cancel thì không tạo vote được nữa,
+          // loại luôn khỏi dropdown để admin không chọn nhầm rồi bị báo lỗi.
+          const items = (data.series || [])
+            .filter(
+              (s) =>
+                s.status !== "stopped" &&
+                s.status !== "rewarded" &&
+                s.status !== "pending_cancel",
+            )
+            .sort((a, b) => a.id.localeCompare(b.id));
+          if (items.length === 0) {
+            showToast("Không còn series nào có thể tạo phiên vote", "error");
+            return;
+          }
+          sel.innerHTML =
+            '<option value="">-- Chọn series --</option>' +
+            items
+              .map((s) => {
+                const tag =
+                  s.status !== "unfinish" ? " [" + s.status + "]" : "";
+                return `<option value="${s.id}">${s.id} — ${s.name}${tag}</option>`;
               })
               .join("");
-          });
+          openModal("modal-create-vote");
+        })
+        .catch((err) =>
+          showToast("Lỗi tải danh sách series: " + err.message, "error"),
+        );
+    }
+
+    function updateVoteTypeHintAdmin() {
+      const type = document.getElementById("cv-voteType").value;
+      const hint = document.getElementById("cv-voteType-hint");
+      const reasonLabel = document.getElementById("cv-reason-label");
+      if (type === "stop") {
+        hint.textContent =
+          "Nếu ≥ 60% board đồng ý → Series sẽ bị DỪNG phát hành.";
+        hint.style.color = "#e74c3c";
+        reasonLabel.innerHTML = 'Lý do <span class="text-danger-span">*</span>';
+      } else {
+        hint.textContent =
+          "Nếu ≥ 60% board đồng ý → Series sẽ được KHEN THƯỞNG.";
+        hint.style.color = "#f59e0b";
+        reasonLabel.textContent = "Lý do (không bắt buộc)";
+      }
+    }
+
+    function submitCreateVoteSessionAdmin() {
+      const seriesId = document.getElementById("cv-seriesId").value;
+      const voteType = document.getElementById("cv-voteType").value;
+      const reason = document.getElementById("cv-reason").value.trim();
+      if (!seriesId) {
+        showToast("Vui lòng chọn series", "error");
+        return;
+      }
+      if (voteType === "stop" && !reason) {
+        showToast("Vui lòng nhập lý do tạo phiên vote dừng series", "error");
+        return;
       }
 
-      function createBottomVoteSessionsAdmin() {
-        if (!confirm("Phiên vote cho 3 series cuối sẽ được khởi tạo.")) return;
-        const month = document.getElementById("vote-rank-month").value;
-        const quarter = document.getElementById("vote-rank-quarter").value;
-        const year = document.getElementById("vote-rank-year").value;
+      const doCreate = () => {
         fetch(
-          "/manga/system-admin/ranking/create-bottom-sessions?month=" +
-            month +
-            "&quarter=" +
-            quarter +
-            "&year=" +
-            year,
+          "/manga/system-admin/ranking/create-session?seriesId=" +
+          seriesId +
+          "&voteType=" +
+          voteType +
+          "&reason=" +
+          encodeURIComponent(reason),
           { method: "POST" },
         )
           .then((r) => r.json())
           .then((data) => {
             showToast(data.message, data.success ? "success" : "error");
-            if (data.success) loadVoteSessionsAdmin();
+            if (data.success) {
+              closeModal("modal-create-vote");
+              loadVoteSessionsAdmin();
+            }
           })
-          .catch(() => showToast("Lỗi khi tạo phiên vote", "error"));
-      }
+          .catch((err) => showToast("Lỗi tạo phiên vote: " + err.message, "error"));
+      };
 
-      function openCreateVoteModalAdmin() {
-        document.getElementById("cv-voteType").value = "stop";
-        document.getElementById("cv-reason").value = "";
-        updateVoteTypeHintAdmin();
-        // Load series list
-        fetch("/manga/system-admin/ranking/all-series")
+      // Vote dừng: cảnh báo nếu series đang trong TOP 5 lượt xem cao
+      if (voteType === "stop") {
+        const year = new Date().getFullYear();
+        fetch("/manga/ranking?month=0&year=" + year)
           .then((r) => r.json())
           .then((data) => {
-            if (data.status !== "success") {
-              showToast(data.message, "error");
-              return;
-            }
-            const sel = document.getElementById("cv-seriesId");
-            // Series đã stopped/rewarded/pending_cancel thì không tạo vote được nữa,
-            // loại luôn khỏi dropdown để admin không chọn nhầm rồi bị báo lỗi.
-            const items = (data.series || [])
-              .filter(
-                (s) =>
-                  s.status !== "stopped" &&
-                  s.status !== "rewarded" &&
-                  s.status !== "pending_cancel",
+            const top5 = (data || []).slice(0, 5);
+            const inTop5 = top5.find((s) => s.seriesId === seriesId);
+            if (
+              inTop5 &&
+              !confirm(
+                'Series "' +
+                inTop5.seriesName +
+                '" đang trong TOP 5 có lượt xem cao. Bạn có chắc muốn tạo vote dừng?',
               )
-              .sort((a, b) => a.id.localeCompare(b.id));
-            if (items.length === 0) {
-              showToast("Không còn series nào có thể tạo phiên vote", "error");
-              return;
-            }
-            sel.innerHTML =
-              '<option value="">-- Chọn series --</option>' +
-              items
-                .map((s) => {
-                  const tag =
-                    s.status !== "unfinish" ? " [" + s.status + "]" : "";
-                  return `<option value="${s.id}">${s.id} — ${s.name}${tag}</option>`;
-                })
-                .join("");
-            openModal("modal-create-vote");
-          })
-          .catch((err) =>
-            showToast("Lỗi tải danh sách series: " + err.message, "error"),
-          );
-      }
-
-      function updateVoteTypeHintAdmin() {
-        const type = document.getElementById("cv-voteType").value;
-        const hint = document.getElementById("cv-voteType-hint");
-        const reasonLabel = document.getElementById("cv-reason-label");
-        if (type === "stop") {
-          hint.textContent =
-            "Nếu ≥ 60% board đồng ý → Series sẽ bị DỪNG phát hành.";
-          hint.style.color = "#e74c3c";
-          reasonLabel.innerHTML = 'Lý do <span class="text-danger-span">*</span>';
-        } else {
-          hint.textContent =
-            "Nếu ≥ 60% board đồng ý → Series sẽ được KHEN THƯỞNG.";
-          hint.style.color = "#f59e0b";
-          reasonLabel.textContent = "Lý do (không bắt buộc)";
-        }
-      }
-
-      function submitCreateVoteSessionAdmin() {
-        const seriesId = document.getElementById("cv-seriesId").value;
-        const voteType = document.getElementById("cv-voteType").value;
-        const reason = document.getElementById("cv-reason").value.trim();
-        if (!seriesId) {
-          showToast("Vui lòng chọn series", "error");
-          return;
-        }
-        if (voteType === "stop" && !reason) {
-          showToast("Vui lòng nhập lý do tạo phiên vote dừng series", "error");
-          return;
-        }
-
-        const doCreate = () => {
-          fetch(
-            "/manga/system-admin/ranking/create-session?seriesId=" +
-              seriesId +
-              "&voteType=" +
-              voteType +
-              "&reason=" +
-              encodeURIComponent(reason),
-            { method: "POST" },
-          )
-            .then((r) => r.json())
-            .then((data) => {
-              showToast(data.message, data.success ? "success" : "error");
-              if (data.success) {
-                closeModal("modal-create-vote");
-                loadVoteSessionsAdmin();
-              }
-            })
-            .catch((err) => showToast("Lỗi tạo phiên vote: " + err.message, "error"));
-        };
-
-        // Vote dừng: cảnh báo nếu series đang trong TOP 5 lượt xem cao
-        if (voteType === "stop") {
-          const year = new Date().getFullYear();
-          fetch("/manga/ranking?month=0&year=" + year)
-            .then((r) => r.json())
-            .then((data) => {
-              const top5 = (data || []).slice(0, 5);
-              const inTop5 = top5.find((s) => s.seriesId === seriesId);
-              if (
-                inTop5 &&
-                !confirm(
-                  'Series "' +
-                    inTop5.seriesName +
-                    '" đang trong TOP 5 có lượt xem cao. Bạn có chắc muốn tạo vote dừng?',
-                )
-              )
-                return;
-              doCreate();
-            })
-            // Không lấy được ranking thì vẫn cho tạo vote (cảnh báo top5 chỉ là phụ),
-            // tránh trường hợp bấm nút mà không có gì xảy ra.
-            .catch(() => doCreate());
-        } else {
-          doCreate();
-        }
-      }
-
-      // ════════════════════════════════════════════
-      // LỊCH SỬ HOẠT ĐỘNG NGƯỜI DÙNG
-      // ════════════════════════════════════════════
-      let historyTabInited = false;
-      let allUsersForHistory = [];
-
-      function initHistoryTab() {
-        // Mỗi lần mở tab đều reload (đảm bảo data mới nhất). Listener chỉ bind 1 lần.
-        if (!historyTabInited) {
-          historyTabInited = true;
-          const input = document.getElementById("history-search-input");
-          if (input) {
-            input.addEventListener("input", () => {
-              renderHistoryUsers(input.value);
-            });
-          }
-        }
-        loadAllUsersForHistory();
-      }
-
-      function loadAllUsersForHistory() {
-        fetch("/manga/system-admin/users/search?keyword=")
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.status !== "success") {
-              showToast(data.message, "error");
-              return;
-            }
-            allUsersForHistory = data.users || [];
-            const kw = document.getElementById("history-search-input").value;
-            renderHistoryUsers(kw);
-          })
-          .catch(() => showToast("Lỗi khi tải danh sách user", "error"));
-      }
-
-      function renderHistoryUsers(keyword) {
-        const kw = (keyword || "").trim().toLowerCase();
-        const filtered = kw
-          ? allUsersForHistory.filter(
-              (u) =>
-                (u.id && u.id.toLowerCase().includes(kw)) ||
-                (u.fullname && u.fullname.toLowerCase().includes(kw)) ||
-                (u.username && u.username.toLowerCase().includes(kw)) ||
-                (u.email && u.email.toLowerCase().includes(kw)),
             )
-          : allUsersForHistory;
+              return;
+            doCreate();
+          })
+          // Không lấy được ranking thì vẫn cho tạo vote (cảnh báo top5 chỉ là phụ),
+          // tránh trường hợp bấm nút mà không có gì xảy ra.
+          .catch(() => doCreate());
+      } else {
+        doCreate();
+      }
+    }
 
-        const tbody = document.getElementById("history-users-tbody");
-        if (filtered.length === 0) {
-          tbody.innerHTML =
-            '<tr><td colspan="6" class="text-center-muted">Không tìm thấy user nào</td></tr>';
-          return;
+    // ════════════════════════════════════════════
+    // LỊCH SỬ HOẠT ĐỘNG NGƯỜI DÙNG
+    // ════════════════════════════════════════════
+    let historyTabInited = false;
+    let allUsersForHistory = [];
+
+    function initHistoryTab() {
+      // Mỗi lần mở tab đều reload (đảm bảo data mới nhất). Listener chỉ bind 1 lần.
+      if (!historyTabInited) {
+        historyTabInited = true;
+        const input = document.getElementById("history-search-input");
+        if (input) {
+          input.addEventListener("input", () => {
+            renderHistoryUsers(input.value);
+          });
         }
-        tbody.innerHTML = filtered
-          .map(
-            (u) => `
+      }
+      loadAllUsersForHistory();
+    }
+
+    function loadAllUsersForHistory() {
+      fetch("/manga/system-admin/users/search?keyword=")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.status !== "success") {
+            showToast(data.message, "error");
+            return;
+          }
+          allUsersForHistory = data.users || [];
+          const kw = document.getElementById("history-search-input").value;
+          renderHistoryUsers(kw);
+        })
+        .catch(() => showToast("Lỗi khi tải danh sách user", "error"));
+    }
+
+    function renderHistoryUsers(keyword) {
+      const kw = (keyword || "").trim().toLowerCase();
+      const filtered = kw
+        ? allUsersForHistory.filter(
+          (u) =>
+            (u.id && u.id.toLowerCase().includes(kw)) ||
+            (u.fullname && u.fullname.toLowerCase().includes(kw)) ||
+            (u.username && u.username.toLowerCase().includes(kw)) ||
+            (u.email && u.email.toLowerCase().includes(kw)),
+        )
+        : allUsersForHistory;
+
+      const tbody = document.getElementById("history-users-tbody");
+      if (filtered.length === 0) {
+        tbody.innerHTML =
+          '<tr><td colspan="6" class="text-center-muted">Không tìm thấy user nào</td></tr>';
+        return;
+      }
+      tbody.innerHTML = filtered
+        .map(
+          (u) => `
               <tr>
                 <td class="u-inline-style-017">${u.id}</td>
                 <td>${u.fullname || ""}</td>
@@ -1697,57 +1571,58 @@
                   </button>
                 </td>
               </tr>`,
-          )
-          .join("");
-      }
+        )
+        .join("");
+    }
 
-      // Nút "Tìm" giờ chỉ là alias reload (nếu user muốn force refresh)
-      function searchUsersHistory() {
-        loadAllUsersForHistory();
-      }
+    // Nút "Tìm" giờ chỉ là alias reload (nếu user muốn force refresh)
+    function searchUsersHistory() {
+      loadAllUsersForHistory();
+    }
 
-      function viewUserActivity(userId) {
-        fetch("/manga/system-admin/users/" + userId + "/activity")
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.status !== "success") {
-              showToast(data.message, "error");
-              return;
-            }
-            const u = data.user;
-            document.getElementById("activity-user-name").textContent =
-              u.fullname || u.username;
-            document.getElementById("activity-user-info").innerHTML =
-              `<strong>${u.username}</strong> · ${u.role} · ID ${u.id}` +
-              (u.email ? ` · ${u.email}` : "");
+    function viewUserActivity(userId) {
+      fetch("/manga/system-admin/users/" + userId + "/activity")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.status !== "success") {
+            showToast(data.message, "error");
+            return;
+          }
+          const u = data.user;
+          document.getElementById("activity-user-name").textContent =
+            u.fullname || u.username;
+          document.getElementById("activity-user-info").innerHTML =
+            `<strong>${u.username}</strong> · ${u.role} · ID ${u.id}` +
+            (u.email ? ` · ${u.email}` : "");
 
-            const tbody = document.getElementById("activity-tbody");
-            const acts = data.activities || [];
-            if (acts.length === 0) {
-              tbody.innerHTML =
-                '<tr><td colspan="2" class="text-center-muted">Chưa có hoạt động nào</td></tr>';
-            } else {
-              tbody.innerHTML = acts
-                .map(
-                  (a) => `
+          const tbody = document.getElementById("activity-tbody");
+          const acts = data.activities || [];
+          if (acts.length === 0) {
+            tbody.innerHTML =
+              '<tr><td colspan="2" class="text-center-muted">Chưa có hoạt động nào</td></tr>';
+          } else {
+            tbody.innerHTML = acts
+              .map(
+                (a) => `
                     <tr>
                       <td class="col-time">${a.timestamp || "—"}</td>
                       <td><i class="fa-solid ${a.icon || "fa-clock"} activity-icon"></i>${a.description || ""}</td>
                     </tr>`,
-                )
-                .join("");
-            }
-            openModal("modal-activity");
-          })
-          .catch(() => showToast("Lỗi khi tải lịch sử", "error"));
-      }
+              )
+              .join("");
+          }
+          openModal("modal-activity");
+        })
+        .catch(() => showToast("Lỗi khi tải lịch sử", "error"));
+    }
 
-      // ════════════════════════════════════════════
-      // INIT
-      // ════════════════════════════════════════════
-      document.addEventListener("DOMContentLoaded", loadData);
-    </script>
-    <script src="/js/ui-alert.js" th:src="@{/js/ui-alert.js}"></script>
-    \n\n
-  </body>
+    // ════════════════════════════════════════════
+    // INIT
+    // ════════════════════════════════════════════
+    document.addEventListener("DOMContentLoaded", loadData);
+  </script>
+  <script src="/js/ui-alert.js" th:src="@{/js/ui-alert.js}"></script>
+  \n\n
+</body>
+
 </html>

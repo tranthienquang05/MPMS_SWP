@@ -869,7 +869,7 @@ tr:hover td {
   padding: calc(var(--app-header-height) + 2rem) 1rem 2rem;
   background:
     linear-gradient(90deg, rgba(8, 9, 13, 0.96), rgba(8, 9, 13, 0.66)),
-    url("/images/login-bg.jpg") center/cover no-repeat,
+    url("images/image-login-done.jpg") center/cover no-repeat,
     linear-gradient(135deg, #171b24, #090a0f);
 }
 

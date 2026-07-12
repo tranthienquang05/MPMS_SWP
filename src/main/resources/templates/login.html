@@ -35,7 +35,7 @@
 
         <div class="form-group">
           <label for="username">Tài khoản:</label>
-          <input type="text" id="username" name="txtUsername" required />
+          <input type="text" id="username" name="txtUsername" autocomplete="username" required>
         </div>
 
         <div th:if="${param.error != null or error != null}" class="errorlogin">
@@ -44,7 +44,7 @@
 
         <div class="form-group">
           <label for="password">Mật khẩu:</label>
-          <input type="password" id="password" name="txtPassword" required />
+          <input type="password" id="password" name="txtPassword" autocomplete="current-password" required>
         </div>
 
         <button type="submit">Đăng nhập</button>

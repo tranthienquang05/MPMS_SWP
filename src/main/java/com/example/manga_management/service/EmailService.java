@@ -17,7 +17,7 @@ public class EmailService {
      * Sends an OTP verification email to the specified address.
      *
      * @param toEmail the recipient's email address
-     * @param otp     the one-time password to include in the email body
+     * @param otp the one-time password to include in the email body
      */
     public void sendOtpEmail(String toEmail, String otp) {
         SimpleMailMessage message = new SimpleMailMessage();

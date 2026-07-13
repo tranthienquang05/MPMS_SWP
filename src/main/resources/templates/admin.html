@@ -75,6 +75,13 @@
         <i class="fa-solid fa-file-excel"></i>
       </button>
     </li>
+    <li>
+      <button title="Thông tin cá nhân" aria-label="Thông tin cá nhân"
+        type="button" class="btn-icon"
+        onclick="openTab('tab-profile'); loadProfile();">
+        <i class="fa-solid fa-circle-user"></i>
+      </button>
+    </li>
   </ul>
 
   <div id="toast"></div>
@@ -405,6 +412,39 @@
         </div>
 
         <div id="import-result" class="u-inline-style-005"></div>
+      </div>
+    </div>
+
+    <div id="tab-profile" class="tab-pane">
+      <h2>Thông tin cá nhân</h2>
+      <div class="section-card" style="max-width:520px;">
+
+        <div class="field">
+          <label>Email <span id="profileEmailVerifiedBadge"></span></label>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <input id="profileEmail" disabled style="flex:1;" />
+            <button type="button" class="btn-sm btn-primary" onclick="openChangeEmailModal()">Đổi email</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Họ tên (Nickname)</label>
+          <input id="profileNickname" placeholder="Họ tên hiển thị..." />
+        </div>
+
+        <div class="field">
+          <label>Số điện thoại</label>
+          <input id="profilePhone" placeholder="Số điện thoại..." />
+        </div>
+
+        <div class="field">
+          <label>Link cá nhân (mạng xã hội, portfolio...)</label>
+          <input id="profileSocialLinks" placeholder="https://..." />
+        </div>
+
+        <div class="modal-footer" style="padding:0; margin-top:1rem;">
+          <button type="button" class="btn-sm btn-primary" onclick="saveProfile()">Lưu thông tin</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1775,6 +1815,264 @@
       }
     }
     </script>
+
+  <div id="emailVerifyOverlay" class="app-floating-modal"
+    style="display:none; background:rgba(4,5,8,0.85); backdrop-filter:blur(14px);">
+    <div class="modal-box" style="width:min(440px,100%); max-height:calc(100dvh - 5rem); overflow:auto;">
+      <div id="evStep1">
+        <h4 style="margin:0 0 1rem;">Xác thực email</h4>
+        <p style="color:var(--app-muted); margin-bottom:1rem;">
+          Tài khoản của bạn được gắn email: <strong id="evEmailDisplay"></strong><br>
+          Vui lòng xác thực để sử dụng đầy đủ tính năng.
+        </p>
+        <div id="evStep1Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+        <button type="button" class="btn-primary" style="width:100%;"
+          id="btnSendVerifyOtp" onclick="evSendOtp()">Nhận mã OTP</button>
+      </div>
+      <div id="evStep2" style="display:none;">
+        <h4 style="margin:0 0 1rem;">Nhập mã OTP</h4>
+        <p style="color:var(--app-muted); margin-bottom:1rem;">
+          Mã OTP đã được gửi tới email của bạn. Có hiệu lực 5 phút.
+        </p>
+        <input type="text" id="evOtpInput" placeholder="Nhập mã 6 số..."
+          maxlength="6" style="margin-bottom:0.75rem;" />
+        <div id="evStep2Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+        <button type="button" class="btn-modal-confirm" style="width:100%;"
+          onclick="evConfirmOtp()">Xác nhận</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="changeEmailOverlay" class="app-floating-modal"
+    style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
+    <div class="modal-box" style="width:min(440px,100%);">
+      <div id="ceStep1">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h4 style="margin:0;">Đổi email</h4>
+          <button type="button" class="modal-close-btn" onclick="closeChangeEmailModal()">×</button>
+        </div>
+        <div class="field">
+          <label>Email mới</label>
+          <input type="email" id="ceNewEmail" placeholder="email@example.com" />
+        </div>
+        <div id="ceStep1Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+        <button type="button" class="btn-primary" style="width:100%;"
+          onclick="ceSendOtp()">Gửi mã OTP tới email mới</button>
+      </div>
+      <div id="ceStep2" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h4 style="margin:0;">Nhập mã OTP</h4>
+          <button type="button" class="modal-close-btn" onclick="closeChangeEmailModal()">×</button>
+        </div>
+        <p style="color:var(--app-muted); margin-bottom:1rem;">
+          OTP đã gửi tới email mới. Có hiệu lực 5 phút.
+        </p>
+        <input type="text" id="ceOtpInput" placeholder="Nhập mã 6 số..."
+          maxlength="6" style="margin-bottom:0.75rem;" />
+        <div id="ceStep2Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+        <div style="display:flex; gap:0.75rem;">
+          <button type="button" class="btn-modal-cancel" style="flex:1;"
+            onclick="ceGoStep1()">Quay lại</button>
+          <button type="button" class="btn-modal-confirm" style="flex:1;"
+            onclick="ceConfirmOtp()">Xác nhận</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+// ===== EMAIL VERIFY POPUP =====
+(function() {
+  async function checkEmailVerified() {
+    try {
+      const res = await fetch('/api/account/profile');
+      const data = await res.json();
+      if (data && data.emailVerified === false && data.email) {
+        document.getElementById('evEmailDisplay').textContent = data.email;
+        document.getElementById('emailVerifyOverlay').style.display = 'flex';
+      }
+    } catch(e) {}
+  }
+
+  window.evSendOtp = async function() {
+    const btn = document.getElementById('btnSendVerifyOtp');
+    const errEl = document.getElementById('evStep1Error');
+    btn.disabled = true;
+    btn.textContent = 'Đang gửi...';
+    errEl.style.display = 'none';
+    try {
+      const res = await fetch('/api/account/verify-email', { method: 'POST' });
+      const data = await res.json();
+      if (data.status === 'success') {
+        document.getElementById('evStep1').style.display = 'none';
+        document.getElementById('evStep2').style.display = 'block';
+      } else {
+        errEl.textContent = data.message || 'Lỗi gửi OTP';
+        errEl.style.display = 'block';
+      }
+    } catch(e) {
+      errEl.textContent = 'Lỗi kết nối';
+      errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Nhận mã OTP';
+    }
+  };
+
+  window.evConfirmOtp = async function() {
+    const otp = document.getElementById('evOtpInput').value.trim();
+    const errEl = document.getElementById('evStep2Error');
+    errEl.style.display = 'none';
+    if (!otp || otp.length !== 6) {
+      errEl.textContent = 'Vui lòng nhập đủ 6 số';
+      errEl.style.display = 'block';
+      return;
+    }
+    try {
+      const res = await fetch('/api/account/confirm-email-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        document.getElementById('emailVerifyOverlay').style.display = 'none';
+      } else {
+        errEl.textContent = data.message || 'OTP không đúng';
+        errEl.style.display = 'block';
+      }
+    } catch(e) {
+      errEl.textContent = 'Lỗi kết nối';
+      errEl.style.display = 'block';
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', checkEmailVerified);
+})();
+
+// ===== TAB THÔNG TIN CÁ NHÂN =====
+async function loadProfile() {
+  try {
+    const res = await fetch('/api/account/profile');
+    const data = await res.json();
+    if (!data || data.status !== 'success') return;
+    document.getElementById('profileEmail').value = data.email || '';
+    document.getElementById('profileNickname').value = data.fullname || '';
+    document.getElementById('profilePhone').value = data.phone || '';
+    document.getElementById('profileSocialLinks').value = data.socialLinks || '';
+    const badge = document.getElementById('profileEmailVerifiedBadge');
+    if (badge) {
+      badge.textContent = data.emailVerified ? '✓ Đã xác thực' : '⚠ Chưa xác thực';
+      badge.style.color = data.emailVerified ? '#4caf50' : '#ff9800';
+    }
+  } catch(e) {}
+}
+
+async function saveProfile() {
+  const body = {
+    nickname: document.getElementById('profileNickname').value.trim(),
+    phone: document.getElementById('profilePhone').value.trim(),
+    socialLinks: document.getElementById('profileSocialLinks').value.trim()
+  };
+  try {
+    const res = await fetch('/api/account/update-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      if (typeof showToast === 'function') showToast('Cập nhật thành công', 'success');
+      else alert('Cập nhật thành công!');
+    } else {
+      if (typeof showToast === 'function') showToast(data.message, 'error');
+      else alert(data.message);
+    }
+  } catch(e) {
+    alert('Lỗi kết nối');
+  }
+}
+
+// ===== ĐỔI EMAIL =====
+function openChangeEmailModal() {
+  document.getElementById('ceNewEmail').value = '';
+  document.getElementById('ceOtpInput').value = '';
+  document.getElementById('ceStep1Error').style.display = 'none';
+  document.getElementById('ceStep2Error').style.display = 'none';
+  document.getElementById('ceStep1').style.display = 'block';
+  document.getElementById('ceStep2').style.display = 'none';
+  document.getElementById('changeEmailOverlay').style.display = 'flex';
+}
+
+function closeChangeEmailModal() {
+  document.getElementById('changeEmailOverlay').style.display = 'none';
+}
+
+function ceGoStep1() {
+  document.getElementById('ceStep1').style.display = 'block';
+  document.getElementById('ceStep2').style.display = 'none';
+}
+
+async function ceSendOtp() {
+  const newEmail = document.getElementById('ceNewEmail').value.trim();
+  const errEl = document.getElementById('ceStep1Error');
+  errEl.style.display = 'none';
+  if (!newEmail) {
+    errEl.textContent = 'Vui lòng nhập email mới';
+    errEl.style.display = 'block';
+    return;
+  }
+  try {
+    const res = await fetch('/api/account/send-change-email-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newEmail })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      document.getElementById('ceStep1').style.display = 'none';
+      document.getElementById('ceStep2').style.display = 'block';
+    } else {
+      errEl.textContent = data.message || 'Lỗi gửi OTP';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Lỗi kết nối';
+    errEl.style.display = 'block';
+  }
+}
+
+async function ceConfirmOtp() {
+  const otp = document.getElementById('ceOtpInput').value.trim();
+  const errEl = document.getElementById('ceStep2Error');
+  errEl.style.display = 'none';
+  if (!otp || otp.length !== 6) {
+    errEl.textContent = 'Vui lòng nhập đủ 6 số';
+    errEl.style.display = 'block';
+    return;
+  }
+  try {
+    const res = await fetch('/api/account/confirm-change-email-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ otp })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      closeChangeEmailModal();
+      loadProfile();
+      if (typeof showToast === 'function') showToast('Đổi email thành công', 'success');
+      else alert('Đổi email thành công!');
+    } else {
+      errEl.textContent = data.message || 'OTP không đúng';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Lỗi kết nối';
+    errEl.style.display = 'block';
+  }
+}
+  </script>
 
   </body>
 </html>

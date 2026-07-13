@@ -16,13 +16,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/user-chat")
 @RequiredArgsConstructor
+@Tag(name = "Chat", description = "Nhắn tin nội bộ giữa các tài khoản (danh bạ, lịch sử hội thoại, số tin chưa đọc)")
 public class ChatRestController {
 
     private final ChatService chatService;
 
+    @Operation(summary = "Danh sách liên hệ đã từng nhắn tin + tin nhắn gần nhất")
     @GetMapping("/contacts")
     public List<Map<String, Object>> getContacts(HttpSession session) {
         User me = currentUser(session);
@@ -42,6 +47,7 @@ public class ChatRestController {
                 .toList();
     }
 
+    @Operation(summary = "Toàn bộ lịch sử hội thoại giữa tôi và 1 người liên hệ")
     @GetMapping("/thread/{partnerId}")
     public List<ChatMessage> getThread(@PathVariable String partnerId, HttpSession session) {
         User me = currentUser(session);
@@ -54,6 +60,7 @@ public class ChatRestController {
         }
     }
 
+    @Operation(summary = "Tổng số tin nhắn chưa đọc của tôi (hiện badge trên chuông chat)")
     @GetMapping("/unread-count")
     public Map<String, Object> getUnreadCount(HttpSession session) {
         User me = currentUser(session);

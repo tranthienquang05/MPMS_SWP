@@ -19,8 +19,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @Controller
 @ControllerAdvice
+@Tag(name = "Notification", description = "Đánh dấu đã đọc thông báo (danh sách thông báo được nạp sẵn vào mọi trang qua @ModelAttribute)")
 public class NotificationController {
 
     @Autowired
@@ -43,6 +47,7 @@ public class NotificationController {
         }
     }
 
+    @Operation(summary = "Đánh dấu 1 thông báo là đã đọc")
     @PostMapping("/notification/{id}/read")
     @ResponseBody
     public Map<String, Object> markOneRead(@PathVariable Long id, HttpSession session) {
@@ -57,6 +62,7 @@ public class NotificationController {
         return result;
     }
 
+    @Operation(summary = "Đánh dấu toàn bộ thông báo của tôi là đã đọc")
     @PostMapping("/notification/read-all")
     @ResponseBody
     public Map<String, Object> markAllRead(HttpSession session) {

@@ -25,8 +25,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @Controller
 @RequestMapping("/manga/system-admin")
+@Tag(name = "Admin", description = "Quản trị hệ thống: tài khoản, phân công, xuất bản chapter, xếp hạng, lịch sử hoạt động, import Excel")
 public class AdminController {
 
     private final UserRepository userRepository;
@@ -96,6 +100,7 @@ public class AdminController {
         return "admin";
     }
 
+    @Operation(summary = "Dữ liệu tổng quan dashboard admin (thống kê tài khoản, series, đề xuất...)")
     @GetMapping("/data")
     @ResponseBody
     public Map<String, Object> adminData(HttpSession session) {
@@ -149,6 +154,7 @@ public class AdminController {
         return result;
     }
 
+    @Operation(summary = "Danh sách chapter đã duyệt (pass), đang chờ admin xuất bản")
     @GetMapping("/chapters/pending-publish")
     @ResponseBody
     public Map<String, Object> getChaptersPendingPublish(HttpSession session) {
@@ -176,6 +182,7 @@ public class AdminController {
         return result;
     }
 
+    @Operation(summary = "Xuất bản 1 chapter (thông báo cho mangaka, tantou và toàn bộ board)")
     @PostMapping("/chapters/{chapterId}/publish")
     @ResponseBody
     public Map<String, Object> publishChapter(@PathVariable String chapterId, HttpSession session) {
@@ -229,6 +236,7 @@ public class AdminController {
         return result;
     }
 
+    @Operation(summary = "Tạo tài khoản mới (mangaka/assistant/tantou/board/admin)")
     @PostMapping("/accounts/create")
     @ResponseBody
     public Map<String, Object> createAccount(@RequestBody Map<String, String> body,
@@ -322,6 +330,7 @@ public class AdminController {
         return result;
     }
 
+    @Operation(summary = "Cập nhật thông tin tài khoản")
     @PostMapping("/accounts/update")
     @ResponseBody
     public Map<String, Object> updateAccount(@RequestBody Map<String, String> body) {
@@ -378,6 +387,7 @@ public class AdminController {
         return result;
     }
 
+    @Operation(summary = "Xóa tài khoản")
     @PostMapping("/accounts/delete")
     @ResponseBody
     public Map<String, Object> deleteAccount(@RequestBody Map<String, String> body) {
@@ -418,6 +428,7 @@ public class AdminController {
     // ══════════════════════════════════════════════════════════════
 
     // Đổi Mangaka của Assistant
+    @Operation(summary = "Gán 1 trợ lý vào làm việc dưới 1 mangaka")
     @PostMapping("/assign/assistant-mangaka")
     @ResponseBody
     public Map<String, Object> assignAssistantToMangaka(@RequestBody Map<String, String> body) {
@@ -459,6 +470,7 @@ public class AdminController {
     }
 
     // Đổi TantoEditor của Mangaka
+    @Operation(summary = "Gán 1 mangaka vào phụ trách bởi 1 tantou (biên tập viên)")
     @PostMapping("/assign/mangaka-tanto")
     @ResponseBody
     public Map<String, Object> assignMangakaToTanto(@RequestBody Map<String, String> body) {
@@ -498,6 +510,7 @@ public class AdminController {
     // ════════════════════════════════════════════════════════════
 
     // Lấy danh sách series cho dropdown khi tạo phiên
+    @Operation(summary = "Danh sách toàn bộ series để admin chọn tạo phiên vote")
     @GetMapping("/ranking/all-series")
     @ResponseBody
     public Map<String, Object> getAllSeriesForVote(HttpSession session) {
@@ -524,6 +537,7 @@ public class AdminController {
     }
 
     // Tạo phiên vote thủ công (Admin chọn series + loại vote)
+    @Operation(summary = "Admin mở phiên vote mới (stop/defense/reward) cho 1 series")
     @PostMapping("/ranking/create-session")
     @ResponseBody
     public Map<String, Object> createVoteSession(
@@ -599,6 +613,7 @@ public class AdminController {
     }
 
     // Tạo phiên vote dừng cho 3 series cuối bảng
+    @Operation(summary = "Tự động mở phiên vote 'stop' cho các series cuối bảng xếp hạng")
     @PostMapping("/ranking/create-bottom-sessions")
     @ResponseBody
     public Map<String, Object> createBottomVoteSessions(
@@ -697,6 +712,7 @@ public class AdminController {
     // ════════════════════════════════════════════════════════════
 
     // Search user theo keyword (fullname / username / email / id)
+    @Operation(summary = "Tìm kiếm tài khoản theo tên/username/email/role")
     @GetMapping("/users/search")
     @ResponseBody
     public Map<String, Object> searchUsers(
@@ -737,6 +753,7 @@ public class AdminController {
     }
 
     // Lấy lịch sử hoạt động của 1 user — tổng hợp từ nhiều bảng có sẵn
+    @Operation(summary = "Lịch sử hoạt động của 1 tài khoản — gộp từ nhiều nguồn (Proposal, Chapter, Submission, BoardProposalComment, ActivityLog)")
     @GetMapping("/users/{userId}/activity")
     @ResponseBody
     public Map<String, Object> getUserActivity(
@@ -1008,6 +1025,7 @@ public class AdminController {
     // ════════════════════════════════════════════════════════════
     // TÍNH NĂNG 3: IMPORT EXCEL
     // ════════════════════════════════════════════════════════════
+    @Operation(summary = "Import danh sách tài khoản hàng loạt từ file Excel")
     @PostMapping("/import-excel")
     @ResponseBody
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
@@ -1223,6 +1241,7 @@ public class AdminController {
         }
     }
 
+    @Operation(summary = "Tải file Excel mẫu để import tài khoản")
     @GetMapping("/download-template")
     public org.springframework.http.ResponseEntity<byte[]> downloadTemplate() {
         try (Workbook workbook = new XSSFWorkbook()) {

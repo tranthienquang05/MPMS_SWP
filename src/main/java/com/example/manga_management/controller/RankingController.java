@@ -9,10 +9,13 @@ import org.springframework.web.bind.annotation.*;
 import com.example.manga_management.entity.*;
 import com.example.manga_management.repository.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/manga/ranking")
+@Tag(name = "Ranking", description = "Bảng xếp hạng series và bỏ phiếu hội đồng (stop/defense/reward)")
 public class RankingController {
 
     private final RankingRepository rankingRepository;
@@ -40,6 +43,7 @@ public class RankingController {
     }
 
     // ===== 1. API ranking =====
+    @Operation(summary = "Bảng xếp hạng series theo tháng/quý/năm (view, like, dislike)")
     @GetMapping
     public List<Map<String, Object>> getRanking(
             @RequestParam(defaultValue = "0") int month,
@@ -71,6 +75,7 @@ public class RankingController {
     }
 
     // ===== 2. Lấy danh sách phiên vote đang mở (tất cả board thấy) =====
+    @Operation(summary = "Danh sách phiên vote (stop/defense/reward) và tiến độ bỏ phiếu")
     @GetMapping("/active-sessions")
     public List<Map<String, Object>> getActiveSessions(HttpSession session) {
         User user = (User) session.getAttribute("user");
@@ -129,6 +134,7 @@ public class RankingController {
     }
 
     // ===== 5. Board cast vote vào phiên =====
+    @Operation(summary = "Board bỏ phiếu cho một phiên vote series đang mở")
     @PostMapping("/cast-session-vote")
     public Map<String, Object> castSessionVote(
             @RequestParam String sessionId,

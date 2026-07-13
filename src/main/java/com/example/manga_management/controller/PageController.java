@@ -33,10 +33,13 @@ import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.SubmissionRepository;
 import com.example.manga_management.service.ActivityLogService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api/page")
+@Tag(name = "Page", description = "Giao việc vẽ trang cho trợ lý, duyệt bài, và nhận xét của tantou trên từng trang")
 public class PageController {
 
     @Autowired
@@ -84,6 +87,7 @@ public class PageController {
         assistantRepository.save(assistant);
     }
 
+    @Operation(summary = "Lưu ảnh bản vẽ (base64) cho một trang")
     @PostMapping("/{pageId}/savefile")
     @ResponseBody
     public Map<String, String> savePageFile(@PathVariable String pageId,
@@ -142,6 +146,7 @@ public class PageController {
         return result;
     }
 
+    @Operation(summary = "Thông tin submission (bài nộp) gần nhất của một trang")
     @GetMapping("/{pageId}/submission")
     @ResponseBody
     public Map<String, Object> getPageSubmission(@PathVariable String pageId) {
@@ -162,6 +167,7 @@ public class PageController {
         return result;
     }
 
+    @Operation(summary = "Mangaka giao vẽ 1 trang cho trợ lý (kèm deadline + note từng frame)")
     @PostMapping("/{pageId}/assign")
     @ResponseBody
     @Transactional
@@ -333,6 +339,7 @@ public class PageController {
         return result;
     }
 
+    @Operation(summary = "Đánh dấu 1 trang đã hoàn thành xong (kết thúc vòng làm việc)")
     @PostMapping("/{pageId}/finish")
     @ResponseBody
     public Map<String, Object> finishPage(@PathVariable String pageId) {
@@ -378,6 +385,7 @@ public class PageController {
         return result;
     }
 
+    @Operation(summary = "Mangaka duyệt bài trợ lý vừa nộp cho 1 trang")
     @PostMapping("/{pageId}/approve-done")
     @ResponseBody
     public Map<String, Object> approvePageDone(@PathVariable String pageId) {
@@ -450,6 +458,7 @@ public class PageController {
     //     result.put("pageId", pageId);
     //     return result;
     // }
+    @Operation(summary = "Giao lại trang cho đúng trợ lý cũ (đổi deadline/note, không đổi người)")
     @PostMapping("/{pageId}/reassign")
     @ResponseBody
     public Map<String, Object> reassignPage(@PathVariable String pageId,
@@ -562,6 +571,7 @@ public class PageController {
     }
 
     /** Tantou nhận xét riêng cho 1 trang (khác kịch bản) — mangaka xem được, có thông báo + lưu lịch sử. */
+    @Operation(summary = "Tantou lưu nhận xét cho 1 trang (chặn nếu trang đã hoàn thành)")
     @PostMapping("/{pageId}/tantou-comment")
     @ResponseBody
     public Map<String, Object> saveTantouComment(@PathVariable String pageId,

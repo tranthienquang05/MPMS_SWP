@@ -3810,3 +3810,10 @@ body:not(:has(.topnav)) .app-floating-modal {
   cursor: not-allowed;
   background: #555 !important;
 }
+
+
+/* Keep global alerts above nested page action modals */
+#uiAlertOverlay,
+#uiConfirmOverlay {
+  z-index: 9000 !important;
+}

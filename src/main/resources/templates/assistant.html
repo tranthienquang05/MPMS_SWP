@@ -184,16 +184,21 @@
 
           <div class="u-inline-style-030">
             <h3 th:text="${done != null ? #lists.size(done) : 0}"></h3>
-            <p>Hoàn thành</p>
+            <p>Tổng đã hoàn thành</p>
           </div>
 
           <div class="u-inline-style-030">
-            <h3 th:text="${totalSalary != null ? #numbers.formatInteger(totalSalary, 0, 'COMMA') : 0}"></h3>
+            <h3 th:text="${completedThisMonth != null ? completedThisMonth : 0}"></h3>
+            <p th:text="${currentMonthLabel != null ? currentMonthLabel : 'Hoàn thành tháng này'}">Hoàn thành tháng này</p>
+          </div>
+
+          <div class="u-inline-style-030">
+            <h3 th:text="|${monthlySalary != null ? #numbers.formatInteger(monthlySalary, 0, 'COMMA') : 0} VNĐ|"></h3>
             <p>
-              Tổng lương
+              Lương tháng này
               <small
                 th:if="${salaryPerTask != null}"
-                th:text="|(${#numbers.formatInteger(salaryPerTask, 0, 'COMMA')} / task)|"
+                th:text="|(${#numbers.formatInteger(salaryPerTask, 0, 'COMMA')} VNĐ/task)|"
               ></small>
             </p>
           </div>
@@ -769,6 +774,13 @@
           </button>
         </div>
 
+        <p class="ptab-sub-desc assistant-task-month-summary">
+          <span th:text="${currentMonthLabel != null ? currentMonthLabel : 'Hoàn thành tháng này'}"></span>:
+          <strong th:text="${completedThisMonth != null ? completedThisMonth : 0}"></strong> task —
+          Lương tháng này:
+          <strong th:text="|${monthlySalary != null ? #numbers.formatInteger(monthlySalary, 0, 'COMMA') : 0} VNĐ|"></strong>
+        </p>
+
         <p
           id="assistantTaskTabDesc"
           class="ptab-sub-desc assistant-task-tab-desc"
@@ -928,7 +940,7 @@
                 ></td>
                 <td class="assistant-task-note">
                   <span th:if="${s.approvedAt != null}"
-                    th:text="|Duyệt lúc ${#temporals.format(s.approvedAt, 'dd/MM/yyyy HH:mm')} — +${salaryPerTask != null ? #numbers.formatInteger(salaryPerTask, 0, 'COMMA') : 0}|"
+                    th:text="|Duyệt lúc ${#temporals.format(s.approvedAt, 'dd/MM/yyyy HH:mm')} — +${salaryPerTask != null ? #numbers.formatInteger(salaryPerTask, 0, 'COMMA') : 0} VNĐ|"
                   ></span>
                   <span th:unless="${s.approvedAt != null}">Đã hoàn thành.</span>
                 </td>

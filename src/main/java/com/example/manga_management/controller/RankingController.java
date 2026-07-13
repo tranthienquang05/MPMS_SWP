@@ -1,13 +1,10 @@
 package com.example.manga_management.controller;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.servlet.http.HttpServletResponse;
 
 import com.example.manga_management.entity.*;
 import com.example.manga_management.repository.*;
@@ -295,19 +292,6 @@ public class RankingController {
         if (mangaka.getEditor() != null && mangaka.getEditor().getUser() != null) {
             notificationController.send(null, mangaka.getEditor().getUser().getId(), content, "/manga/tantou");
         }
-    }
-
-    // ===== 6. Reset toàn bộ vote để demo(http://localhost:8080/manga/ranking/reset-vote) =====
-    @GetMapping("/reset-vote")
-    public void resetVote(HttpServletResponse httpResp) throws IOException {
-        // Xóa SeriesVote trước, sau đó VoteSession để tránh lỗi FK
-        seriesVoteRepository.deleteAll();
-        voteSessionRepository.deleteAll();
-
-        // Dùng UPDATE trực tiếp để tránh lỗi duplicate ID khi load entity
-        rankingRepository.resetSeriesStatus();
-
-        httpResp.sendRedirect("/manga/editor");
     }
 
     private List<Integer> getMonthsForQuarter(int quarter) {

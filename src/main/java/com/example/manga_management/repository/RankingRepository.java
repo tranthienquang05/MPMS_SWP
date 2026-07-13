@@ -2,10 +2,8 @@ package com.example.manga_management.repository;
 
 import com.example.manga_management.entity.LikeResult;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -102,9 +100,4 @@ public interface RankingRepository extends JpaRepository<LikeResult, String> {
 
     @Query(value = "SELECT Status FROM series WHERE SeriesID = :seriesId LIMIT 1", nativeQuery = true)
     String getSeriesStatus(@Param("seriesId") String seriesId);
-
-    @Transactional
-    @Modifying
-    @Query("UPDATE Series s SET s.status = 'unfinish' WHERE s.status IN ('stopped', 'rewarded')")
-    int resetSeriesStatus();
 }

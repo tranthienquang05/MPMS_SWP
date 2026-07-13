@@ -582,6 +582,12 @@ public class PageController {
             return result;
         }
 
+        if ("finish".equals(page.getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Trang đã hoàn thành, không thể thêm nhận xét!");
+            return result;
+        }
+
         String comment = body.get("comment");
         if (comment == null || comment.trim().isEmpty()) {
             result.put("status", "error");

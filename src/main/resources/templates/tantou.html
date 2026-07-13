@@ -544,7 +544,7 @@
               <h4>Nhận xét của bạn cho trang này</h4>
               <textarea id="mm-s5-comment-input" rows="4" maxlength="500"
                 placeholder="Nhập nhận xét cho mangaka về trang này..."></textarea>
-              <button type="button" class="btn-action primary" onclick="mmSavePageComment()"
+              <button type="button" id="mm-s5-comment-btn" class="btn-action primary" onclick="mmSavePageComment()"
                 style="margin-top:8px;">Lưu nhận xét</button>
               <span id="mm-s5-comment-status" style="margin-left:8px;"></span>
             </div>
@@ -1467,8 +1467,14 @@
 
         document.getElementById("mm-s5-script").textContent =
           p.script || "Không có kịch bản";
-        document.getElementById("mm-s5-comment-input").value = p.tantouComment || "";
-        document.getElementById("mm-s5-comment-status").textContent = "";
+        const commentInput = document.getElementById("mm-s5-comment-input");
+        const commentBtn = document.getElementById("mm-s5-comment-btn");
+        const statusEl0 = document.getElementById("mm-s5-comment-status");
+        commentInput.value = p.tantouComment || "";
+        const isFinished = p.status === "finish";
+        commentInput.disabled = isFinished;
+        commentBtn.disabled = isFinished;
+        statusEl0.textContent = isFinished ? "Trang đã hoàn thành, không thể thêm nhận xét." : "";
         mmGoToScreen(5);
       }
 
@@ -1477,6 +1483,9 @@
         const input = document.getElementById("mm-s5-comment-input");
         const comment = input.value.trim();
         const statusEl = document.getElementById("mm-s5-comment-status");
+        if (input.disabled) {
+          return;
+        }
         if (!comment) {
           statusEl.textContent = "Vui lòng nhập nhận xét!";
           return;

@@ -1,5 +1,6 @@
 package com.example.manga_management.controller;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,23 @@ public class AssistantController {
         return frameCounts;
     }
 
+    /**
+     * Lương chỉ tính trên số task được duyệt (ApprovedAt) trong THÁNG HIỆN TẠI —
+     * task hoàn thành ở các tháng trước không được tính vào lương tháng này.
+     */
+    private int countCompletedThisMonth(List<Submission> done) {
+        LocalDate now = LocalDate.now();
+        int count = 0;
+        for (Submission s : done) {
+            if (s.getApprovedAt() != null
+                    && s.getApprovedAt().getMonthValue() == now.getMonthValue()
+                    && s.getApprovedAt().getYear() == now.getYear()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     // ================= HOME =================
     @GetMapping("")
     public String assistantHome(Model model, HttpSession session) {
@@ -103,7 +121,10 @@ public class AssistantController {
         // Lương = số task đã được duyệt (done) x lương mỗi task. Ngày duyệt lấy
         // thẳng từ Submission.approvedAt (đã có sẵn từ khi mangaka bấm Duyệt).
         model.addAttribute("salaryPerTask", assistant.getSalaryPerTask());
-        model.addAttribute("totalSalary", done.size() * assistant.getSalaryPerTask());
+        int completedThisMonth = countCompletedThisMonth(done);
+        model.addAttribute("completedThisMonth", completedThisMonth);
+        model.addAttribute("monthlySalary", completedThisMonth * assistant.getSalaryPerTask());
+        model.addAttribute("currentMonthLabel", "Hoàn thành tháng " + LocalDate.now().getMonthValue());
         if (model.getAttribute("activeTab") == null) {
             model.addAttribute("activeTab", "tab-home");
         }
@@ -141,7 +162,10 @@ public class AssistantController {
         model.addAttribute("done", done);
         model.addAttribute("frameCounts", buildFrameCounts(todo, waiting, done));
         model.addAttribute("salaryPerTask", assistant.getSalaryPerTask());
-        model.addAttribute("totalSalary", done.size() * assistant.getSalaryPerTask());
+        int completedThisMonth = countCompletedThisMonth(done);
+        model.addAttribute("completedThisMonth", completedThisMonth);
+        model.addAttribute("monthlySalary", completedThisMonth * assistant.getSalaryPerTask());
+        model.addAttribute("currentMonthLabel", "Hoàn thành tháng " + LocalDate.now().getMonthValue());
 
         model.addAttribute("submissions", submissions);
         model.addAttribute("activeTab", "tab-project");
@@ -211,7 +235,10 @@ public class AssistantController {
         model.addAttribute("done", done);
         model.addAttribute("frameCounts", buildFrameCounts(todo, waiting, done));
         model.addAttribute("salaryPerTask", assistant.getSalaryPerTask());
-        model.addAttribute("totalSalary", done.size() * assistant.getSalaryPerTask());
+        int completedThisMonth = countCompletedThisMonth(done);
+        model.addAttribute("completedThisMonth", completedThisMonth);
+        model.addAttribute("monthlySalary", completedThisMonth * assistant.getSalaryPerTask());
+        model.addAttribute("currentMonthLabel", "Hoàn thành tháng " + LocalDate.now().getMonthValue());
 
         model.addAttribute("submission", submission);
         model.addAttribute("page", submission.getPageId());

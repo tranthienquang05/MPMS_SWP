@@ -1163,7 +1163,35 @@
       <!-- Tab profile content -->
       <div id="tab-profile" class="tab-pane">
         <h2>Thông tin cá nhân</h2>
-        <p>Tính năng đang phát triển...</p>
+        <div class="section-card" style="max-width:520px;">
+
+          <div class="field">
+            <label>Email <span id="profileEmailVerifiedBadge"></span></label>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <input id="profileEmail" disabled style="flex:1;" />
+              <button type="button" class="btn-sm btn-primary" onclick="openChangeEmailModal()">Đổi email</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Họ tên (Nickname)</label>
+            <input id="profileNickname" placeholder="Họ tên hiển thị..." />
+          </div>
+
+          <div class="field">
+            <label>Số điện thoại</label>
+            <input id="profilePhone" placeholder="Số điện thoại..." />
+          </div>
+
+          <div class="field">
+            <label>Link cá nhân (mạng xã hội, portfolio...)</label>
+            <input id="profileSocialLinks" placeholder="https://..." />
+          </div>
+
+          <div class="modal-footer" style="padding:0; margin-top:1rem;">
+            <button type="button" class="btn-sm btn-primary" onclick="saveProfile()">Lưu thông tin</button>
+          </div>
+        </div>
       </div>
 
       <!-- Tab chat content -->
@@ -3322,39 +3350,6 @@
           <input type="password" id="cpConfirmPassword" placeholder="Nhập lại mật khẩu mới" style="margin-bottom:0.75rem;" />
           <div id="cpStep3Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
           <button type="button" class="btn-primary" style="width:100%;" onclick="cpChangePassword()">Xác nhận đổi mật khẩu</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="tab-profile" class="tab-pane">
-      <h2>Thong tin ca nhan</h2>
-      <div class="section-card" style="max-width:520px;">
-
-        <div class="field">
-          <label>Email <span id="profileEmailVerifiedBadge"></span></label>
-          <div style="display:flex; gap:0.5rem; align-items:center;">
-            <input id="profileEmail" disabled style="flex:1;" />
-            <button type="button" class="btn-sm btn-primary" onclick="openChangeEmailModal()">Doi email</button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Ho ten (Nickname)</label>
-          <input id="profileNickname" placeholder="Ho ten hien thi..." />
-        </div>
-
-        <div class="field">
-          <label>So dien thoai</label>
-          <input id="profilePhone" placeholder="So dien thoai..." />
-        </div>
-
-        <div class="field">
-          <label>Link ca nhan (mang xa hoi, portfolio...)</label>
-          <input id="profileSocialLinks" placeholder="https://..." />
-        </div>
-
-        <div class="modal-footer" style="padding:0; margin-top:1rem;">
-          <button type="button" class="btn-sm btn-primary" onclick="saveProfile()">Luu thong tin</button>
         </div>
       </div>
     </div>

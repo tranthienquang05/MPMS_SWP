@@ -2,9 +2,11 @@ package com.example.manga_management.controller;
 
 import com.example.manga_management.dto.ApiResult;
 import com.example.manga_management.entity.User;
-import com.example.manga_management.repository.UserRepository;
+import com.example.manga_management.repository.*;
 import com.example.manga_management.service.EmailService;
 import com.example.manga_management.service.OtpService;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,7 +22,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -31,13 +35,34 @@ public class AccountController {
     private final UserRepository userRepository;
     private final OtpService otpService;
     private final EmailService emailService;
+    private final MangakaRepository mangakaRepository;
+    private final AssistantRepository assistantRepository;
+    private final TantoEditorRepository tantoEditorRepository;
+    private final BoardRepository boardRepository;
+    private final SeriesRepository seriesRepository;
+    private final SubmissionRepository submissionRepository;
+    private final EditorialVoteRepository editorialVoteRepository;
 
     public AccountController(UserRepository userRepository,
                              OtpService otpService,
-                             EmailService emailService) {
+                             EmailService emailService,
+                             MangakaRepository mangakaRepository,
+                             AssistantRepository assistantRepository,
+                             TantoEditorRepository tantoEditorRepository,
+                             BoardRepository boardRepository,
+                             SeriesRepository seriesRepository,
+                             SubmissionRepository submissionRepository,
+                             EditorialVoteRepository editorialVoteRepository) {
         this.userRepository = userRepository;
         this.otpService = otpService;
         this.emailService = emailService;
+        this.mangakaRepository = mangakaRepository;
+        this.assistantRepository = assistantRepository;
+        this.tantoEditorRepository = tantoEditorRepository;
+        this.boardRepository = boardRepository;
+        this.seriesRepository = seriesRepository;
+        this.submissionRepository = submissionRepository;
+        this.editorialVoteRepository = editorialVoteRepository;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -214,11 +239,166 @@ public class AccountController {
         result.put("status", "success");
         result.put("id", user.getId());
         result.put("fullname", user.getFullname());
+        result.put("username", user.getUsername());
         result.put("email", user.getEmail());
+        result.put("avatar", user.getAvatar());
+        result.put("profile", user.getProfile());
         result.put("phone", user.getPhone());
         result.put("socialLinks", user.getSocialLinks());
         result.put("emailVerified", user.isEmailVerified());
         result.put("role", user.getRole());
+
+        String role = user.getRole();
+
+        if ("mangaka".equalsIgnoreCase(role)) {
+            mangakaRepository.findByUserId(user.getId()).ifPresent(mgk -> {
+                result.put("profileId", mgk.getId());
+                if (mgk.getEditor() != null) {
+                    Map<String, Object> editorInfo = new HashMap<>();
+                    editorInfo.put("editorId", mgk.getEditor().getId());
+                    editorInfo.put("editorName", mgk.getEditor().getUser().getFullname());
+                    result.put("editor", editorInfo);
+                }
+                List<Map<String, Object>> assistants = assistantRepository.findByMangakaId(mgk.getId())
+                    .stream().map(a -> {
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("assistantId", a.getId());
+                        m.put("name", a.getUser().getFullname());
+                        m.put("salaryPerTask", a.getSalaryPerTask());
+                        m.put("status", a.getStatus());
+                        return m;
+                    }).toList();
+                result.put("assistants", assistants);
+                List<Map<String, Object>> seriesList = seriesRepository.findByProposal_Mangaka_Id(mgk.getId())
+                    .stream().map(s -> {
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("seriesId", s.getId());
+                        m.put("seriesName", s.getSeriesName());
+                        m.put("genre", s.getGenre());
+                        m.put("status", s.getStatus());
+                        m.put("startDate", s.getStartDate() != null ? s.getStartDate().toString() : null);
+                        return m;
+                    }).toList();
+                result.put("series", seriesList);
+                
+                // Extra stats for mangaka
+                result.put("totalSeries", seriesList.size());
+                long totalAssistants = assistants.size();
+                result.put("totalAssistants", totalAssistants);
+            });
+
+        } else if ("assistant".equalsIgnoreCase(role)) {
+            try {
+                assistantRepository.findByUserId(user.getId()).ifPresent(ast -> {
+                result.put("profileId", ast.getId());
+                result.put("salaryPerTask", ast.getSalaryPerTask());
+                result.put("status", ast.getStatus());
+                if (ast.getMangaka() != null) {
+                    Map<String, Object> mgkInfo = new HashMap<>();
+                    mgkInfo.put("mangakaId", ast.getMangaka().getId());
+                    if (ast.getMangaka().getUser() != null) {
+                        mgkInfo.put("mangakaName", ast.getMangaka().getUser().getFullname());
+                    } else {
+                        mgkInfo.put("mangakaName", "Không xác định");
+                    }
+                    result.put("mangaka", mgkInfo);
+                }
+                
+                // Detailed task statistics
+                List<com.example.manga_management.entity.Submission> submissions = submissionRepository.findByAssistant_Id(ast.getId());
+                long totalTasks = submissions.size();
+                long completedTasks = submissions.stream().filter(s -> "approved".equalsIgnoreCase(s.getStatus())).count();
+                long pendingTasks = submissions.stream().filter(s -> "assigned".equalsIgnoreCase(s.getStatus()) || "submitted".equalsIgnoreCase(s.getStatus())).count();
+                long failedTasks = submissions.stream().filter(s -> "failed".equalsIgnoreCase(s.getStatus())).count();
+                
+                Map<String, Object> stats = new HashMap<>();
+                stats.put("totalTasks", totalTasks);
+                stats.put("completedTasks", completedTasks);
+                stats.put("pendingTasks", pendingTasks);
+                stats.put("failedTasks", failedTasks);
+                result.put("taskStats", stats);
+
+                // Thêm danh sách task gần đây (giới hạn hiển thị vài task trên UI)
+                List<Map<String, Object>> recentTasks = submissions.stream()
+                    .sorted((s1, s2) -> {
+                        if (s1.getDeadline() == null && s2.getDeadline() == null) return 0;
+                        if (s1.getDeadline() == null) return 1;
+                        if (s2.getDeadline() == null) return -1;
+                        return s2.getDeadline().compareTo(s1.getDeadline()); // Mới nhất lên đầu
+                    })
+                    .map(s -> {
+                        Map<String, Object> taskInfo = new HashMap<>();
+                        taskInfo.put("taskId", s.getId());
+                        taskInfo.put("status", s.getStatus());
+                        taskInfo.put("deadline", s.getDeadline() != null ? s.getDeadline().toString() : "—");
+                        if (s.getPageId() != null) {
+                            taskInfo.put("pageNumber", s.getPageId().getPageNumber());
+                            if (s.getPageId().getChapter() != null) {
+                                taskInfo.put("chapterNumber", s.getPageId().getChapter().getChapterNumber());
+                                if (s.getPageId().getChapter().getSeries() != null) {
+                                    taskInfo.put("seriesName", s.getPageId().getChapter().getSeries().getSeriesName());
+                                } else {
+                                    taskInfo.put("seriesName", "?");
+                                }
+                            } else {
+                                taskInfo.put("chapterNumber", "?");
+                            }
+                        } else {
+                            taskInfo.put("pageNumber", "?");
+                        }
+                        return taskInfo;
+                    }).toList();
+                result.put("recentTasks", recentTasks);
+            });
+            } catch (Exception e) {
+                result.put("status", "error");
+                result.put("message", "Lỗi backend: " + e.getMessage());
+                try {
+                    java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter("debug_error.log"));
+                    e.printStackTrace(pw);
+                    pw.close();
+                } catch (Exception ex) {}
+            }
+
+        } else if ("tantou".equalsIgnoreCase(role)) {
+            tantoEditorRepository.findByUserId(user.getId()).ifPresent(editor -> {
+                result.put("profileId", editor.getId());
+                List<Map<String, Object>> mangakaList = mangakaRepository.findByEditor_Id(editor.getId())
+                    .stream().map(m -> {
+                        Map<String, Object> info = new HashMap<>();
+                        info.put("mangakaId", m.getId());
+                        info.put("mangakaName", m.getUser().getFullname());
+                        info.put("seriesCount", seriesRepository.findByProposal_Mangaka_Id(m.getId()).size());
+                        return info;
+                    }).toList();
+                result.put("managedMangaka", mangakaList);
+                
+                long totalSeriesManaged = mangakaList.stream().mapToLong(m -> (long) (Integer) m.get("seriesCount")).sum();
+                result.put("totalSeriesManaged", totalSeriesManaged);
+                result.put("totalMangakaManaged", mangakaList.size());
+            });
+
+        } else if ("board".equalsIgnoreCase(role)) {
+            boardRepository.findByUser_Id(user.getId()).ifPresent(board -> {
+                result.put("profileId", board.getId());
+                List<com.example.manga_management.entity.EditorialVote> votes = editorialVoteRepository.findByBoard_User_IdOrderByVoteDateDesc(user.getId());
+                long totalVotes = votes.size();
+                long approvedVotes = votes.stream().filter(v -> "approve".equalsIgnoreCase(v.getVote())).count();
+                long rejectedVotes = votes.stream().filter(v -> "reject".equalsIgnoreCase(v.getVote())).count();
+                
+                Map<String, Object> stats = new HashMap<>();
+                stats.put("totalVotes", totalVotes);
+                stats.put("approvedVotes", approvedVotes);
+                stats.put("rejectedVotes", rejectedVotes);
+                result.put("voteStats", stats);
+            });
+        }
+
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            mapper.writeValue(new java.io.File("debug_result.json"), result);
+        } catch (Exception e) {}
+
         return result;
     }
 
@@ -422,6 +602,10 @@ public class AccountController {
         if (socialLinks != null) {
             user.setSocialLinks(socialLinks);
         }
+        String profile = body.get("profile");
+        if (profile != null) {
+            user.setProfile(profile);
+        }
         try {
             User savedUser = userRepository.save(user);
             session.setAttribute("user", savedUser);
@@ -430,6 +614,54 @@ public class AccountController {
         } catch (Exception e) {
             result.put("status", "error");
             result.put("message", "Lỗi hệ thống: " + e.getMessage());
+        }
+        return result;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Endpoint 10: Upload Avatar
+    // ─────────────────────────────────────────────────────────────────────────
+    @Operation(summary = "[SWAGGER] Upload ảnh đại diện")
+    @PostMapping("/upload-avatar")
+    @ResponseBody
+    public Map<String, Object> uploadAvatar(@RequestParam("file") MultipartFile file,
+                                             HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập");
+            return result;
+        }
+        if (file == null || file.isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "Chưa chọn file");
+            return result;
+        }
+        try {
+            String originalName = file.getOriginalFilename();
+            String ext = originalName != null && originalName.contains(".")
+                ? originalName.substring(originalName.lastIndexOf(".")) : ".jpg";
+            if (!List.of(".jpg", ".jpeg", ".png", ".gif", ".webp").contains(ext.toLowerCase())) {
+                result.put("status", "error");
+                result.put("message", "Chỉ chấp nhận file ảnh (jpg, png, gif, webp)");
+                return result;
+            }
+            String fileName = "avatar_" + user.getId() + ext;
+            String uploadDir = System.getProperty("user.dir") + File.separator
+                + "src" + File.separator + "main" + File.separator
+                + "resources" + File.separator + "static" + File.separator + "avatars" + File.separator;
+            java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
+            java.nio.file.Files.createDirectories(uploadPath);
+            file.transferTo(uploadPath.resolve(fileName).toFile());
+            user.setAvatar("/avatars/" + fileName);
+            User savedUser = userRepository.save(user);
+            session.setAttribute("user", savedUser);
+            result.put("status", "success");
+            result.put("avatarUrl", "/avatars/" + fileName);
+        } catch (Exception e) {
+            result.put("status", "error");
+            result.put("message", "Lỗi upload: " + e.getMessage());
         }
         return result;
     }

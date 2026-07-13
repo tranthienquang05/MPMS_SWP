@@ -1061,6 +1061,78 @@
           </div>
         </div>
       </div>
+      <div id="tab-profile" class="tab-pane">
+      <h2>Thông tin cá nhân</h2>
+
+      <!-- Avatar -->
+      <div class="section-card" style="max-width:520px; display:flex; align-items:center; gap:1.5rem; margin-bottom:1rem;">
+        <div style="position:relative; flex-shrink:0;">
+          <img id="profileAvatarImg"
+               src="/images/default-avatar.svg"
+               style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:2px solid var(--border);"
+               onerror="this.src='/images/default-avatar.svg'" />
+          <label for="avatarFileInput"
+                 style="position:absolute; bottom:0; right:0; background:var(--accent); color:#fff;
+                        border-radius:50%; width:24px; height:24px; display:flex; align-items:center;
+                        justify-content:center; cursor:pointer; font-size:14px;" title="Đổi ảnh">✎</label>
+          <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="uploadAvatar(this)" />
+        </div>
+        <div>
+          <div style="font-weight:600; font-size:1rem;" id="profileDisplayName"></div>
+          <div style="font-size:0.8rem; color:var(--text-muted);" id="profileDisplayRole"></div>
+          <div style="font-size:0.8rem; color:var(--text-muted);" id="profileDisplayId"></div>
+        </div>
+      </div>
+
+      <!-- Form chỉnh sửa -->
+      <div class="section-card" style="max-width:520px;">
+
+        <div class="field">
+          <label>Email <span id="profileEmailVerifiedBadge"></span></label>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <input id="profileEmail" disabled style="flex:1;" />
+            <button type="button" class="btn-sm btn-primary" onclick="openChangeEmailModal()">Đổi email</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Username</label>
+          <input id="profileUsername" disabled />
+        </div>
+
+        <div class="field">
+          <label>Họ tên (Nickname)</label>
+          <input id="profileNickname" placeholder="Họ tên hiển thị..." />
+        </div>
+
+        <div class="field">
+          <label>Số điện thoại</label>
+          <input id="profilePhone" placeholder="Số điện thoại..." />
+        </div>
+
+        <div class="field">
+          <label>Link cá nhân (mạng xã hội, portfolio...)</label>
+          <input id="profileSocialLinks" placeholder="https://..." />
+        </div>
+
+        <div class="field">
+          <label>Giới thiệu bản thân</label>
+          <textarea id="profileBio" placeholder="Viết vài dòng về bản thân..."
+                    style="width:100%; min-height:80px; resize:vertical;"></textarea>
+        </div>
+
+        <div class="modal-footer" style="padding:0; margin-top:1rem;">
+          <button type="button" class="btn-sm btn-primary" onclick="saveProfile()">Lưu thông tin</button>
+        </div>
+      </div>
+
+      <!-- Thông tin tĩnh theo role -->
+      <div id="profileRoleInfo" class="section-card" style="max-width:520px; margin-top:1.5rem; display:none;">
+        <h3 id="profileRoleInfoTitle" style="margin-bottom:1rem;"></h3>
+        <div id="profileRoleInfoContent"></div>
+      </div>
+    </div>
+
     </div>
     <script src="/js/draw.js" defer></script>
 
@@ -1207,6 +1279,10 @@
           sessionStorage.removeItem("assistantTaskStatusTab");
           setAssistantTaskTab(savedTaskTab);
         }
+        if (document.getElementById('tab-profile') &&
+          document.getElementById('tab-profile').classList.contains('active')) {
+          loadProfile();
+        }
       });
 
       async function submitSubmission(btn) {
@@ -1347,39 +1423,6 @@
           <input type="password" id="cpConfirmPassword" placeholder="Nhập lại mật khẩu mới" style="margin-bottom:0.75rem;" />
           <div id="cpStep3Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
           <button type="button" class="btn-primary" style="width:100%;" onclick="cpChangePassword()">Xác nhận đổi mật khẩu</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="tab-profile" class="tab-pane">
-      <h2>Thong tin ca nhan</h2>
-      <div class="section-card" style="max-width:520px;">
-
-        <div class="field">
-          <label>Email <span id="profileEmailVerifiedBadge"></span></label>
-          <div style="display:flex; gap:0.5rem; align-items:center;">
-            <input id="profileEmail" disabled style="flex:1;" />
-            <button type="button" class="btn-sm btn-primary" onclick="openChangeEmailModal()">Doi email</button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Ho ten (Nickname)</label>
-          <input id="profileNickname" placeholder="Ho ten hien thi..." />
-        </div>
-
-        <div class="field">
-          <label>So dien thoai</label>
-          <input id="profilePhone" placeholder="So dien thoai..." />
-        </div>
-
-        <div class="field">
-          <label>Link ca nhan (mang xa hoi, portfolio...)</label>
-          <input id="profileSocialLinks" placeholder="https://..." />
-        </div>
-
-        <div class="modal-footer" style="padding:0; margin-top:1rem;">
-          <button type="button" class="btn-sm btn-primary" onclick="saveProfile()">Luu thong tin</button>
         </div>
       </div>
     </div>
@@ -1630,16 +1673,32 @@ async function loadProfile() {
   try {
     const res = await fetch('/api/account/profile');
     const data = await res.json();
-    if (!data || data.status !== 'success') return;
+    if (!data || data.id === undefined) return;
+
+    const avatarImg = document.getElementById('profileAvatarImg');
+    if (avatarImg && data.avatar) avatarImg.src = data.avatar;
+
+    const dn = document.getElementById('profileDisplayName');
+    if (dn) dn.textContent = data.fullname || '';
+    const dr = document.getElementById('profileDisplayRole');
+    if (dr) dr.textContent = (data.role || '').toUpperCase();
+    const di = document.getElementById('profileDisplayId');
+    if (di) di.textContent = 'ID: ' + (data.id || '') + (data.profileId ? '  |  Profile: ' + data.profileId : '');
+
     document.getElementById('profileEmail').value = data.email || '';
+    document.getElementById('profileUsername').value = data.username || '';
     document.getElementById('profileNickname').value = data.fullname || '';
     document.getElementById('profilePhone').value = data.phone || '';
     document.getElementById('profileSocialLinks').value = data.socialLinks || '';
+    document.getElementById('profileBio').value = data.profile || '';
+
     const badge = document.getElementById('profileEmailVerifiedBadge');
     if (badge) {
-      badge.textContent = data.emailVerified ? 'Da xac thuc' : 'Chua xac thuc';
+      badge.textContent = data.emailVerified ? '✓ Đã xác thực' : '⚠ Chưa xác thực';
       badge.style.color = data.emailVerified ? '#4caf50' : '#ff9800';
     }
+
+    renderProfileRoleInfo(data);
   } catch(e) {}
 }
 
@@ -1647,7 +1706,8 @@ async function saveProfile() {
   const body = {
     nickname: document.getElementById('profileNickname').value.trim(),
     phone: document.getElementById('profilePhone').value.trim(),
-    socialLinks: document.getElementById('profileSocialLinks').value.trim()
+    socialLinks: document.getElementById('profileSocialLinks').value.trim(),
+    profile: document.getElementById('profileBio').value.trim()
   };
   try {
     const res = await fetch('/api/account/update-profile', {
@@ -1657,15 +1717,190 @@ async function saveProfile() {
     });
     const data = await res.json();
     if (data.status === 'success') {
-      if (typeof showToast === 'function') showToast('Cap nhat thanh cong', 'success');
-      else alert('Cap nhat thanh cong!');
+      if (typeof showToast === 'function') showToast('Cập nhật thành công', 'success');
+      else alert('Cập nhật thành công!');
+      const dn = document.getElementById('profileDisplayName');
+      if (dn) dn.textContent = body.nickname || dn.textContent;
     } else {
       if (typeof showToast === 'function') showToast(data.message, 'error');
       else alert(data.message);
     }
   } catch(e) {
-    alert('Loi ket noi');
+    alert('Lỗi kết nối');
   }
+}
+
+async function uploadAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const res = await fetch('/api/account/upload-avatar', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.status === 'success') {
+      const avatarImg = document.getElementById('profileAvatarImg');
+      if (avatarImg) avatarImg.src = data.avatarUrl + '?t=' + Date.now();
+      if (typeof showToast === 'function') showToast('Cập nhật ảnh thành công', 'success');
+    } else {
+      if (typeof showToast === 'function') showToast(data.message, 'error');
+      else alert(data.message);
+    }
+  } catch(e) {
+    alert('Lỗi upload ảnh');
+  }
+}
+
+function renderProfileRoleInfo(data) {
+  const container = document.getElementById('profileRoleInfo');
+  const title = document.getElementById('profileRoleInfoTitle');
+  const content = document.getElementById('profileRoleInfoContent');
+  if (!container || !title || !content) return;
+
+  const role = (data.role || '').toLowerCase();
+  let html = '';
+
+  if (role === 'mangaka') {
+    title.textContent = 'Thông tin Mangaka';
+    
+    html += '<div style="display:flex; gap:1rem; margin-bottom:1rem;">';
+    html += '<div style="flex:1; background:var(--bg-light); padding:1rem; border-radius:8px; text-align:center;">';
+    html += '<div style="font-size:1.5rem; font-weight:bold; color:var(--accent);">' + (data.totalSeries || 0) + '</div>';
+    html += '<div style="font-size:0.8rem; color:var(--text-muted);">Series</div>';
+    html += '</div>';
+    html += '<div style="flex:1; background:var(--bg-light); padding:1rem; border-radius:8px; text-align:center;">';
+    html += '<div style="font-size:1.5rem; font-weight:bold; color:var(--accent);">' + (data.totalAssistants || 0) + '</div>';
+    html += '<div style="font-size:0.8rem; color:var(--text-muted);">Trợ lý</div>';
+    html += '</div>';
+    html += '</div>';
+
+    if (data.editor) {
+      html += '<div class="field"><label>Tantou Editor phụ trách</label>';
+      html += '<input value="' + data.editor.editorName + ' (' + data.editor.editorId + ')" disabled /></div>';
+    }
+    html += '<div class="field"><label>Trợ lý (Assistant) thuộc quản lý</label>';
+    if (data.assistants && data.assistants.length > 0) {
+      html += '<table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-top:0.5rem;">';
+      html += '<thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px 8px;">Tên</th><th style="text-align:left;padding:4px 8px;">Mã</th><th style="text-align:left;padding:4px 8px;">Lương/Task</th><th style="text-align:left;padding:4px 8px;">Trạng thái</th></tr></thead><tbody>';
+      for (const a of data.assistants) {
+        html += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;">' + a.name + '</td><td style="padding:4px 8px;">' + a.assistantId + '</td><td style="padding:4px 8px;">' + (a.salaryPerTask ?? 0).toLocaleString() + ' đ</td><td style="padding:4px 8px;">' + a.status + '</td></tr>';
+      }
+      html += '</tbody></table>';
+    } else {
+      html += '<p style="color:var(--text-muted);font-size:0.85rem;margin-top:0.5rem;">Chưa có assistant nào</p>';
+    }
+    html += '</div>';
+    html += '<div class="field" style="margin-top:1rem;"><label>Series đang quản lý</label>';
+    if (data.series && data.series.length > 0) {
+      html += '<table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-top:0.5rem;">';
+      html += '<thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px 8px;">Tên series</th><th style="text-align:left;padding:4px 8px;">Thể loại</th><th style="text-align:left;padding:4px 8px;">Trạng thái</th><th style="text-align:left;padding:4px 8px;">Ngày bắt đầu</th></tr></thead><tbody>';
+      for (const s of data.series) {
+        html += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;">' + s.seriesName + '</td><td style="padding:4px 8px;">' + (s.genre || '—') + '</td><td style="padding:4px 8px;">' + s.status + '</td><td style="padding:4px 8px;">' + (s.startDate || '—') + '</td></tr>';
+      }
+      html += '</tbody></table>';
+    } else {
+      html += '<p style="color:var(--text-muted);font-size:0.85rem;margin-top:0.5rem;">Chưa có series nào</p>';
+    }
+    html += '</div>';
+
+  } else if (role === 'assistant') {
+    title.textContent = 'Thông tin Assistant';
+    
+    if (data.taskStats) {
+      html += '<div style="display:flex; gap:1rem; margin-bottom:1rem; flex-wrap:wrap;">';
+      html += '<div style="flex:1; min-width:100px; background:var(--bg-light); padding:1rem; border-radius:8px; text-align:center;">';
+      html += '<div style="font-size:1.5rem; font-weight:bold; color:var(--accent);">' + (data.taskStats.totalTasks || 0) + '</div>';
+      html += '<div style="font-size:0.8rem; color:var(--text-muted);">Tổng số Task</div>';
+      html += '</div>';
+      html += '<div style="flex:1; min-width:100px; background:var(--bg-light); padding:1rem; border-radius:8px; text-align:center;">';
+      html += '<div style="font-size:1.5rem; font-weight:bold; color:#4caf50;">' + (data.taskStats.completedTasks || 0) + '</div>';
+      html += '<div style="font-size:0.8rem; color:var(--text-muted);">Đã hoàn thành</div>';
+      html += '</div>';
+      html += '<div style="flex:1; min-width:100px; background:var(--bg-light); padding:1rem; border-radius:8px; text-align:center;">';
+      html += '<div style="font-size:1.5rem; font-weight:bold; color:#ff9800;">' + (data.taskStats.pendingTasks || 0) + '</div>';
+      html += '<div style="font-size:0.8rem; color:var(--text-muted);">Đang thực hiện</div>';
+      html += '</div>';
+      html += '</div>';
+    }
+
+    if (data.mangaka) {
+      html += '<div class="field"><label>Mangaka quản lý</label>';
+      html += '<input value="' + data.mangaka.mangakaName + ' (' + data.mangaka.mangakaId + ')" disabled /></div>';
+    }
+    html += '<div class="field"><label>Lương mỗi task</label>';
+    html += '<input value="' + (data.salaryPerTask ?? 0).toLocaleString() + ' đ" disabled /></div>';
+    html += '<div class="field"><label>Trạng thái hiện tại</label>';
+    html += '<input value="' + (data.status || '') + '" disabled /></div>';
+
+    html += '<div class="field" style="margin-top:1rem;"><label>Task được giao gần đây</label>';
+    if (data.recentTasks && data.recentTasks.length > 0) {
+      html += '<table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-top:0.5rem;">';
+      html += '<thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px 8px;">Series/Chương/Trang</th><th style="text-align:left;padding:4px 8px;">Deadline</th><th style="text-align:left;padding:4px 8px;">Trạng thái</th></tr></thead><tbody>';
+      for (const t of data.recentTasks.slice(0, 5)) {
+        const title = (t.seriesName || '?') + ' - Ch.' + (t.chapterNumber || '?') + ' - Pg.' + (t.pageNumber || '?');
+        html += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;">' + title + '</td><td style="padding:4px 8px;">' + t.deadline.replace('T', ' ') + '</td><td style="padding:4px 8px;">' + t.status + '</td></tr>';
+      }
+      html += '</tbody></table>';
+      if (data.recentTasks.length > 5) html += '<p style="color:var(--text-muted);font-size:0.8rem;text-align:right;margin-top:0.5rem;">(Và ' + (data.recentTasks.length - 5) + ' task khác)</p>';
+    } else {
+      html += '<p style="color:var(--text-muted);font-size:0.85rem;margin-top:0.5rem;">Chưa có task nào</p>';
+    }
+    html += '</div>';
+
+
+  } else if (role === 'tantou') {
+    title.textContent = 'Thông tin Tantou Editor';
+    
+    html += '<div style="display:flex; gap:1rem; margin-bottom:1rem;">';
+    html += '<div style="flex:1; background:var(--bg-light); padding:1rem; border-radius:8px; text-align:center;">';
+    html += '<div style="font-size:1.5rem; font-weight:bold; color:var(--accent);">' + (data.totalMangakaManaged || 0) + '</div>';
+    html += '<div style="font-size:0.8rem; color:var(--text-muted);">Mangaka</div>';
+    html += '</div>';
+    html += '<div style="flex:1; background:var(--bg-light); padding:1rem; border-radius:8px; text-align:center;">';
+    html += '<div style="font-size:1.5rem; font-weight:bold; color:var(--accent);">' + (data.totalSeriesManaged || 0) + '</div>';
+    html += '<div style="font-size:0.8rem; color:var(--text-muted);">Series</div>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div class="field"><label>Mangaka đang phụ trách</label>';
+    if (data.managedMangaka && data.managedMangaka.length > 0) {
+      html += '<table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-top:0.5rem;">';
+      html += '<thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px 8px;">Tên Mangaka</th><th style="text-align:left;padding:4px 8px;">Mã</th><th style="text-align:left;padding:4px 8px;">Số Series</th></tr></thead><tbody>';
+      for (const m of data.managedMangaka) {
+        html += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;">' + m.mangakaName + '</td><td style="padding:4px 8px;">' + m.mangakaId + '</td><td style="padding:4px 8px;">' + m.seriesCount + '</td></tr>';
+      }
+      html += '</tbody></table>';
+    } else {
+      html += '<p style="color:var(--text-muted);font-size:0.85rem;margin-top:0.5rem;">Chưa phụ trách Mangaka nào</p>';
+    }
+    html += '</div>';
+
+  } else if (role === 'board') {
+    title.textContent = 'Thông tin Board Member';
+    
+    if (data.voteStats) {
+      html += '<div style="display:flex; gap:1rem; margin-bottom:1rem;">';
+      html += '<div style="flex:1; background:var(--bg-light); padding:1rem; border-radius:8px; text-align:center;">';
+      html += '<div style="font-size:1.5rem; font-weight:bold; color:var(--accent);">' + (data.voteStats.totalVotes || 0) + '</div>';
+      html += '<div style="font-size:0.8rem; color:var(--text-muted);">Tổng lượt vote</div>';
+      html += '</div>';
+      html += '<div style="flex:1; background:var(--bg-light); padding:1rem; border-radius:8px; text-align:center;">';
+      html += '<div style="font-size:1.5rem; font-weight:bold; color:#4caf50;">' + (data.voteStats.approvedVotes || 0) + '</div>';
+      html += '<div style="font-size:0.8rem; color:var(--text-muted);">Chấp thuận</div>';
+      html += '</div>';
+      html += '<div style="flex:1; background:var(--bg-light); padding:1rem; border-radius:8px; text-align:center;">';
+      html += '<div style="font-size:1.5rem; font-weight:bold; color:#f44336;">' + (data.voteStats.rejectedVotes || 0) + '</div>';
+      html += '<div style="font-size:0.8rem; color:var(--text-muted);">Từ chối</div>';
+      html += '</div>';
+      html += '</div>';
+    }
+
+  } else if (role === 'admin') {
+    title.textContent = 'Thông tin Quản trị viên';
+  }
+
+  content.innerHTML = html;
+  container.style.display = html || role === 'board' || role === 'admin' ? 'block' : 'none';
 }
 
 // ===== DOI EMAIL =====

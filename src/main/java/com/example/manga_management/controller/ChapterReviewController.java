@@ -17,6 +17,7 @@ import com.example.manga_management.entity.MangaPage;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.MangaPageRepository;
+import com.example.manga_management.service.ActivityLogService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,13 +31,16 @@ public class ChapterReviewController {
     private final ChapterRepository chapterRepository;
     private final MangaPageRepository mangaPageRepository;
     private final NotificationController notificationController;
+    private final ActivityLogService activityLogService;
 
     public ChapterReviewController(ChapterRepository chapterRepository,
             NotificationController notificationController,
-            MangaPageRepository mangaPageRepository) {
+            MangaPageRepository mangaPageRepository,
+            ActivityLogService activityLogService) {
         this.chapterRepository = chapterRepository;
         this.notificationController = notificationController;
         this.mangaPageRepository = mangaPageRepository;
+        this.activityLogService = activityLogService;
     }
 
     // ── Mangaka bấm "Submit Chapter" ──────────────────────────────────────
@@ -104,6 +108,8 @@ public class ChapterReviewController {
                 "Chapter '" + chapterName + "' của series '" + seriesName + "' đang chờ bạn duyệt.",
                 "/manga/tantou"
         );
+        activityLogService.log(user.getId(), "submit-chapter",
+                "Đã nộp chapter \"" + chapterName + "\" (series \"" + seriesName + "\") lên biên tập viên");
 
         result.put("status", "success");
         result.put("message", "Đã submit chapter lên biên tập viên!");
@@ -170,12 +176,18 @@ public class ChapterReviewController {
 
         if ("approve".equals(action)) {
             chapter.setStatus("pass");
+            chapter.setReviewedAt(java.time.LocalDateTime.now());
+            if (comment != null && !comment.isBlank()) {
+                chapter.setTantouComment(comment.trim());
+            }
             chapterRepository.save(chapter);
 
+            String notifMsg = "✅ Chapter '" + chapterName + "' của series '" + seriesName + "' đã được duyệt!"
+                    + (comment != null && !comment.isBlank() ? " Nhận xét: " + comment.trim() : "");
             notificationController.send(
                     null,
                     mangakaUserId,
-                    "✅ Chapter '" + chapterName + "' của series '" + seriesName + "' đã được duyệt!",
+                    notifMsg,
                     "/manga/mangaka"
             );
 
@@ -184,8 +196,9 @@ public class ChapterReviewController {
 
         } else if ("reject".equals(action)) {
             chapter.setStatus("unfinish");
+            chapter.setReviewedAt(java.time.LocalDateTime.now());
             if (comment != null && !comment.isBlank()) {
-                chapter.setTantouComment(comment);
+                chapter.setTantouComment(comment.trim());
             }
 
             // Reset status tất cả page về unfinish
@@ -199,7 +212,7 @@ public class ChapterReviewController {
 
             String notifMsg = "❌ Chapter '" + chapterName + "' của series '" + seriesName
                     + "' bị yêu cầu chỉnh sửa."
-                    + (comment != null && !comment.isBlank() ? " Nhận xét: " + comment : "");
+                    + (comment != null && !comment.isBlank() ? " Nhận xét: " + comment.trim() : "");
 
             notificationController.send(null, mangakaUserId, notifMsg, "/manga/mangaka");
 

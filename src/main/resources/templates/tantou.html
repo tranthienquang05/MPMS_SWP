@@ -540,6 +540,14 @@
               <h4>Kịch bản Trang</h4>
               <div id="mm-s5-script" class="u-inline-style-155"></div>
             </div>
+            <div class="u-inline-style-153">
+              <h4>Nhận xét của bạn cho trang này</h4>
+              <textarea id="mm-s5-comment-input" rows="4" maxlength="500"
+                placeholder="Nhập nhận xét cho mangaka về trang này..."></textarea>
+              <button type="button" class="btn-action primary" onclick="mmSavePageComment()"
+                style="margin-top:8px;">Lưu nhận xét</button>
+              <span id="mm-s5-comment-status" style="margin-left:8px;"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -914,7 +922,7 @@
                                 class="btn-action primary u-inline-style-134">Xem trang</button>
                         </td>
                         <td>
-                            <textarea id="cr-comment-${c.id}" placeholder="Nhận xét nếu từ chối..." class="u-inline-style-157"></textarea>
+                            <textarea id="cr-comment-${c.id}" placeholder="Nhận xét (tuỳ chọn, áp dụng cho cả duyệt và từ chối)..." class="u-inline-style-157"></textarea>
                         </td>
                         <td>
                             <div class="u-inline-style-158">
@@ -1037,6 +1045,8 @@
       let mmCurrentMangakaId = null;
       let mmCurrentSeriesId = null;
       let mmCurrentChapterId = null;
+      let mmCurrentPageId = null;
+      let mmPagesCache = {};
 
       function mmGoToScreen(screenNumber) {
         for (let i = 1; i <= 5; i++) {
@@ -1425,17 +1435,13 @@
                 };
                 tbody.innerHTML = res.pages
                   .map((p) => {
-                    const scriptEscaped = (p.script || "")
-                      .replace(/\\/g, "\\\\")
-                      .replace(/'/g, "\\'")
-                      .replace(/"/g, "&quot;")
-                      .replace(/\n/g, "\\n");
+                    mmPagesCache[p.id] = p;
                     return `
                   <tr>
                     <td>${p.pageNumber}</td>
                     <td>${typeMap[p.pageType] || p.pageType}</td>
                     <td>${p.status}</td>
-                    <td><button class="btn-action primary" onclick="mmViewPageDetail('${p.filePath || ""}', '${scriptEscaped}')">Xem Chi Tiết</button></td>
+                    <td><button class="btn-action primary" onclick="mmViewPageDetail('${p.id}')">Xem Chi Tiết</button></td>
                   </tr>
                   `;
                   })
@@ -1447,19 +1453,50 @@
           });
       }
 
-      function mmViewPageDetail(filePath, script) {
+      function mmViewPageDetail(pageId) {
+        const p = mmPagesCache[pageId] || {};
+        mmCurrentPageId = pageId;
         document.getElementById("mm-s5-title").textContent = "Chi tiết trang";
 
         const imgContainer = document.getElementById("mm-s5-image");
-        if (filePath && filePath !== "null") {
-          imgContainer.innerHTML = `<img src="${filePath}" onclick="openFullImage('${filePath}')" class="u-inline-style-164">`;
+        if (p.filePath) {
+          imgContainer.innerHTML = `<img src="${p.filePath}" onclick="openFullImage('${p.filePath}')" class="u-inline-style-164">`;
         } else {
           imgContainer.innerHTML = `<span class="u-inline-style-165">Chưa có ảnh</span>`;
         }
 
         document.getElementById("mm-s5-script").textContent =
-          script || "Không có kịch bản";
+          p.script || "Không có kịch bản";
+        document.getElementById("mm-s5-comment-input").value = p.tantouComment || "";
+        document.getElementById("mm-s5-comment-status").textContent = "";
         mmGoToScreen(5);
+      }
+
+      function mmSavePageComment() {
+        if (!mmCurrentPageId) return;
+        const input = document.getElementById("mm-s5-comment-input");
+        const comment = input.value.trim();
+        const statusEl = document.getElementById("mm-s5-comment-status");
+        if (!comment) {
+          statusEl.textContent = "Vui lòng nhập nhận xét!";
+          return;
+        }
+        statusEl.textContent = "Đang lưu...";
+        fetch("/api/page/" + mmCurrentPageId + "/tantou-comment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ comment }),
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            statusEl.textContent = data.status === "success" ? "Đã lưu!" : "Lỗi: " + data.message;
+            if (data.status === "success" && mmPagesCache[mmCurrentPageId]) {
+              mmPagesCache[mmCurrentPageId].tantouComment = comment;
+            }
+          })
+          .catch((err) => {
+            statusEl.textContent = "Lỗi: " + err.message;
+          });
       }
     </script>
     <script src="/js/ui-alert.js" th:src="@{/js/ui-alert.js}"></script>

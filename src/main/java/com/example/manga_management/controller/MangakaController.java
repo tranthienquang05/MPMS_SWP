@@ -41,6 +41,7 @@ import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.ProposalRepository;
 import com.example.manga_management.repository.SeriesRepository;
 import com.example.manga_management.repository.SubmissionRepository;
+import com.example.manga_management.service.ActivityLogService;
 import com.example.manga_management.service.ProposalService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -62,13 +63,14 @@ public class MangakaController {
     private final AssistantRepository assistantRepository;
     private final ProposalService proposalService;
     private NotificationController notificationController;
+    private final ActivityLogService activityLogService;
 
     public MangakaController(ProposalRepository proposalRepository, MangakaRepository mangakaRepository,
             SeriesRepository seriesRepository,
             com.example.manga_management.repository.ChapterRepository chapterRepository,
             MangaPageRepository mangaPageRepository, SubmissionRepository submissionRepository,
             NotificationController notificationController, AssistantRepository assistantRepository,
-            ProposalService proposalService) {
+            ProposalService proposalService, ActivityLogService activityLogService) {
         this.proposalRepository = proposalRepository;
         this.mangakaRepository = mangakaRepository;
         this.assistantRepository = assistantRepository;
@@ -78,6 +80,7 @@ public class MangakaController {
         this.submissionRepository = submissionRepository;
         this.notificationController = notificationController;
         this.proposalService = proposalService;
+        this.activityLogService = activityLogService;
     }
 
     @GetMapping({ "" })
@@ -490,7 +493,7 @@ public class MangakaController {
     @PostMapping("/myseries/{seriesId}/createchapter/data")
     @ResponseBody
     public Map<String, Object> createChapterData(@PathVariable String seriesId,
-            @RequestParam String txtChapterName) {
+            @RequestParam String txtChapterName, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
         Series series = seriesRepository.findById(seriesId).orElse(null);
         if (series == null) {
@@ -519,6 +522,14 @@ public class MangakaController {
             chapter.setDeadline(resolveNextSaturday(series));
             chapter.setStatus("unfinish");
             chapterRepository.save(chapter);
+
+            User user = (User) session.getAttribute("user");
+            if (user != null) {
+                activityLogService.log(user.getId(), "create-chapter",
+                        "Đã tạo chapter \"" + txtChapterName + "\" (Chapter " + nextNumber
+                                + ") trong series \"" + series.getSeriesName() + "\"");
+            }
+
             result.put("status", "success");
             result.put("chapterId", chapter.getId());
             result.put("chapterNumber", nextNumber);
@@ -650,7 +661,8 @@ public class MangakaController {
     @ResponseBody
     public Map<String, Object> addPageData(@PathVariable String seriesId,
             @PathVariable String chapterId,
-            @org.springframework.web.bind.annotation.RequestBody(required = false) Map<String, String> body) {
+            @org.springframework.web.bind.annotation.RequestBody(required = false) Map<String, String> body,
+            HttpSession session) {
         Map<String, Object> result = new HashMap<>();
         Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
         if (chapter == null) {
@@ -712,6 +724,12 @@ public class MangakaController {
             page.setPageType(pageType);
             page.setScript(pageScript.trim());
             mangaPageRepository.save(page);
+
+            User user = (User) session.getAttribute("user");
+            if (user != null) {
+                activityLogService.log(user.getId(), "create-page",
+                        "Đã tạo trang " + nextNum + " trong chapter \"" + chapter.getChapterName() + "\"");
+            }
 
             result.put("status", "success");
             result.put("pageId", pageId);
@@ -790,6 +808,9 @@ public class MangakaController {
                 submissionRepository.deleteAll(subs);
             }
             mangaPageRepository.delete(page);
+
+            activityLogService.log(user.getId(), "delete-page",
+                    "Đã xóa trang " + page.getPageNumber() + " trong chapter \"" + chapter.getChapterName() + "\"");
 
             result.put("status", "success");
             result.put("message", "Đã xóa trang thành công!");

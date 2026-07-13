@@ -186,6 +186,17 @@
             <h3 th:text="${done != null ? #lists.size(done) : 0}"></h3>
             <p>Hoàn thành</p>
           </div>
+
+          <div class="u-inline-style-030">
+            <h3 th:text="${totalSalary != null ? #numbers.formatInteger(totalSalary, 0, 'COMMA') : 0}"></h3>
+            <p>
+              Tổng lương
+              <small
+                th:if="${salaryPerTask != null}"
+                th:text="|(${#numbers.formatInteger(salaryPerTask, 0, 'COMMA')} / task)|"
+              ></small>
+            </p>
+          </div>
         </div>
       </div>
 
@@ -915,7 +926,12 @@
                 <td
                   th:text="${frameCounts != null ? (frameCounts.get(s.id) ?: 0) : 0}"
                 ></td>
-                <td class="assistant-task-note">Đã hoàn thành.</td>
+                <td class="assistant-task-note">
+                  <span th:if="${s.approvedAt != null}"
+                    th:text="|Duyệt lúc ${#temporals.format(s.approvedAt, 'dd/MM/yyyy HH:mm')} — +${salaryPerTask != null ? #numbers.formatInteger(salaryPerTask, 0, 'COMMA') : 0}|"
+                  ></span>
+                  <span th:unless="${s.approvedAt != null}">Đã hoàn thành.</span>
+                </td>
                 <td>
                   <div class="assistant-task-actions">
                     <button

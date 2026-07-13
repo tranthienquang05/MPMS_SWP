@@ -100,6 +100,10 @@ public class AssistantController {
         model.addAttribute("waiting", waiting);
         model.addAttribute("done", done);
         model.addAttribute("frameCounts", buildFrameCounts(todo, waiting, done));
+        // Lương = số task đã được duyệt (done) x lương mỗi task. Ngày duyệt lấy
+        // thẳng từ Submission.approvedAt (đã có sẵn từ khi mangaka bấm Duyệt).
+        model.addAttribute("salaryPerTask", assistant.getSalaryPerTask());
+        model.addAttribute("totalSalary", done.size() * assistant.getSalaryPerTask());
         if (model.getAttribute("activeTab") == null) {
             model.addAttribute("activeTab", "tab-home");
         }
@@ -136,6 +140,8 @@ public class AssistantController {
         model.addAttribute("waiting", waiting);
         model.addAttribute("done", done);
         model.addAttribute("frameCounts", buildFrameCounts(todo, waiting, done));
+        model.addAttribute("salaryPerTask", assistant.getSalaryPerTask());
+        model.addAttribute("totalSalary", done.size() * assistant.getSalaryPerTask());
 
         model.addAttribute("submissions", submissions);
         model.addAttribute("activeTab", "tab-project");
@@ -204,6 +210,8 @@ public class AssistantController {
         model.addAttribute("waiting", waiting);
         model.addAttribute("done", done);
         model.addAttribute("frameCounts", buildFrameCounts(todo, waiting, done));
+        model.addAttribute("salaryPerTask", assistant.getSalaryPerTask());
+        model.addAttribute("totalSalary", done.size() * assistant.getSalaryPerTask());
 
         model.addAttribute("submission", submission);
         model.addAttribute("page", submission.getPageId());

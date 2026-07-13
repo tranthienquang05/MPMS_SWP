@@ -34,4 +34,8 @@ public class MangaPage {
     @Column(name = "Script", length = 1000)
     private String script;
 
+    /** Nhận xét của tantou dành riêng cho trang này (khác kịch bản, dùng để góp ý bản vẽ). */
+    @Column(name = "TantouComment", length = 500)
+    private String tantouComment;
+
 }

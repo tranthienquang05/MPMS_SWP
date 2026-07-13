@@ -31,6 +31,7 @@ import com.example.manga_management.repository.AssistantRepository;
 import com.example.manga_management.repository.FrameTaskRepository;
 import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.SubmissionRepository;
+import com.example.manga_management.service.ActivityLogService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -46,13 +47,29 @@ public class PageController {
     private final MangaPageRepository mangaPageRepository;
     @Autowired
     private final FrameTaskRepository frameTaskRepository;
+    private final NotificationController notificationController;
+    private final ActivityLogService activityLogService;
 
     public PageController(AssistantRepository assistantRepository, SubmissionRepository submissionRepository,
-            MangaPageRepository mangaPageRepository, FrameTaskRepository frameTaskRepository) {
+            MangaPageRepository mangaPageRepository, FrameTaskRepository frameTaskRepository,
+            NotificationController notificationController, ActivityLogService activityLogService) {
         this.assistantRepository = assistantRepository;
         this.submissionRepository = submissionRepository;
         this.mangaPageRepository = mangaPageRepository;
         this.frameTaskRepository = frameTaskRepository;
+        this.notificationController = notificationController;
+        this.activityLogService = activityLogService;
+    }
+
+    /** Mô tả ngắn gọn 1 trang, dùng chung cho nội dung thông báo/log. */
+    private String describePage(MangaPage page) {
+        if (page.getChapter() == null) {
+            return "trang " + page.getId();
+        }
+        String seriesName = page.getChapter().getSeries() != null
+                ? page.getChapter().getSeries().getSeriesName() : "—";
+        return "trang " + page.getPageNumber() + " (Chapter " + page.getChapter().getChapterNumber()
+                + " - " + seriesName + ")";
     }
 
     /**
@@ -299,6 +316,13 @@ public class PageController {
             assistant.setStatus("intask");
             assistantRepository.save(assistant);
 
+            if (assistant.getUser() != null) {
+                notificationController.send(null, assistant.getUser().getId(),
+                        "Bạn được giao " + describePage(page) + ", deadline "
+                                + deadline.toLocalDate() + " " + deadline.toLocalTime() + ".",
+                        "/manga/assistant");
+            }
+
             result.put("status", "success");
             result.put("message", "Giao việc thành công!");
             result.put("submissionId", submission.getId());
@@ -387,6 +411,11 @@ public class PageController {
         // Nếu assistant không còn task nào chưa duyệt thì chuyển về untask
         if (sub.getAssistant() != null) {
             refreshAssistantStatus(sub.getAssistant());
+            if (sub.getAssistant().getUser() != null) {
+                notificationController.send(null, sub.getAssistant().getUser().getId(),
+                        "Bài làm " + describePage(page) + " của bạn đã được duyệt!",
+                        "/manga/assistant");
+            }
         }
 
         result.put("status", "success");
@@ -513,6 +542,15 @@ public class PageController {
             assistant.setStatus("intask");
             assistantRepository.save(assistant);
 
+            if (assistant.getUser() != null) {
+                notificationController.send(null, assistant.getUser().getId(),
+                        "Bạn được giao lại " + describePage(page) + ", deadline "
+                                + deadline.toLocalDate() + " " + deadline.toLocalTime() + ".",
+                        "/manga/assistant");
+            }
+            activityLogService.log(user.getId(), "reassign-task",
+                    "Đã giao lại " + describePage(page) + " cho " + assistant.getUser().getFullname());
+
             result.put("status", "success");
             result.put("message", "Đã giao lại thành công!");
             result.put("submissionId", submissionId);
@@ -520,6 +558,62 @@ public class PageController {
             result.put("status", "error");
             result.put("message", "Lỗi hệ thống: " + e.getMessage());
         }
+        return result;
+    }
+
+    /** Tantou nhận xét riêng cho 1 trang (khác kịch bản) — mangaka xem được, có thông báo + lưu lịch sử. */
+    @PostMapping("/{pageId}/tantou-comment")
+    @ResponseBody
+    public Map<String, Object> saveTantouComment(@PathVariable String pageId,
+            @RequestBody Map<String, String> body, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập");
+            return result;
+        }
+
+        MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
+        if (page == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy trang: " + pageId);
+            return result;
+        }
+
+        String comment = body.get("comment");
+        if (comment == null || comment.trim().isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng nhập nội dung nhận xét!");
+            return result;
+        }
+        if (comment.trim().length() > 500) {
+            result.put("status", "error");
+            result.put("message", "Nhận xét tối đa 500 chữ!");
+            return result;
+        }
+
+        page.setTantouComment(comment.trim());
+        mangaPageRepository.save(page);
+
+        if (page.getChapter() != null && page.getChapter().getSeries() != null
+                && page.getChapter().getSeries().getProposal() != null
+                && page.getChapter().getSeries().getProposal().getMangaka() != null
+                && page.getChapter().getSeries().getProposal().getMangaka().getUser() != null) {
+            String seriesId = page.getChapter().getSeries().getId();
+            String chapterId = page.getChapter().getId();
+            notificationController.send(null,
+                    page.getChapter().getSeries().getProposal().getMangaka().getUser().getId(),
+                    "Tantou vừa nhận xét " + describePage(page) + ": " + comment.trim(),
+                    "/manga/mangaka/myseries/" + seriesId + "/" + chapterId);
+        }
+
+        activityLogService.log(user.getId(), "comment-page",
+                "Đã nhận xét " + describePage(page) + ": " + comment.trim());
+
+        result.put("status", "success");
+        result.put("message", "Đã lưu nhận xét!");
         return result;
     }
 }

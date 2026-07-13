@@ -16,13 +16,16 @@ public class ProposalService {
     private final ProposalRepository proposalRepository;
     private final BoardProposalCommentRepository boardCommentRepository;
     private final BoardRepository boardRepository;
+    private final NotificationService notificationService;
 
     public ProposalService(ProposalRepository proposalRepository,
             BoardProposalCommentRepository boardCommentRepository,
-            BoardRepository boardRepository) {
+            BoardRepository boardRepository,
+            NotificationService notificationService) {
         this.proposalRepository = proposalRepository;
         this.boardCommentRepository = boardCommentRepository;
         this.boardRepository = boardRepository;
+        this.notificationService = notificationService;
     }
 
     public String generateNextProposalId() {
@@ -81,8 +84,25 @@ public class ProposalService {
             return;
         }
 
-        proposal.setStatus(passVotes > rejectVotes ? "passed" : "locked");
+        String finalStatus = passVotes > rejectVotes ? "passed" : "locked";
+        proposal.setStatus(finalStatus);
         proposalRepository.save(proposal);
+
+        // Thông báo KẾT QUẢ CHUNG CUỘC (khác thông báo từng phiếu lẻ đã gửi ở
+        // BoardController) — gửi cho cả mangaka và tantou phụ trách.
+        boolean passed = "passed".equals(finalStatus);
+        String resultLabel = passed ? "ĐƯỢC HỘI ĐỒNG THÔNG QUA" : "BỊ HỘI ĐỒNG TỪ CHỐI";
+        String content = "Kết quả chung cuộc: Đề xuất \"" + proposal.getSeriesName() + "\" đã " + resultLabel + "!";
+
+        if (proposal.getMangaka() != null && proposal.getMangaka().getUser() != null) {
+            notificationService.sendToUser(proposal.getMangaka().getUser().getId(), content,
+                    "/manga/mangaka/my-projects");
+        }
+        if (proposal.getMangaka() != null && proposal.getMangaka().getEditor() != null
+                && proposal.getMangaka().getEditor().getUser() != null) {
+            notificationService.sendToUser(proposal.getMangaka().getEditor().getUser().getId(), content,
+                    "/manga/tantou");
+        }
     }
 
     public List<BoardProposalComment> getCommentsForProposal(String proposalId) {

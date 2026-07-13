@@ -37,7 +37,7 @@ public class AdminController {
     private final SeriesRepository seriesRepository;
     private final VoteSessionRepository voteSessionRepository;
     private final RankingRepository rankingRepository;
-    private final EditorialVoteRepository editorialVoteRepository;
+    private final BoardProposalCommentRepository boardProposalCommentRepository;
     private final SeriesVoteRepository seriesVoteRepository;
     private final SubmissionRepository submissionRepository;
     private final NotificationRepository notificationRepository;
@@ -45,6 +45,8 @@ public class AdminController {
     private final ChapterRepository chapterRepository;
     private final LikeResultRepository likeResultRepository;
     private final PublicDateRepository publicDateRepository;
+    private final NotificationController notificationController;
+    private final ActivityLogRepository activityLogRepository;
 
     public AdminController(UserRepository userRepository,
             MangakaRepository mangakaRepository,
@@ -54,14 +56,16 @@ public class AdminController {
             SeriesRepository seriesRepository,
             VoteSessionRepository voteSessionRepository,
             RankingRepository rankingRepository,
-            EditorialVoteRepository editorialVoteRepository,
+            BoardProposalCommentRepository boardProposalCommentRepository,
             SeriesVoteRepository seriesVoteRepository,
             SubmissionRepository submissionRepository,
             NotificationRepository notificationRepository,
             ProposalRepository proposalRepository,
             ChapterRepository chapterRepository,
             LikeResultRepository likeResultRepository,
-            PublicDateRepository publicDateRepository) {
+            PublicDateRepository publicDateRepository,
+            NotificationController notificationController,
+            ActivityLogRepository activityLogRepository) {
         this.userRepository = userRepository;
         this.mangakaRepository = mangakaRepository;
         this.assistantRepository = assistantRepository;
@@ -70,7 +74,7 @@ public class AdminController {
         this.seriesRepository = seriesRepository;
         this.voteSessionRepository = voteSessionRepository;
         this.rankingRepository = rankingRepository;
-        this.editorialVoteRepository = editorialVoteRepository;
+        this.boardProposalCommentRepository = boardProposalCommentRepository;
         this.seriesVoteRepository = seriesVoteRepository;
         this.submissionRepository = submissionRepository;
         this.notificationRepository = notificationRepository;
@@ -78,6 +82,8 @@ public class AdminController {
         this.chapterRepository = chapterRepository;
         this.likeResultRepository = likeResultRepository;
         this.publicDateRepository = publicDateRepository;
+        this.notificationController = notificationController;
+        this.activityLogRepository = activityLogRepository;
     }
 
     @GetMapping("")
@@ -202,6 +208,21 @@ public class AdminController {
         publicDate.setChapter(chapter);
         publicDate.setDatePublic(LocalDate.now());
         publicDateRepository.save(publicDate);
+
+        // Báo cho mangaka, tantou phụ trách, và toàn bộ hội đồng board biết chapter đã lên sóng
+        if (chapter.getSeries() != null && chapter.getSeries().getProposal() != null
+                && chapter.getSeries().getProposal().getMangaka() != null) {
+            var mangaka = chapter.getSeries().getProposal().getMangaka();
+            String content = "🎉 Chapter '" + chapter.getChapterName() + "' của series '"
+                    + chapter.getSeries().getSeriesName() + "' đã được xuất bản!";
+            if (mangaka.getUser() != null) {
+                notificationController.send(null, mangaka.getUser().getId(), content, "/manga/mangaka");
+            }
+            if (mangaka.getEditor() != null && mangaka.getEditor().getUser() != null) {
+                notificationController.send(null, mangaka.getEditor().getUser().getId(), content, "/manga/tantou");
+            }
+            notificationController.send("board", null, content, "/manga/editor");
+        }
 
         result.put("status", "success");
         result.put("message", "Đã xuất bản chapter '" + chapter.getChapterName() + "'!");
@@ -745,11 +766,15 @@ public class AdminController {
 
         // 1. Board: bỏ phiếu bản thảo / bỏ phiếu series / tạo phiên vote
         if ("board".equals(role)) {
-            for (EditorialVote ev : editorialVoteRepository.findByBoard_User_IdOrderByVoteDateDesc(userId)) {
-                String label = "pass".equalsIgnoreCase(ev.getVote()) ? "chấp thuận" : "bác bỏ";
-                addActivity(activities, ev.getVoteDate(), "vote-proposal", "fa-file-circle-check",
+            // Phiếu bầu bản thảo thật sự nằm ở board_proposal_comment (BoardProposalComment)
+            // — EditorialVote là bảng không có nơi nào ghi dữ liệu vào, không dùng.
+            for (BoardProposalComment bc : boardProposalCommentRepository.findByBoard_User_IdOrderByCreatedAtDesc(userId)) {
+                String label = "pass".equalsIgnoreCase(bc.getAction()) ? "chấp thuận" : "bác bỏ";
+                addActivity(activities, bc.getCreatedAt(), "vote-proposal", "fa-file-circle-check",
                         "Đã bỏ phiếu " + label + " bản thảo \""
-                                + (ev.getProposal() != null ? ev.getProposal().getSeriesName() : "—") + "\"");
+                                + (bc.getProposal() != null ? bc.getProposal().getSeriesName() : "—") + "\""
+                                + (bc.getContent() != null && !bc.getContent().isBlank()
+                                        ? " — nhận xét: " + bc.getContent() : ""));
             }
 
             for (SeriesVote sv : seriesVoteRepository.findByBoard_User_IdOrderByVoteDateDesc(userId)) {
@@ -847,7 +872,28 @@ public class AdminController {
                     addActivity(activities, p.getReviewedAt(), "review-proposal", "fa-file-circle-check",
                             action + " bản thảo \"" + p.getSeriesName() + "\" của " + mangakaName);
                 }
+
+                for (Chapter c : chapterRepository
+                        .findBySeries_Proposal_Mangaka_Editor_User_IdAndReviewedAtIsNotNullOrderByReviewedAtDesc(userId)) {
+                    String seriesName = c.getSeries() != null ? c.getSeries().getSeriesName() : "—";
+                    String chapterAction = switch (c.getStatus() != null ? c.getStatus().toLowerCase() : "") {
+                        case "pass", "published" -> "Đã duyệt chapter";
+                        default -> "Đã yêu cầu chỉnh sửa chapter"; // reject đưa status về unfinish
+                    };
+                    addActivity(activities, c.getReviewedAt(), "review-chapter", "fa-book",
+                            chapterAction + " \"" + c.getChapterName() + "\" (series \"" + seriesName + "\")"
+                                    + (c.getTantouComment() != null && !c.getTantouComment().isBlank()
+                                            ? " — nhận xét: " + c.getTantouComment() : ""));
+                }
             }
+        }
+
+        // 5b. Hành động không thể suy ra được từ trạng thái hiện tại (giao lại,
+        // tạo chapter, tạo/sửa kịch bản, tạo/xóa trang, nhận xét trang...) —
+        // được ghi trực tiếp vào ActivityLog lúc xảy ra, áp dụng cho mọi role.
+        for (ActivityLog log : activityLogRepository.findByUserIdOrderByCreatedAtDesc(userId)) {
+            addActivity(activities, log.getCreatedAt(), log.getType(), activityIcon(log.getType()),
+                    log.getDescription());
         }
 
         // 5. Admin: xuất bản chapter
@@ -909,6 +955,23 @@ public class AdminController {
         a.put("icon", icon);
         a.put("description", description);
         activities.add(a);
+    }
+
+    /** Icon hiển thị cho từng loại hoạt động ghi qua ActivityLogService. */
+    private String activityIcon(String type) {
+        if (type == null) {
+            return "fa-clock";
+        }
+        return switch (type) {
+            case "reassign-task" -> "fa-arrows-rotate";
+            case "submit-chapter" -> "fa-paper-plane";
+            case "comment-page" -> "fa-comment-dots";
+            case "create-chapter" -> "fa-book-medical";
+            case "create-script", "edit-script" -> "fa-pen-to-square";
+            case "create-page" -> "fa-file-circle-plus";
+            case "delete-page" -> "fa-trash";
+            default -> "fa-clock";
+        };
     }
 
     /** Mô tả trang của 1 submission, vd: trang 3 (chapter "Chuong 1"). */

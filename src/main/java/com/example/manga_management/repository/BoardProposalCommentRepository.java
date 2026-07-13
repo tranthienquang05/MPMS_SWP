@@ -9,4 +9,5 @@ public interface BoardProposalCommentRepository extends JpaRepository<BoardPropo
     boolean existsByProposal_IdAndBoard_Id(String proposalId, String boardId);
     long countByProposal_IdAndAction(String proposalId, String action);
     long countByProposal_Id(String proposalId);
+    List<BoardProposalComment> findByBoard_User_IdOrderByCreatedAtDesc(String userId);
 }

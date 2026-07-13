@@ -27,4 +27,8 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
     List<Chapter> findByStatusAndSeries_Proposal_Mangaka_Editor_User_Id(String status, String editorId);
 
     List<Chapter> findBySeries_IdAndStatus(String seriesId, String status);
+
+    // Lịch sử hoạt động của tantou: các chapter họ đã duyệt/từ chối
+    List<Chapter> findBySeries_Proposal_Mangaka_Editor_User_IdAndReviewedAtIsNotNullOrderByReviewedAtDesc(
+            String editorUserId);
 }

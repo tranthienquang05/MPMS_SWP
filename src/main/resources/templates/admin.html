@@ -35,25 +35,25 @@
     <li>
       <button title="Tài khoản" aria-label="Tài khoản" data-nav-label="Tài khoản" type="button" class="btn-icon"
         onclick="openTab('tab-accounts')">
-        <i class="icon-3user"></i>
+        <i class="fa-solid fa-users"></i>
       </button>
     </li>
     <li>
       <button title="Phân quyền" aria-label="Phân quyền" data-nav-label="Phân quyền" type="button" class="btn-icon"
         onclick="openTab('tab-relations')">
-        <i class="icon-link"></i>
+        <i class="fa-solid fa-user-shield"></i>
       </button>
     </li>
     <li>
       <button title="Bình chọn" aria-label="Bình chọn" data-nav-label="Bình chọn" type="button" class="btn-icon"
         onclick="openTab('tab-vote')">
-        <i class="icon-vote"></i>
+        <i class="fa-solid fa-chart-simple"></i>
       </button>
     </li>
     <li>
       <button title="Lịch sử" aria-label="Lịch sử" data-nav-label="Lịch sử" type="button" class="btn-icon"
         onclick="openTab('tab-history')">
-        <i class="icon-history"></i>
+        <i class="fa-solid fa-clock-rotate-left"></i>
       </button>
     </li>
     <li>
@@ -65,14 +65,14 @@
     <li class="u-inline-style-001">
       <button aria-label="Tin nhắn" data-nav-label="Tin nhắn" type="button" class="btn-icon"
         onclick="openTab('tab-chat')" title="Tin nhắn">
-        <i class="icon-chat"></i>
+        <i class="fa-solid fa-comments"></i>
       </button>
       <span id="chatTabBadge" class="badge u-inline-style-002"></span>
     </li>
     <li>
       <button aria-label="Import Excel" data-nav-label="Import Excel" type="button" class="btn-icon"
         onclick="openTab('tab-import')" title="Import Excel">
-        <i class="fa-solid fa-file-excel"></i>
+        <i class="fa-solid fa-file-arrow-up"></i>
       </button>
     </li>
     <li>
@@ -91,7 +91,7 @@
     <div id="tab-accounts" class="tab-pane active">
       <h2>Tài khoản</h2>
       <div class="section-card">
-        <h3><i class="icon-3user"></i>Quản lý tài khoản</h3>
+        <h3><i class="fa-solid fa-users"></i>Quản lý tài khoản</h3>
 
         <div class="form-inline mb-10">
           <div class="field">
@@ -135,7 +135,7 @@
     <div id="tab-relations" class="tab-pane">
       <h2>Phân công</h2>
       <div class="section-card">
-        <h3><i class="icon-link"></i>Tantou phụ trách Mangaka</h3>
+        <h3><i class="fa-solid fa-user-shield"></i>Tantou phụ trách Mangaka</h3>
 
         <div class="form-inline">
           <div class="field">
@@ -170,7 +170,7 @@
       </div>
 
       <div class="section-card">
-        <h3><i class="icon-link"></i>Assistant làm việc với Mangaka</h3>
+        <h3><i class="fa-solid fa-user-shield"></i>Assistant làm việc với Mangaka</h3>
 
         <div class="form-inline">
           <div class="field">
@@ -1611,7 +1611,7 @@
                 <td>${badgeHtml((u.role || "").toLowerCase())}</td>
                 <td>
                   <button class="btn-sm btn-primary" onclick="viewUserActivity('${u.id}')">
-                    <i class="icon-history"></i>Xem lịch sử
+                    <i class="fa-solid fa-clock-rotate-left"></i>Xem lịch sử
                   </button>
                 </td>
               </tr>`,

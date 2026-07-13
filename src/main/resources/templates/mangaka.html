@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="vi" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -88,12 +88,6 @@
         <button title="Trợ lý" aria-label="Trợ lý" data-nav-label="Trợ lý" type="button" class="btn-icon"
           onclick="openTab('tab-assistant')">
           <i class="fa-solid fa-user"></i>
-        </button>
-      </li>
-      <li>
-        <button title="Khác" aria-label="Khác" data-nav-label="Khác" type="button" class="btn-icon"
-          onclick="openTab('tab-other')">
-          <i class="fa-solid fa-hashtag"></i>
         </button>
       </li>
       <li class="u-inline-style-001">
@@ -417,6 +411,9 @@
                     <button type="button" id="btnModalDownload">
                       <span>Download file</span>
                     </button>
+                    <button type="button" id="btnConfirmEdit">
+                      <span>Lưu bản vẽ</span>
+                    </button>
                   </div>
 
                   <div class="draw-modal-divider"></div>
@@ -424,10 +421,6 @@
                   <div class="actions-wrapper compact-draw-footer">
                     <button type="button" onclick="closeEditSubmissionModal()" class="btn-cancel">
                       Quay lại
-                    </button>
-
-                    <button type="button" id="btnConfirmEdit" class="btn-confirm">
-                      Lưu bản vẽ
                     </button>
                   </div>
                 </div>
@@ -1167,9 +1160,9 @@
         </div>
       </div>
 
-      <!-- Tab other content -->
-      <div id="tab-other" class="tab-pane">
-        <h2>Cài đặt khác</h2>
+      <!-- Tab profile content -->
+      <div id="tab-profile" class="tab-pane">
+        <h2>Thông tin cá nhân</h2>
         <p>Tính năng đang phát triển...</p>
       </div>
 
@@ -2253,25 +2246,51 @@
         .catch((err) => alert("Lỗi: " + err.message));
     }
 
-    function deletePage(sid, cid, pageId) {
-      if (!confirm("Xác nhận xóa trang này? Hành động không thể hoàn tác."))
-        return;
-      fetch(`/manga/mangaka/myseries/${sid}/${cid}/${pageId}/delete-page`, {
-        method: "POST",
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.status === "success") {
-            alert(data.message);
-            closePageActionModal();
-            loadChapterView(sid, cid);
+    async function deletePage(sid, cid, pageId) {
+      const confirmMessage =
+        "X\u00e1c nh\u1eadn x\u00f3a trang n\u00e0y? H\u00e0nh \u0111\u1ed9ng kh\u00f4ng th\u1ec3 ho\u00e0n t\u00e1c.";
+      const confirmed = window.showUiConfirm
+        ? await window.showUiConfirm(confirmMessage, {
+            title: "X\u00f3a trang",
+            okText: "X\u00f3a trang",
+            cancelText: "H\u1ee7y",
+          })
+        : window.confirm(confirmMessage);
+
+      if (!confirmed) return;
+
+      try {
+        const response = await fetch(
+          `/manga/mangaka/myseries/${sid}/${cid}/${pageId}/delete-page`,
+          { method: "POST" },
+        );
+        const data = await response.json();
+        const message = data.message || "\u0110\u00e3 x\u1eed l\u00fd y\u00eau c\u1ea7u x\u00f3a trang.";
+
+        if (data.status === "success") {
+          if (window.showUiAlertAsync) {
+            await window.showUiAlertAsync(message);
           } else {
-            // Message giờ đã cụ thể theo từng lý do backend trả về
-            // (VD: "Trang này đang được giao cho trợ lý...", "Chapter đã xuất bản...")
-            alert(data.message);
+            alert(message);
           }
-        })
-        .catch((err) => alert("Lỗi: " + err.message));
+          closePageActionModal();
+          loadChapterView(sid, cid);
+          return;
+        }
+
+        if (window.showUiAlertAsync) {
+          await window.showUiAlertAsync(message);
+        } else {
+          alert(message);
+        }
+      } catch (err) {
+        const message = "L\u1ed7i: " + err.message;
+        if (window.showUiAlertAsync) {
+          await window.showUiAlertAsync(message);
+        } else {
+          alert(message);
+        }
+      }
     }
 
     function approvePageDone(pageId) {

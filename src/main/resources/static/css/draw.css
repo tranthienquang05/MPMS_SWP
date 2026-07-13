@@ -537,6 +537,21 @@
   justify-content: center;
 }
 
+.draw-hidden-action,
+#inputLoadPage {
+  display: none !important;
+}
+
+.submission-update-panel {
+  order: 3;
+}
+
+.submission-update-panel #btnEditSubmission {
+  width: 100%;
+  margin-bottom: 0;
+  justify-content: center;
+}
+
 #editSubmissionModal {
   position: fixed;
   inset: 0;
@@ -555,11 +570,8 @@
   overflow: auto;
   border: 1px solid rgba(231, 189, 104, 0.22);
   border-radius: 18px;
-  background: radial-gradient(
-      circle at top left,
-      rgba(239, 59, 54, 0.12),
-      transparent 36%
-    ),
+  background:
+    radial-gradient(circle at top left, rgba(239, 59, 54, 0.12), transparent 36%),
     linear-gradient(180deg, rgba(30, 35, 47, 0.98), rgba(15, 18, 26, 0.98));
   box-shadow:
     0 30px 90px rgba(0, 0, 0, 0.56),
@@ -665,6 +677,32 @@
 
 #editSubmissionModal .actions-wrapper > * {
   flex: 1;
+}
+
+@keyframes draw-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 680px) {
+  .draw-action-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #editSubmissionModal .modal-content-box,
+  .draw-action-grid button {
+    animation: none;
+    transition: none;
+  }
 }
 
 @keyframes draw-modal-in {

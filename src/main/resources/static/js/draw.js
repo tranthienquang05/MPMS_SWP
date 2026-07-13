@@ -1573,7 +1573,15 @@ if (btnSubmitSubmission) {
 
   actionButton?.addEventListener("click", openActionModal);
 
-  btnModalLoadPage?.addEventListener("click", () => btnLoadPageLegacy?.click());
+  btnModalLoadPage?.addEventListener("click", () => {
+    const input = document.getElementById("inputLoadPage");
+    if (input) {
+      input.value = "";
+      input.click();
+      return;
+    }
+    btnLoadPageLegacy?.click();
+  });
   btnModalDownload?.addEventListener("click", () => btnDownloadLegacy?.click());
   btnModalSaveArtwork?.addEventListener("click", async (e) => {
     const saved = await saveArtwork(e.currentTarget, { redirect: false });

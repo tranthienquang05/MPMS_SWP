@@ -3810,3 +3810,44 @@ body:not(:has(.topnav)) .app-floating-modal {
   cursor: not-allowed;
   background: #555 !important;
 }
+
+
+/* Keep global alerts above nested page action modals */
+#uiAlertOverlay,
+#uiConfirmOverlay {
+  z-index: 9000 !important;
+}
+
+/* Admin sidebar icon refresh */
+.topnav .btn-icon > i.fa-solid,
+.topnav .btn-icon > i.fa-regular {
+  display: inline-flex;
+  width: 1.25rem;
+  min-width: 1.25rem;
+  align-items: center;
+  justify-content: center;
+  color: rgba(213, 219, 232, 0.82) !important;
+  font-size: 1.05rem;
+  line-height: 1;
+  opacity: 1;
+  transition:
+    color 180ms ease,
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.topnav .btn-icon:hover > i.fa-solid,
+.topnav .btn-icon:hover > i.fa-regular,
+.topnav .btn-icon:focus-visible > i.fa-solid,
+.topnav .btn-icon:focus-visible > i.fa-regular,
+.topnav .btn-icon.active > i.fa-solid,
+.topnav .btn-icon.active > i.fa-regular {
+  color: #f6f7fb !important;
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.topnav .btn-icon.active > i.fa-solid,
+.topnav .btn-icon.active > i.fa-regular {
+  color: #f4c866 !important;
+}

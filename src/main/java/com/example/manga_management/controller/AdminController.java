@@ -1,20 +1,20 @@
 package com.example.manga_management.controller;
 
-import com.example.manga_management.entity.*;
-import com.example.manga_management.repository.*;
-
-import jakarta.servlet.http.HttpSession;
-
-import java.time.LocalDate;
-import java.util.*;
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.web.multipart.MultipartFile;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,10 +23,47 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.example.manga_management.entity.ActivityLog;
+import com.example.manga_management.entity.Assistant;
+import com.example.manga_management.entity.Board;
+import com.example.manga_management.entity.BoardProposalComment;
+import com.example.manga_management.entity.Chapter;
+import com.example.manga_management.entity.LikeResult;
+import com.example.manga_management.entity.MangaPage;
+import com.example.manga_management.entity.Mangaka;
+import com.example.manga_management.entity.Proposal;
+import com.example.manga_management.entity.PublicDate;
+import com.example.manga_management.entity.Series;
+import com.example.manga_management.entity.SeriesVote;
+import com.example.manga_management.entity.Submission;
+import com.example.manga_management.entity.TantoEditor;
+import com.example.manga_management.entity.User;
+import com.example.manga_management.entity.VoteSession;
+import com.example.manga_management.repository.ActivityLogRepository;
+import com.example.manga_management.repository.AssistantRepository;
+import com.example.manga_management.repository.BoardProposalCommentRepository;
+import com.example.manga_management.repository.BoardRepository;
+import com.example.manga_management.repository.ChapterRepository;
+import com.example.manga_management.repository.LikeResultRepository;
+import com.example.manga_management.repository.MangakaRepository;
+import com.example.manga_management.repository.NotificationRepository;
+import com.example.manga_management.repository.ProposalRepository;
+import com.example.manga_management.repository.PublicDateRepository;
+import com.example.manga_management.repository.RankingRepository;
+import com.example.manga_management.repository.SeriesRepository;
+import com.example.manga_management.repository.SeriesVoteRepository;
+import com.example.manga_management.repository.SubmissionRepository;
+import com.example.manga_management.repository.TantoEditorRepository;
+import com.example.manga_management.repository.UserRepository;
+import com.example.manga_management.repository.VoteSessionRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("/manga/system-admin")
@@ -343,14 +380,18 @@ public class AdminController {
                 return result;
             }
 
-            if (isSet(body, "username"))
+            if (isSet(body, "username")) {
                 u.setUsername(body.get("username"));
-            if (isSet(body, "fullname"))
+            }
+            if (isSet(body, "fullname")) {
                 u.setFullname(body.get("fullname"));
-            if (isSet(body, "email"))
+            }
+            if (isSet(body, "email")) {
                 u.setEmail(body.get("email"));
-            if (isSet(body, "password"))
+            }
+            if (isSet(body, "password")) {
                 u.setPassword(body.get("password"));
+            }
             // Không cho đổi role vì liên quan đến profile table
 
             userRepository.save(u);
@@ -403,14 +444,18 @@ public class AdminController {
 
             // Xóa profile trước, sau đó xóa user
             switch (u.getRole().toLowerCase()) {
-                case "mangaka" -> mangakaRepository.findByUserId(id)
-                        .ifPresent(mangakaRepository::delete);
-                case "assistant" -> assistantRepository.findByUserId(id)
-                        .ifPresent(assistantRepository::delete);
-                case "tantou" -> tantoEditorRepository.findByUserId(id)
-                        .ifPresent(tantoEditorRepository::delete);
-                case "board" -> boardRepository.findByUser_Id(id)
-                        .ifPresent(boardRepository::delete);
+                case "mangaka" ->
+                    mangakaRepository.findByUserId(id)
+                            .ifPresent(mangakaRepository::delete);
+                case "assistant" ->
+                    assistantRepository.findByUserId(id)
+                            .ifPresent(assistantRepository::delete);
+                case "tantou" ->
+                    tantoEditorRepository.findByUserId(id)
+                            .ifPresent(tantoEditorRepository::delete);
+                case "board" ->
+                    boardRepository.findByUser_Id(id)
+                            .ifPresent(boardRepository::delete);
             }
 
             userRepository.deleteById(id);
@@ -426,7 +471,6 @@ public class AdminController {
     // ══════════════════════════════════════════════════════════════
     // ĐỔI QUAN HỆ (riêng biệt với update thông tin cơ bản)
     // ══════════════════════════════════════════════════════════════
-
     // Đổi Mangaka của Assistant
     @Operation(summary = "Gán 1 trợ lý vào làm việc dưới 1 mangaka")
     @PostMapping("/assign/assistant-mangaka")
@@ -508,7 +552,6 @@ public class AdminController {
     // ════════════════════════════════════════════════════════════
     // QUẢN LÝ VOTE SERIES (Admin tạo phiên, Board cast vote)
     // ════════════════════════════════════════════════════════════
-
     // Lấy danh sách series cho dropdown khi tạo phiên
     @Operation(summary = "Danh sách toàn bộ series để admin chọn tạo phiên vote")
     @GetMapping("/ranking/all-series")
@@ -650,8 +693,9 @@ public class AdminController {
                 String sname = (String) rows.get(i)[1];
 
                 Optional<Series> seriesOpt = seriesRepository.findById(sid);
-                if (seriesOpt.isEmpty())
+                if (seriesOpt.isEmpty()) {
                     continue;
+                }
                 String seriesStatus = seriesOpt.get().getStatus();
 
                 // Bỏ qua series đã có kết quả cuối, đang chờ bảo vệ, hoặc đang có
@@ -702,15 +746,15 @@ public class AdminController {
         String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
         Random rand = new Random();
         StringBuilder sb = new StringBuilder("VS");
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++) {
             sb.append(chars.charAt(rand.nextInt(chars.length())));
+        }
         return sb.toString();
     }
 
     // ════════════════════════════════════════════════════════════
     // LỊCH SỬ HOẠT ĐỘNG USER (Admin xem)
     // ════════════════════════════════════════════════════════════
-
     // Search user theo keyword (fullname / username / email / id)
     @Operation(summary = "Tìm kiếm tài khoản theo tên/username/email/role")
     @GetMapping("/users/search")
@@ -735,8 +779,9 @@ public class AdminController {
                     || (u.getFullname() != null && u.getFullname().toLowerCase().contains(kw))
                     || (u.getUsername() != null && u.getUsername().toLowerCase().contains(kw))
                     || (u.getEmail() != null && u.getEmail().toLowerCase().contains(kw));
-            if (!match)
+            if (!match) {
                 continue;
+            }
 
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("id", u.getId());
@@ -789,33 +834,40 @@ public class AdminController {
                 String label = "pass".equalsIgnoreCase(bc.getAction()) ? "chấp thuận" : "bác bỏ";
                 addActivity(activities, bc.getCreatedAt(), "vote-proposal", "fa-file-circle-check",
                         "Đã bỏ phiếu " + label + " bản thảo \""
-                                + (bc.getProposal() != null ? bc.getProposal().getSeriesName() : "—") + "\""
-                                + (bc.getContent() != null && !bc.getContent().isBlank()
-                                        ? " — nhận xét: " + bc.getContent() : ""));
+                        + (bc.getProposal() != null ? bc.getProposal().getSeriesName() : "—") + "\""
+                        + (bc.getContent() != null && !bc.getContent().isBlank()
+                        ? " — nhận xét: " + bc.getContent() : ""));
             }
 
             for (SeriesVote sv : seriesVoteRepository.findByBoard_User_IdOrderByVoteDateDesc(userId)) {
                 String choice = sv.getVote() == null ? "" : sv.getVote().toLowerCase();
                 String label = switch (choice) {
-                    case "stop" -> "đồng ý dừng";
-                    case "keep" -> "giữ lại";
-                    case "reward" -> "đồng ý khen thưởng";
-                    case "against" -> "không đồng ý khen thưởng";
+                    case "stop" ->
+                        "đồng ý dừng";
+                    case "keep" ->
+                        "giữ lại";
+                    case "reward" ->
+                        "đồng ý khen thưởng";
+                    case "against" ->
+                        "không đồng ý khen thưởng";
                     // Phiên bảo vệ (defense) dùng approve/reject
-                    case "approve" -> "chấp nhận hồ sơ bảo vệ";
-                    case "reject" -> "bác bỏ hồ sơ bảo vệ";
-                    default -> choice;
+                    case "approve" ->
+                        "chấp nhận hồ sơ bảo vệ";
+                    case "reject" ->
+                        "bác bỏ hồ sơ bảo vệ";
+                    default ->
+                        choice;
                 };
                 addActivity(activities, sv.getVoteDate(), "vote-series", "fa-square-poll-vertical",
                         "Đã bỏ phiếu " + label + " cho series \""
-                                + (sv.getSeries() != null ? sv.getSeries().getSeriesName() : "—") + "\"");
+                        + (sv.getSeries() != null ? sv.getSeries().getSeriesName() : "—") + "\"");
             }
 
             for (VoteSession vs : voteSessionRepository.findByCreatedBy_User_IdOrderByCreatedAtDesc(userId)) {
                 String t = "stop".equalsIgnoreCase(vs.getVoteType()) ? "dừng" : "khen thưởng";
                 addActivity(activities, vs.getCreatedAt(), "create-session", "fa-plus-square",
                         "Đã tạo phiên vote " + t + " cho series \""
-                                + (vs.getSeries() != null ? vs.getSeries().getSeriesName() : "—") + "\"");
+                        + (vs.getSeries() != null ? vs.getSeries().getSeriesName() : "—") + "\"");
             }
         }
 
@@ -859,7 +911,7 @@ public class AdminController {
 
                     addActivity(activities, s.getCreatedAt(), "receive-task", "fa-inbox",
                             "Được giao việc " + pageInfo
-                                    + (s.getDeadline() != null ? " (deadline " + s.getDeadline() + ")" : ""));
+                            + (s.getDeadline() != null ? " (deadline " + s.getDeadline() + ")" : ""));
 
                     addActivity(activities, s.getSubmittedAt(), "submit-task", "fa-paper-plane",
                             "Đã nộp bài " + pageInfo);
@@ -880,11 +932,16 @@ public class AdminController {
                             ? p.getMangaka().getUser().getFullname()
                             : "—";
                     String action = switch (p.getStatus() != null ? p.getStatus().toLowerCase() : "") {
-                        case "approved" -> "Đã duyệt";
-                        case "revision" -> "Đã yêu cầu chỉnh sửa";
-                        case "locked" -> "Đã từ chối";
-                        case "board_check", "passed", "started" -> "Đã nộp lên hội đồng";
-                        default -> "Đã xử lý";
+                        case "approved" ->
+                            "Đã duyệt";
+                        case "revision" ->
+                            "Đã yêu cầu chỉnh sửa";
+                        case "locked" ->
+                            "Đã từ chối";
+                        case "board_check", "passed", "started" ->
+                            "Đã nộp lên hội đồng";
+                        default ->
+                            "Đã xử lý";
                     };
                     addActivity(activities, p.getReviewedAt(), "review-proposal", "fa-file-circle-check",
                             action + " bản thảo \"" + p.getSeriesName() + "\" của " + mangakaName);
@@ -894,13 +951,15 @@ public class AdminController {
                         .findBySeries_Proposal_Mangaka_Editor_User_IdAndReviewedAtIsNotNullOrderByReviewedAtDesc(userId)) {
                     String seriesName = c.getSeries() != null ? c.getSeries().getSeriesName() : "—";
                     String chapterAction = switch (c.getStatus() != null ? c.getStatus().toLowerCase() : "") {
-                        case "pass", "published" -> "Đã duyệt chapter";
-                        default -> "Đã yêu cầu chỉnh sửa chapter"; // reject đưa status về unfinish
+                        case "pass", "published" ->
+                            "Đã duyệt chapter";
+                        default ->
+                            "Đã yêu cầu chỉnh sửa chapter"; // reject đưa status về unfinish
                     };
                     addActivity(activities, c.getReviewedAt(), "review-chapter", "fa-book",
                             chapterAction + " \"" + c.getChapterName() + "\" (series \"" + seriesName + "\")"
-                                    + (c.getTantouComment() != null && !c.getTantouComment().isBlank()
-                                            ? " — nhận xét: " + c.getTantouComment() : ""));
+                            + (c.getTantouComment() != null && !c.getTantouComment().isBlank()
+                            ? " — nhận xét: " + c.getTantouComment() : ""));
                 }
             }
         }
@@ -931,16 +990,21 @@ public class AdminController {
         activities.sort((a, b) -> {
             String ta = (String) a.get("timestamp");
             String tb = (String) b.get("timestamp");
-            if (ta == null)
+            if (ta == null) {
                 ta = "";
-            if (tb == null)
+            }
+            if (tb == null) {
                 tb = "";
-            if (ta.isEmpty() && tb.isEmpty())
+            }
+            if (ta.isEmpty() && tb.isEmpty()) {
                 return 0;
-            if (ta.isEmpty())
+            }
+            if (ta.isEmpty()) {
                 return 1;
-            if (tb.isEmpty())
+            }
+            if (tb.isEmpty()) {
                 return -1;
+            }
             return tb.compareTo(ta);
         });
 
@@ -974,24 +1038,36 @@ public class AdminController {
         activities.add(a);
     }
 
-    /** Icon hiển thị cho từng loại hoạt động ghi qua ActivityLogService. */
+    /**
+     * Icon hiển thị cho từng loại hoạt động ghi qua ActivityLogService.
+     */
     private String activityIcon(String type) {
         if (type == null) {
             return "fa-clock";
         }
         return switch (type) {
-            case "reassign-task" -> "fa-arrows-rotate";
-            case "submit-chapter" -> "fa-paper-plane";
-            case "comment-page" -> "fa-comment-dots";
-            case "create-chapter" -> "fa-book-medical";
-            case "create-script", "edit-script" -> "fa-pen-to-square";
-            case "create-page" -> "fa-file-circle-plus";
-            case "delete-page" -> "fa-trash";
-            default -> "fa-clock";
+            case "reassign-task" ->
+                "fa-arrows-rotate";
+            case "submit-chapter" ->
+                "fa-paper-plane";
+            case "comment-page" ->
+                "fa-comment-dots";
+            case "create-chapter" ->
+                "fa-book-medical";
+            case "create-script", "edit-script" ->
+                "fa-pen-to-square";
+            case "create-page" ->
+                "fa-file-circle-plus";
+            case "delete-page" ->
+                "fa-trash";
+            default ->
+                "fa-clock";
         };
     }
 
-    /** Mô tả trang của 1 submission, vd: trang 3 (chapter "Chuong 1"). */
+    /**
+     * Mô tả trang của 1 submission, vd: trang 3 (chapter "Chuong 1").
+     */
     private String describePage(Submission s) {
         if (s.getPageId() == null) {
             return "task " + s.getId();
@@ -1014,22 +1090,27 @@ public class AdminController {
 
     private long getNextProfileId(String role) {
         return switch (role.toLowerCase()) {
-            case "mangaka" -> mangakaRepository.count() + 1;
-            case "assistant" -> assistantRepository.count() + 1;
-            case "tantou" -> tantoEditorRepository.count() + 1;
-            case "board" -> boardRepository.count() + 1;
-            default -> 0;
+            case "mangaka" ->
+                mangakaRepository.count() + 1;
+            case "assistant" ->
+                assistantRepository.count() + 1;
+            case "tantou" ->
+                tantoEditorRepository.count() + 1;
+            case "board" ->
+                boardRepository.count() + 1;
+            default ->
+                0;
         };
     }
 
     // ════════════════════════════════════════════════════════════
-    // TÍNH NĂNG 3: IMPORT EXCEL
-    // ════════════════════════════════════════════════════════════
+// TÍNH NĂNG 3: IMPORT EXCEL
+// ════════════════════════════════════════════════════════════
     @Operation(summary = "Import danh sách tài khoản hàng loạt từ file Excel")
-    @PostMapping("/import-excel")
+    @PostMapping(value = "/import-excel", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> importExcel(@RequestParam("file") MultipartFile file, HttpSession session) {
+    public Map<String, Object> importExcel(@RequestPart("file") MultipartFile file, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
         User user = (User) session.getAttribute("user");
         if (user == null || !"admin".equalsIgnoreCase(user.getRole())) {
@@ -1037,7 +1118,6 @@ public class AdminController {
             result.put("message", "Không có quyền truy cập");
             return result;
         }
-
         if (file.isEmpty() || file.getOriginalFilename() == null || !file.getOriginalFilename().endsWith(".xlsx")) {
             result.put("status", "error");
             result.put("message", "file phải là .xlsx");
@@ -1062,9 +1142,9 @@ public class AdminController {
             // BƯỚC 1: VALIDATE TOÀN BỘ FILE
             // ============================================
             for (Row row : likeSheet) {
-                if (row.getRowNum() == 0)
+                if (row.getRowNum() == 0) {
                     continue; // Skip header
-
+                }
                 String seriesId = getCellStringValue(row.getCell(0));
                 String monthStr = getCellStringValue(row.getCell(1));
                 String yearStr = getCellStringValue(row.getCell(2));
@@ -1073,8 +1153,9 @@ public class AdminController {
                 String dislikeStr = getCellStringValue(row.getCell(5));
 
                 if (seriesId.isEmpty() && monthStr.isEmpty() && yearStr.isEmpty()
-                        && viewStr.isEmpty() && likeStr.isEmpty() && dislikeStr.isEmpty())
+                        && viewStr.isEmpty() && likeStr.isEmpty() && dislikeStr.isEmpty()) {
                     continue;
+                }
 
                 if (seriesId.isEmpty()) {
                     errors.add("Sheet LikeDislike, dòng " + (row.getRowNum() + 1) + ": SeriesID không được để trống");
@@ -1141,8 +1222,9 @@ public class AdminController {
             // ============================================
             int updatedLikeCount = 0;
             for (Row row : likeSheet) {
-                if (row.getRowNum() == 0)
+                if (row.getRowNum() == 0) {
                     continue;
+                }
                 String seriesId = getCellStringValue(row.getCell(0));
                 String monthStr = getCellStringValue(row.getCell(1));
                 String yearStr = getCellStringValue(row.getCell(2));
@@ -1150,8 +1232,9 @@ public class AdminController {
                 String likeStr = getCellStringValue(row.getCell(4));
                 String dislikeStr = getCellStringValue(row.getCell(5));
                 if (seriesId.isEmpty() && monthStr.isEmpty() && yearStr.isEmpty()
-                        && viewStr.isEmpty() && likeStr.isEmpty() && dislikeStr.isEmpty())
+                        && viewStr.isEmpty() && likeStr.isEmpty() && dislikeStr.isEmpty()) {
                     continue;
+                }
 
                 int month = (int) Double.parseDouble(monthStr.replace(",", ""));
                 int year = (int) Double.parseDouble(yearStr.replace(",", ""));
@@ -1192,7 +1275,9 @@ public class AdminController {
         return result;
     }
 
-    /** Validate 1 ô phải là số nguyên >= 0, thêm lỗi vào danh sách nếu sai. */
+    /**
+     * Validate 1 ô phải là số nguyên >= 0, thêm lỗi vào danh sách nếu sai.
+     */
     private void validateNonNegativeInt(String value, String fieldName, int rowNum, List<String> errors) {
         if (value.isEmpty()) {
             errors.add("Sheet LikeDislike, dòng " + (rowNum + 1) + ": " + fieldName + " không được để trống");
@@ -1211,15 +1296,17 @@ public class AdminController {
     }
 
     private String getCellStringValue(org.apache.poi.ss.usermodel.Cell cell) {
-        if (cell == null)
+        if (cell == null) {
             return "";
+        }
         org.apache.poi.ss.usermodel.DataFormatter formatter = new org.apache.poi.ss.usermodel.DataFormatter();
         return formatter.formatCellValue(cell).trim();
     }
 
     private int getCellIntValue(org.apache.poi.ss.usermodel.Cell cell) {
-        if (cell == null)
+        if (cell == null) {
             return 0;
+        }
         if (cell.getCellType() == org.apache.poi.ss.usermodel.CellType.NUMERIC) {
             return (int) cell.getNumericCellValue();
         } else if (cell.getCellType() == org.apache.poi.ss.usermodel.CellType.FORMULA) {
@@ -1231,8 +1318,9 @@ public class AdminController {
         } else {
             org.apache.poi.ss.usermodel.DataFormatter formatter = new org.apache.poi.ss.usermodel.DataFormatter();
             String val = formatter.formatCellValue(cell).trim();
-            if (val.isEmpty())
+            if (val.isEmpty()) {
                 return 0;
+            }
             try {
                 return (int) Double.parseDouble(val); // Handle cases like "1.0"
             } catch (NumberFormatException e) {

@@ -109,8 +109,9 @@
       <div id="tab-home" class="tab-pane active">
         <h2>Trang chủ</h2>
 
-        <div class="filter-row filter-group-inline">
-          <label>Tháng:
+        <div class="ranking-filter-bar" aria-label="Bộ lọc ranking">
+          <div class="ranking-filter-field">
+            <label for="rankMonth">Tháng</label>
             <select id="rankMonth" onchange="
                   if (this.value != '0')
                     document.getElementById('rankQuarter').value = '0';
@@ -129,9 +130,18 @@
               <option value="11">Tháng 11</option>
               <option value="12">Tháng 12</option>
             </select>
-          </label>
+          </div>
 
-          <label class="filter-label-spacing">Quý:
+          <div class="ranking-filter-field">
+            <label for="rankYear">Năm</label>
+            <select id="rankYear">
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+            </select>
+          </div>
+
+          <div class="ranking-filter-field">
+            <label for="rankQuarter">Quý</label>
             <select id="rankQuarter" onchange="
                   if (this.value != '0')
                     document.getElementById('rankMonth').value = '0';
@@ -142,35 +152,35 @@
               <option value="3">Quý 3 (T7-T9)</option>
               <option value="4">Quý 4 (T10-T12)</option>
             </select>
-          </label>
+          </div>
 
-          <label class="filter-label-spacing">Năm:
-            <select id="rankYear">
-              <option value="2026">2026</option>
-              <option value="2025">2025</option>
-            </select>
-          </label>
-
-          <button type="button" onclick="loadRanking()">Xem ranking</button>
+          <div class="ranking-filter-actions">
+            <button type="button" id="rankingShowButton" class="ranking-filter-button"
+              aria-controls="rankingResults" aria-expanded="true" onclick="loadRanking()">Xem ranking</button>
+            <button type="button" id="rankingCollapseButton" class="ranking-filter-button"
+              aria-controls="rankingResults" onclick="collapseRanking()">Thu lại</button>
+          </div>
         </div>
 
-        <table id="rankingTable" class="data-table u-inline-style-002">
-          <thead>
-            <tr>
-              <th>Hạng</th>
-              <th>Mã Series</th>
-              <th>Tên Series</th>
-              <th>Lượt xem</th>
-              <th>Like</th>
-              <th>Dislike</th>
-            </tr>
-          </thead>
-          <tbody id="rankingBody"></tbody>
-        </table>
+        <div id="rankingResults">
+          <table id="rankingTable" class="data-table u-inline-style-002">
+            <thead>
+              <tr>
+                <th>Hạng</th>
+                <th>Mã Series</th>
+                <th>Tên Series</th>
+                <th>Lượt xem</th>
+                <th>Like</th>
+                <th>Dislike</th>
+              </tr>
+            </thead>
+            <tbody id="rankingBody"></tbody>
+          </table>
 
-        <p id="rankingMsg" class="empty-msg u-inline-style-002">
-          Không có dữ liệu
-        </p>
+          <p id="rankingMsg" class="empty-msg u-inline-style-002">
+            Không có dữ liệu
+          </p>
+        </div>
       </div>
 
       <!-- Tab draw content -->
@@ -245,13 +255,18 @@
               <div class="prop-group">
                 <span class="prop-label">Cỡ nét</span>
                 <input type="range" id="penSize" min="1" max="60" value="6" />
-                <span class="prop-value" id="penSizeValue">6</span>
+                <input type="number" class="prop-number" id="penSizeValue" min="1" max="60" value="6"
+                  aria-label="Nhập cỡ nét" />
               </div>
               <div class="prop-divider"></div>
               <div class="prop-group">
                 <span class="prop-label">Độ mờ</span>
                 <input type="range" id="penOpacity" min="10" max="100" value="100" />
-                <span class="prop-value" id="penOpacityValue">100%</span>
+                <span class="prop-number-wrap">
+                  <input type="number" class="prop-number" id="penOpacityValue" min="10" max="100" value="100"
+                    aria-label="Nhập độ mờ" />
+                  <span class="prop-unit">%</span>
+                </span>
               </div>
               <div class="prop-divider"></div>
 
@@ -272,7 +287,8 @@
               <div class="prop-group u-inline-style-002" id="textSizeGroup">
                 <span class="prop-label">Cỡ chữ</span>
                 <input type="range" id="textSize" min="10" max="72" value="24" />
-                <span class="prop-value" id="textSizeValue">24</span>
+                <input type="number" class="prop-number" id="textSizeValue" min="10" max="72" value="24"
+                  aria-label="Nhập cỡ chữ" />
               </div>
 
               <button type="button" class="btn-ai-support-top approve u-inline-style-002 draw-hidden-action"
@@ -339,12 +355,10 @@
           <!-- ============ PANEL PHẢI ============ -->
           <div class="right-panel">
             <div class="panel-section">
-              <div class="panel-section-header">
-                <span>Layers</span>
-                <button type="button" class="header-btn" id="btnAddLayer" title="Thêm layer">
-                  <i class="fa-solid fa-plus"></i>
-                </button>
-              </div>
+              <h3 class="layer-panel-title">Layers</h3>
+              <button type="button" class="header-btn layer-add-button" id="btnAddLayer" title="Thêm layer mới">
+                Thêm layer mới
+              </button>
               <div id="layerList"></div>
             </div>
             <div class="panel-section manga-chat-panel">
@@ -1680,6 +1694,13 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       var month = document.getElementById("rankMonth").value;
       var quarter = document.getElementById("rankQuarter").value;
       var year = document.getElementById("rankYear").value;
+      var results = document.getElementById("rankingResults");
+      var showButton = document.getElementById("rankingShowButton");
+      var collapseButton = document.getElementById("rankingCollapseButton");
+
+      results.hidden = false;
+      showButton.setAttribute("aria-expanded", "true");
+      collapseButton.disabled = false;
 
       fetch(
         "/manga/ranking?month=" +
@@ -1734,6 +1755,12 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
               "</tr>";
           });
         });
+    }
+
+    function collapseRanking() {
+      document.getElementById("rankingResults").hidden = true;
+      document.getElementById("rankingShowButton").setAttribute("aria-expanded", "false");
+      document.getElementById("rankingCollapseButton").disabled = true;
     }
 
     const mangakaId = '[[${mangaka != null ? mangaka.id : ""}]]';

@@ -119,7 +119,6 @@ public class TantouController {
             @RequestParam String id,
             @RequestParam String action, // "approve" | "revision" | "reject"
             @RequestParam(required = false) String comment,
-            @RequestParam(required = false) Double score,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime deadline) {
 
         Map<String, String> result = new HashMap<>();
@@ -136,17 +135,16 @@ public class TantouController {
         }
 
         p.setComment(comment);
-        p.setEditorScore(score);
+        p.setEditorScore(null);
         p.setReviewedAt(LocalDateTime.now());
 
         switch (action) {
             case "approve" -> {
                 p.setStatus("approved");
-                String scoreText = score != null ? String.format(" Điểm chấm: %.2f/10.", score) : "";
                 String commentText = (comment != null && !comment.isBlank()) ? " Nhận xét: " + comment.trim() : "";
                 notificationController.send(null, p.getMangaka().getUser().getId(),
                         "Đề xuất \"" + p.getSeriesName() + "\" đã được biên tập viên duyệt và sẽ sớm gửi lên hội đồng."
-                                + scoreText + commentText,
+                                + commentText,
                         "/manga/mangaka/my-projects");
             }
             case "revision" -> {

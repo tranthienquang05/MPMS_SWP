@@ -609,6 +609,57 @@ input[type="radio"] {
   flex: 1 1 220px;
 }
 
+.ranking-filter-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(180px, 1fr);
+  align-items: end;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.ranking-filter-field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.ranking-filter-field label {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.ranking-filter-field select,
+.ranking-filter-button {
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+}
+
+.ranking-filter-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ranking-filter-button {
+  align-self: end;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .ranking-filter-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .ranking-filter-bar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 table,
 .data-table {
   width: 100%;
@@ -785,14 +836,38 @@ tr:hover td {
 .chat-layout,
 .chat-shell {
   display: grid;
-  min-height: 620px;
+  min-height: 0;
   grid-template-columns: minmax(240px, 340px) minmax(0, 1fr);
   gap: 1rem;
 }
 
+#tab-chat.tab-pane.active,
+#tab-chat.tab-pane.show,
+#tab-chat.tab-pane[style*="block"] {
+  display: flex;
+  height: calc(100dvh - var(--app-header-height) - 3.8rem);
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#tab-chat > h2 {
+  flex: 0 0 auto;
+}
+
+#tab-chat .chat-layout,
+#tab-chat .chat-shell {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .chat-contact-list,
 #chatContactList {
+  min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius);
   background: rgba(255, 255, 255, 0.035);
@@ -835,7 +910,7 @@ tr:hover td {
 .chat-thread,
 .chat-main {
   display: flex;
-  min-height: 620px;
+  min-height: 0;
   flex-direction: column;
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius);
@@ -845,6 +920,7 @@ tr:hover td {
 
 .chat-thread-header,
 #chatThreadHeader {
+  flex: 0 0 auto;
   border-bottom: 1px solid var(--app-border);
   color: var(--app-text);
   font-weight: 900;
@@ -855,9 +931,11 @@ tr:hover td {
 #chatMessages {
   display: flex;
   flex: 1;
+  min-height: 0;
   flex-direction: column;
   gap: 0.6rem;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: 1rem;
 }
 
@@ -893,15 +971,18 @@ tr:hover td {
 }
 
 .chat-input-row,
-.chat-compose {
+.chat-compose,
+.chat-input-bar {
   display: flex;
+  flex: 0 0 auto;
   gap: 0.6rem;
   border-top: 1px solid var(--app-border);
   padding: 0.85rem;
 }
 
 .chat-input-row input,
-.chat-compose input {
+.chat-compose input,
+.chat-input-bar input {
   flex: 1;
 }
 

@@ -16,6 +16,51 @@ function normalizeDrawCanvasStack() {
 
 normalizeDrawCanvasStack();
 
+function updateRangeProgress(range) {
+  if (!range) return;
+  const min = Number(range.min || 0);
+  const max = Number(range.max || 100);
+  const value = Number(range.value);
+  const progress = max === min ? 0 : ((value - min) / (max - min)) * 100;
+  range.style.setProperty("--range-progress", progress + "%");
+}
+
+function bindRangeNumber(rangeId, numberId) {
+  const range = document.getElementById(rangeId);
+  const number = document.getElementById(numberId);
+  if (!range || !number) return;
+
+  const min = Number(range.min);
+  const max = Number(range.max);
+  const step = Number(range.step || 1);
+
+  const applyValue = (rawValue, restoreEmpty) => {
+    if (rawValue === "" && !restoreEmpty) return;
+    const parsed = Number(rawValue);
+    const fallback = Number(range.value);
+    const safeValue = Number.isFinite(parsed) ? parsed : fallback;
+    const clamped = Math.min(max, Math.max(min, safeValue));
+    const stepped = Math.round(clamped / step) * step;
+    range.value = stepped;
+    number.value = stepped;
+    updateRangeProgress(range);
+  };
+
+  range.addEventListener("input", () => {
+    number.value = range.value;
+    updateRangeProgress(range);
+  });
+  number.addEventListener("input", () => {
+    if (number.value === "") return;
+    const parsed = Number(number.value);
+    if (!Number.isFinite(parsed) || parsed < min || parsed > max) return;
+    range.value = parsed;
+    updateRangeProgress(range);
+  });
+  number.addEventListener("change", () => applyValue(number.value, true));
+  updateRangeProgress(range);
+}
+
 // Cấu trúc layer: { id, name, canvas, ctx, visible, opacity }
 let layers = [];
 let activeLayerIndex = 0;
@@ -113,11 +158,13 @@ function renderLayerList() {
   });
 
   listEl.querySelectorAll(".layer-opacity-slider").forEach((slider) => {
+    updateRangeProgress(slider);
     slider.addEventListener("input", () => {
       const idx = parseInt(slider.dataset.idx);
       layers[idx].opacity = slider.value;
       layers[idx].canvas.style.opacity = slider.value / 100;
       slider.nextElementSibling.textContent = slider.value + "%";
+      updateRangeProgress(slider);
     });
   });
 }
@@ -1018,25 +1065,10 @@ document.querySelectorAll(".palette-swatch").forEach((sw) => {
   });
 });
 
-// Slider hiển thị giá trị
-const penSizeEl = document.getElementById("penSize");
-penSizeEl.addEventListener(
-  "input",
-  () => (document.getElementById("penSizeValue").textContent = penSizeEl.value),
-);
-const penOpacityEl = document.getElementById("penOpacity");
-penOpacityEl.addEventListener(
-  "input",
-  () =>
-    (document.getElementById("penOpacityValue").textContent =
-      penOpacityEl.value + "%"),
-);
-const textSizeEl = document.getElementById("textSize");
-textSizeEl.addEventListener(
-  "input",
-  () =>
-    (document.getElementById("textSizeValue").textContent = textSizeEl.value),
-);
+// Đồng bộ hai chiều giữa thanh kéo và ô nhập số.
+bindRangeNumber("penSize", "penSizeValue");
+bindRangeNumber("penOpacity", "penOpacityValue");
+bindRangeNumber("textSize", "textSizeValue");
 
 // Undo / Clear
 document.getElementById("toolUndo").addEventListener("click", () => {

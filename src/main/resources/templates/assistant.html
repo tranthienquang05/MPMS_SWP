@@ -322,7 +322,8 @@
               <div class="prop-group">
                 <span class="prop-label">Cỡ nét</span>
                 <input type="range" id="penSize" min="1" max="60" value="6" />
-                <span class="prop-value" id="penSizeValue">6</span>
+                <input type="number" class="prop-number" id="penSizeValue" min="1" max="60" value="6"
+                  aria-label="Nhập cỡ nét" />
               </div>
               <div class="prop-divider"></div>
 
@@ -335,7 +336,11 @@
                   max="100"
                   value="100"
                 />
-                <span class="prop-value" id="penOpacityValue">100%</span>
+                <span class="prop-number-wrap">
+                  <input type="number" class="prop-number" id="penOpacityValue" min="10" max="100" value="100"
+                    aria-label="Nhập độ mờ" />
+                  <span class="prop-unit">%</span>
+                </span>
               </div>
               <div class="prop-divider"></div>
 
@@ -368,7 +373,8 @@
                   max="72"
                   value="24"
                 />
-                <span class="prop-value" id="textSizeValue">24</span>
+                <input type="number" class="prop-number" id="textSizeValue" min="10" max="72" value="24"
+                  aria-label="Nhập cỡ chữ" />
               </div>
 
               <button
@@ -461,17 +467,10 @@
           <!-- ============ PANEL PHẢI ============ -->
           <div class="right-panel">
             <div class="panel-section">
-              <div class="panel-section-header">
-                <span>Layers</span>
-                <button
-                  type="button"
-                  class="header-btn"
-                  id="btnAddLayer"
-                  title="Thêm layer"
-                >
-                  <i class="fa-solid fa-plus"></i>
-                </button>
-              </div>
+              <h3 class="layer-panel-title">Layers</h3>
+              <button type="button" class="header-btn layer-add-button" id="btnAddLayer" title="Thêm layer mới">
+                Thêm layer mới
+              </button>
               <div id="layerList"></div>
             </div>
             <div class="panel-section u-inline-style-032">

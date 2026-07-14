@@ -22,7 +22,7 @@ public class EmailService {
     public void sendOtpEmail(String toEmail, String otp) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);
-        message.setSubject("SANKYUU - Mã xác thực đổi mật khẩu");
+        message.setSubject("SANKYUU - Mã xác thực tài khoản");
         message.setText("Mã OTP của bạn là: " + otp
                 + ". Mã có hiệu lực trong 5 phút. Không chia sẻ mã này cho ai.");
         mailSender.send(message);

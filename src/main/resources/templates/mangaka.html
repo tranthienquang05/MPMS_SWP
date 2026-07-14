@@ -25,7 +25,7 @@
 
       <div class="header-actions">
         <div class="u-inline-style-001">
-          <button type="button" class="btn-icon" id="btnNoti" aria-label="Thông báo">
+          <button type="button" class="btn-icon" id="btnNoti" aria-label="Thông báo" title="Thông báo">
             <i class="fa-solid fa-bell"></i>
             <span th:if="${unreadCount > 0}" th:text="${unreadCount}" class="badge"></span>
           </button>
@@ -98,9 +98,7 @@
         <span id="chatTabBadge" class="badge u-inline-style-002"></span>
       </li>
     <li>
-      <button title="Thong tin ca nhan" aria-label="Thong tin ca nhan"
-        type="button" class="btn-icon"
-        onclick="openTab('tab-profile'); loadProfile();">
+      <button title="Thông tin cá nhân" aria-label="Thông tin cá nhân" type="button" class="btn-icon" data-nav-label="Thông tin cá nhân" onclick="openTab('tab-profile'); loadProfile();">
         <i class="fa-solid fa-circle-user"></i>
       </button>
     </li>    </ul>
@@ -838,7 +836,7 @@
                     <span th:case="'revision'" class="badge-status-waiting">Cần sửa</span>
                     <span th:case="'locked'" class="badge-status-rejected">Bị từ chối</span>
                     <span th:case="'started'" class="badge-status-passed">Đã khởi động</span>
-                    <span th:case="*" class="badge-status-default" th:text="${p.status}"></span>
+                    <span th:case="*" class="badge-status-default" th:text="${p.status == 'new' ? 'Chờ Tantou duyệt' : (p.status == 'approved' ? 'Tantou đã duyệt' : (p.status == 'board_check' ? 'Hội đồng đang xét' : (p.status == 'passed' ? 'Hội đồng thông qua' : (p.status == 'revision' ? 'Cần sửa' : (p.status == 'locked' ? 'Bị từ chối' : (p.status == 'started' ? 'Đã khởi động' : p.status))))))}"></span>
                   </span>
                 </td>
                 <td>
@@ -1163,6 +1161,9 @@
       <div id="tab-profile" class="tab-pane">
         <h2>Thông tin cá nhân</h2>
 
+        <div class="profile-workspace">
+          <div class="profile-primary-column">
+
         <!-- Avatar -->
         <div class="section-card" style="max-width:520px; display:flex; align-items:center; gap:1.5rem; margin-bottom:1rem;">
           <div style="position:relative; flex-shrink:0;">
@@ -1206,7 +1207,10 @@
 
           <div class="field">
             <label>Số điện thoại</label>
-            <input id="profilePhone" placeholder="Số điện thoại..." />
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <input id="profilePhone" placeholder="Chưa có số điện thoại" disabled style="flex:1;" />
+              <button type="button" class="btn-sm btn-primary" onclick="openChangePhoneModal()">Đổi số</button>
+            </div>
           </div>
 
           <div class="field">
@@ -1225,10 +1229,13 @@
           </div>
         </div>
 
+          </div>
+
         <!-- Thông tin tĩnh theo role -->
-        <div id="profileRoleInfo" class="section-card" style="max-width:520px; margin-top:1.5rem; display:none;">
+        <aside id="profileRoleInfo" class="section-card profile-role-card" style="display:none;">
           <h3 id="profileRoleInfoTitle" style="margin-bottom:1rem;"></h3>
           <div id="profileRoleInfoContent"></div>
+        </aside>
         </div>
       </div>
 
@@ -1330,6 +1337,44 @@
 
       <!-- Tab profile content -->
       <script>
+// ===== STATUS DISPLAY I18N =====
+const STATUS_VI_MAP = {
+  unfinish: "Đang thực hiện",
+  unfinished: "Đang thực hiện",
+  finish: "Hoàn thành",
+  finished: "Hoàn thành",
+  done: "Chờ duyệt",
+  intask: "Đang làm",
+  untask: "Chưa có việc",
+  pass: "Đã duyệt",
+  passed: "Đã thông qua",
+  approved: "Đã duyệt",
+  reject: "Từ chối",
+  rejected: "Bị từ chối",
+  revision: "Cần sửa",
+  pending: "Chờ xử lý",
+  pending_cancel: "Chờ duyệt hủy",
+  board_check: "Hội đồng đang xét",
+  started: "Đã khởi động",
+  stopped: "Đã dừng",
+  locked: "Bị khóa",
+  published: "Đã xuất bản",
+  rewarded: "Đã khen thưởng",
+  active: "Đang mở",
+  closed: "Đã đóng",
+  assigned: "Đã giao",
+  submitted: "Đã nộp",
+  success: "Thành công",
+  error: "Lỗi"
+};
+
+function formatStatusVi(status, fallback = "Chưa xác định") {
+  if (status === null || status === undefined || status === "") return fallback;
+  const key = String(status).trim().toLowerCase();
+  return STATUS_VI_MAP[key] || status;
+}
+
+
     function openTab(tabId, options = {}) {
       const shouldResetProject = options.resetProject !== false;
       const shouldNormalizeRoute = options.normalizeRoute !== false;
@@ -2690,7 +2735,7 @@
           <p><strong>Tên series:</strong> ${s.seriesName || "—"}</p>
           <p><strong>Thể loại:</strong> ${s.genre || "Chưa cập nhật"}</p>
           <p><strong>Mô tả:</strong> ${s.description || "—"}</p>
-          <p><strong>Trạng thái:</strong> ${s.status || "—"}</p>
+          <p><strong>Trạng thái:</strong> ${formatStatusVi(s.status, "—")}</p>
           <p><strong>Ngày bắt đầu:</strong> ${s.startDate || "—"}</p>
           <hr>
           <h4>Đề xuất gốc (proposal)</h4>
@@ -2776,7 +2821,7 @@
                       <span>${s.seriesName}</span>
                     </div>
                   </td>
-                  <td>${statusMap[s.status] || s.status}</td>
+                  <td>${statusMap[s.status] || formatStatusVi(s.status)}</td>
                   <td>${s.startDate || ""}</td>
                   <td>
                     <a href="/manga/mangaka/myseries/${s.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectSeries('${s.id}')">Xem chapter</a>
@@ -2871,7 +2916,7 @@
                   <td>${c.chapterNumber}</td>
                   <td>${c.chapterName}</td>
                   <td>${deadline}</td>
-                  <td>${chapterStatusMap[c.status] || c.status}</td>
+                  <td>${chapterStatusMap[c.status] || formatStatusVi(c.status)}</td>
                   <td>${comment}</td>
                   <td>
                     ${viewPagesBtn}
@@ -3538,42 +3583,91 @@
     </div>
   </div>
 
-  <div id="changeEmailOverlay" class="app-floating-modal"
+    <div id="changeEmailOverlay" class="app-floating-modal"
     style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
-    <div class="modal-box" style="width:min(440px,100%);">
+    <div class="modal-box change-email-modal" style="width:min(460px,100%);">
       <div id="ceStep1">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-          <h4 style="margin:0;">Doi email</h4>
-          <button type="button" class="modal-close-btn" onclick="closeChangeEmailModal()">x</button>
+          <h4 style="margin:0;">Đổi email</h4>
+          <button type="button" class="modal-close-btn" onclick="closeChangeEmailModal()">×</button>
         </div>
+        <p style="color:var(--app-muted); margin-bottom:1rem;">
+          Nhập email mới bạn muốn sử dụng. Mã OTP xác nhận sẽ được gửi về email hiện tại đã xác thực:
+          <strong id="ceCurrentEmailText"></strong>
+        </p>
         <div class="field">
-          <label>Email moi</label>
-          <input type="email" id="ceNewEmail" placeholder="email@example.com" />
+          <label>Email mới</label>
+          <input type="email" id="ceNewEmail" placeholder="email@example.com" autocomplete="email" />
         </div>
         <div id="ceStep1Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
-        <button type="button" class="btn-primary" style="width:100%;"
-          onclick="ceSendOtp()">Gui ma OTP toi email moi</button>
+        <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+          <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="closeChangeEmailModal()">Hủy</button>
+          <button type="button" class="btn-modal-confirm" style="flex:1;" onclick="ceSendOtp()">Xác nhận</button>
+        </div>
       </div>
       <div id="ceStep2" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-          <h4 style="margin:0;">Nhap ma OTP</h4>
-          <button type="button" class="modal-close-btn" onclick="closeChangeEmailModal()">x</button>
+          <h4 style="margin:0;">Xác nhận OTP</h4>
+          <button type="button" class="modal-close-btn" onclick="closeChangeEmailModal()">×</button>
         </div>
         <p style="color:var(--app-muted); margin-bottom:1rem;">
-          OTP da gui toi email moi. Co hieu luc 5 phut.
+          Mã OTP đã được gửi về email hiện tại của bạn. Nhập mã 6 số để xác nhận đổi sang
+          <strong id="cePendingEmailText"></strong>.
         </p>
-        <input type="text" id="ceOtpInput" placeholder="Nhap ma 6 so..."
-          maxlength="6" style="margin-bottom:0.75rem;" />
+        <div class="field">
+          <label>Mã OTP</label>
+          <input type="text" id="ceOtpInput" placeholder="Nhập mã 6 số..." maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
+        </div>
         <div id="ceStep2Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
-        <div style="display:flex; gap:0.75rem;">
-          <button type="button" class="btn-modal-cancel" style="flex:1;"
-            onclick="ceGoStep1()">Quay lai</button>
-          <button type="button" class="btn-modal-confirm" style="flex:1;"
-            onclick="ceConfirmOtp()">Xac nhan</button>
+        <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+          <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="closeChangeEmailModal()">Hủy</button>
+          <button type="button" class="btn-modal-confirm" style="flex:1;" onclick="ceConfirmOtp()">Xác nhận</button>
         </div>
       </div>
     </div>
   </div>
+  <div id="changePhoneOverlay" class="app-floating-modal"
+    style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
+    <div class="modal-box" style="width:min(460px,100%);">
+      <div id="cpnStep1">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h4 style="margin:0;">Đổi số điện thoại</h4>
+          <button type="button" class="modal-close-btn" onclick="closeChangePhoneModal()" aria-label="Đóng">×</button>
+        </div>
+        <p style="color:var(--app-muted); margin-bottom:1rem;">
+          Nhập số điện thoại mới. Mã OTP xác nhận sẽ được gửi về email hiện tại đã xác thực của bạn.
+        </p>
+        <div class="field">
+          <label for="cpnNewPhone">Số điện thoại mới</label>
+          <input type="tel" id="cpnNewPhone" placeholder="Ví dụ: 0912345678" autocomplete="tel" inputmode="tel" />
+        </div>
+        <div id="cpnStep1Error" role="alert" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+        <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+          <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="closeChangePhoneModal()">Hủy</button>
+          <button type="button" class="btn-modal-confirm" id="cpnSendButton" style="flex:1;" onclick="cpnSendOtp()">Gửi OTP</button>
+        </div>
+      </div>
+      <div id="cpnStep2" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h4 style="margin:0;">Xác nhận số điện thoại</h4>
+          <button type="button" class="modal-close-btn" onclick="closeChangePhoneModal()" aria-label="Đóng">×</button>
+        </div>
+        <p style="color:var(--app-muted); margin-bottom:1rem;">
+          Nhập mã OTP 6 số để xác nhận đổi sang <strong id="cpnPendingPhoneText"></strong>.
+        </p>
+        <div class="field">
+          <label for="cpnOtpInput">Mã OTP</label>
+          <input type="text" id="cpnOtpInput" placeholder="Nhập mã 6 số..." maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
+        </div>
+        <div id="cpnStep2Error" role="alert" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+        <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+          <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="closeChangePhoneModal()">Hủy</button>
+          <button type="button" class="btn-modal-confirm" id="cpnConfirmButton" style="flex:1;" onclick="cpnConfirmOtp()">Xác nhận</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
 // ===== EMAIL VERIFY POPUP =====
 (function() {
@@ -3681,7 +3775,6 @@ async function loadProfile() {
 async function saveProfile() {
   const body = {
     nickname: document.getElementById('profileNickname').value.trim(),
-    phone: document.getElementById('profilePhone').value.trim(),
     socialLinks: document.getElementById('profileSocialLinks').value.trim(),
     profile: document.getElementById('profileBio').value.trim()
   };
@@ -3759,7 +3852,7 @@ function renderProfileRoleInfo(data) {
       html += '<table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-top:0.5rem;">';
       html += '<thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px 8px;">Tên</th><th style="text-align:left;padding:4px 8px;">Mã</th><th style="text-align:left;padding:4px 8px;">Lương/Task</th><th style="text-align:left;padding:4px 8px;">Trạng thái</th></tr></thead><tbody>';
       for (const a of data.assistants) {
-        html += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;">' + a.name + '</td><td style="padding:4px 8px;">' + a.assistantId + '</td><td style="padding:4px 8px;">' + (a.salaryPerTask ?? 0).toLocaleString() + ' đ</td><td style="padding:4px 8px;">' + a.status + '</td></tr>';
+        html += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;">' + a.name + '</td><td style="padding:4px 8px;">' + a.assistantId + '</td><td style="padding:4px 8px;">' + (a.salaryPerTask ?? 0).toLocaleString() + ' đ</td><td style="padding:4px 8px;">' + formatStatusVi(a.status) + '</td></tr>';
       }
       html += '</tbody></table>';
     } else {
@@ -3771,7 +3864,7 @@ function renderProfileRoleInfo(data) {
       html += '<table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-top:0.5rem;">';
       html += '<thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px 8px;">Tên series</th><th style="text-align:left;padding:4px 8px;">Thể loại</th><th style="text-align:left;padding:4px 8px;">Trạng thái</th><th style="text-align:left;padding:4px 8px;">Ngày bắt đầu</th></tr></thead><tbody>';
       for (const s of data.series) {
-        html += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;">' + s.seriesName + '</td><td style="padding:4px 8px;">' + (s.genre || '—') + '</td><td style="padding:4px 8px;">' + s.status + '</td><td style="padding:4px 8px;">' + (s.startDate || '—') + '</td></tr>';
+        html += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;">' + s.seriesName + '</td><td style="padding:4px 8px;">' + (s.genre || '—') + '</td><td style="padding:4px 8px;">' + formatStatusVi(s.status) + '</td><td style="padding:4px 8px;">' + (s.startDate || '—') + '</td></tr>';
       }
       html += '</tbody></table>';
     } else {
@@ -3806,7 +3899,7 @@ function renderProfileRoleInfo(data) {
     html += '<div class="field"><label>Lương mỗi task</label>';
     html += '<input value="' + (data.salaryPerTask ?? 0).toLocaleString() + ' đ" disabled /></div>';
     html += '<div class="field"><label>Trạng thái hiện tại</label>';
-    html += '<input value="' + (data.status || '') + '" disabled /></div>';
+    html += '<input value="' + formatStatusVi(data.status, '') + '" disabled /></div>';
 
     html += '<div class="field" style="margin-top:1rem;"><label>Task được giao gần đây</label>';
     if (data.recentTasks && data.recentTasks.length > 0) {
@@ -3814,7 +3907,7 @@ function renderProfileRoleInfo(data) {
       html += '<thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px 8px;">Series/Chương/Trang</th><th style="text-align:left;padding:4px 8px;">Deadline</th><th style="text-align:left;padding:4px 8px;">Trạng thái</th></tr></thead><tbody>';
       for (const t of data.recentTasks.slice(0, 5)) {
         const title = (t.seriesName || '?') + ' - Ch.' + (t.chapterNumber || '?') + ' - Pg.' + (t.pageNumber || '?');
-        html += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;">' + title + '</td><td style="padding:4px 8px;">' + t.deadline.replace('T', ' ') + '</td><td style="padding:4px 8px;">' + t.status + '</td></tr>';
+        html += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;">' + title + '</td><td style="padding:4px 8px;">' + t.deadline.replace('T', ' ') + '</td><td style="padding:4px 8px;">' + formatStatusVi(t.status) + '</td></tr>';
       }
       html += '</tbody></table>';
       if (data.recentTasks.length > 5) html += '<p style="color:var(--text-muted);font-size:0.8rem;text-align:right;margin-top:0.5rem;">(Và ' + (data.recentTasks.length - 5) + ' task khác)</p>';
@@ -3880,32 +3973,43 @@ function renderProfileRoleInfo(data) {
 }
 
 // ===== DOI EMAIL =====
+function ceSetError(id, message) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = message || '';
+  el.style.display = message ? 'block' : 'none';
+}
+
+function ceGetCurrentEmail() {
+  const input = document.getElementById('profileEmail');
+  return input ? input.value.trim() : '';
+}
+
 function openChangeEmailModal() {
+  const currentEmail = ceGetCurrentEmail();
+  const currentEmailText = document.getElementById('ceCurrentEmailText');
+  if (currentEmailText) currentEmailText.textContent = currentEmail || 'email cũ';
   document.getElementById('ceNewEmail').value = '';
   document.getElementById('ceOtpInput').value = '';
-  document.getElementById('ceStep1Error').style.display = 'none';
-  document.getElementById('ceStep2Error').style.display = 'none';
+  const pendingEmailText = document.getElementById('cePendingEmailText');
+  if (pendingEmailText) pendingEmailText.textContent = '';
+  ceSetError('ceStep1Error', '');
+  ceSetError('ceStep2Error', '');
   document.getElementById('ceStep1').style.display = 'block';
   document.getElementById('ceStep2').style.display = 'none';
   document.getElementById('changeEmailOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('ceNewEmail')?.focus(), 40);
 }
 
 function closeChangeEmailModal() {
   document.getElementById('changeEmailOverlay').style.display = 'none';
 }
 
-function ceGoStep1() {
-  document.getElementById('ceStep1').style.display = 'block';
-  document.getElementById('ceStep2').style.display = 'none';
-}
-
 async function ceSendOtp() {
   const newEmail = document.getElementById('ceNewEmail').value.trim();
-  const errEl = document.getElementById('ceStep1Error');
-  errEl.style.display = 'none';
+  ceSetError('ceStep1Error', '');
   if (!newEmail) {
-    errEl.textContent = 'Vui long nhap email moi';
-    errEl.style.display = 'block';
+    ceSetError('ceStep1Error', 'Vui lòng nhập email mới');
     return;
   }
   try {
@@ -3916,25 +4020,25 @@ async function ceSendOtp() {
     });
     const data = await res.json();
     if (data.status === 'success') {
+      const pendingEmailText = document.getElementById('cePendingEmailText');
+      if (pendingEmailText) pendingEmailText.textContent = newEmail;
       document.getElementById('ceStep1').style.display = 'none';
       document.getElementById('ceStep2').style.display = 'block';
+      setTimeout(() => document.getElementById('ceOtpInput')?.focus(), 40);
+      if (typeof showToast === 'function') showToast(data.message || 'Đã gửi OTP về email hiện tại', 'success');
     } else {
-      errEl.textContent = data.message || 'Loi gui OTP';
-      errEl.style.display = 'block';
+      ceSetError('ceStep1Error', data.message || 'Không thể gửi OTP');
     }
   } catch(e) {
-    errEl.textContent = 'Loi ket noi';
-    errEl.style.display = 'block';
+    ceSetError('ceStep1Error', 'Lỗi kết nối');
   }
 }
 
 async function ceConfirmOtp() {
   const otp = document.getElementById('ceOtpInput').value.trim();
-  const errEl = document.getElementById('ceStep2Error');
-  errEl.style.display = 'none';
-  if (!otp || otp.length !== 6) {
-    errEl.textContent = 'Vui long nhap du 6 so';
-    errEl.style.display = 'block';
+  ceSetError('ceStep2Error', '');
+  if (!/^\d{6}$/.test(otp)) {
+    ceSetError('ceStep2Error', 'Vui lòng nhập đúng mã OTP gồm 6 số');
     return;
   }
   try {
@@ -3946,18 +4050,112 @@ async function ceConfirmOtp() {
     const data = await res.json();
     if (data.status === 'success') {
       closeChangeEmailModal();
-      loadProfile();
-      if (typeof showToast === 'function') showToast('Doi email thanh cong', 'success');
-      else alert('Doi email thanh cong!');
+      if (typeof loadProfile === 'function') loadProfile();
+      if (typeof showToast === 'function') showToast(data.message || 'Đổi email thành công', 'success');
+      else alert(data.message || 'Đổi email thành công!');
     } else {
-      errEl.textContent = data.message || 'OTP khong dung';
-      errEl.style.display = 'block';
+      ceSetError('ceStep2Error', data.message || 'OTP không đúng');
     }
   } catch(e) {
-    errEl.textContent = 'Loi ket noi';
-    errEl.style.display = 'block';
+    ceSetError('ceStep2Error', 'Lỗi kết nối');
   }
 }
+// ===== ĐỔI SỐ ĐIỆN THOẠI BẰNG OTP =====
+function cpnSetError(id, message) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = message || '';
+  el.style.display = message ? 'block' : 'none';
+}
+
+function cpnSetBusy(id, busy, busyText, idleText) {
+  const button = document.getElementById(id);
+  if (!button) return;
+  button.disabled = busy;
+  button.textContent = busy ? busyText : idleText;
+}
+
+function openChangePhoneModal() {
+  document.getElementById('cpnNewPhone').value = '';
+  document.getElementById('cpnOtpInput').value = '';
+  document.getElementById('cpnPendingPhoneText').textContent = '';
+  cpnSetError('cpnStep1Error', '');
+  cpnSetError('cpnStep2Error', '');
+  document.getElementById('cpnStep1').style.display = 'block';
+  document.getElementById('cpnStep2').style.display = 'none';
+  document.getElementById('changePhoneOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('cpnNewPhone')?.focus(), 40);
+}
+
+function closeChangePhoneModal() {
+  document.getElementById('changePhoneOverlay').style.display = 'none';
+}
+
+async function cpnSendOtp() {
+  const rawPhone = document.getElementById('cpnNewPhone').value.trim();
+  const newPhone = rawPhone.replace(/[\s().-]/g, '');
+  cpnSetError('cpnStep1Error', '');
+  if (!/^\+?\d{8,15}$/.test(newPhone)) {
+    cpnSetError('cpnStep1Error', 'Số điện thoại phải gồm 8 đến 15 chữ số');
+    return;
+  }
+
+  cpnSetBusy('cpnSendButton', true, 'Đang gửi...', 'Gửi OTP');
+  try {
+    const res = await fetch('/api/account/send-change-phone-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newPhone })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      document.getElementById('cpnPendingPhoneText').textContent = newPhone;
+      document.getElementById('cpnStep1').style.display = 'none';
+      document.getElementById('cpnStep2').style.display = 'block';
+      setTimeout(() => document.getElementById('cpnOtpInput')?.focus(), 40);
+      if (typeof showToast === 'function') showToast(data.message || 'Đã gửi OTP', 'success');
+    } else {
+      cpnSetError('cpnStep1Error', data.message || 'Không thể gửi OTP');
+    }
+  } catch (e) {
+    cpnSetError('cpnStep1Error', 'Lỗi kết nối');
+  } finally {
+    cpnSetBusy('cpnSendButton', false, 'Đang gửi...', 'Gửi OTP');
+  }
+}
+
+async function cpnConfirmOtp() {
+  const otp = document.getElementById('cpnOtpInput').value.trim();
+  cpnSetError('cpnStep2Error', '');
+  if (!/^\d{6}$/.test(otp)) {
+    cpnSetError('cpnStep2Error', 'Vui lòng nhập đúng mã OTP gồm 6 số');
+    return;
+  }
+
+  cpnSetBusy('cpnConfirmButton', true, 'Đang xác nhận...', 'Xác nhận');
+  try {
+    const res = await fetch('/api/account/confirm-change-phone-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ otp })
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      const phone = document.getElementById('cpnPendingPhoneText').textContent;
+      document.getElementById('profilePhone').value = phone;
+      closeChangePhoneModal();
+      if (typeof showToast === 'function') showToast(data.message || 'Đổi số điện thoại thành công', 'success');
+      else alert(data.message || 'Đổi số điện thoại thành công!');
+    } else {
+      cpnSetError('cpnStep2Error', data.message || 'OTP không đúng');
+    }
+  } catch (e) {
+    cpnSetError('cpnStep2Error', 'Lỗi kết nối');
+  } finally {
+    cpnSetBusy('cpnConfirmButton', false, 'Đang xác nhận...', 'Xác nhận');
+  }
+}
+
 </script>
   </body>
 </html>

@@ -2,8 +2,8 @@ package com.example.manga_management.service;
 
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -12,7 +12,7 @@ public class OtpService {
     private record OtpEntry(String otp, LocalDateTime expiry) {}
 
     private final ConcurrentHashMap<String, OtpEntry> otpStore = new ConcurrentHashMap<>();
-    private final Random random = new Random();
+    private final SecureRandom random = new SecureRandom();
 
     /**
      * Generates a 6-digit OTP for the given userId and stores it with a 5-minute expiry.

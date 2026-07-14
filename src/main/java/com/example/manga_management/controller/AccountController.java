@@ -100,7 +100,13 @@ public class AccountController {
             return ResponseEntity.badRequest()
                     .body(new ApiResult("error", "Tài khoản chưa có email"));
         }
+        if (!user.isEmailVerified()) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResult("error", "Vui lòng xác thực email trước khi đổi mật khẩu"));
+        }
         try {
+            session.removeAttribute("otpVerified");
+            session.removeAttribute("otpVerifiedAt");
             String otp = otpService.generateOtp(user.getId());
             emailService.sendOtpEmail(user.getEmail(), otp);
             return ResponseEntity.ok(new ApiResult("success", "Đã gửi OTP tới email của bạn"));
@@ -143,9 +149,14 @@ public class AccountController {
                     .body(new ApiResult("error", "Chưa đăng nhập"));
         }
         String otp = body.get("otp");
+        if (otp == null || !otp.matches("\\d{6}")) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResult("error", "Vui lòng nhập đúng mã OTP gồm 6 số"));
+        }
         boolean valid = otpService.verifyOtp(user.getId(), otp);
         if (valid) {
             session.setAttribute("otpVerified", true);
+            session.setAttribute("otpVerifiedAt", System.currentTimeMillis());
             return ResponseEntity.ok(new ApiResult("success", "Xác thực OTP thành công"));
         } else {
             return ResponseEntity.badRequest()
@@ -192,9 +203,14 @@ public class AccountController {
         }
 
         Boolean otpVerified = (Boolean) session.getAttribute("otpVerified");
-        if (!Boolean.TRUE.equals(otpVerified)) {
+        Long otpVerifiedAt = (Long) session.getAttribute("otpVerifiedAt");
+        boolean otpExpired = otpVerifiedAt == null
+                || System.currentTimeMillis() - otpVerifiedAt > 5 * 60 * 1000L;
+        if (!Boolean.TRUE.equals(otpVerified) || otpExpired) {
+            session.removeAttribute("otpVerified");
+            session.removeAttribute("otpVerifiedAt");
             return ResponseEntity.status(403)
-                    .body(new ApiResult("error", "Chưa xác thực OTP"));
+                    .body(new ApiResult("error", "Chưa xác thực OTP hoặc phiên xác thực đã hết hạn"));
         }
 
         String newPassword = body.get("newPassword");
@@ -217,6 +233,7 @@ public class AccountController {
         User savedUser = userRepository.save(user);
 
         session.removeAttribute("otpVerified");
+        session.removeAttribute("otpVerifiedAt");
         session.setAttribute("user", savedUser);
 
         return ResponseEntity.ok(new ApiResult("success", "Đổi mật khẩu thành công"));
@@ -485,8 +502,7 @@ public class AccountController {
 
     // ─────────────────────────────────────────────────────────────────────────
     // Endpoint 7: Send OTP đổi email
-    // ─────────────────────────────────────────────────────────────────────────
-    @Operation(summary = "[SWAGGER] Gửi OTP tới email mới để đổi email")
+    @Operation(summary = "[SWAGGER] Gửi OTP về email hiện tại để xác nhận đổi email")
     @PostMapping("/send-change-email-otp")
     @ResponseBody
     public Map<String, Object> sendChangeEmailOtp(@RequestBody Map<String, String> body,
@@ -498,12 +514,23 @@ public class AccountController {
             result.put("message", "Chưa đăng nhập");
             return result;
         }
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            result.put("status", "error");
+            result.put("message", "Tài khoản chưa có email hiện tại để nhận OTP");
+            return result;
+        }
+        if (!user.isEmailVerified()) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng xác thực email hiện tại trước khi đổi email mới");
+            return result;
+        }
         String newEmail = body.get("newEmail");
         if (newEmail == null || newEmail.isBlank()) {
             result.put("status", "error");
             result.put("message", "Vui lòng nhập email mới");
             return result;
         }
+        newEmail = newEmail.trim();
         if (newEmail.equalsIgnoreCase(user.getEmail())) {
             result.put("status", "error");
             result.put("message", "Email mới không được trùng email hiện tại");
@@ -515,11 +542,11 @@ public class AccountController {
             return result;
         }
         try {
-            session.setAttribute("pendingEmail", newEmail);
             String otp = otpService.generateOtp(user.getId() + "_changeEmail");
-            emailService.sendOtpEmail(newEmail, otp);
+            emailService.sendOtpEmail(user.getEmail(), otp);
+            session.setAttribute("pendingEmail", newEmail);
             result.put("status", "success");
-            result.put("message", "Đã gửi OTP tới " + newEmail);
+            result.put("message", "Đã gửi OTP về email hiện tại của bạn");
         } catch (Exception e) {
             result.put("status", "error");
             result.put("message", "Không thể gửi email: " + e.getMessage());
@@ -527,10 +554,8 @@ public class AccountController {
         return result;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // Endpoint 8: Confirm OTP đổi email
-    // ─────────────────────────────────────────────────────────────────────────
-    @Operation(summary = "[SWAGGER] Xác nhận OTP và lưu email mới")
+    @Operation(summary = "[SWAGGER] Xác nhận OTP từ email hiện tại và lưu email mới")
     @PostMapping("/confirm-change-email-otp")
     @ResponseBody
     public Map<String, Object> confirmChangeEmailOtp(@RequestBody Map<String, String> body,
@@ -575,10 +600,99 @@ public class AccountController {
         return result;
     }
 
+    // Endpoint 9: Send OTP đổi số điện thoại
+    @Operation(summary = "[SWAGGER] Gửi OTP về email hiện tại để xác nhận đổi số điện thoại")
+    @PostMapping("/send-change-phone-otp")
+    @ResponseBody
+    public Map<String, Object> sendChangePhoneOtp(@RequestBody Map<String, String> body,
+                                                   HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập");
+            return result;
+        }
+        if (user.getEmail() == null || user.getEmail().isBlank() || !user.isEmailVerified()) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng xác thực email trước khi đổi số điện thoại");
+            return result;
+        }
+
+        String newPhone = normalizePhone(body.get("newPhone"));
+        if (newPhone == null || !newPhone.matches("^\\+?[0-9]{8,15}$")) {
+            result.put("status", "error");
+            result.put("message", "Số điện thoại phải gồm 8 đến 15 chữ số");
+            return result;
+        }
+        if (newPhone.equals(normalizePhone(user.getPhone()))) {
+            result.put("status", "error");
+            result.put("message", "Số điện thoại mới không được trùng số hiện tại");
+            return result;
+        }
+
+        try {
+            String otp = otpService.generateOtp(user.getId() + "_changePhone");
+            emailService.sendOtpEmail(user.getEmail(), otp);
+            session.setAttribute("pendingPhone", newPhone);
+            result.put("status", "success");
+            result.put("message", "Đã gửi OTP về email hiện tại của bạn");
+        } catch (Exception e) {
+            session.removeAttribute("pendingPhone");
+            result.put("status", "error");
+            result.put("message", "Không thể gửi email: " + e.getMessage());
+        }
+        return result;
+    }
+
+    // Endpoint 10: Confirm OTP đổi số điện thoại
+    @Operation(summary = "[SWAGGER] Xác nhận OTP và lưu số điện thoại mới")
+    @PostMapping("/confirm-change-phone-otp")
+    @ResponseBody
+    public Map<String, Object> confirmChangePhoneOtp(@RequestBody Map<String, String> body,
+                                                      HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập");
+            return result;
+        }
+        String pendingPhone = (String) session.getAttribute("pendingPhone");
+        if (pendingPhone == null || pendingPhone.isBlank()) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy số điện thoại đang chờ xác thực. Vui lòng thử lại");
+            return result;
+        }
+        String otp = body.get("otp");
+        if (otp == null || !otp.matches("\\d{6}")) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng nhập đúng mã OTP gồm 6 số");
+            return result;
+        }
+        if (!otpService.verifyOtp(user.getId() + "_changePhone", otp)) {
+            result.put("status", "error");
+            result.put("message", "OTP không đúng hoặc đã hết hạn");
+            return result;
+        }
+
+        try {
+            user.setPhone(pendingPhone);
+            User savedUser = userRepository.save(user);
+            session.setAttribute("user", savedUser);
+            session.removeAttribute("pendingPhone");
+            result.put("status", "success");
+            result.put("message", "Đổi số điện thoại thành công");
+        } catch (Exception e) {
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
+        }
+        return result;
+    }
+
+    // Endpoint 11: Update profile
     // ─────────────────────────────────────────────────────────────────────────
-    // Endpoint 9: Update profile
-    // ─────────────────────────────────────────────────────────────────────────
-    @Operation(summary = "[SWAGGER] Cập nhật thông tin cá nhân (nickname, phone, socialLinks)")
+    @Operation(summary = "[SWAGGER] Cập nhật thông tin cá nhân (nickname, socialLinks)")
     @PostMapping("/update-profile")
     @ResponseBody
     public Map<String, Object> updateProfile(@RequestBody Map<String, String> body,
@@ -591,13 +705,15 @@ public class AccountController {
             return result;
         }
         String nickname = body.get("nickname");
-        String phone = body.get("phone");
         String socialLinks = body.get("socialLinks");
         if (nickname != null && !nickname.isBlank()) {
             user.setFullname(nickname);
         }
-        if (phone != null) {
-            user.setPhone(phone);
+        if (body.containsKey("phone")
+                && !java.util.Objects.equals(normalizePhone(body.get("phone")), normalizePhone(user.getPhone()))) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng dùng chức năng đổi số điện thoại và xác thực OTP");
+            return result;
         }
         if (socialLinks != null) {
             user.setSocialLinks(socialLinks);
@@ -616,6 +732,13 @@ public class AccountController {
             result.put("message", "Lỗi hệ thống: " + e.getMessage());
         }
         return result;
+    }
+
+    private String normalizePhone(String phone) {
+        if (phone == null) {
+            return null;
+        }
+        return phone.trim().replaceAll("[\\s().-]", "");
     }
 
     // ─────────────────────────────────────────────────────────────────────────

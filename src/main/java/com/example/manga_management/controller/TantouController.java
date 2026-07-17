@@ -32,6 +32,7 @@ import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.SeriesRepository;
 import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.VoteSessionRepository;
+import com.example.manga_management.service.EditorialAiService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpSession;
@@ -48,12 +49,14 @@ public class TantouController {
     private final ChapterRepository chapterRepository;
     private final VoteSessionRepository voteSessionRepository;
     private final com.example.manga_management.repository.LikeResultRepository likeResultRepository;
+    private final EditorialAiService editorialAiService;
 
     public TantouController(ProposalRepository proposalRepository, TantoEditorRepository tantoEditorRepository,
             NotificationController notificationController, MangakaRepository mangakaRepository,
             SeriesRepository seriesRepository, ChapterRepository chapterRepository,
             VoteSessionRepository voteSessionRepository,
-            com.example.manga_management.repository.LikeResultRepository likeResultRepository) {
+            com.example.manga_management.repository.LikeResultRepository likeResultRepository,
+            EditorialAiService editorialAiService) {
         this.proposalRepository = proposalRepository;
         this.tantoEditorRepository = tantoEditorRepository;
         this.notificationController = notificationController;
@@ -62,6 +65,7 @@ public class TantouController {
         this.seriesRepository = seriesRepository;
         this.chapterRepository = chapterRepository;
         this.likeResultRepository = likeResultRepository;
+        this.editorialAiService = editorialAiService;
     }
 
     @GetMapping("")
@@ -77,6 +81,59 @@ public class TantouController {
         model.addAttribute("currentUserId", user.getId());
         model.addAttribute("tantouId", editor.getId());
         return "tantou";
+    }
+
+    @PostMapping("/ai/review-assist")
+    @ResponseBody
+    public Map<String, Object> aiReviewAssist(
+            @RequestParam String proposalId,
+            @RequestParam(required = false) String draft,
+            HttpSession session) {
+        return runEditorialAi("review_assist", proposalId, draft, session);
+    }
+
+    @PostMapping("/ai/feedback-polish")
+    @ResponseBody
+    public Map<String, Object> aiFeedbackPolish(
+            @RequestParam String proposalId,
+            @RequestParam(required = false) String draft,
+            HttpSession session) {
+        return runEditorialAi("feedback_polish", proposalId, draft, session);
+    }
+
+    private Map<String, Object> runEditorialAi(
+            String mode, String proposalId, String draft, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Ch\u01b0a \u0111\u0103ng nh\u1eadp!");
+            return result;
+        }
+
+        TantoEditor editor = tantoEditorRepository.findByUser(user).orElse(null);
+        Proposal proposal = proposalRepository.findById(proposalId).orElse(null);
+        if (editor == null || proposal == null || proposal.getMangaka() == null
+                || proposal.getMangaka().getEditor() == null
+                || !editor.getId().equals(proposal.getMangaka().getEditor().getId())) {
+            result.put("status", "error");
+            result.put("message", "B\u1ea1n kh\u00f4ng c\u00f3 quy\u1ec1n ph\u00e2n t\u00edch \u0111\u1ec1 xu\u1ea5t n\u00e0y.");
+            return result;
+        }
+
+        try {
+            return editorialAiService.assist("tantou", mode, proposalId, draft);
+        } catch (EditorialAiService.EditorialAiRateLimitException e) {
+            result.put("status", "rate_limited");
+            result.put("retryAfterSeconds", e.getRetryAfterSeconds());
+            result.put("message", "Gemini \u0111ang gi\u1edbi h\u1ea1n quota. H\u00e3y th\u1eed l\u1ea1i sau "
+                    + e.getRetryAfterSeconds() + " gi\u00e2y.");
+            return result;
+        } catch (EditorialAiService.EditorialAiException e) {
+            result.put("status", "error");
+            result.put("message", e.getMessage());
+            return result;
+        }
     }
 
     @Operation(summary = "Danh sách bản thảo mới chờ duyệt")

@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="vi" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
@@ -409,14 +409,6 @@
               </button>
 
               <input type="file" id="inputLoadPage" accept="image/png" />
-
-              <button
-                type="button"
-                class="btn-ai-support-top"
-                id="btnAiSupport"
-              >
-                AI Support
-              </button>
             </div>
 
             <div class="color-palette-bar">
@@ -472,6 +464,31 @@
                 Thêm layer mới
               </button>
               <div id="layerList"></div>
+            </div>
+            <div class="panel-section manga-chat-panel">
+              <div class="panel-section-header manga-chat-header">
+                <span>Manga Chat </span>
+                <span class="manga-chat-status">AI hỗ trợ</span>
+              </div>
+              <div class="chat-history-list" id="chatHistoryList"></div>
+              <div class="chat-input-area">
+                <div id="chatImagePreview" class="u-inline-style-061 manga-chat-preview">
+                  <img id="chatImgPrevSrc" src="" class="u-inline-style-062" />
+                  <button type="button" onclick="removeChatImage()" class="u-inline-style-063" aria-label="Xóa ảnh đính kèm">
+                    &times;
+                  </button>
+                </div>
+                <div class="manga-chat-composer u-inline-style-064">
+                  <button type="button" class="btn-icon u-inline-style-065 manga-chat-attach" onclick="document.getElementById('chatImageInput').click()" title="Đính kèm ảnh" aria-label="Đính kèm ảnh">
+                    <i class="fa-solid fa-paperclip"></i>
+                  </button>
+                  <input type="file" id="chatImageInput" accept="image/png, image/jpeg" onchange="previewChatImage(event)" class="u-inline-style-002" />
+                  <input type="text" id="chatTextInput" placeholder="Nhắn cho trợ lý AI..." onkeydown="if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendChatMessage(); }" class="u-inline-style-066 manga-chat-input" />
+                  <button type="button" class="btn-submit u-inline-style-067 manga-chat-send" onclick="sendChatMessage()" id="btnSendChat" aria-label="Gửi tin nhắn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
             </div>
             <div class="panel-section u-inline-style-032">
               <div class="panel-section-header">Lịch sử thao tác</div>

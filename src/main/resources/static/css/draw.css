@@ -17,8 +17,9 @@
 
 .draw-wrapper {
   display: grid;
+  width: 100%;
   min-height: calc(100vh - 118px);
-  grid-template-columns: 76px minmax(360px, 1fr) 310px;
+  grid-template-columns: 76px minmax(620px, 1fr) minmax(300px, 360px);
   grid-template-rows: auto 1fr;
   gap: 0.8rem;
   border: 1px solid var(--draw-border);
@@ -457,7 +458,7 @@
 
 /* Draw workspace reflow: centered paper and right-side workflow */
 .draw-wrapper {
-  grid-template-columns: 76px minmax(560px, 1fr) 360px;
+  grid-template-columns: 76px minmax(620px, 1fr) minmax(300px, 360px);
   grid-template-rows: auto 1fr;
   align-items: stretch;
 }
@@ -1058,4 +1059,43 @@
   .manga-chat-message {
     animation: none;
   }
+}
+
+/* Keep the drawing workspace flush inside the available content width. */
+#tab-draw.tab-pane,
+#tab-draw .draw-wrapper {
+  width: 100%;
+  max-width: none;
+}
+
+#tab-draw .right-panel,
+#tab-draw .center-area {
+  min-width: 0;
+}
+/* Drawing pages need the full application width, not the generic 1500px content cap. */
+body:has(#tab-draw.active) .flex-container,
+body:has(#tab-draw.show) .flex-container,
+body:has(#tab-draw[style*="block"]) .flex-container,
+body:has(#tab-draw.active) .main-content,
+body:has(#tab-draw.show) .main-content,
+body:has(#tab-draw[style*="block"]) .main-content {
+  width: calc(100% - var(--app-sidebar-width));
+  max-width: none;
+}
+
+body:has(.topnav:hover):has(#tab-draw.active) .flex-container,
+body:has(.topnav:hover):has(#tab-draw.show) .flex-container,
+body:has(.topnav:hover):has(#tab-draw[style*="block"]) .flex-container,
+body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw.active) .flex-container,
+body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw.show) .flex-container,
+body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw[style*="block"]) .flex-container,
+body:has(.topnav:hover):has(#tab-draw.active) .main-content,
+body:has(.topnav:hover):has(#tab-draw.show) .main-content,
+body:has(.topnav:hover):has(#tab-draw[style*="block"]) .main-content,
+body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw.active) .main-content,
+body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw.show) .main-content,
+body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw[style*="block"]) .main-content {
+  width: calc(100% - var(--app-sidebar-expanded-width));
+  margin-left: var(--app-sidebar-expanded-width);
+  max-width: none;
 }

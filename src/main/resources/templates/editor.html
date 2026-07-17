@@ -18,7 +18,7 @@
     />
   </head>
 
-  <body th:attr="data-user-id=${currentUserId}">
+  <body data-editorial-role="board" th:attr="data-user-id=${currentUserId}">
     <div class="header">
       <div class="logo">
         <div class="brand-stack">
@@ -28,6 +28,9 @@
       </div>
 
       <div class="header-actions">
+        <button type="button" class="btn-icon editorial-ai-trigger" id="btnEditorialAi" aria-label="AI Brief" title="AI Brief">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </button>
         <div class="u-inline-style-001">
           <button type="button" class="btn-icon" id="btnNoti" aria-label="Thông báo" title="Thông báo">
             <i class="fa-solid fa-bell"></i>
@@ -1524,5 +1527,6 @@ async function cpnConfirmOtp() {
 }
 
 </script>
+    <script src="/js/editorial-ai.js" th:src="@{/js/editorial-ai.js}"></script>
   </body>
 </html>

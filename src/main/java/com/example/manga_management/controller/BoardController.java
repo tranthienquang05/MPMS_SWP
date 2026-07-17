@@ -16,6 +16,7 @@ import com.example.manga_management.repository.BoardProposalCommentRepository;
 import com.example.manga_management.repository.BoardRepository;
 import com.example.manga_management.repository.ProposalRepository;
 import com.example.manga_management.service.ProposalService;
+import com.example.manga_management.service.EditorialAiService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpSession;
@@ -29,15 +30,18 @@ public class BoardController {
     private final NotificationController notificationController;
     private final BoardRepository boardRepository;
     private final BoardProposalCommentRepository boardProposalCommentRepository;
+    private final EditorialAiService editorialAiService;
 
     public BoardController(ProposalRepository proposalRepository, ProposalService proposalService,
             NotificationController notificationController, BoardRepository boardRepository,
-            BoardProposalCommentRepository boardProposalCommentRepository) {
+            BoardProposalCommentRepository boardProposalCommentRepository,
+            EditorialAiService editorialAiService) {
         this.proposalRepository = proposalRepository;
         this.proposalService = proposalService;
         this.notificationController = notificationController;
         this.boardRepository = boardRepository;
         this.boardProposalCommentRepository = boardProposalCommentRepository;
+        this.editorialAiService = editorialAiService;
     }
 
     @GetMapping("")
@@ -47,6 +51,60 @@ public class BoardController {
             return "redirect:/login";
         model.addAttribute("currentUserId", user.getId());
         return "editor";
+    }
+
+    @PostMapping("/ai/brief")
+    @ResponseBody
+    public Map<String, Object> aiBrief(
+            @RequestParam String proposalId,
+            @RequestParam(required = false) String draft,
+            HttpSession session) {
+        return runEditorialAi("board_brief", proposalId, draft, session);
+    }
+
+    @PostMapping("/ai/decision-summary")
+    @ResponseBody
+    public Map<String, Object> aiDecisionSummary(
+            @RequestParam String proposalId,
+            @RequestParam(required = false) String draft,
+            HttpSession session) {
+        return runEditorialAi("decision_summary", proposalId, draft, session);
+    }
+
+    private Map<String, Object> runEditorialAi(
+            String mode, String proposalId, String draft, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        Object userObj = session.getAttribute("user");
+        if (!(userObj instanceof User user)) {
+            result.put("status", "error");
+            result.put("message", "Ch\u01b0a \u0111\u0103ng nh\u1eadp!");
+            return result;
+        }
+        if (boardRepository.findByUser_Id(user.getId()).isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "B\u1ea1n kh\u00f4ng ph\u1ea3i th\u00e0nh vi\u00ean h\u1ed9i \u0111\u1ed3ng.");
+            return result;
+        }
+        Proposal proposal = proposalRepository.findById(proposalId).orElse(null);
+        if (proposal == null || !"board_check".equals(proposal.getStatus())) {
+            result.put("status", "error");
+            result.put("message", "\u0110\u1ec1 xu\u1ea5t kh\u00f4ng c\u00f2n trong danh s\u00e1ch ch\u1edd h\u1ed9i \u0111\u1ed3ng.");
+            return result;
+        }
+
+        try {
+            return editorialAiService.assist("board", mode, proposalId, draft);
+        } catch (EditorialAiService.EditorialAiRateLimitException e) {
+            result.put("status", "rate_limited");
+            result.put("retryAfterSeconds", e.getRetryAfterSeconds());
+            result.put("message", "Gemini \u0111ang gi\u1edbi h\u1ea1n quota. H\u00e3y th\u1eed l\u1ea1i sau "
+                    + e.getRetryAfterSeconds() + " gi\u00e2y.");
+            return result;
+        } catch (EditorialAiService.EditorialAiException e) {
+            result.put("status", "error");
+            result.put("message", e.getMessage());
+            return result;
+        }
     }
 
     @Operation(summary = "Danh sách đề xuất chờ hội đồng bỏ phiếu (kèm 2 file)")

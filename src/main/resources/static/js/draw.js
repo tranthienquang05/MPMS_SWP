@@ -104,7 +104,7 @@ function addLayer(name, isBackground) {
 }
 
 // Layer nền trắng (luôn có, không xoá được)
-const baseLayer = addLayer("Nền (trắng)", true);
+const baseLayer = addLayer("N\u1ec1n (tr\u1eafng)", true);
 baseLayer.isBase = true;
 // Layer vẽ chính, đang active
 const mainLayer = addLayer("Layer 1", false);
@@ -117,7 +117,7 @@ function getActiveLayer() {
 function renderLayerList() {
   const listEl = document.getElementById("layerList");
   listEl.innerHTML = "";
-  // hiện từ layer trên cùng (cuối array) xuống dưới
+  // hiá»‡n tá»« layer trÃªn cÃ¹ng (cuá»‘i array) xuá»‘ng dÆ°á»›i
   for (let i = layers.length - 1; i >= 0; i--) {
     const layer = layers[i];
     const item = document.createElement("div");
@@ -177,10 +177,10 @@ document.getElementById("btnAddLayer").addEventListener("click", () => {
 });
 
 // ========================================================
-// PHẦN 2: Vẽ trên layer đang active (vẽ trực tiếp vào canvas của layer đó)
+// PHáº¦N 2: Váº½ trÃªn layer Ä‘ang active (váº½ trá»±c tiáº¿p vÃ o canvas cá»§a layer Ä‘Ã³)
 // ========================================================
-// Để đơn giản hoá việc bắt sự kiện chuột, ta dùng 1 lớp "input layer" trong suốt
-// nằm trên cùng để nhận event, rồi vẽ vào canvas của activeLayer.
+// Äá»ƒ Ä‘Æ¡n giáº£n hoÃ¡ viá»‡c báº¯t sá»± kiá»‡n chuá»™t, ta dÃ¹ng 1 lá»›p "input layer" trong suá»‘t
+// náº±m trÃªn cÃ¹ng Ä‘á»ƒ nháº­n event, rá»“i váº½ vÃ o canvas cá»§a activeLayer.
 const inputLayer = document.getElementById("drawCanvas");
 inputLayer.style.zIndex = 999;
 inputLayer.style.pointerEvents = "auto";
@@ -206,7 +206,7 @@ function decorateDrawIconButtons() {
     text: "fa-font",
     select: "fa-vector-square",
     "select-oval": "fa-circle-dot",
-    "select-free": "fa-crop-simple",
+    "select-free": "Ch\u1ecdn v\u00f9ng (t\u1ef1 do)",
     toolEyedrop: "fa-eye-dropper",
     toolUndo: "fa-rotate-left",
     toolClear: "fa-trash",
@@ -235,7 +235,7 @@ function decorateDrawIconButtons() {
 decorateDrawIconButtons();
 
 function snapshotAllLayers() {
-  // Lưu trạng thái toàn bộ layer hiện có (đơn giản hoá: lưu canvas của activeLayer)
+  // LÆ°u tráº¡ng thÃ¡i toÃ n bá»™ layer hiá»‡n cÃ³ (Ä‘Æ¡n giáº£n hoÃ¡: lÆ°u canvas cá»§a activeLayer)
   return { idx: activeLayerIndex, data: getActiveLayer().canvas.toDataURL() };
 }
 
@@ -253,7 +253,7 @@ function pushHistoryEntry(label) {
     historyListEl.scrollTop = historyListEl.scrollHeight;
   }
 }
-pushHistoryEntry("Tạo canvas mới");
+pushHistoryEntry("T\u1ea1o canvas m\u1edbi");
 
 function getPos(e) {
   const rect = inputLayer.getBoundingClientRect();
@@ -340,7 +340,7 @@ function hexToRgba(hex, alpha) {
 }
 
 // ========================================================
-// TEXT TOOL — Canva-style (fixed + enhanced)
+// TEXT TOOL â€” Canva-style (fixed + enhanced)
 // ========================================================
 let activeTextBox = null;
 
@@ -445,7 +445,7 @@ function createTextBox(x, y) {
   // Align buttons
   let textAlign = "left";
   const alignBtns = ["left", "center", "right"].map((align) => {
-    const icons = { left: "≡", center: "☰", right: "≣" };
+    const icons = { left: "\u2261", center: "\u2630", right: "\u2263" };
     const btn = makeToolbarBtn(icons[align]);
     btn.title = align;
     btn.addEventListener("mousedown", (e) => {
@@ -461,7 +461,7 @@ function createTextBox(x, y) {
   });
 
   // Delete button
-  const btnDelete = makeToolbarBtn("✕", "color:#ff5c5c;");
+  const btnDelete = makeToolbarBtn("\u2715", "color:#ff5c5c;");
   btnDelete.addEventListener("mousedown", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -498,7 +498,7 @@ function createTextBox(x, y) {
         box-sizing: border-box;
         text-align: left;
     `;
-  ta.placeholder = "Nhập chữ...";
+  ta.placeholder = "Nh\u1eadp ch\u1eef...";
 
   // Sync font family
   fontSelect.addEventListener("change", () => {
@@ -558,7 +558,7 @@ function createTextBox(x, y) {
         display:flex;align-items:center;justify-content:center;
         color:white;font-size:10px;user-select:none;
     `;
-  rotateHandle.innerHTML = "↻";
+  rotateHandle.innerHTML = "\u21bb";
   box.appendChild(rotateHandle);
 
   box.appendChild(ta);
@@ -673,7 +673,7 @@ function createTextBox(x, y) {
         box.style.top = resizeStartT + resizeStartH - newH + "px";
       }
       if (activeHandle === "s") {
-        // no-op height — auto height from content
+        // no-op height â€” auto height from content
       }
     }
 
@@ -698,7 +698,7 @@ function createTextBox(x, y) {
   document.addEventListener("mousemove", onMouseMove);
   document.addEventListener("mouseup", onMouseUp);
 
-  // ---- Click ngoài → commit ----
+  // ---- Click ngoÃ i â†’ commit ----
   setTimeout(() => {
     document.addEventListener("mousedown", onOutsideClick);
   }, 100);
@@ -713,7 +713,7 @@ function createTextBox(x, y) {
   }
 }
 
-// ---- Helper: tạo toolbar button ----
+// ---- Helper: táº¡o toolbar button ----
 function makeToolbarBtn(html, extraStyle = "") {
   const btn = document.createElement("button");
   btn.innerHTML = html;
@@ -726,7 +726,7 @@ function makeToolbarBtn(html, extraStyle = "") {
   return btn;
 }
 
-// ---- Commit: vẽ text lên canvas ----
+// ---- Commit: váº½ text lÃªn canvas ----
 function commitTextBox() {
   if (!activeTextBox) return;
   const {
@@ -752,7 +752,7 @@ function commitTextBox() {
     const boxTop = parseInt(box.style.top);
     const boxW = box.offsetWidth;
 
-    // box.style.left/top relative to viewport; canvasStack offset cũng tính từ viewport
+    // box.style.left/top relative to viewport; canvasStack offset cÅ©ng tÃ­nh tá»« viewport
     const canvasOffX = canvasRect.left - viewportRect.left;
     const canvasOffY = canvasRect.top - viewportRect.top;
     const canvasX = (boxLeft - canvasOffX) / scaleX;
@@ -779,12 +779,12 @@ function commitTextBox() {
     layerCtx.fillStyle = ta.style.color;
     layerCtx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
     layerCtx.textBaseline = "top";
-    layerCtx.textAlign = "left"; // luôn dùng left, tự tính x bên dưới
+    layerCtx.textAlign = "left"; // luÃ´n dÃ¹ng left, tá»± tÃ­nh x bÃªn dÆ°á»›i
 
     const padding = 4;
     const maxW = canvasBoxW - padding * 2;
 
-    // Tính lines trước (word-wrap)
+    // TÃ­nh lines trÆ°á»›c (word-wrap)
     const allLines = [];
     text.split("\n").forEach((paragraph) => {
       if (paragraph.trim() === "") {
@@ -805,7 +805,7 @@ function commitTextBox() {
       if (current) allLines.push(current);
     });
 
-    // Vẽ từng dòng với x tính đúng theo align
+    // Váº½ tá»«ng dÃ²ng vá»›i x tÃ­nh Ä‘Ãºng theo align
     let lineY = canvasY + padding;
     allLines.forEach((line) => {
       let drawX;
@@ -822,7 +822,7 @@ function commitTextBox() {
       lineY += fontSize * 1.2;
     });
 
-    layerCtx.restore(); // ← FIX: restore canvas state
+    layerCtx.restore(); // â† FIX: restore canvas state
   }
 
   box.remove();
@@ -833,7 +833,7 @@ function placeTextAt(pos) {
   createTextBox(pos.x, pos.y);
 }
 
-// ---- Mouse events chính ----
+// ---- Mouse events chÃ­nh ----
 inputLayer.addEventListener("mousedown", (e) => {
   if (
     currentTool === "select" ||
@@ -889,8 +889,8 @@ inputLayer.addEventListener("mousemove", (e) => {
       currentTool === "brush" ? getOpacity() * 0.6 : getOpacity();
     layerCtx.strokeStyle = currentTool === "eraser" ? "#ffffff" : getFgColor();
     if (currentTool === "eraser") {
-      // Tẩy: vẽ lại màu trắng đè lên (đơn giản hoá, không dùng destination-out
-      // để layer nền trắng không bị ảnh hưởng khi xoá layer trên)
+      // Tẩy: váº½ láº¡i mÃ u tráº¯ng Ä‘Ã¨ lÃªn (Ä‘Æ¡n giáº£n hoÃ¡, khÃ´ng dÃ¹ng destination-out
+      // Ä‘á»ƒ layer ná»n tráº¯ng khÃ´ng bá»‹ áº£nh hÆ°á»Ÿng khi xoÃ¡ layer trÃªn)
       layerCtx.globalCompositeOperation = "source-over";
     }
     layerCtx.lineTo(p.x, p.y);
@@ -900,7 +900,7 @@ inputLayer.addEventListener("mousemove", (e) => {
     currentTool === "rect" ||
     currentTool === "oval"
   ) {
-    // Vẽ shape preview lên input layer (canvas tạm phía trên), xoá sau khi xong
+    // Váº½ shape preview lÃªn input layer (canvas táº¡m phÃ­a trÃªn), xoÃ¡ sau khi xong
     redrawShapePreview(shapeStart, p);
   }
 });
@@ -937,7 +937,7 @@ window.addEventListener("mouseup", (e) => {
   isDrawing = false;
 });
 
-// ---- Shape preview (vẽ tạm lên input layer rồi commit vào layer thật) ----
+// ---- Shape preview (váº½ táº¡m lÃªn input layer rá»“i commit vÃ o layer tháº­t) ----
 const previewCtx = inputLayer.getContext("2d");
 
 function clearShapePreview() {
@@ -983,7 +983,7 @@ function commitShape(start, end) {
 }
 
 // ========================================================
-// PHẦN 3: Toolbar — chọn tool, fill mode, eyedropper
+// PHáº¦N 3: Toolbar â€” chá»n tool, fill mode, eyedropper
 // ========================================================
 document.querySelectorAll(".lt-btn[data-tool]").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -1004,7 +1004,7 @@ document.querySelectorAll(".lt-btn[data-tool]").forEach((btn) => {
       text: "Chèn chữ",
       select: "Chọn vùng",
       "select-oval": "Chọn vùng (oval)",
-      "select-free": "Chọn vùng (tự do)",
+      "select-free": "Chọn vùng (tá»± do)",
     };
     document.getElementById("statusTool").textContent =
       "Công cụ: " + labels[currentTool];
@@ -1022,7 +1022,7 @@ document.querySelectorAll(".lt-btn[data-tool]").forEach((btn) => {
         ? textCursor
         : darkCrosshair;
 
-    // Hiện/ẩn property phù hợp
+    // Hiá»‡n/áº©n property phÃ¹ há»£p
     const isShape = ["line", "rect", "oval"].includes(currentTool);
     document.getElementById("shapeFillGroup").style.display = isShape
       ? "flex"
@@ -1065,7 +1065,7 @@ document.querySelectorAll(".palette-swatch").forEach((sw) => {
   });
 });
 
-// Đồng bộ hai chiều giữa thanh kéo và ô nhập số.
+// Äá»“ng bá»™ hai chiá»u giá»¯a thanh kÃ©o vÃ  Ã´ nháº­p sá»‘.
 bindRangeNumber("penSize", "penSizeValue");
 bindRangeNumber("penOpacity", "penOpacityValue");
 bindRangeNumber("textSize", "textSizeValue");
@@ -1098,7 +1098,7 @@ document.getElementById("toolClear").addEventListener("click", () => {
 });
 
 // ========================================================
-// PHẦN 4: Region selection
+// PHáº¦N 4: Region selection
 // ========================================================
 let selectionRect = null;
 let selectionShape = "rect"; // 'rect' | 'oval' | 'free'
@@ -1222,7 +1222,7 @@ window.addEventListener("mouseup", () => {
 });
 
 // ========================================================
-// PHẦN 5: Zoom canvas (CSS transform scale đơn giản)
+// PHáº¦N 5: Zoom canvas (CSS transform scale Ä‘Æ¡n giáº£n)
 // ========================================================
 let zoomLevel = 1;
 
@@ -1268,7 +1268,7 @@ async function loadChatHistory() {
     if (!list) return;
     list.innerHTML = "";
     history.forEach((msg) => {
-      appendChatMessage(msg.role, msg.content, msg.isImage);
+      appendChatMessage(msg.role, msg.content, msg.isImage, msg);
     });
     list.scrollTop = list.scrollHeight;
   } catch (e) {
@@ -1291,8 +1291,135 @@ function previewChatImage(event) {
 
 function removeChatImage() {
   currentChatImageFile = null;
-  document.getElementById("chatImageInput").value = "";
-  document.getElementById("chatImagePreview").style.display = "none";
+  const input = document.getElementById("chatImageInput");
+  if (input) input.value = "";
+  const preview = document.getElementById("chatImagePreview");
+  if (preview) preview.style.display = "none";
+}
+
+function getChatDrawContext() {
+  const saveBtn = document.getElementById("btnSavePage");
+  const actionBtn = document.getElementById("btnEditSubmission");
+  const body = document.body;
+  const roleText = (document.querySelector(".brand-stack .name")?.textContent || "").trim();
+  const scriptParagraphs = Array.from(
+    document.querySelectorAll("#scriptModalOverlay .u-inline-style-036"),
+  );
+  const frameNotes = Array.from(document.querySelectorAll("#scriptModalOverlay li"))
+    .map((li) => li.textContent.trim())
+    .filter(Boolean)
+    .join("\n");
+  const currentPageId = saveBtn?.dataset.pageId || actionBtn?.dataset.pageId || "";
+  const pageCard = currentPageId
+    ? document.querySelector(`.page-grid-item[data-page-id="${CSS.escape(String(currentPageId))}"]`)
+    : null;
+
+  return {
+    pageId: currentPageId,
+    submissionId:
+      actionBtn?.dataset.submissionId || saveBtn?.dataset.submissionId || "",
+    role: body?.dataset.role || roleText || "",
+    pageType: pageCard?.dataset.pageType || "",
+    chapterScript:
+      window._chapterScript || scriptParagraphs[0]?.textContent.trim() || "",
+    pageScript:
+      document.getElementById("pageActionScriptText")?.textContent.trim() ||
+      pageCard?.dataset.pageScript ||
+      scriptParagraphs[1]?.textContent.trim() ||
+      "",
+    frameNotes,
+    selectedRegion: selectionRect
+      ? JSON.stringify({
+          shape: selectionShape || "rect",
+          x: Math.round(selectionRect.x),
+          y: Math.round(selectionRect.y),
+          w: Math.round(selectionRect.w),
+          h: Math.round(selectionRect.h),
+        })
+      : "",
+  };
+}
+
+async function canvasSnapshotFile() {
+  if (currentChatImageFile) return currentChatImageFile;
+  if (typeof flattenAllLayers !== "function") return null;
+
+  const flat = flattenAllLayers();
+  const hasArtwork = hasNonWhitePixels(flat);
+  if (!hasArtwork) return null;
+
+  return new Promise((resolve) => {
+    flat.toBlob((blob) => {
+      if (!blob) {
+        resolve(null);
+        return;
+      }
+      resolve(new File([blob], "canvas.png", { type: "image/png" }));
+    }, "image/png");
+  });
+}
+
+async function selectionMaskFile() {
+  if (!selectionRect || selectionRect.w <= 5 || selectionRect.h <= 5) return null;
+
+  const maskCanvas = document.createElement("canvas");
+  maskCanvas.width = CANVAS_W;
+  maskCanvas.height = CANVAS_H;
+  const ctx = maskCanvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.beginPath();
+
+  if (selectionShape === "oval") {
+    ctx.ellipse(
+      selectionRect.x + selectionRect.w / 2,
+      selectionRect.y + selectionRect.h / 2,
+      Math.max(1, selectionRect.w / 2),
+      Math.max(1, selectionRect.h / 2),
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  } else if (selectionShape === "free" && selectionPath.length > 2) {
+    ctx.moveTo(selectionPath[0].x, selectionPath[0].y);
+    for (let i = 1; i < selectionPath.length; i++) {
+      ctx.lineTo(selectionPath[i].x, selectionPath[i].y);
+    }
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    ctx.fillRect(selectionRect.x, selectionRect.y, selectionRect.w, selectionRect.h);
+  }
+
+  ctx.globalCompositeOperation = "source-over";
+
+  return new Promise((resolve) => {
+    maskCanvas.toBlob((blob) => {
+      if (!blob) {
+        resolve(null);
+        return;
+      }
+      resolve(new File([blob], "selection-mask.png", { type: "image/png" }));
+    }, "image/png");
+  });
+}
+
+function hasNonWhitePixels(canvas) {
+  try {
+    const ctx = canvas.getContext("2d");
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    for (let i = 0; i < data.length; i += 16) {
+      const alpha = data[i + 3];
+      if (alpha > 0 && (data[i] < 248 || data[i + 1] < 248 || data[i + 2] < 248)) {
+        return true;
+      }
+    }
+  } catch (e) {
+    return true;
+  }
+  return false;
 }
 
 async function sendChatMessage() {
@@ -1300,7 +1427,6 @@ async function sendChatMessage() {
   const msg = input.value.trim();
   if (!msg && !currentChatImageFile) return;
 
-  // Show user msg
   let userDisplay = msg;
   if (currentChatImageFile) userDisplay += " [Đã đính kèm ảnh]";
   appendChatMessage("user", userDisplay, false);
@@ -1310,22 +1436,45 @@ async function sendChatMessage() {
   btnSend.disabled = true;
   btnSend.innerHTML = "Đang xử lý...";
 
-  const formData = new FormData();
-  formData.append("message", msg);
-  if (currentChatImageFile) {
-    formData.append("image", currentChatImageFile);
-  }
-
-  // Hide preview
-  removeChatImage();
-
   try {
+    const formData = new FormData();
+    formData.append("message", msg);
+
+    const imageForAi = await canvasSnapshotFile();
+    if (imageForAi) {
+      formData.append("image", imageForAi);
+      const maskForAi = currentChatImageFile ? null : await selectionMaskFile();
+      if (maskForAi) formData.append("mask", maskForAi);
+    }
+
+    const context = getChatDrawContext();
+    Object.entries(context).forEach(([key, value]) => {
+      if (value) formData.append(key, value);
+    });
+
+    removeChatImage();
+
     const res = await fetch("/api/chat/message", {
       method: "POST",
       body: formData,
     });
     const data = await res.json();
-    appendChatMessage("ai", data.content, data.type === "image");
+
+    if (data.status === "rate_limited") {
+      appendChatMessage("ai", data.content || data.message || "Gemini dang bi gioi han tam thoi. Thu lai sau it giay.", false, data);
+      return;
+    }
+
+    if (data.status === "error") {
+      appendChatMessage("ai", data.content || data.message || "Không thể xử lý yêu cầu AI.", false, data);
+      return;
+    }
+
+    appendChatMessage("ai", data.content, data.type === "image", data);
+
+    if (data.type === "image" && data.applyMode !== "reference_only") {
+      addAiImageAsNewLayer(data.content, data.intent || "Result");
+    }
   } catch (e) {
     appendChatMessage("ai", "Lỗi: " + e.message, false);
   } finally {
@@ -1334,7 +1483,7 @@ async function sendChatMessage() {
   }
 }
 
-function appendChatMessage(role, content, isImage) {
+function appendChatMessage(role, content, isImage, meta = {}) {
   const list = document.getElementById("chatHistoryList");
   if (!list) return;
   const msgDiv = document.createElement("div");
@@ -1347,10 +1496,32 @@ function appendChatMessage(role, content, isImage) {
     msgDiv.classList.add("is-ai");
 
     if (isImage) {
-      msgDiv.innerHTML = `<img src="${content}" style="max-width:100%; border-radius:4px; margin-bottom:8px;" />
-                                <button type="button" class="btn-submit" onclick="applyChatImageToCanvas('${content}')" style="width:100%; padding:4px;">Đưa vào Canvas</button>`;
+      const img = document.createElement("img");
+      img.src = ensureImageDataUrl(content);
+      img.style.maxWidth = "100%";
+      img.style.borderRadius = "4px";
+      img.style.marginBottom = "8px";
+      msgDiv.appendChild(img);
+
+      const note = document.createElement("div");
+      note.style.fontSize = "12px";
+      note.style.opacity = "0.85";
+      note.style.marginBottom = "8px";
+      note.textContent = meta.applyMode === "reference_only"
+        ? "Ảnh AI đang ở chế độ tham khảo."
+        : "Đã thêm ảnh AI vào layer mới trên canvas.";
+      msgDiv.appendChild(note);
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn-submit";
+      btn.style.width = "100%";
+      btn.style.padding = "4px";
+      btn.textContent = "Thêm lại vào layer mới";
+      btn.addEventListener("click", () => addAiImageAsNewLayer(content, meta.intent || "Result"));
+      msgDiv.appendChild(btn);
     } else {
-      msgDiv.innerHTML = content.replace(/\\n/g, "<br/>");
+      msgDiv.innerHTML = (content || "").replace(/\n/g, "<br/>");
     }
   }
 
@@ -1358,20 +1529,35 @@ function appendChatMessage(role, content, isImage) {
   list.scrollTop = list.scrollHeight;
 }
 
-function applyChatImageToCanvas(base64DataUrl) {
+function addAiImageAsNewLayer(base64DataUrl, intentLabel) {
   const img = new Image();
   img.onload = () => {
-    const layerCtx = getActiveLayer().ctx;
-    layerCtx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
-    pushHistoryEntry("AI Chat: Thêm ảnh");
+    const label = String(intentLabel || "Result")
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (ch) => ch.toUpperCase());
+    const layer = addLayer("AI - " + label, false);
+    activeLayerIndex = layers.length - 1;
+    layer.ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+    layer.ctx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
+    renderLayerList();
+    pushHistoryEntry("AI Chat: Th\u00eam layer " + label);
   };
-  img.src = base64DataUrl;
+  img.src = ensureImageDataUrl(base64DataUrl);
+}
+
+function applyChatImageToCanvas(base64DataUrl) {
+  addAiImageAsNewLayer(base64DataUrl, "Result");
+}
+
+function ensureImageDataUrl(value) {
+  if (!value) return "";
+  return value.startsWith("data:image") ? value : "data:image/png;base64," + value;
 }
 
 document.addEventListener("DOMContentLoaded", loadChatHistory);
 
 // ========================================================
-// PHẦN 7: Gộp tất cả layer thành 1 ảnh rồi gọi /api/ai/run
+// PHáº¦N 7: Gá»™p táº¥t cáº£ layer thÃ nh 1 áº£nh rá»“i gá»i /api/ai/run
 // ========================================================
 function flattenAllLayers() {
   const flat = document.createElement("canvas");
@@ -1389,14 +1575,14 @@ function flattenAllLayers() {
 
 // Lưu trang
 // ========================================================
-// PHẦN 8: Lưu trang & Submission
+// PHáº¦N 8: Lưu trang & Submission
 // ========================================================
 const btnSavePage = document.getElementById("btnSavePage");
 
 // Lưu trang
 if (btnSavePage) {
   btnSavePage.addEventListener("click", async () => {
-    const pageId = btnSavePage.dataset.pageId; // 👈 đọc tại thời điểm click, không đọc lúc load file
+    const pageId = btnSavePage.dataset.pageId; // ðŸ‘ˆ Ä‘á»c táº¡i thá»i Ä‘iá»ƒm click, khÃ´ng Ä‘á»c lÃºc load file
     if (!pageId) {
       alert("Không tìm thấy pageId, vui lòng tải lại trang!");
       return;
@@ -1482,8 +1668,8 @@ if (btnSubmitSubmission) {
   });
 }
 
-// Đặt toàn bộ vào một khối IIFE độc lập để tránh xung đột biến hệ thống
-// Khối tác vụ trang: mở modal, lưu đúng page/submission và tránh lỗi thiếu submissionId.
+// Äáº·t toÃ n bá»™ vÃ o má»™t khá»‘i IIFE Ä‘á»™c láº­p Ä‘á»ƒ trÃ¡nh xung Ä‘á»™t biáº¿n há»‡ thá»‘ng
+// Khá»‘i tÃ¡c vá»¥ trang: má»Ÿ modal, lÆ°u Ä‘Ãºng page/submission vÃ  trÃ¡nh lá»—i thiáº¿u submissionId.
 (() => {
   const actionButton = document.getElementById("btnEditSubmission");
   const btnModalLoadPage = document.getElementById("btnModalLoadPage");
@@ -1654,19 +1840,19 @@ if (btnSubmitSubmission) {
     });
 })();
 
-// Hàm hỗ trợ đóng modal nhanh khi người dùng bấm nút Hủy
+// HÃ m há»— trá»£ Ä‘Ã³ng modal nhanh khi ngÆ°á»i dÃ¹ng báº¥m nÃºt Há»§y
 function closeEditSubmissionModal() {
   const modal = document.getElementById("editSubmissionModal");
   if (modal) modal.style.display = "none";
 }
 
-// --- LOGIC XỬ LÝ ĐỌC FILE LÊN KHÔNG GIAN VẼ THỦ CÔNG ---
+// --- LOGIC Xá»¬ LÃ Äá»ŒC FILE LÃŠN KHÃ”NG GIAN Váº¼ THá»¦ CÃ”NG ---
 const btnLoadPage = document.getElementById("btnLoadPage");
 const inputLoadPage = document.getElementById("inputLoadPage");
 
 if (btnLoadPage && inputLoadPage) {
   btnLoadPage.addEventListener("click", () => {
-    inputLoadPage.click(); // Kích hoạt sự kiện click giả lập vào thẻ input file ẩn
+    inputLoadPage.click(); // KÃ­ch hoáº¡t sá»± kiá»‡n click giáº£ láº­p vÃ o tháº» input file áº©n
   });
 
   inputLoadPage.addEventListener("change", (e) => {
@@ -1677,7 +1863,7 @@ if (btnLoadPage && inputLoadPage) {
     reader.onload = (ev) => {
       const img = new Image();
       img.onload = () => {
-        // Xóa vùng canvas cũ trên layer chỉ định và vẽ đè file mới tải lên lên
+        // XÃ³a vÃ¹ng canvas cÅ© trÃªn layer chá»‰ Ä‘á»‹nh vÃ  váº½ Ä‘Ã¨ file má»›i táº£i lÃªn lÃªn
         layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
         layers[1].ctx.drawImage(img, 0, 0);
         pushHistoryEntry("Load file thủ công");
@@ -1687,16 +1873,16 @@ if (btnLoadPage && inputLoadPage) {
     reader.readAsDataURL(file);
   });
 }
-// Khởi tạo layer list lần đầu
+// Khá»Ÿi táº¡o layer list láº§n Ä‘áº§u
 renderLayerList();
 // ========================================
-// DOWNLOAD MỌI Layer thành 1 file ảnh
+// DOWNLOAD Má»ŒI Layer thÃ nh 1 file áº£nh
 // ========================================
 document.getElementById("btnDownload")?.addEventListener("click", () => {
-  // Gộp tất cả layer thành 1 ảnh
+  // Gá»™p táº¥t cáº£ layer thÃ nh 1 áº£nh
   const flatCanvas = flattenAllLayers();
 
-  // Tạo link download tự động
+  // Táº¡o link download tá»± Ä‘á»™ng
   const link = document.createElement("a");
   link.download = "manga-page-" + Date.now() + ".png";
   link.href = flatCanvas.toDataURL("image/png");

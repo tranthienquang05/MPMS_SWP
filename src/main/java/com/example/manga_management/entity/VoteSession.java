@@ -44,4 +44,20 @@ public class VoteSession {
 
     @Column(name = "DefenseNote", length = 500)
     private String defenseNote;
+
+    /** Ngày phiên đóng (đủ số board vote) — dùng để tính "trong tháng này" và mốc 1 tuần chờ bảo vệ. */
+    @Column(name = "ClosedAt")
+    private LocalDate closedAt;
+
+    /** Kết quả phiên khi đóng: true = đạt ngưỡng 60% đồng ý, false = không đạt. Null khi phiên chưa đóng. */
+    @Column(name = "ResultPassed")
+    private Boolean resultPassed;
+
+    /**
+     * Chỉ dùng cho voteType="reward" đã pass: số tiền thưởng đã tính và "chốt"
+     * ngay lúc đóng phiên (10% x salaryPerChapter x số chapter published chưa
+     * từng được thưởng). Lưu cố định ở đây để tháng sau không bị tính lại.
+     */
+    @Column(name = "RewardBonusAmount")
+    private Integer rewardBonusAmount;
 }

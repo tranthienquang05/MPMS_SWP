@@ -22,4 +22,8 @@ public class Mangaka {
     @ManyToOne
     @JoinColumn(name = "EditorID", nullable = false)
     private TantoEditor editor;
+
+    /** Lương cho mỗi chapter được Tantou duyệt, dùng để tính lương/thưởng theo tháng. */
+    @Column(name = "SalaryPerChapter", nullable = false, columnDefinition = "INT DEFAULT 0")
+    private Integer salaryPerChapter = 0;
 }

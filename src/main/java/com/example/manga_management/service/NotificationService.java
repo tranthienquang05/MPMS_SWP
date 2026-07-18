@@ -6,14 +6,19 @@ import com.example.manga_management.entity.MangaPage;
 import com.example.manga_management.entity.Mangaka;
 import com.example.manga_management.entity.Notification;
 import com.example.manga_management.entity.Proposal;
+import com.example.manga_management.entity.Series;
 import com.example.manga_management.entity.Submission;
 import com.example.manga_management.entity.User;
+import com.example.manga_management.entity.VoteSession;
 import com.example.manga_management.repository.AssistantRepository;
 import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.NotificationRepository;
 import com.example.manga_management.repository.ProposalRepository;
+import com.example.manga_management.repository.SeriesRepository;
 import com.example.manga_management.repository.SubmissionRepository;
+import com.example.manga_management.repository.VoteSessionRepository;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +37,7 @@ public class NotificationService {
     private static final String TYPE_AUTO_SUBMIT = "AUTO_SUBMIT";
     private static final String TYPE_CHAPTER_OVERDUE_CANCEL = "CHAPTER_OVERDUE_CANCEL";
     private static final String TYPE_CHAPTER_AUTO_SUBMIT = "CHAPTER_AUTO_SUBMIT";
+    private static final String TYPE_SERIES_AUTO_STOPPED = "SERIES_AUTO_STOPPED";
 
     private final NotificationRepository notificationRepository;
     private final SubmissionRepository submissionRepository;
@@ -39,6 +45,8 @@ public class NotificationService {
     private final MangaPageRepository mangaPageRepository;
     private final ChapterRepository chapterRepository;
     private final ProposalRepository proposalRepository;
+    private final SeriesRepository seriesRepository;
+    private final VoteSessionRepository voteSessionRepository;
 
     public List<Notification> getInbox(User user) {
         if (user == null) {
@@ -281,6 +289,84 @@ public class NotificationService {
                 || !submissionRepository.findByAssistant_IdAndStatus(assistant.getId(), "done").isEmpty();
         assistant.setStatus(hasUnapprovedTask ? "intask" : "untask");
         assistantRepository.save(assistant);
+    }
+
+    /**
+     * Huỷ hàng loạt mọi task chưa duyệt xong (intask/done) thuộc 1 series khi
+     * series đó bị dừng vĩnh viễn ("stopped") — dùng chung cho cả 2 trường hợp:
+     * bảo vệ bị hội đồng bác bỏ, và tự động dừng do quá hạn 1 tuần không nộp bảo vệ.
+     */
+    @Transactional
+    public void cancelUnapprovedTasksForStoppedSeries(Series series) {
+        List<Submission> unapproved = submissionRepository
+                .findByPageId_Chapter_Series_IdAndStatusIn(series.getId(), List.of("intask", "done"));
+
+        for (Submission sub : unapproved) {
+            sub.setStatus("cancelled");
+            submissionRepository.save(sub);
+
+            if (sub.getAssistant() != null) {
+                refreshAssistantStatus(sub.getAssistant());
+                if (sub.getAssistant().getUser() != null) {
+                    sendToUser(sub.getAssistant().getUser().getId(),
+                            "Task " + sub.getId() + " đã bị huỷ do series '" + series.getSeriesName()
+                                    + "' đã bị dừng phát hành.",
+                            "/manga/assistant",
+                            TYPE_SERIES_AUTO_STOPPED,
+                            sub.getId());
+                }
+            }
+        }
+    }
+
+    /**
+     * Series đang "pending_cancel" (đã bị vote dừng) mà quá 1 tuần kể từ lúc đó
+     * vẫn chưa có Tantou nào nộp hồ sơ bảo vệ thì tự động dừng vĩnh viễn —
+     * coi như không ai lên tiếng bảo vệ nên chấp nhận huỷ.
+     */
+    @Transactional
+    @Scheduled(fixedDelay = 3_600_000)
+    public void autoCancelUndefendedSeries() {
+        List<Series> pendingSeries = seriesRepository.findByStatus("pending_cancel");
+        LocalDate today = LocalDate.now();
+
+        for (Series series : pendingSeries) {
+            // Tantou đã nộp hồ sơ bảo vệ rồi (dù đang chờ vote hay đã có kết quả) thì bỏ qua,
+            // để luồng vote "defense" ở RankingController tự xử lý kết quả.
+            if (voteSessionRepository.existsBySeriesIdAndVoteType(series.getId(), "defense")) {
+                continue;
+            }
+
+            VoteSession stopSession = voteSessionRepository
+                    .findFirstBySeriesIdAndVoteTypeAndStatusAndResultPassedTrueOrderByClosedAtDesc(
+                            series.getId(), "stop", "closed")
+                    .orElse(null);
+            if (stopSession == null || stopSession.getClosedAt() == null) {
+                continue;
+            }
+
+            if (!today.isAfter(stopSession.getClosedAt().plusWeeks(1))) {
+                continue;
+            }
+
+            series.setStatus("stopped");
+            seriesRepository.save(series);
+            cancelUnapprovedTasksForStoppedSeries(series);
+
+            if (series.getProposal() != null && series.getProposal().getMangaka() != null) {
+                Mangaka mangaka = series.getProposal().getMangaka();
+                String content = "⛔ Series '" + series.getSeriesName()
+                        + "' đã bị dừng vĩnh viễn do quá 1 tuần không nộp hồ sơ bảo vệ.";
+                if (mangaka.getUser() != null) {
+                    sendToUser(mangaka.getUser().getId(), content, "/manga/mangaka",
+                            TYPE_SERIES_AUTO_STOPPED, series.getId());
+                }
+                if (mangaka.getEditor() != null && mangaka.getEditor().getUser() != null) {
+                    sendToUser(mangaka.getEditor().getUser().getId(), content, "/manga/tantou",
+                            TYPE_SERIES_AUTO_STOPPED, series.getId() + ":tantou");
+                }
+            }
+        }
     }
 
     @Transactional

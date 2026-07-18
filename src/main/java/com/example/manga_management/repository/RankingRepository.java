@@ -20,6 +20,7 @@ public interface RankingRepository extends JpaRepository<LikeResult, String> {
            "FROM Series s LEFT JOIN LikeResult v ON v.series.id = s.id AND v.year = :year " +
            "WHERE s.status <> 'stopped' " +
            "GROUP BY s.id, s.seriesName " +
+           "HAVING COALESCE(SUM(v.viewCount), 0L) > 0 " +
            "ORDER BY COALESCE(SUM(v.viewCount), 0L) DESC, " +
            "COALESCE(SUM(v.likeNumber), 0L) DESC, COALESCE(SUM(v.dislikeNumber), 0L) ASC")
     List<Object[]> findRankingByYear(@Param("year") int year);
@@ -29,6 +30,7 @@ public interface RankingRepository extends JpaRepository<LikeResult, String> {
            "FROM Series s LEFT JOIN LikeResult v ON v.series.id = s.id AND v.month = :month AND v.year = :year " +
            "WHERE s.status <> 'stopped' " +
            "GROUP BY s.id, s.seriesName " +
+           "HAVING COALESCE(SUM(v.viewCount), 0L) > 0 " +
            "ORDER BY COALESCE(SUM(v.viewCount), 0L) DESC, " +
            "COALESCE(SUM(v.likeNumber), 0L) DESC, COALESCE(SUM(v.dislikeNumber), 0L) ASC")
     List<Object[]> findRankingByMonthAndYear(@Param("month") int month,
@@ -40,6 +42,7 @@ public interface RankingRepository extends JpaRepository<LikeResult, String> {
            "AND v.year = :year AND v.month IN :months " +
            "WHERE s.status <> 'stopped' " +
            "GROUP BY s.id, s.seriesName " +
+           "HAVING COALESCE(SUM(v.viewCount), 0L) > 0 " +
            "ORDER BY COALESCE(SUM(v.viewCount), 0L) DESC, " +
            "COALESCE(SUM(v.likeNumber), 0L) DESC, COALESCE(SUM(v.dislikeNumber), 0L) ASC")
     List<Object[]> findRankingByQuarterAndYear(@Param("months") List<Integer> months,
@@ -54,6 +57,7 @@ public interface RankingRepository extends JpaRepository<LikeResult, String> {
            "FROM Series s LEFT JOIN LikeResult v ON v.series.id = s.id AND v.year = :year " +
            "WHERE s.status <> 'stopped' " +
            "GROUP BY s.id, s.seriesName " +
+           "HAVING COALESCE(SUM(v.viewCount), 0L) > 0 " +
            "ORDER BY COALESCE(SUM(v.viewCount), 0L) ASC, " +
            "COALESCE(SUM(v.likeNumber), 0L) ASC, COALESCE(SUM(v.dislikeNumber), 0L) DESC")
     List<Object[]> findBottomByYear(@Param("year") int year);
@@ -63,6 +67,7 @@ public interface RankingRepository extends JpaRepository<LikeResult, String> {
            "FROM Series s LEFT JOIN LikeResult v ON v.series.id = s.id AND v.month = :month AND v.year = :year " +
            "WHERE s.status <> 'stopped' " +
            "GROUP BY s.id, s.seriesName " +
+           "HAVING COALESCE(SUM(v.viewCount), 0L) > 0 " +
            "ORDER BY COALESCE(SUM(v.viewCount), 0L) ASC, " +
            "COALESCE(SUM(v.likeNumber), 0L) ASC, COALESCE(SUM(v.dislikeNumber), 0L) DESC")
     List<Object[]> findBottomByMonthAndYear(@Param("month") int month,
@@ -74,6 +79,7 @@ public interface RankingRepository extends JpaRepository<LikeResult, String> {
            "AND v.year = :year AND v.month IN :months " +
            "WHERE s.status <> 'stopped' " +
            "GROUP BY s.id, s.seriesName " +
+           "HAVING COALESCE(SUM(v.viewCount), 0L) > 0 " +
            "ORDER BY COALESCE(SUM(v.viewCount), 0L) ASC, " +
            "COALESCE(SUM(v.likeNumber), 0L) ASC, COALESCE(SUM(v.dislikeNumber), 0L) DESC")
     List<Object[]> findBottomByQuarterAndYear(@Param("months") List<Integer> months,

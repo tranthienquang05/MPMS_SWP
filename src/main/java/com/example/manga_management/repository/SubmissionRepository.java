@@ -36,5 +36,8 @@ public interface SubmissionRepository extends JpaRepository<Submission, String> 
 
     List<Submission> findByAssistant_Mangaka_IdAndStatus(String mangakaId, String status);
 
-    List<Submission> findByPageIdId(String pageId); 
+    List<Submission> findByPageIdId(String pageId);
+
+    // Task chưa duyệt xong (intask/done) thuộc 1 series — dùng để huỷ hàng loạt khi series bị "stopped".
+    List<Submission> findByPageId_Chapter_Series_IdAndStatusIn(String seriesId, List<String> statuses);
 }

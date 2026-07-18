@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.example.manga_management.entity.*;
 import com.example.manga_management.repository.*;
+import com.example.manga_management.service.NotificationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,7 +25,9 @@ public class RankingController {
     private final SeriesVoteRepository seriesVoteRepository;
     private final SeriesRepository seriesRepository;
     private final LikeResultRepository likeResultRepository;
+    private final ChapterRepository chapterRepository;
     private final NotificationController notificationController;
+    private final NotificationService notificationService;
 
     public RankingController(RankingRepository rankingRepository,
             BoardRepository boardRepository,
@@ -32,14 +35,18 @@ public class RankingController {
             SeriesVoteRepository seriesVoteRepository,
             SeriesRepository seriesRepository,
             LikeResultRepository likeResultRepository,
-            NotificationController notificationController) {
+            ChapterRepository chapterRepository,
+            NotificationController notificationController,
+            NotificationService notificationService) {
         this.rankingRepository = rankingRepository;
         this.boardRepository = boardRepository;
         this.voteSessionRepository = voteSessionRepository;
         this.seriesVoteRepository = seriesVoteRepository;
         this.seriesRepository = seriesRepository;
         this.likeResultRepository = likeResultRepository;
+        this.chapterRepository = chapterRepository;
         this.notificationController = notificationController;
+        this.notificationService = notificationService;
     }
 
     // ===== 1. API ranking =====
@@ -235,7 +242,8 @@ public class RankingController {
         response.put("percent", Math.round(percent));
 
         vs.setStatus("closed");
-        voteSessionRepository.save(vs);
+        vs.setClosedAt(LocalDate.now());
+        vs.setResultPassed(percent >= 60);
 
         Series series = vs.getSeries();
         if (vs.getVoteType().equals("stop")) {
@@ -264,6 +272,7 @@ public class RankingController {
             } else {
                 series.setStatus("stopped");
                 seriesRepository.save(series);
+                notificationService.cancelUnapprovedTasksForStoppedSeries(series);
                 notifySeriesStakeholders(series,
                         "❌ Hồ sơ bảo vệ của series '" + series.getSeriesName()
                                 + "' không được hội đồng thông qua (" + Math.round(percent)
@@ -275,12 +284,42 @@ public class RankingController {
             if (percent >= 60) {
                 series.setStatus("rewarded");
                 seriesRepository.save(series);
-                response.put("message", "🏆 Tất cả board đã vote. Series được KHEN THƯỞNG! (" + Math.round(percent) + "% đồng ý)");
+                int bonus = computeAndLockRewardBonus(series, vs);
+                response.put("message", "🏆 Tất cả board đã vote. Series được KHEN THƯỞNG! (" + Math.round(percent)
+                        + "% đồng ý, thưởng " + bonus + ")");
             } else {
                 response.put("message", "Tất cả board đã vote. Kết quả: " + Math.round(percent) + "% vote khen thưởng → Không đủ 60%.");
             }
         }
+        voteSessionRepository.save(vs);
         return response;
+    }
+
+    /**
+     * Tính thưởng 1 lần cho series vừa được vote thưởng thông qua: 10% x
+     * salaryPerChapter x số chapter "published" CHƯA từng được thưởng trước đó.
+     * Đánh dấu ngay các chapter đó isReward=true để không bị tính lại ở lần
+     * thưởng sau (kể cả cùng tháng hay tháng khác), và chốt số tiền vào chính
+     * phiên vote này để tra lại sau không bị lệch do chapter mới publish thêm.
+     */
+    private int computeAndLockRewardBonus(Series series, VoteSession vs) {
+        if (series.getProposal() == null || series.getProposal().getMangaka() == null) {
+            vs.setRewardBonusAmount(0);
+            return 0;
+        }
+        Mangaka mangaka = series.getProposal().getMangaka();
+        List<Chapter> publishedChapters = chapterRepository.findBySeries_IdAndStatus(series.getId(), "published");
+        List<Chapter> eligibleChapters = publishedChapters.stream().filter(c -> !c.isReward()).toList();
+
+        int bonus = (int) Math.round(0.10 * mangaka.getSalaryPerChapter() * eligibleChapters.size());
+
+        for (Chapter c : eligibleChapters) {
+            c.setReward(true);
+        }
+        chapterRepository.saveAll(eligibleChapters);
+
+        vs.setRewardBonusAmount(bonus);
+        return bonus;
     }
 
     /**

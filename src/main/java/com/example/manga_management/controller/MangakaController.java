@@ -35,12 +35,14 @@ import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.Series;
 import com.example.manga_management.entity.Submission;
 import com.example.manga_management.entity.User;
+import com.example.manga_management.entity.VoteSession;
 import com.example.manga_management.repository.AssistantRepository;
 import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.MangakaRepository;
 import com.example.manga_management.repository.ProposalRepository;
 import com.example.manga_management.repository.SeriesRepository;
 import com.example.manga_management.repository.SubmissionRepository;
+import com.example.manga_management.repository.VoteSessionRepository;
 import com.example.manga_management.service.ActivityLogService;
 import com.example.manga_management.service.ProposalService;
 
@@ -64,13 +66,15 @@ public class MangakaController {
     private final ProposalService proposalService;
     private NotificationController notificationController;
     private final ActivityLogService activityLogService;
+    private final VoteSessionRepository voteSessionRepository;
 
     public MangakaController(ProposalRepository proposalRepository, MangakaRepository mangakaRepository,
             SeriesRepository seriesRepository,
             com.example.manga_management.repository.ChapterRepository chapterRepository,
             MangaPageRepository mangaPageRepository, SubmissionRepository submissionRepository,
             NotificationController notificationController, AssistantRepository assistantRepository,
-            ProposalService proposalService, ActivityLogService activityLogService) {
+            ProposalService proposalService, ActivityLogService activityLogService,
+            VoteSessionRepository voteSessionRepository) {
         this.proposalRepository = proposalRepository;
         this.mangakaRepository = mangakaRepository;
         this.assistantRepository = assistantRepository;
@@ -81,6 +85,7 @@ public class MangakaController {
         this.notificationController = notificationController;
         this.proposalService = proposalService;
         this.activityLogService = activityLogService;
+        this.voteSessionRepository = voteSessionRepository;
     }
 
     @GetMapping({ "" })
@@ -101,8 +106,47 @@ public class MangakaController {
                     proposalRepository.findByStatusAndMangaka_Id("revision", mangaka.getId()));
             model.addAttribute("lockedList",
                     proposalRepository.findByStatusAndMangaka_Id("locked", mangaka.getId()));
+            addMonthlyEarningsToModel(mangaka, model);
         }
         return "mangaka";
+    }
+
+    /**
+     * Thống kê thu nhập trong tháng của mangaka, hiển thị ở tab "Dự án":
+     * - Số chapter được tantou duyệt trong tháng ("pass"/"published", theo ReviewedAt).
+     * - Lương tháng này = số chapter đó x salaryPerChapter.
+     * - Thưởng tháng này = tổng rewardBonusAmount đã "chốt" từ các phiên vote thưởng
+     *   ĐẠT trong tháng (đã tính 1 lần lúc phiên đóng, không tính lại ở đây).
+     * - Tổng lương tháng này = lương + thưởng.
+     */
+    private void addMonthlyEarningsToModel(Mangaka mangaka, Model model) {
+        LocalDate now = LocalDate.now();
+        LocalDateTime monthStart = LocalDateTime.of(now.getYear(), now.getMonthValue(), 1, 0, 0);
+        LocalDateTime monthEnd = monthStart.plusMonths(1);
+        LocalDate monthStartDate = monthStart.toLocalDate();
+        LocalDate monthEndDate = monthStartDate.plusMonths(1).minusDays(1);
+
+        List<Chapter> reviewedThisMonth = chapterRepository
+                .findBySeries_Proposal_Mangaka_IdAndReviewedAtBetween(mangaka.getId(), monthStart, monthEnd);
+        long chaptersApprovedThisMonth = reviewedThisMonth.stream()
+                .filter(c -> "pass".equals(c.getStatus()) || "published".equals(c.getStatus()))
+                .count();
+
+        int salaryThisMonth = (int) (chaptersApprovedThisMonth * mangaka.getSalaryPerChapter());
+
+        List<VoteSession> rewardSessionsThisMonth = voteSessionRepository
+                .findBySeries_Proposal_Mangaka_IdAndVoteTypeAndResultPassedTrueAndClosedAtBetween(
+                        mangaka.getId(), "reward", monthStartDate, monthEndDate);
+        int bonusThisMonth = rewardSessionsThisMonth.stream()
+                .mapToInt(vs -> vs.getRewardBonusAmount() != null ? vs.getRewardBonusAmount() : 0)
+                .sum();
+
+        model.addAttribute("salaryPerChapter", mangaka.getSalaryPerChapter());
+        model.addAttribute("chaptersApprovedThisMonth", chaptersApprovedThisMonth);
+        model.addAttribute("mangakaSalaryThisMonth", salaryThisMonth);
+        model.addAttribute("mangakaBonusThisMonth", bonusThisMonth);
+        model.addAttribute("mangakaTotalSalaryThisMonth", salaryThisMonth + bonusThisMonth);
+        model.addAttribute("currentMonthLabel", "Tháng " + now.getMonthValue());
     }
 
     // ===================== SWAGGER / JSON ENDPOINTS =====================

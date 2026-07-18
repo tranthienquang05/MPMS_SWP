@@ -13,4 +13,6 @@ public interface SeriesRepository extends JpaRepository<Series, String> {
     List<Series> findByProposal_Mangaka_IdAndStatusIn(String mangakaId, List<String> statuses);
 
     List<Series> findByStatusAndProposal_Mangaka_Editor_Id(String status, String editorId);
+
+    List<Series> findByStatus(String status);
 }

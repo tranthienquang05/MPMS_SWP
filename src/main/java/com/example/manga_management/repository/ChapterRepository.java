@@ -31,4 +31,11 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
     // Lịch sử hoạt động của tantou: các chapter họ đã duyệt/từ chối
     List<Chapter> findBySeries_Proposal_Mangaka_Editor_User_IdAndReviewedAtIsNotNullOrderByReviewedAtDesc(
             String editorUserId);
+
+    // findBySeries_IdAndStatus(seriesId, "published") (đã có ở trên) dùng khi tính thưởng: lọc thêm !isReward() ở tầng service
+
+    // Mọi chapter mangaka đã được tantou xử lý (duyệt/từ chối) trong khoảng thời gian —
+    // dùng để tính "số chapter hoàn thành trong tháng" (lọc thêm status pass/published ở tầng service)
+    List<Chapter> findBySeries_Proposal_Mangaka_IdAndReviewedAtBetween(
+            String mangakaId, LocalDateTime start, LocalDateTime end);
 }

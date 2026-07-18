@@ -324,6 +324,8 @@ public class AdminController {
                     mangaka.setId(profileId);
                     mangaka.setUser(newUser);
                     mangaka.setEditor(editor);
+                    mangaka.setSalaryPerChapter(
+                            Integer.parseInt(body.getOrDefault("salaryPerChapter", "0")));
                     mangakaRepository.save(mangaka);
                 }
                 case "assistant" -> {
@@ -415,6 +417,15 @@ public class AdminController {
                 TantoEditor editor = tantoEditorRepository.findById(body.get("editorId")).orElse(null);
                 if (mangaka != null && editor != null) {
                     mangaka.setEditor(editor);
+                    mangakaRepository.save(mangaka);
+                }
+            }
+
+            // Nếu là mangaka và muốn đổi lương mỗi chapter
+            if (isSet(body, "salaryPerChapter")) {
+                Mangaka mangaka = mangakaRepository.findByUserId(u.getId()).orElse(null);
+                if (mangaka != null) {
+                    mangaka.setSalaryPerChapter(Integer.parseInt(body.get("salaryPerChapter")));
                     mangakaRepository.save(mangaka);
                 }
             }

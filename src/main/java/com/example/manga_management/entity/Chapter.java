@@ -50,4 +50,12 @@ public class Chapter {
     /** Thời điểm tantou duyệt hoặc từ chối chapter này (dùng cho lịch sử hoạt động). */
     @Column(name = "ReviewedAt")
     private LocalDateTime reviewedAt;
+
+    /**
+     * Đánh dấu chapter này đã được tính vào 1 lần thưởng series (10%/chap) rồi.
+     * Một khi = true thì không được tính vào lần thưởng nào khác nữa, kể cả
+     * khi series được vote thưởng lại ở kỳ sau.
+     */
+    @Column(name = "IsReward", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    private boolean isReward = false;
 }

@@ -445,6 +445,33 @@
       <div id="tab-project" class="tab-pane">
         <h2>Series của tôi</h2>
 
+        <div class="u-inline-style-029">
+          <div class="u-inline-style-030">
+            <h3 th:text="${chaptersApprovedThisMonth != null ? chaptersApprovedThisMonth : 0}"></h3>
+            <p th:text="${currentMonthLabel != null ? 'Chapter hoàn thành ' + currentMonthLabel : 'Chapter hoàn thành tháng này'}">
+              Chapter hoàn thành tháng này</p>
+          </div>
+
+          <div class="u-inline-style-030">
+            <h3 th:text="|${mangakaSalaryThisMonth != null ? #numbers.formatInteger(mangakaSalaryThisMonth, 0, 'COMMA') : 0} VNĐ|"></h3>
+            <p>
+              Lương tháng này
+              <small th:if="${salaryPerChapter != null}"
+                th:text="|(${#numbers.formatInteger(salaryPerChapter, 0, 'COMMA')} VNĐ/chapter)|"></small>
+            </p>
+          </div>
+
+          <div class="u-inline-style-030">
+            <h3 th:text="|${mangakaBonusThisMonth != null ? #numbers.formatInteger(mangakaBonusThisMonth, 0, 'COMMA') : 0} VNĐ|"></h3>
+            <p>Thưởng tháng này <small>(series được vote thưởng)</small></p>
+          </div>
+
+          <div class="u-inline-style-030">
+            <h3 th:text="|${mangakaTotalSalaryThisMonth != null ? #numbers.formatInteger(mangakaTotalSalaryThisMonth, 0, 'COMMA') : 0} VNĐ|"></h3>
+            <p>Tổng lương tháng này</p>
+          </div>
+        </div>
+
         <div id="project-view-series"></div>
         <div id="project-view-chapter" class="u-inline-style-002"></div>
         <div id="project-view-page" class="u-inline-style-002"></div>

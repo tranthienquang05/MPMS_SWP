@@ -445,7 +445,7 @@
       <div id="tab-project" class="tab-pane">
         <h2>Series của tôi</h2>
 
-        <div class="u-inline-style-029">
+        <div id="project-earnings-summary" class="u-inline-style-029">
           <div class="u-inline-style-030">
             <h3 th:text="${chaptersApprovedThisMonth != null ? chaptersApprovedThisMonth : 0}"></h3>
             <p th:text="${currentMonthLabel != null ? 'Chapter hoàn thành ' + currentMonthLabel : 'Chapter hoàn thành tháng này'}">
@@ -1458,6 +1458,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       const seriesView = document.getElementById("project-view-series");
       const chapterView = document.getElementById("project-view-chapter");
       const pageView = document.getElementById("project-view-page");
+      const earningsSummary = document.getElementById("project-earnings-summary");
 
       if (seriesView)
         seriesView.style.display = viewName === "series" ? "block" : "none";
@@ -1465,6 +1466,10 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         chapterView.style.display = viewName === "chapter" ? "block" : "none";
       if (pageView)
         pageView.style.display = viewName === "page" ? "block" : "none";
+      // Ô lương/thưởng chỉ hiện ở màn danh sách series ngoài cùng, không theo
+      // vào các màn con (chapter/page) khi drill-down.
+      if (earningsSummary)
+        earningsSummary.style.display = viewName === "series" ? "flex" : "none";
     }
 
     function restoreProjectSeriesView(updateRoute = true) {
@@ -2965,12 +2970,16 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                 ? `<button type="button" class="project-action-btn series-chapter-btn project-action-locked"
                         onclick="alert('${lockMessage}')">🔒 Đã khoá</button>`
                 : `<a href="/manga/mangaka/myseries/${sid}/${c.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectChapter('${sid}','${c.id}')">Xem trang</a>`;
+              // c.reward: JSON trả về "reward" (không phải "isReward") do quy ước getter boolean của Jackson/Lombok.
+              const rewardBadge = c.reward
+                ? ` <span class="badge-status-passed u-inline-style-125" title="Chapter này đã được tính vào 1 lần thưởng series, không tính lại nữa">🏆 Đã thưởng</span>`
+                : "";
 
               html += `<tr>
                   <td>${c.chapterNumber}</td>
                   <td>${c.chapterName}</td>
                   <td>${deadline}</td>
-                  <td>${chapterStatusMap[c.status] || formatStatusVi(c.status)}</td>
+                  <td>${chapterStatusMap[c.status] || formatStatusVi(c.status)}${rewardBadge}</td>
                   <td>${comment}</td>
                   <td>
                     ${viewPagesBtn}

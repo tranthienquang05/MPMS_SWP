@@ -317,6 +317,19 @@ public class NotificationService {
                 }
             }
         }
+
+        // Mọi chapter CHƯA published thì khoá luôn thành "stopped" — nếu để nguyên
+        // "unfinish"/"finish"/"pass" thì job autoFinishOverdueChapters() (quét theo
+        // deadline) vẫn thấy "unfinish" quá hạn và tự nộp lên tantou liên tục dù
+        // series đã chết. Chapter "stopped" không khớp điều kiện "unfinish" của
+        // job đó nữa nên sẽ không bao giờ bị tự nộp nữa.
+        List<Chapter> chapters = chapterRepository.findBySeries(series);
+        for (Chapter chapter : chapters) {
+            if (!"published".equals(chapter.getStatus()) && !"stopped".equals(chapter.getStatus())) {
+                chapter.setStatus("stopped");
+                chapterRepository.save(chapter);
+            }
+        }
     }
 
     /**

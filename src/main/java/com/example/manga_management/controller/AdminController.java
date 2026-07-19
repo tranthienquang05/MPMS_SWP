@@ -161,6 +161,7 @@ public class AdminController {
             Map<String, Object> item = new HashMap<>();
             item.put("id", m.getId());
             item.put("user", m.getUser());
+            item.put("salaryPerChapter", m.getSalaryPerChapter());
             if (m.getEditor() != null) {
                 Map<String, Object> editorMap = new HashMap<>();
                 editorMap.put("id", m.getEditor().getId());

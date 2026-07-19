@@ -528,6 +528,10 @@
             <span class="text-danger-span">*</span></label>
           <select id="c-editorId"></select>
         </div>
+        <div class="field">
+          <label>Lương mỗi chapter (VNĐ)</label>
+          <input id="c-salaryPerChapter" type="number" placeholder="0" value="0" />
+        </div>
       </div>
 
       <div id="extra-assistant">
@@ -574,6 +578,10 @@
         <label>Password
           <span class="text-muted-small">(để trống = giữ nguyên)</span></label>
         <input id="e-password" type="password" placeholder="••••••••" />
+      </div>
+      <div id="e-extra-mangaka" class="field">
+        <label>Lương mỗi chapter (VNĐ)</label>
+        <input id="e-salaryPerChapter" type="number" placeholder="0" value="0" />
       </div>
 
       <div class="modal-footer">
@@ -978,7 +986,9 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                 <td>${u.email}</td>
                 <td>${badgeHtml(u.role)}</td>
                 <td class="u-inline-style-018">
-                    <button class="btn-sm btn-warning" onclick="openEditModal('${u.id}','${u.fullname}','${u.username}','${u.email}')">Sửa
+                    <button class="btn-sm btn-warning" onclick="openEditModal('${u.id}','${u.fullname}','${u.username}','${u.email}','${u.role}',${
+                  (allData.mangakas || []).find((m) => m.user && m.user.id === u.id)?.salaryPerChapter ?? 0
+                })">Sửa
                     </button>
                     <button class="btn-sm btn-danger" onclick="openDeleteModal('${u.id}','${u.fullname}')">Xóa
                     </button>
@@ -1051,6 +1061,8 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
 
       if (body.role === "mangaka") {
         body.editorId = document.getElementById("c-editorId").value;
+        body.salaryPerChapter =
+          document.getElementById("c-salaryPerChapter").value || "0";
         if (!body.editorId) {
           showToast("Vui lòng chọn Tantou Editor", "error");
           return;
@@ -1085,12 +1097,15 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
     // ════════════════════════════════════════════
     // SỬA TÀI KHOẢN
     // ════════════════════════════════════════════
-    function openEditModal(id, fullname, username, email) {
+    function openEditModal(id, fullname, username, email, role, salaryPerChapter) {
       document.getElementById("e-id").value = id;
       document.getElementById("e-fullname").value = fullname;
       document.getElementById("e-username").value = username;
       document.getElementById("e-email").value = email;
       document.getElementById("e-password").value = "";
+      document.getElementById("e-extra-mangaka").style.display =
+        (role || "").toLowerCase() === "mangaka" ? "block" : "none";
+      document.getElementById("e-salaryPerChapter").value = salaryPerChapter ?? 0;
       openModal("modal-edit");
     }
 
@@ -1103,6 +1118,9 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       };
       const pw = document.getElementById("e-password").value.trim();
       if (pw) body.password = pw;
+      if (document.getElementById("e-extra-mangaka").style.display !== "none") {
+        body.salaryPerChapter = document.getElementById("e-salaryPerChapter").value || "0";
+      }
 
       const res = await fetch("/manga/system-admin/accounts/update", {
         method: "POST",

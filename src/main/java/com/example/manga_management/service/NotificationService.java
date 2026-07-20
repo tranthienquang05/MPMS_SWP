@@ -121,26 +121,6 @@ public class NotificationService {
         notificationRepository.saveAll(list);
     }
 
-    public boolean markRead(Long notificationId, User user) {
-        Notification note = notificationRepository.findById(notificationId).orElse(null);
-        if (note == null || !isVisibleTo(note, user)) {
-            return false;
-        }
-        if (!note.isRead()) {
-            note.setRead(true);
-            notificationRepository.save(note);
-        }
-        return true;
-    }
-
-    public boolean isVisibleTo(Notification note, User user) {
-        if (note == null || user == null) {
-            return false;
-        }
-        return (note.getUserId() != null && note.getUserId().equals(user.getId()))
-                || (note.getRole() != null && note.getRole().equalsIgnoreCase(user.getRole()));
-    }
-
     /**
      * Quá hạn deadline thì tự động nộp bài: submission intask -> done, page ->
      * done. Assistant vẫn giữ intask cho tới khi mangaka duyệt hết task.

@@ -994,9 +994,10 @@ public class AdminController {
             }
         }
 
-        // 5b. Hành động không thể suy ra được từ trạng thái hiện tại (giao lại,
-        // tạo chapter, tạo/sửa kịch bản, tạo/xóa trang, nhận xét trang...) —
-        // được ghi trực tiếp vào ActivityLog lúc xảy ra, áp dụng cho mọi role.
+        // 5b. Hành động không thể suy ra được từ trạng thái hiện tại — ghi trực
+        // tiếp vào ActivityLog lúc xảy ra (mangaka: giao lại, nộp chap, tạo chapter,
+        // tạo/sửa kịch bản, tạo/xóa trang; tantou: nhận xét trang). Vòng lặp bên
+        // dưới không lọc theo role — ai làm gì thì tự khớp đúng UserID người đó.
         for (ActivityLog log : activityLogRepository.findByUserIdOrderByCreatedAtDesc(userId)) {
             addActivity(activities, log.getCreatedAt(), log.getType(), activityIcon(log.getType()),
                     log.getDescription());

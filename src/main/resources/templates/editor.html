@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
-    <script defer src="/js/profile-security.js" th:src="@{/js/profile-security.js}"></script>
+    <script defer src="/js/profile-security.js?v=20260721-profile-compact" th:src="@{/js/profile-security.js(v='20260721-profile-compact')}"></script>
     <title>Hội đồng biên tập</title>
     <link
       rel="stylesheet"
@@ -11,8 +11,8 @@
     />
     <link
       rel="stylesheet"
-      href="../static/css/all.css?v=20260721-fixed-chat"
-      th:href="@{/css/all.css(v='20260721-fixed-chat')}"
+      href="../static/css/all.css?v=20260721-profile-labels"
+      th:href="@{/css/all.css(v='20260721-profile-labels')}"
     />
     <link
       rel="stylesheet"
@@ -127,72 +127,6 @@
         th:classappend="${message == null} ? 'active' : ''"
       >
         <h2>Trang chủ</h2>
-
-        <!-- Ranking -->
-        <div class="u-inline-style-042">
-          <label
-            >Tháng:
-            <select
-              id="rankMonth"
-              onchange="if(this.value!='0') document.getElementById('rankQuarter').value='0'"
-            >
-              <option value="0">-- Cả năm --</option>
-              <option value="1">Tháng 1</option>
-              <option value="2">Tháng 2</option>
-              <option value="3">Tháng 3</option>
-              <option value="4">Tháng 4</option>
-              <option value="5">Tháng 5</option>
-              <option value="6">Tháng 6</option>
-              <option value="7">Tháng 7</option>
-              <option value="8">Tháng 8</option>
-              <option value="9">Tháng 9</option>
-              <option value="10">Tháng 10</option>
-              <option value="11">Tháng 11</option>
-              <option value="12">Tháng 12</option>
-            </select>
-          </label>
-          <label class="u-inline-style-043"
-            >Quý:
-            <select
-              id="rankQuarter"
-              onchange="if(this.value!='0') document.getElementById('rankMonth').value='0'"
-            >
-              <option value="0">-- Tất cả --</option>
-              <option value="1">Quý 1 (T1-T3)</option>
-              <option value="2">Quý 2 (T4-T6)</option>
-              <option value="3">Quý 3 (T7-T9)</option>
-              <option value="4">Quý 4 (T10-T12)</option>
-            </select>
-          </label>
-          <label class="u-inline-style-043"
-            >Nam:
-            <select id="rankYear">
-              <option value="2026">2026</option>
-              <option value="2025">2025</option>
-            </select>
-          </label>
-          <button type="button" onclick="loadAll()">Xem ranking</button>
-        </div>
-
-        <div id="rankingSection" class="u-inline-style-002">
-          <h3>Bảng Xếp Hạng Series</h3>
-          <table id="rankingTable" border="1" class="u-inline-style-044">
-            <thead>
-              <tr>
-                <th>Hạng</th>
-                <th>Mã Series</th>
-                <th>Tên Series</th>
-                <th>Lượt xem</th>
-                <th>Like</th>
-                <th>Dislike</th>
-              </tr>
-            </thead>
-            <tbody id="rankingBody"></tbody>
-          </table>
-          <p id="rankingMsg" class="u-inline-style-045">Không có dữ liệu.</p>
-        </div>
-
-        <hr class="u-inline-style-003" />
 
         <!-- Phiên vote đang mở (Board cast vote) -->
         <h3 class="u-inline-style-046">Phiên Vote đang mở</h3>
@@ -506,66 +440,6 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
             }
           })
           .catch((err) => alert("Lỗi: " + err.message));
-      }
-
-      function loadAll() {
-        loadRanking();
-      }
-
-      function loadRanking() {
-        document.getElementById("rankingSection").style.display = "block";
-
-        var month = document.getElementById("rankMonth").value;
-        var quarter = document.getElementById("rankQuarter").value;
-        var year = document.getElementById("rankYear").value;
-        fetch(
-          "/manga/ranking?month=" +
-            month +
-            "&quarter=" +
-            quarter +
-            "&year=" +
-            year,
-        )
-          .then((res) => res.json())
-          .then((data) => {
-            var tbody = document.getElementById("rankingBody");
-            var table = document.getElementById("rankingTable");
-            var msg = document.getElementById("rankingMsg");
-            tbody.innerHTML = "";
-            if (data.length === 0) {
-              table.style.display = "none";
-              msg.style.display = "block";
-              return;
-            }
-            table.style.display = "table";
-            msg.style.display = "none";
-            var medals = ["1", "2", "3"];
-            data.forEach(function (item) {
-              var medal = item.rank <= 3 ? medals[item.rank - 1] + " " : "";
-              tbody.innerHTML +=
-                "<tr>" +
-                '<td class="u-inline-style-019">' +
-                medal +
-                item.rank +
-                "</td>" +
-                '<td class="u-inline-style-019">' +
-                item.seriesId +
-                "</td>" +
-                "<td>" +
-                item.seriesName +
-                "</td>" +
-                '<td class="u-inline-style-019">' +
-                item.totalView +
-                "</td>" +
-                '<td class="u-inline-style-019">' +
-                item.totalLike +
-                "</td>" +
-                '<td class="u-inline-style-019">' +
-                item.totalDislike +
-                "</td>" +
-                "</tr>";
-            });
-          });
       }
 
       // ===== Phiên vote (Board chỉ cast vote, không tạo phiên) =====
@@ -1646,6 +1520,6 @@ async function cpnConfirmOtp() {
 
 </script>
     <script src="/js/editorial-ai.js" th:src="@{/js/editorial-ai.js}"></script>
-    <script src="/js/workspace-density.js" th:src="@{/js/workspace-density.js}"></script>
+    <script src="/js/workspace-density.js?v=20260721-square-ranking" th:src="@{/js/workspace-density.js(v='20260721-square-ranking')}"></script>
   </body>
 </html>

@@ -101,6 +101,153 @@
     else target.prepend(bar);
   }
 
+  function ensureSharedRankingModal() {
+    let overlay = document.getElementById("sharedRankingModalOverlay");
+    if (overlay) return overlay;
+
+    overlay = document.createElement("div");
+    overlay.id = "sharedRankingModalOverlay";
+    overlay.className = "modal-overlay ranking-modal-overlay shared-ranking-modal";
+    overlay.hidden = true;
+    overlay.innerHTML = `
+      <div class="modal-content ranking-modal-content" role="dialog" aria-modal="true" aria-labelledby="sharedRankingModalTitle">
+        <div class="modal-header ranking-modal-header">
+          <div>
+            <h5 id="sharedRankingModalTitle">Ranking series</h5>
+            <p>So sánh hiệu suất series theo tháng, quý hoặc cả năm.</p>
+          </div>
+          <button type="button" class="modal-close-btn" data-ranking-close aria-label="Đóng bảng ranking">&times;</button>
+        </div>
+        <div class="modal-body ranking-modal-body">
+          <div class="ranking-filter-bar" aria-label="Bộ lọc ranking">
+            <div class="ranking-filter-field">
+              <label for="sharedRankMonth">Tháng</label>
+              <select id="sharedRankMonth">
+                <option value="0">-- Cả năm --</option>
+                ${Array.from({ length: 12 }, (_, index) => `<option value="${index + 1}">Tháng ${index + 1}</option>`).join("")}
+              </select>
+            </div>
+            <div class="ranking-filter-field">
+              <label for="sharedRankYear">Năm</label>
+              <select id="sharedRankYear"></select>
+            </div>
+            <div class="ranking-filter-field">
+              <label for="sharedRankQuarter">Quý</label>
+              <select id="sharedRankQuarter">
+                <option value="0">-- Tất cả --</option>
+                <option value="1">Quý 1 (T1-T3)</option>
+                <option value="2">Quý 2 (T4-T6)</option>
+                <option value="3">Quý 3 (T7-T9)</option>
+                <option value="4">Quý 4 (T10-T12)</option>
+              </select>
+            </div>
+            <div class="ranking-filter-actions">
+              <button type="button" class="ranking-filter-button" data-ranking-load>Xem ranking</button>
+              <button type="button" class="ranking-filter-button" data-ranking-collapse>Thu lại</button>
+            </div>
+          </div>
+          <div class="ranking-results" data-ranking-results>
+            <div class="ranking-table-scroll">
+              <table class="data-table">
+                <thead><tr><th>Hạng</th><th>Mã Series</th><th>Tên Series</th><th>Lượt xem</th><th>Like</th><th>Dislike</th></tr></thead>
+                <tbody data-ranking-body></tbody>
+              </table>
+              <p class="empty-msg" data-ranking-message>Đang tải ranking...</p>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    const month = overlay.querySelector("#sharedRankMonth");
+    const quarter = overlay.querySelector("#sharedRankQuarter");
+    const year = overlay.querySelector("#sharedRankYear");
+    const currentYear = new Date().getFullYear();
+    for (let value = currentYear; value >= currentYear - 4; value -= 1) {
+      year.add(new Option(String(value), String(value)));
+    }
+    month.addEventListener("change", () => { if (month.value !== "0") quarter.value = "0"; });
+    quarter.addEventListener("change", () => { if (quarter.value !== "0") month.value = "0"; });
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay || event.target.closest("[data-ranking-close]")) closeSharedRankingModal();
+    });
+    overlay.querySelector("[data-ranking-load]").addEventListener("click", loadSharedRanking);
+    overlay.querySelector("[data-ranking-collapse]").addEventListener("click", () => {
+      overlay.querySelector("[data-ranking-results]").hidden = true;
+    });
+    return overlay;
+  }
+
+  function rankingCell(value) {
+    const cell = document.createElement("td");
+    cell.textContent = value == null ? "—" : String(value);
+    return cell;
+  }
+
+  async function loadSharedRanking() {
+    const overlay = ensureSharedRankingModal();
+    const results = overlay.querySelector("[data-ranking-results]");
+    const tbody = overlay.querySelector("[data-ranking-body]");
+    const message = overlay.querySelector("[data-ranking-message]");
+    const table = overlay.querySelector("table");
+    const loadButton = overlay.querySelector("[data-ranking-load]");
+    results.hidden = false;
+    tbody.replaceChildren();
+    table.hidden = true;
+    message.hidden = false;
+    message.textContent = "Đang tải ranking...";
+    loadButton.disabled = true;
+    const query = new URLSearchParams({
+      month: overlay.querySelector("#sharedRankMonth").value,
+      quarter: overlay.querySelector("#sharedRankQuarter").value,
+      year: overlay.querySelector("#sharedRankYear").value,
+    });
+    try {
+      const response = await fetch(`/manga/ranking?${query}`);
+      if (!response.ok) throw new Error("Không thể tải ranking");
+      const rows = await response.json();
+      if (!rows.length) {
+        message.textContent = "Không có dữ liệu trong khoảng thời gian này.";
+        return;
+      }
+      const medals = ["🥇", "🥈", "🥉"];
+      rows.forEach((item) => {
+        const row = document.createElement("tr");
+        row.append(
+          rankingCell(`${medals[item.rank - 1] || ""}${medals[item.rank - 1] ? " " : ""}${item.rank}`),
+          rankingCell(item.seriesId), rankingCell(item.seriesName), rankingCell(item.totalView),
+          rankingCell(item.totalLike), rankingCell(item.totalDislike),
+        );
+        tbody.appendChild(row);
+      });
+      table.hidden = false;
+      message.hidden = true;
+    } catch (error) {
+      message.textContent = "Không thể tải ranking. Vui lòng thử lại.";
+    } finally {
+      loadButton.disabled = false;
+    }
+  }
+
+  function openSharedRankingModal() {
+    const overlay = ensureSharedRankingModal();
+    overlay.hidden = false;
+    overlay.classList.add("show");
+    document.documentElement.classList.add("app-modal-open");
+    loadSharedRanking();
+    requestAnimationFrame(() => overlay.querySelector("#sharedRankMonth")?.focus());
+  }
+
+  function closeSharedRankingModal() {
+    const overlay = document.getElementById("sharedRankingModalOverlay");
+    if (!overlay) return;
+    overlay.classList.remove("show");
+    overlay.hidden = true;
+    document.documentElement.classList.remove("app-modal-open");
+  }
+
+  window.openSharedRankingModal = openSharedRankingModal;
+
   function removeDeadPlaceholders() {
     document.querySelectorAll("#tab-assistant, #tab-other").forEach((tab) => {
       if (!/tính năng đang phát triển/i.test(tab.textContent || "")) return;
@@ -135,7 +282,7 @@
       description: "Xem hồ sơ, tiến độ bỏ phiếu và đưa ra quyết định trong cùng một màn hình.",
     });
     addQuickActions("tab-home", [
-      { label: "Ranking", icon: "fa-solid fa-chart-column", run: () => document.getElementById("rankingSection")?.scrollIntoView({ behavior: "smooth" }) },
+      { label: "Ranking", icon: "fa-solid fa-chart-column", run: openSharedRankingModal },
       { label: "Phiên vote", icon: "fa-solid fa-check-to-slot", run: () => document.getElementById("activeSessionsSection")?.scrollIntoView({ behavior: "smooth" }) },
       { label: "Đề xuất chờ duyệt", icon: "fa-solid fa-file-circle-check", primary: true, run: () => document.getElementById("tab-project-merged")?.scrollIntoView({ behavior: "smooth" }) },
     ]);
@@ -158,6 +305,7 @@
   function initAssistant() {
     if (!document.querySelector(".assistant-task-table") || !document.getElementById("tab-home")) return;
     addQuickActions("tab-home", [
+      { label: "Ranking", icon: "fa-solid fa-chart-column", run: openSharedRankingModal },
       { label: "Công việc được giao", icon: "fa-solid fa-list-check", primary: true, run: () => window.openTab?.("tab-project") },
       { label: "Mở bảng vẽ", icon: "fa-solid fa-brush", run: () => window.openTab?.("tab-draw") },
       { label: "Tin nhắn", icon: "fa-solid fa-comments", run: () => window.openTab?.("tab-chat") },
@@ -167,6 +315,7 @@
   function initTantou() {
     if (!document.getElementById("pendingCancelTbody") || !document.getElementById("tab-home")) return;
     addQuickActions("tab-home", [
+      { label: "Ranking", icon: "fa-solid fa-chart-column", run: openSharedRankingModal },
       { label: "Duyệt bản thảo", icon: "fa-solid fa-file-circle-check", primary: true, run: () => window.openTab?.("tab-proposal") },
       { label: "Duyệt chapter", icon: "fa-solid fa-book-open", run: () => window.openTab?.("tab-chapter-review") },
       { label: "Quản lý Mangaka", icon: "fa-solid fa-users", run: () => { window.openTab?.("tab-manage-mangaka"); window.mmLoadMangakas?.(); } },
@@ -237,6 +386,9 @@
     initAssistant();
     initTantou();
     normalizeWorkspaceShells();
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeSharedRankingModal();
+    });
   }
 
   if (document.readyState === "loading") {

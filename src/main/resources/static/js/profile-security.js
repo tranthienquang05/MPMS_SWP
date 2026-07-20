@@ -119,34 +119,33 @@
         <input id="profileNickname" maxlength="30" aria-label="Tên hiển thị" placeholder="Tên hiển thị" />
         <button type="button" class="btn-sm" id="saveNicknameButton"><i class="fa-solid fa-check" aria-hidden="true"></i><span>Lưu tên</span></button>
       </div>`;
-    if (role) details.appendChild(role);
-    if (id) details.appendChild(id);
+    role?.remove();
+    id?.remove();
 
     formCard.classList.add("profile-account-card");
     formCard.removeAttribute("style");
     formCard.innerHTML = `
       <div class="profile-account-row">
-        <div class="profile-account-copy"><label for="profileUsername">Username</label><small>Không thể thay đổi</small></div>
+        <div class="profile-account-copy"><label for="profileUsername">Username</label></div>
         <input id="profileUsername" readonly />
       </div>
       <div class="profile-account-row">
-        <div class="profile-account-copy"><label for="profilePassword">Password</label><small>Mật khẩu được lưu dưới dạng bảo vệ</small></div>
+        <div class="profile-account-copy"><label for="profilePassword">Password</label></div>
         <div class="profile-account-control">
-          <input id="profilePassword" value="••••••" readonly aria-label="Mật khẩu được bảo vệ" />
-          <button type="button" class="btn-sm profile-icon-action" id="toggleProtectedPassword" aria-label="Hiển thị trạng thái mật khẩu"><i class="fa-solid fa-eye"></i></button>
+          <input id="profilePassword" value="******" readonly aria-label="Mật khẩu được ẩn" />
           <button type="button" class="btn-sm btn-primary" onclick="openChangePasswordModal()">Đổi mật khẩu</button>
         </div>
       </div>
       <div class="profile-account-row">
-        <div class="profile-account-copy"><label for="profileEmail">Email <span id="profileEmailVerifiedBadge"></span></label><small>Nhận thông báo và OTP bảo mật</small></div>
+        <div class="profile-account-copy"><label for="profileEmail">Email <span id="profileEmailVerifiedBadge"></span></label></div>
         <div class="profile-account-control"><input id="profileEmail" readonly /><button type="button" class="btn-sm btn-primary" onclick="openChangeEmailModal()">Đổi email</button></div>
       </div>
       <div class="profile-account-row">
-        <div class="profile-account-copy"><label for="profilePhone">Số điện thoại <span id="profilePhoneVerifiedBadge"></span></label><small id="profilePhoneHint">Có thể dùng để nhận OTP sau khi xác thực</small></div>
+        <div class="profile-account-copy"><label for="profilePhone">Số điện thoại <span id="profilePhoneVerifiedBadge"></span></label></div>
         <div class="profile-account-control"><input id="profilePhone" readonly placeholder="Chưa liên kết" /><button type="button" class="btn-sm" id="verifyPhoneButton" hidden>Xác thực số</button><button type="button" class="btn-sm btn-primary" onclick="openChangePhoneModal()">Đổi số</button></div>
       </div>
       <div class="profile-connections">
-        <div class="profile-account-copy"><label>Kết nối</label><small>Ứng dụng, mạng xã hội và portfolio</small></div>
+        <div class="profile-account-copy"><label>Kết nối</label></div>
         <div id="profileConnectionList"></div>
         <div class="profile-connection-editor"><input id="profileConnectionName" placeholder="Tên hiển thị, ví dụ: GitHub" /><input id="profileConnectionUrl" type="url" placeholder="https://..." /><button type="button" class="btn-sm" id="addConnectionButton"><i class="fa-solid fa-plus"></i> Thêm kết nối</button></div>
         <button type="button" class="btn-sm btn-primary profile-save-connections" id="saveConnectionsButton">Lưu kết nối</button>
@@ -157,12 +156,6 @@
     document.getElementById("saveConnectionsButton").addEventListener("click", saveProfile);
     document.getElementById("addConnectionButton").addEventListener("click", addConnection);
     document.getElementById("verifyPhoneButton").addEventListener("click", openPhoneVerification);
-    document.getElementById("toggleProtectedPassword").addEventListener("click", (event) => {
-      const input = document.getElementById("profilePassword");
-      const showing = input.value !== "••••••";
-      input.value = showing ? "••••••" : "Mật khẩu được bảo vệ";
-      event.currentTarget.querySelector("i").className = showing ? "fa-solid fa-eye" : "fa-solid fa-eye-slash";
-    });
   }
 
   function applyProfile(data) {
@@ -175,8 +168,8 @@
     }
     document.getElementById("profileDisplayName").textContent = data.fullname || data.username || "";
     document.getElementById("profileNickname").value = data.fullname || "";
-    document.getElementById("profileDisplayRole").textContent = String(data.role || "").toUpperCase();
-    document.getElementById("profileDisplayId").textContent = `ID: ${data.id || ""}${data.profileId ? ` | Profile: ${data.profileId}` : ""}`;
+    document.getElementById("profileDisplayRole")?.remove();
+    document.getElementById("profileDisplayId")?.remove();
     document.getElementById("profileUsername").value = data.username || "";
     document.getElementById("profileEmail").value = data.email || "";
     document.getElementById("profilePhone").value = data.phone || "";

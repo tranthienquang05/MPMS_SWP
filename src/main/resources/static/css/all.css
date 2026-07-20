@@ -2390,15 +2390,135 @@ body.login-page .login-form {
 /* Login form title sizing */
 body.login-page .login-form h1.form-group {
   margin-bottom: 1.25rem;
-  font-size: clamp(1.85rem, 3.3vw, 2.55rem);
-  line-height: 1.04;
+  font-size: 2.05rem;
+  line-height: 1.1;
   text-align: center;
   white-space: nowrap;
 }
 
+body.login-page .login-password-group {
+  display: flex;
+  flex-direction: column;
+}
+
+body.login-page .forgot-password-link {
+  align-self: flex-end;
+  width: auto;
+  min-height: 0;
+  margin: 0.45rem 0 0;
+  border: 0;
+  background: transparent;
+  color: #f87171;
+  padding: 0.15rem 0;
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1.3;
+  text-decoration: none;
+}
+
+body.login-page .forgot-password-link:hover,
+body.login-page .forgot-password-link:focus-visible {
+  color: #fca5a5;
+  text-decoration: underline;
+  outline: none;
+}
+
+.forgot-password-modal[hidden],
+.forgot-password-modal [hidden] {
+  display: none !important;
+}
+
+.forgot-password-dialog {
+  width: min(520px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+}
+
+.forgot-password-dialog .modal-header {
+  align-items: flex-start;
+}
+
+.forgot-password-dialog .modal-header h2,
+.forgot-password-dialog .modal-header p {
+  margin: 0;
+}
+
+.forgot-password-dialog .modal-header h2 {
+  font-size: 1.35rem;
+}
+
+.forgot-password-dialog .modal-header p {
+  margin-top: 0.3rem;
+  color: var(--app-muted);
+  font-size: 0.86rem;
+}
+
+.forgot-password-body {
+  display: grid;
+  gap: 1rem;
+}
+
+.forgot-password-send-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+
+.forgot-password-send-row input {
+  min-width: 0;
+  flex: 1;
+}
+
+.forgot-password-send-row button {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+#forgotResetFields {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.forgot-password-submit {
+  width: 100%;
+}
+
+.forgot-password-status {
+  min-height: 1.35em;
+  margin: 0;
+  color: var(--app-muted);
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.forgot-password-status.is-error {
+  color: #fca5a5;
+}
+
+.forgot-password-status.is-success {
+  color: #6ee7b7;
+}
+
+:root[data-theme="light"] body.login-page .forgot-password-link {
+  color: #dc2626;
+}
+
+:root[data-theme="light"] body.login-page .forgot-password-link:hover,
+:root[data-theme="light"] body.login-page .forgot-password-link:focus-visible {
+  color: #991b1b;
+}
+
 @media (max-width: 520px) {
   body.login-page .login-form h1.form-group {
-    font-size: clamp(1.55rem, 8vw, 2rem);
+    font-size: 1.65rem;
+    white-space: normal;
+  }
+
+  .forgot-password-send-row {
+    flex-direction: column;
+  }
+
+  .forgot-password-send-row button {
+    width: 100%;
   }
 }
 
@@ -4472,9 +4592,9 @@ body:not(:has(.topnav)) .app-floating-modal {
 .profile-account-row,
 .profile-connections {
   display: grid;
-  grid-template-columns: minmax(150px, 0.72fr) minmax(250px, 1.28fr);
-  gap: 1rem;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: stretch;
   padding: 1rem 1.1rem;
   border-bottom: 1px solid var(--app-border);
 }
@@ -4483,7 +4603,9 @@ body:not(:has(.topnav)) .app-floating-modal {
   display: block;
   margin: 0;
   color: var(--app-text);
+  font-size: 0.88rem;
   font-weight: 750;
+  line-height: 1.35;
 }
 
 .profile-account-copy small {
@@ -4496,6 +4618,15 @@ body:not(:has(.topnav)) .app-floating-modal {
 .profile-account-control input {
   min-width: 0;
   flex: 1;
+}
+
+.profile-account-row > input,
+.profile-account-row > .profile-account-control {
+  width: 100%;
+}
+
+.profile-account-row > input {
+  min-width: 0;
 }
 
 .profile-icon-action {
@@ -4597,7 +4728,6 @@ body:not(:has(.topnav)) .app-floating-modal {
 .profile-inline-error { min-height: 1.3em; margin: 0.75rem 0 0; color: #ff7772; }
 
 @media (max-width: 720px) {
-  .profile-account-row { grid-template-columns: 1fr; }
   .profile-account-control { flex-wrap: wrap; }
   .profile-account-control input { flex-basis: 100%; }
   .profile-connection-editor { flex-direction: column; }
@@ -8566,5 +8696,82 @@ body.role-workspaces-ready:not(.login-page)
     .role-workspace-content
     > :is(.chat-layout, .chat-shell) {
     grid-template-columns: minmax(150px, 38%) minmax(0, 1fr);
+  }
+}
+
+/* Square, full-bleed role workspaces ---------------------------------------
+   The outer data surface meets the fixed header/sidebar. Spacing belongs to
+   the inner toolbar and headings, so controls never sit against navigation. */
+body.role-workspaces-ready:not(.login-page)
+  :is(
+    .role-workspace-surface,
+    .role-workspace-native-surface,
+    .proposal-workspace,
+    .project-series-surface,
+    .home-report-hub,
+    .workspace-merged-section,
+    .workspace-merged-details,
+    .section-card,
+    .data-table,
+    .table-container
+  ) {
+  border-radius: 0 !important;
+}
+
+body.role-workspaces-ready:not(.login-page) .workspace-quick-actions {
+  width: 100%;
+  margin: 0 !important;
+  border-bottom: 1px solid var(--app-border);
+  background: var(--app-surface);
+  padding: 0.85rem 1.35rem 1rem;
+}
+
+body.role-workspaces-ready:not(.login-page)
+  :is(.workspace-merged-header, .workspace-merged-details > summary) {
+  padding-inline: 1.35rem;
+}
+
+body.role-workspaces-ready:not(.login-page)
+  :is(.workspace-merged-section, .workspace-merged-details) {
+  margin: 0 !important;
+  border-inline: 0 !important;
+}
+
+body.role-workspaces-ready:not(.login-page)
+  :is(.proposal-workspace-header, .project-series-header, .home-report-header) {
+  padding-inline: 1.35rem !important;
+}
+
+body.role-workspaces-ready:not(.login-page)
+  .role-workspace-content
+  > :is(h1, h2, h3, p, .toolbar, .actions, .filter-bar) {
+  margin-inline: 0 !important;
+  padding-inline: 1.35rem;
+}
+
+.shared-ranking-modal[hidden] {
+  display: none !important;
+}
+
+.shared-ranking-modal {
+  z-index: 100000 !important;
+}
+
+.shared-ranking-modal .ranking-modal-content {
+  border-radius: 0 !important;
+}
+
+.shared-ranking-modal table[hidden],
+.shared-ranking-modal [hidden] {
+  display: none !important;
+}
+
+@media (max-width: 700px) {
+  body.role-workspaces-ready:not(.login-page) .workspace-quick-actions,
+  body.role-workspaces-ready:not(.login-page)
+    :is(.workspace-merged-header, .workspace-merged-details > summary),
+  body.role-workspaces-ready:not(.login-page)
+    :is(.proposal-workspace-header, .project-series-header, .home-report-header) {
+    padding-inline: 1rem !important;
   }
 }

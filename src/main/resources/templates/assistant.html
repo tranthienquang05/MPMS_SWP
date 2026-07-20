@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
-    <script defer src="/js/profile-security.js" th:src="@{/js/profile-security.js}"></script>
+    <script defer src="/js/profile-security.js?v=20260721-profile-compact" th:src="@{/js/profile-security.js(v='20260721-profile-compact')}"></script>
     <title>Trợ lý</title>
     <link
       rel="stylesheet"
@@ -11,8 +11,8 @@
     />
     <link
       rel="stylesheet"
-      href="../static/css/all.css?v=20260721-fixed-chat"
-      th:href="@{/css/all.css(v='20260721-fixed-chat')}"
+      href="../static/css/all.css?v=20260721-profile-labels"
+      th:href="@{/css/all.css(v='20260721-profile-labels')}"
     />
     <link
       rel="stylesheet"
@@ -2210,6 +2210,6 @@ async function cpnConfirmOtp() {
 }
 
 </script>
-  <script src="/js/workspace-density.js" th:src="@{/js/workspace-density.js}"></script>
+    <script src="/js/workspace-density.js?v=20260721-square-ranking" th:src="@{/js/workspace-density.js(v='20260721-square-ranking')}"></script>
   </body>
 </html>

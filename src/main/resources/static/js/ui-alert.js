@@ -644,6 +644,11 @@
     // the surrounding series table while its confirmation dialog is closing.
     if (path.endsWith("/edit-jacket")) return;
 
+    // The create-chapter form refreshes its current series view itself. Letting
+    // the generic mutation handler run as well can race with that refresh and
+    // incorrectly fall back to the outer series list.
+    if (/^\/manga\/mangaka\/myseries\/[^/]+\/createchapter\/data$/.test(path)) return;
+
     const affectsChapter = /^\/api\/(page\/|chapter-review\/|chapters\/)/.test(path)
       || /^\/manga\/mangaka\/(myseries\/|submission\/)/.test(path);
     if (!affectsChapter || path.endsWith("/savefile")) return;

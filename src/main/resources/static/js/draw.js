@@ -133,6 +133,7 @@ function renderLayerList() {
                 `;
     item.addEventListener("click", (e) => {
       if (e.target.closest(".layer-toggle-visible")) return;
+      clearEditableShapeSelection();
       activeLayerIndex = i;
       renderLayerList();
     });
@@ -178,6 +179,7 @@ function renderLayerList() {
 }
 
 document.getElementById("btnAddLayer").addEventListener("click", () => {
+  clearEditableShapeSelection();
   numberedLayerCounter++;
   const newLayer = addLayer("Layer " + numberedLayerCounter, false);
   activeLayerIndex = layers.length - 1;
@@ -199,7 +201,10 @@ let currentTool = "pencil";
 let history = [];
 let redoStack = [];
 let shapeStart = null;
+let shapeBasePixels = null;
 let shapeFillMode = "outline";
+let editableShape = null;
+let shapeTransformOverlay = null;
 
 const historyListEl =
   document.getElementById("historyList") || document.createElement("div");
@@ -216,7 +221,7 @@ function decorateDrawIconButtons() {
     text: "fa-font",
     select: "fa-vector-square",
     "select-oval": "fa-circle-dot",
-    "select-free": "Ch\u1ecdn v\u00f9ng (t\u1ef1 do)",
+    "select-free": "fa-crop-simple",
     toolEyedrop: "fa-eye-dropper",
     toolUndo: "fa-rotate-left",
     toolClear: "fa-trash",
@@ -760,6 +765,61 @@ function applyFrameDraft() {
   document.getElementById("frameCreatorDialog").close();
 }
 
+function toggleDrawToolMenu(trigger, menu) {
+  if (typeof menu.showPopover !== "function") {
+    menu.hidden = !menu.hidden;
+    return;
+  }
+  if (menu.matches(":popover-open")) {
+    menu.hidePopover();
+    return;
+  }
+  const triggerRect = trigger.getBoundingClientRect();
+  menu.showPopover();
+  const menuRect = menu.getBoundingClientRect();
+  const opensFromToolbar = Boolean(trigger.closest(".left-toolbar"));
+  const preferredLeft = opensFromToolbar ? triggerRect.right + 8 : triggerRect.left;
+  const preferredTop = opensFromToolbar ? triggerRect.top : triggerRect.bottom + 8;
+  menu.style.left = `${Math.max(8, Math.min(window.innerWidth - menuRect.width - 8, preferredLeft))}px`;
+  menu.style.top = `${Math.max(8, Math.min(window.innerHeight - menuRect.height - 8, preferredTop))}px`;
+}
+
+function closeDrawToolMenu(menu) {
+  if (typeof menu.hidePopover === "function") {
+    if (menu.matches(":popover-open")) menu.hidePopover();
+    return;
+  }
+  menu.hidden = true;
+}
+
+function updateToolPropertyVisibility(tool) {
+  const topBar = document.getElementById("topPropertyBar");
+  const groups = {
+    size: document.getElementById("penSize")?.closest(".prop-group"),
+    opacity: document.getElementById("penOpacity")?.closest(".prop-group"),
+    shape: document.getElementById("shapeFillGroup"),
+    text: document.getElementById("textSizeGroup"),
+  };
+  const visibilityMap = {
+    pencil: ["size", "opacity"],
+    brush: ["size", "opacity"],
+    eraser: ["size", "opacity"],
+    bucket: [],
+    line: ["size", "opacity"],
+    rect: ["size", "opacity", "shape"],
+    oval: ["size", "opacity", "shape"],
+    text: ["opacity", "text"],
+  };
+  const visibleGroups = visibilityMap[tool] || [];
+  Object.entries(groups).forEach(([name, group]) => {
+    if (group) group.style.display = visibleGroups.includes(name) ? "flex" : "none";
+  });
+  topBar.querySelectorAll(".prop-divider").forEach((divider) => {
+    divider.style.display = "none";
+  });
+  topBar.hidden = visibleGroups.length === 0;
+}
+
 function setupDrawingEnhancements() {
   const shapeGroup = document.getElementById("shapeFillGroup");
   if (shapeGroup) {
@@ -772,25 +832,152 @@ function setupDrawingEnhancements() {
     filledButton.title = "Tô toàn bộ phần bên trong bằng màu đang chọn";
   }
 
-  const topPropertyBar = document.getElementById("topPropertyBar");
-  const frameMainActions = document.createElement("div");
-  frameMainActions.className = "frame-main-actions";
+  const paletteBar = document.querySelector(".color-palette-bar");
+  const paletteCommandActions = document.createElement("div");
+  paletteCommandActions.className = "palette-command-actions";
+  paletteBar.appendChild(paletteCommandActions);
+
+  const colorMenuTrigger = document.createElement("button");
+  colorMenuTrigger.type = "button";
+  colorMenuTrigger.id = "btnColorMenu";
+  colorMenuTrigger.className = "palette-command-button color-menu-trigger";
+  colorMenuTrigger.innerHTML =
+    '<span class="color-menu-preview" aria-hidden="true"></span><span>Color</span><i class="fa-solid fa-chevron-down menu-caret"></i>';
+  colorMenuTrigger.setAttribute("aria-haspopup", "menu");
+  colorMenuTrigger.style.setProperty("--active-color", getFgColor());
+
+  const colorMenu = document.createElement("div");
+  colorMenu.id = "colorToolMenu";
+  colorMenu.className = "draw-tool-menu color-tool-menu";
+  colorMenu.setAttribute("popover", "auto");
+  colorMenu.setAttribute("role", "menu");
+  const colorMenuLabel = document.createElement("div");
+  colorMenuLabel.className = "color-menu-label";
+  colorMenuLabel.textContent = "Màu nhanh";
+  colorMenu.appendChild(colorMenuLabel);
+  const colorGrid = document.createElement("div");
+  colorGrid.className = "color-menu-grid";
+  paletteBar.querySelectorAll(".palette-swatch").forEach((swatch) => {
+    swatch.setAttribute("role", "menuitem");
+    swatch.tabIndex = 0;
+    swatch.title = `Chọn màu ${swatch.dataset.color}`;
+    swatch.addEventListener("click", () => {
+      colorMenuTrigger.style.setProperty("--active-color", swatch.dataset.color);
+      closeDrawToolMenu(colorMenu);
+    });
+    swatch.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      swatch.click();
+    });
+    colorGrid.appendChild(swatch);
+  });
+  colorMenu.appendChild(colorGrid);
+  document.body.appendChild(colorMenu);
+  colorMenuTrigger.addEventListener("click", () =>
+    toggleDrawToolMenu(colorMenuTrigger, colorMenu),
+  );
+  paletteCommandActions.appendChild(colorMenuTrigger);
+  paletteBar.querySelector(".palette-label")?.remove();
+
+  const frameMenuTrigger = document.createElement("button");
+  frameMenuTrigger.type = "button";
+  frameMenuTrigger.id = "btnFrameMenu";
+  frameMenuTrigger.className = "palette-command-button";
+  frameMenuTrigger.innerHTML = '<i class="fa-solid fa-border-all"></i><span>Frame</span><i class="fa-solid fa-chevron-down menu-caret"></i>';
+  frameMenuTrigger.setAttribute("aria-haspopup", "menu");
+
+  const frameMenu = document.createElement("div");
+  frameMenu.id = "frameToolMenu";
+  frameMenu.className = "draw-tool-menu frame-tool-menu";
+  frameMenu.setAttribute("popover", "auto");
+  frameMenu.setAttribute("role", "menu");
   const frameButton = document.createElement("button");
   frameButton.type = "button";
   frameButton.id = "btnFrameCreator";
-  frameButton.className = "draw-feature-button";
+  frameButton.className = "draw-tool-menu-item";
+  frameButton.setAttribute("role", "menuitem");
   frameButton.innerHTML = '<i class="fa-solid fa-border-all"></i> Tạo frame';
-  frameButton.addEventListener("click", openFrameCreator);
-  frameMainActions.appendChild(frameButton);
+  frameButton.addEventListener("click", () => {
+    closeDrawToolMenu(frameMenu);
+    openFrameCreator();
+  });
+  frameMenu.appendChild(frameButton);
   const addFrameButton = document.createElement("button");
   addFrameButton.type = "button";
   addFrameButton.id = "btnAddFrameDirect";
-  addFrameButton.className = "draw-feature-button";
+  addFrameButton.className = "draw-tool-menu-item";
+  addFrameButton.setAttribute("role", "menuitem");
   addFrameButton.innerHTML = '<i class="fa-solid fa-plus"></i> Thêm frame';
   addFrameButton.title = "Thêm ngay một frame mới vào trang hiện tại";
-  addFrameButton.addEventListener("click", addFrameDirectlyToPage);
-  frameMainActions.appendChild(addFrameButton);
-  topPropertyBar.appendChild(frameMainActions);
+  addFrameButton.addEventListener("click", () => {
+    closeDrawToolMenu(frameMenu);
+    addFrameDirectlyToPage();
+  });
+  frameMenu.appendChild(addFrameButton);
+  document.body.appendChild(frameMenu);
+  frameMenuTrigger.addEventListener("click", () =>
+    toggleDrawToolMenu(frameMenuTrigger, frameMenu),
+  );
+  paletteCommandActions.appendChild(frameMenuTrigger);
+
+  const eyedropButton = document.getElementById("toolEyedrop");
+  eyedropButton.classList.add("palette-action-button");
+  eyedropButton.setAttribute("aria-label", "Lấy màu");
+  eyedropButton.title = "Lấy màu từ canvas";
+  paletteCommandActions.appendChild(eyedropButton);
+  const colorPicker = document.querySelector(".lt-swatch-wrap");
+  colorPicker.classList.add("palette-color-picker");
+  colorPicker.title = "Màu nét vẽ";
+  paletteCommandActions.appendChild(colorPicker);
+  document.getElementById("penColor").addEventListener("input", (event) => {
+    colorMenuTrigger.style.setProperty("--active-color", event.target.value);
+  });
+
+  const firstSelectionButton = document.querySelector('.lt-btn[data-tool="select"]');
+  const selectionMenuTrigger = document.createElement("button");
+  selectionMenuTrigger.type = "button";
+  selectionMenuTrigger.id = "toolSelectionMenu";
+  selectionMenuTrigger.className = "lt-btn selection-menu-trigger";
+  selectionMenuTrigger.title = "Chọn vùng";
+  selectionMenuTrigger.setAttribute("aria-haspopup", "menu");
+  selectionMenuTrigger.innerHTML =
+    '<i class="fa-solid fa-object-group"></i><i class="fa-solid fa-chevron-right selection-menu-caret"></i>';
+  firstSelectionButton.parentNode.insertBefore(selectionMenuTrigger, firstSelectionButton);
+
+  const selectionMenu = document.createElement("div");
+  selectionMenu.id = "selectionToolMenu";
+  selectionMenu.className = "draw-tool-menu selection-tool-menu";
+  selectionMenu.setAttribute("popover", "auto");
+  selectionMenu.setAttribute("role", "menu");
+  const selectionOptions = [
+    { tool: "select", label: "Chữ nhật", shape: '<rect x="3" y="5" width="14" height="10" rx="1" />' },
+    { tool: "select-oval", label: "Oval", shape: '<ellipse cx="10" cy="10" rx="7" ry="5" />' },
+    { tool: "select-free", label: "Tự do", shape: '<path d="M4 13c-2-4 2-8 6-7 5-2 8 2 6 6-1 3-5 4-8 3-2 0-3 1-2 3" /><path d="M6 18l3-1" />' },
+    { tool: "select-triangle", label: "Tam giác", shape: '<path d="M10 3 18 17H2Z" />' },
+    { tool: "select-diamond", label: "Hình thoi", shape: '<path d="m10 2 8 8-8 8-8-8Z" />' },
+    { tool: "select-hexagon", label: "Lục giác", shape: '<path d="m6 3 8 0 4 7-4 7H6l-4-7Z" />' },
+  ];
+  selectionOptions.forEach((option) => {
+    let button = document.querySelector(`.lt-btn[data-tool="${option.tool}"]`);
+    if (!button) {
+      button = document.createElement("button");
+      button.type = "button";
+      button.className = "lt-btn";
+      button.dataset.tool = option.tool;
+    }
+    button.classList.add("draw-tool-menu-item", "selection-menu-item");
+    button.setAttribute("role", "menuitemradio");
+    button.setAttribute("aria-checked", "false");
+    button.title = `Chọn vùng ${option.label.toLowerCase()}`;
+    button.innerHTML = `<svg class="selection-shape-icon" viewBox="0 0 20 20" aria-hidden="true">${option.shape}</svg><span>${option.label}</span>`;
+    button.addEventListener("click", () => closeDrawToolMenu(selectionMenu));
+    selectionMenu.appendChild(button);
+  });
+  document.body.appendChild(selectionMenu);
+  selectionMenuTrigger.addEventListener("click", () =>
+    toggleDrawToolMenu(selectionMenuTrigger, selectionMenu),
+  );
 
   const addLayerButton = document.getElementById("btnAddLayer");
   const layerActions = document.createElement("div");
@@ -839,7 +1026,6 @@ function setupDrawingEnhancements() {
   if (dividerAfterHistory?.classList.contains("lt-divider")) {
     dividerAfterHistory.remove();
   }
-  const paletteBar = document.querySelector(".color-palette-bar");
   const paletteHistoryActions = document.createElement("div");
   paletteHistoryActions.className = "palette-history-actions";
   undoButton.setAttribute("aria-label", "Hoàn tác");
@@ -849,7 +1035,7 @@ function setupDrawingEnhancements() {
     button.classList.add("palette-action-button");
     paletteHistoryActions.appendChild(button);
   });
-  paletteBar.appendChild(paletteHistoryActions);
+  paletteCommandActions.appendChild(paletteHistoryActions);
 
   const dialog = document.createElement("dialog");
   dialog.id = "frameCreatorDialog";
@@ -896,7 +1082,6 @@ function setupDrawingEnhancements() {
         <label class="frame-style-control">Màu viền
           <input id="frameColor" type="color" value="#111111">
         </label>
-        <p class="frame-editor-help">Mẹo: kéo bốn chấm xanh để chỉnh góc độ. Có thể nhập tọa độ từng góc để căn chính xác.</p>
       </div>
     </div>
     <div class="frame-dialog-actions">
@@ -987,6 +1172,7 @@ function setupDrawingEnhancements() {
     if (event.target === dialog) dialog.close();
   });
 
+  updateToolPropertyVisibility(currentTool);
   updateLayerActionButtons();
 }
 
@@ -1024,6 +1210,7 @@ function updateHistoryButtons() {
 }
 
 function restoreHistorySnapshot(snapshot) {
+  clearEditableShapeSelection();
   layers.forEach((layer) => layer.canvas.remove());
   layers = [];
   layerCounter = snapshot.layerCounter;
@@ -1707,12 +1894,8 @@ function placeTextAt(pos) {
 
 // ---- Mouse events chÃ­nh ----
 inputLayer.addEventListener("pointerdown", (e) => {
-  if (
-    currentTool === "select" ||
-    currentTool === "select-oval" ||
-    currentTool === "select-free"
-  )
-    return;
+  if (isSelectTool(currentTool)) return;
+  clearEditableShapeSelection();
   ensureActiveLayerVisible();
   const p = getPos(e);
   const layerCtx = getActiveLayer().ctx;
@@ -1737,6 +1920,7 @@ inputLayer.addEventListener("pointerdown", (e) => {
     currentTool === "rect" ||
     currentTool === "oval"
   ) {
+    shapeBasePixels = layerCtx.getImageData(0, 0, CANVAS_W, CANVAS_H);
     shapeStart = p;
     isDrawing = true;
   } else if (currentTool === "text") {
@@ -1808,9 +1992,13 @@ window.addEventListener("pointerup", (e) => {
     shapeStart
   ) {
     const p = constrainShapeEnd(shapeStart, getPos(e), e.shiftKey);
+    const completedTool = currentTool;
+    const completedStart = { ...shapeStart };
     commitShape(shapeStart, p);
     clearShapePreview();
     pushHistoryEntry("Vẽ hình " + currentTool);
+    selectEditableShape(completedTool, completedStart, p, shapeBasePixels);
+    shapeBasePixels = null;
     shapeStart = null;
   }
   isDrawing = false;
@@ -1823,29 +2011,34 @@ function clearShapePreview() {
   previewCtx.clearRect(0, 0, CANVAS_W, CANVAS_H);
 }
 
-function drawShapeOnContext(ctxTarget, start, end) {
-  ctxTarget.lineWidth = getSize();
-  ctxTarget.strokeStyle = getFgColor();
-  ctxTarget.fillStyle = getFgColor();
-  ctxTarget.globalAlpha = getOpacity();
+function drawShapeOnContext(ctxTarget, start, end, shapeStyle = null) {
+  const tool = shapeStyle?.tool || currentTool;
+  const color = shapeStyle?.color || getFgColor();
+  const size = shapeStyle?.size ?? getSize();
+  const opacity = shapeStyle?.opacity ?? getOpacity();
+  const fillMode = shapeStyle?.fillMode || shapeFillMode;
+  ctxTarget.lineWidth = size;
+  ctxTarget.strokeStyle = color;
+  ctxTarget.fillStyle = color;
+  ctxTarget.globalAlpha = opacity;
   ctxTarget.beginPath();
 
-  if (currentTool === "line") {
+  if (tool === "line") {
     ctxTarget.moveTo(start.x, start.y);
     ctxTarget.lineTo(end.x, end.y);
     ctxTarget.stroke();
-  } else if (currentTool === "rect") {
+  } else if (tool === "rect") {
     const w = end.x - start.x,
       h = end.y - start.y;
-    if (shapeFillMode === "filled") ctxTarget.fillRect(start.x, start.y, w, h);
+    if (fillMode === "filled") ctxTarget.fillRect(start.x, start.y, w, h);
     else ctxTarget.strokeRect(start.x, start.y, w, h);
-  } else if (currentTool === "oval") {
+  } else if (tool === "oval") {
     const cx = (start.x + end.x) / 2,
       cy = (start.y + end.y) / 2;
     const rx = Math.abs(end.x - start.x) / 2,
       ry = Math.abs(end.y - start.y) / 2;
     ctxTarget.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-    if (shapeFillMode === "filled") ctxTarget.fill();
+    if (fillMode === "filled") ctxTarget.fill();
     else ctxTarget.stroke();
   }
   ctxTarget.globalAlpha = 1;
@@ -1861,16 +2054,176 @@ function commitShape(start, end) {
   drawShapeOnContext(layerCtx, start, end);
 }
 
+function clearEditableShapeSelection() {
+  editableShape = null;
+  if (shapeTransformOverlay) shapeTransformOverlay.remove();
+  shapeTransformOverlay = null;
+}
+
+function clampCanvasPoint(point) {
+  return {
+    x: Math.max(0, Math.min(CANVAS_W, point.x)),
+    y: Math.max(0, Math.min(CANVAS_H, point.y)),
+  };
+}
+
+function renderEditableShape() {
+  if (!editableShape) return;
+  const layer = layers.find((item) => item.id === editableShape.layerId);
+  if (!layer) {
+    clearEditableShapeSelection();
+    return;
+  }
+  layer.ctx.putImageData(editableShape.basePixels, 0, 0);
+  drawShapeOnContext(
+    layer.ctx,
+    editableShape.start,
+    editableShape.end,
+    editableShape.style,
+  );
+  updateShapeTransformOverlay();
+}
+
+function resizeEditableShape(handle, point) {
+  if (!editableShape) return;
+  const next = clampCanvasPoint(point);
+  if (editableShape.style.tool === "line") {
+    editableShape[handle === "start" ? "start" : "end"] = next;
+    renderEditableShape();
+    return;
+  }
+
+  const minimumSize = 4;
+  const start = { ...editableShape.start };
+  const end = { ...editableShape.end };
+  if (handle.includes("n")) start.y = Math.min(next.y, end.y - minimumSize);
+  if (handle.includes("s")) end.y = Math.max(next.y, start.y + minimumSize);
+  if (handle.includes("w")) start.x = Math.min(next.x, end.x - minimumSize);
+  if (handle.includes("e")) end.x = Math.max(next.x, start.x + minimumSize);
+  editableShape.start = clampCanvasPoint(start);
+  editableShape.end = clampCanvasPoint(end);
+  renderEditableShape();
+}
+
+function beginShapeHandleDrag(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  const handle = event.currentTarget.dataset.handle;
+  let didMove = false;
+  const move = (moveEvent) => {
+    didMove = true;
+    resizeEditableShape(handle, getPos(moveEvent));
+  };
+  const stop = () => {
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", stop);
+    if (editableShape && didMove) {
+      const label = editableShape.style.tool === "line" ? "đường thẳng" : editableShape.style.tool === "rect" ? "hình chữ nhật" : "hình tròn";
+      pushHistoryEntry(`Điều chỉnh kích thước ${label}`);
+    }
+  };
+  event.currentTarget.setPointerCapture?.(event.pointerId);
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", stop, { once: true });
+}
+
+function createShapeHandle(handle, label) {
+  const element = document.createElement("button");
+  element.type = "button";
+  element.className = "shape-transform-handle";
+  element.dataset.handle = handle;
+  element.setAttribute("aria-label", label);
+  element.addEventListener("pointerdown", beginShapeHandleDrag);
+  return element;
+}
+
+function updateShapeTransformOverlay() {
+  if (!editableShape || !shapeTransformOverlay) return;
+  const { start, end, style } = editableShape;
+  if (style.tool === "line") {
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const length = Math.hypot(dx, dy);
+    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    const guide = shapeTransformOverlay.querySelector(".shape-line-guide");
+    guide.style.left = `${start.x}px`;
+    guide.style.top = `${start.y}px`;
+    guide.style.width = `${length}px`;
+    guide.style.transform = `rotate(${angle}deg)`;
+    const startHandle = shapeTransformOverlay.querySelector('[data-handle="start"]');
+    const endHandle = shapeTransformOverlay.querySelector('[data-handle="end"]');
+    startHandle.style.left = `${start.x}px`;
+    startHandle.style.top = `${start.y}px`;
+    endHandle.style.left = `${end.x}px`;
+    endHandle.style.top = `${end.y}px`;
+    return;
+  }
+
+  shapeTransformOverlay.style.left = `${start.x}px`;
+  shapeTransformOverlay.style.top = `${start.y}px`;
+  shapeTransformOverlay.style.width = `${Math.max(4, end.x - start.x)}px`;
+  shapeTransformOverlay.style.height = `${Math.max(4, end.y - start.y)}px`;
+}
+
+function selectEditableShape(tool, start, end, basePixels) {
+  clearEditableShapeSelection();
+  const normalizedStart = tool === "line"
+    ? { ...start }
+    : { x: Math.min(start.x, end.x), y: Math.min(start.y, end.y) };
+  const normalizedEnd = tool === "line"
+    ? { ...end }
+    : { x: Math.max(start.x, end.x), y: Math.max(start.y, end.y) };
+  editableShape = {
+    layerId: getActiveLayer().id,
+    start: normalizedStart,
+    end: normalizedEnd,
+    basePixels,
+    style: {
+      tool,
+      color: getFgColor(),
+      size: getSize(),
+      opacity: getOpacity(),
+      fillMode: shapeFillMode,
+    },
+  };
+
+  shapeTransformOverlay = document.createElement("div");
+  shapeTransformOverlay.className = `shape-transform-overlay shape-transform-${tool}`;
+  if (tool === "line") {
+    const guide = document.createElement("div");
+    guide.className = "shape-line-guide";
+    shapeTransformOverlay.appendChild(guide);
+    shapeTransformOverlay.appendChild(createShapeHandle("start", "Điều chỉnh điểm đầu đường thẳng"));
+    shapeTransformOverlay.appendChild(createShapeHandle("end", "Điều chỉnh điểm cuối đường thẳng"));
+  } else {
+    [
+      ["nw", "Điều chỉnh góc trên trái"],
+      ["ne", "Điều chỉnh góc trên phải"],
+      ["se", "Điều chỉnh góc dưới phải"],
+      ["sw", "Điều chỉnh góc dưới trái"],
+    ].forEach(([handle, label]) =>
+      shapeTransformOverlay.appendChild(createShapeHandle(handle, label)),
+    );
+  }
+  canvasStack.appendChild(shapeTransformOverlay);
+  updateShapeTransformOverlay();
+}
+
 // ========================================================
 // PHáº¦N 3: Toolbar â€” chá»n tool, fill mode, eyedropper
 // ========================================================
 document.querySelectorAll(".lt-btn[data-tool]").forEach((btn) => {
   btn.addEventListener("click", () => {
+    const nextTool = btn.dataset.tool;
+    if (isSelectTool(currentTool) || isSelectTool(nextTool)) {
+      resetRegionSelection();
+    }
+    clearEditableShapeSelection();
     document
       .querySelectorAll(".lt-btn[data-tool]")
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
-    currentTool = btn.dataset.tool;
+    currentTool = nextTool;
 
     const labels = {
       pencil: "Bút vẽ",
@@ -1883,14 +2236,31 @@ document.querySelectorAll(".lt-btn[data-tool]").forEach((btn) => {
       text: "Chèn chữ",
       select: "Chọn vùng",
       "select-oval": "Chọn vùng (oval)",
-      "select-free": "Chọn vùng (tá»± do)",
+      "select-free": "Chọn vùng (tự do)",
     };
+    Object.assign(labels, {
+      "select-triangle": "Ch\u1ecdn v\u00f9ng (tam gi\u00e1c)",
+      "select-diamond": "Ch\u1ecdn v\u00f9ng (h\u00ecnh thoi)",
+      "select-hexagon": "Ch\u1ecdn v\u00f9ng (l\u1ee5c gi\u00e1c)",
+    });
     document.getElementById("statusTool").textContent =
       "Công cụ: " + labels[currentTool];
-    const isSelTool =
-      currentTool === "select" ||
-      currentTool === "select-oval" ||
-      currentTool === "select-free";
+    const isSelTool = isSelectTool(currentTool);
+    document
+      .getElementById("toolSelectionMenu")
+      ?.classList.toggle("active", isSelTool);
+    document
+      .querySelectorAll("#selectionToolMenu [data-tool]")
+      .forEach((item) =>
+        item.setAttribute("aria-checked", String(item.dataset.tool === currentTool)),
+      );
+    if (isSelTool) {
+      const selectionTrigger = document.getElementById("toolSelectionMenu");
+      selectionTrigger.title = labels[currentTool];
+      selectionTrigger.setAttribute("aria-label", labels[currentTool]);
+      document.getElementById("statusRegion").textContent =
+        `Kéo trên canvas để ${labels[currentTool].toLowerCase()}`;
+    }
     const darkCrosshair =
       "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cline x1='10' y1='0' x2='10' y2='20' stroke='black' stroke-width='1.5'/%3E%3Cline x1='0' y1='10' x2='20' y2='10' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E\") 10 10, crosshair";
     const textCursor =
@@ -1902,12 +2272,7 @@ document.querySelectorAll(".lt-btn[data-tool]").forEach((btn) => {
         : darkCrosshair;
 
     // Hiá»‡n/áº©n property phÃ¹ há»£p
-    const isShape = ["rect", "oval"].includes(currentTool);
-    document.getElementById("shapeFillGroup").style.display = isShape
-      ? "flex"
-      : "none";
-    document.getElementById("textSizeGroup").style.display =
-      currentTool === "text" ? "flex" : "none";
+    updateToolPropertyVisibility(currentTool);
   });
 });
 
@@ -1969,12 +2334,10 @@ document.addEventListener("keydown", (event) => {
   } else if (event.key === "Escape") {
     isDrawing = false;
     shapeStart = null;
-    clearShapePreview();
-    const selectionBox = document.getElementById("regionSelectBox");
-    if (selectionBox) selectionBox.style.display = "none";
-    selectionRect = null;
-    selectionPath = [];
-    document.getElementById("statusRegion").textContent = "Vùng AI: Toàn canvas";
+    shapeBasePixels = null;
+    clearEditableShapeSelection();
+    resetRegionSelection();
+    selectionPointerId = null;
   }
 });
 
@@ -1989,6 +2352,7 @@ document.getElementById("toolEyedrop").addEventListener("click", () => {
         .map((v) => v.toString(16).padStart(2, "0"))
         .join("");
     document.getElementById("penColor").value = hex;
+    document.getElementById("penColor").dispatchEvent(new Event("input", { bubbles: true }));
     inputLayer.removeEventListener("click", handler);
   };
   inputLayer.addEventListener("click", handler);
@@ -2024,6 +2388,7 @@ document.getElementById("toolRedo").addEventListener("click", () => {
 
 document.getElementById("toolClear").addEventListener("click", () => {
   if (!confirm("Xóa toàn bộ nội dung của layer đang chọn?")) return;
+  clearEditableShapeSelection();
   const layer = getActiveLayer();
   layer.ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
   if (layer.isBase) {
@@ -2037,22 +2402,107 @@ document.getElementById("toolClear").addEventListener("click", () => {
 // PHáº¦N 4: Region selection
 // ========================================================
 let selectionRect = null;
-let selectionShape = "rect"; // 'rect' | 'oval' | 'free'
+let selectionShape = "rect"; // rect | oval | free | triangle | diamond | hexagon
 let selectionPath = []; // array of {x, y} for freehand selection
 let isSelecting = false;
 let selStart = null;
+let selectionPointerId = null;
 const regionBox = document.getElementById("regionSelectBox");
 const canvasViewport = document.getElementById("canvasViewport");
 
+function resetRegionSelection(options = {}) {
+  if (
+    selectionPointerId !== null &&
+    inputLayer.hasPointerCapture?.(selectionPointerId)
+  ) {
+    inputLayer.releasePointerCapture?.(selectionPointerId);
+  }
+  selectionPointerId = null;
+  isSelecting = false;
+  selectionRect = null;
+  selectionPath = [];
+  selStart = null;
+  regionBox.style.display = "none";
+  regionBox.style.width = "0";
+  regionBox.style.height = "0";
+  regionBox.style.borderRadius = "0";
+  clearShapePreview();
+  if (!options.keepStatus) {
+    document.getElementById("statusRegion").textContent = "Vùng AI: Toàn canvas";
+  }
+}
+
 function isSelectTool(tool) {
-  return tool === "select" || tool === "select-oval" || tool === "select-free";
+  return [
+    "select",
+    "select-oval",
+    "select-free",
+    "select-triangle",
+    "select-diamond",
+    "select-hexagon",
+  ].includes(tool);
+}
+
+function getSelectionPolygonPoints(shape, rect) {
+  const { x, y, w, h } = rect;
+  const shapes = {
+    triangle: [
+      { x: x + w / 2, y },
+      { x: x + w, y: y + h },
+      { x, y: y + h },
+    ],
+    diamond: [
+      { x: x + w / 2, y },
+      { x: x + w, y: y + h / 2 },
+      { x: x + w / 2, y: y + h },
+      { x, y: y + h / 2 },
+    ],
+    hexagon: [
+      { x: x + w * 0.25, y },
+      { x: x + w * 0.75, y },
+      { x: x + w, y: y + h / 2 },
+      { x: x + w * 0.75, y: y + h },
+      { x: x + w * 0.25, y: y + h },
+      { x, y: y + h / 2 },
+    ],
+  };
+  return shapes[shape] || [];
+}
+
+function traceSelectionPolygon(ctx, shape, rect) {
+  const points = getSelectionPolygonPoints(shape, rect);
+  if (!points.length) return false;
+  ctx.moveTo(points[0].x, points[0].y);
+  points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
+  ctx.closePath();
+  return true;
+}
+
+function drawPolygonSelectionPreview(shape, rect) {
+  clearShapePreview();
+  previewCtx.save();
+  previewCtx.setLineDash([6, 4]);
+  previewCtx.strokeStyle =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--ps-accent")
+      .trim() || "#3d8eff";
+  previewCtx.fillStyle = "rgba(82, 209, 255, 0.12)";
+  previewCtx.lineWidth = 1.5;
+  previewCtx.beginPath();
+  traceSelectionPolygon(previewCtx, shape, rect);
+  previewCtx.fill();
+  previewCtx.stroke();
+  previewCtx.restore();
 }
 
 inputLayer.addEventListener("pointerdown", (e) => {
   if (!isSelectTool(currentTool)) return;
+  e.preventDefault();
+  resetRegionSelection({ keepStatus: true });
   isSelecting = true;
+  selectionPointerId = e.pointerId;
+  inputLayer.setPointerCapture?.(e.pointerId);
   selStart = getPos(e);
-  clearShapePreview(); // clear any previous freehand preview
 
   if (currentTool === "select") {
     selectionShape = "rect";
@@ -2066,17 +2516,17 @@ inputLayer.addEventListener("pointerdown", (e) => {
     selectionShape = "free";
     selectionPath = [selStart];
     regionBox.style.display = "none";
+  } else {
+    selectionShape = currentTool.replace("select-", "");
+    regionBox.style.display = "none";
   }
 });
 
 inputLayer.addEventListener("pointermove", (e) => {
   if (!isSelectTool(currentTool) || !isSelecting) return;
   const p = getPos(e);
-  const rectCanvas = inputLayer.getBoundingClientRect();
-  const scaleX = rectCanvas.width / CANVAS_W;
-  const scaleY = rectCanvas.height / CANVAS_H;
 
-  if (selectionShape === "rect" || selectionShape === "oval") {
+  if (selectionShape !== "free") {
     selectionRect = {
       x: Math.min(selStart.x, p.x),
       y: Math.min(selStart.y, p.y),
@@ -2084,10 +2534,15 @@ inputLayer.addEventListener("pointermove", (e) => {
       h: Math.abs(p.y - selStart.y),
     };
 
-    regionBox.style.left = selectionRect.x * scaleX + "px";
-    regionBox.style.top = selectionRect.y * scaleY + "px";
-    regionBox.style.width = selectionRect.w * scaleX + "px";
-    regionBox.style.height = selectionRect.h * scaleY + "px";
+    if (selectionShape === "rect" || selectionShape === "oval") {
+      clearShapePreview();
+      regionBox.style.left = selectionRect.x + "px";
+      regionBox.style.top = selectionRect.y + "px";
+      regionBox.style.width = selectionRect.w + "px";
+      regionBox.style.height = selectionRect.h + "px";
+    } else {
+      drawPolygonSelectionPreview(selectionShape, selectionRect);
+    }
   } else if (selectionShape === "free") {
     selectionPath.push(p);
     // Draw freehand selection preview on input layer
@@ -2109,7 +2564,7 @@ inputLayer.addEventListener("pointermove", (e) => {
   }
 });
 
-window.addEventListener("pointerup", () => {
+window.addEventListener("pointerup", (event) => {
   if (!isSelectTool(currentTool) || !isSelecting) {
     isSelecting = false;
     return;
@@ -2149,12 +2604,36 @@ window.addEventListener("pointerup", () => {
     selectionRect = { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
   }
 
-  const shapeLabels = { rect: "rect", oval: "oval", free: "freehand" };
-  if (selectionRect && selectionRect.w > 5) {
+  const shapeLabels = {
+    rect: "ch\u1eef nh\u1eadt",
+    oval: "oval",
+    free: "t\u1ef1 do",
+    triangle: "tam gi\u00e1c",
+    diamond: "h\u00ecnh thoi",
+    hexagon: "l\u1ee5c gi\u00e1c",
+  };
+  if (selectionRect && selectionRect.w > 5 && selectionRect.h > 5) {
     document.getElementById("statusRegion").textContent =
       `Vùng AI (${shapeLabels[selectionShape]}): ${Math.round(selectionRect.w)}×${Math.round(selectionRect.h)}px`;
+  } else {
+    resetRegionSelection({ keepStatus: true });
+    document.getElementById("statusRegion").textContent =
+      "Vùng chọn quá nhỏ — hãy kéo một vùng lớn hơn trên canvas";
   }
   isSelecting = false;
+  if (
+    selectionPointerId !== null &&
+    inputLayer.hasPointerCapture?.(selectionPointerId)
+  ) {
+    inputLayer.releasePointerCapture?.(selectionPointerId);
+  }
+  selectionPointerId = null;
+});
+
+inputLayer.addEventListener("pointercancel", () => {
+  if (!isSelecting) return;
+  resetRegionSelection();
+  selectionPointerId = null;
 });
 
 // ========================================================
@@ -2324,6 +2803,9 @@ async function selectionMaskFile() {
       ctx.lineTo(selectionPath[i].x, selectionPath[i].y);
     }
     ctx.closePath();
+    ctx.fill();
+  } else if (["triangle", "diamond", "hexagon"].includes(selectionShape)) {
+    traceSelectionPolygon(ctx, selectionShape, selectionRect);
     ctx.fill();
   } else {
     ctx.fillRect(selectionRect.x, selectionRect.y, selectionRect.w, selectionRect.h);

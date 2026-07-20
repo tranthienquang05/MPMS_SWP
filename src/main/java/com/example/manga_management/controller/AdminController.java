@@ -623,9 +623,9 @@ public class AdminController {
         }
 
         String seriesStatus = seriesOpt.get().getStatus();
-        if ("stopped".equals(seriesStatus) || "rewarded".equals(seriesStatus)) {
+        if ("stopped".equals(seriesStatus)) {
             response.put("success", false);
-            response.put("message", "Series này đã có kết quả vote, không thể tạo phiên mới!");
+            response.put("message", "Series này đã bị dừng phát hành, không thể tạo phiên vote mới!");
             return response;
         }
         if ("pending_cancel".equals(seriesStatus)) {
@@ -639,6 +639,24 @@ public class AdminController {
             response.put("success", false);
             response.put("message", "Vui lòng nhập lý do khi tạo phiên vote dừng series!");
             return response;
+        }
+
+        // Reward: chỉ tạo được phiên vote mới nếu series còn ít nhất 1 chapter đã
+        // published mà CHƯA từng được đánh dấu khen thưởng (isReward=false).
+        // Không dựa vào status series vì thưởng không đổi status series nữa —
+        // series có thể được xét thưởng nhiều lần, mỗi lần chỉ tính cho các
+        // chapter mới publish thêm kể từ lần thưởng trước.
+        if ("reward".equals(voteType)) {
+            boolean hasUnrewardedChapter = chapterRepository
+                    .findBySeries_IdAndStatus(seriesId, "published")
+                    .stream()
+                    .anyMatch(c -> !c.isReward());
+            if (!hasUnrewardedChapter) {
+                response.put("success", false);
+                response.put("message",
+                        "Series này không còn chapter nào đã xuất bản mà chưa được khen thưởng, không thể tạo phiên vote khen thưởng!");
+                return response;
+            }
         }
 
         // Chỉ chặn khi series đang có phiên vote MỞ. Phiên cũ đã đóng (vd series
@@ -712,7 +730,7 @@ public class AdminController {
 
                 // Bỏ qua series đã có kết quả cuối, đang chờ bảo vệ, hoặc đang có
                 // phiên vote mở. Phiên cũ đã đóng thì vẫn được xét dừng lại.
-                if ("stopped".equals(seriesStatus) || "rewarded".equals(seriesStatus)
+                if ("stopped".equals(seriesStatus)
                         || "pending_cancel".equals(seriesStatus)
                         || voteSessionRepository.existsBySeriesIdAndStatus(sid, "active")) {
                     skippedNames.add(sname);

@@ -2965,7 +2965,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                   '<span class="badge-status-passed">Đã xuất bản</span>',
                 stopped: '<span class="badge-status-rejected">Đã dừng</span>',
               };
-              const chapterLocked = isLocked && c.status === "unfinish";
+              const chapterLocked = isLocked && c.status !== "published";
               const viewPagesBtn = chapterLocked
                 ? `<button type="button" class="project-action-btn series-chapter-btn project-action-locked"
                         onclick="alert('${lockMessage}')">🔒 Đã khoá</button>`

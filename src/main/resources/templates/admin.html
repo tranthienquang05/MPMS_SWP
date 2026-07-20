@@ -1536,14 +1536,13 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
             return;
           }
           const sel = document.getElementById("cv-seriesId");
-          // Series đã stopped/rewarded/pending_cancel thì không tạo vote được nữa,
-          // loại luôn khỏi dropdown để admin không chọn nhầm rồi bị báo lỗi.
+          // Series đã stopped/pending_cancel thì không tạo vote được nữa, loại
+          // luôn khỏi dropdown để admin không chọn nhầm rồi bị báo lỗi. Riêng
+          // reward vẫn cho chọn mọi series còn lại — backend sẽ tự chặn (báo lỗi)
+          // nếu series đó không còn chapter nào chưa được khen thưởng.
           const items = (data.series || [])
             .filter(
-              (s) =>
-                s.status !== "stopped" &&
-                s.status !== "rewarded" &&
-                s.status !== "pending_cancel",
+              (s) => s.status !== "stopped" && s.status !== "pending_cancel",
             )
             .sort((a, b) => a.id.localeCompare(b.id));
           if (items.length === 0) {

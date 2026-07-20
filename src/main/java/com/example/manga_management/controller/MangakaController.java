@@ -721,6 +721,12 @@ public class MangakaController {
             return result;
         }
 
+        if (!"unfinish".equals(chapter.getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Chỉ có thể thêm trang khi chapter đang ở trạng thái unfinish");
+            return result;
+        }
+
         // ✅ Chapter phải có kịch bản thì mới được tạo trang mới
         if (chapter.getScript() == null || chapter.getScript().trim().isEmpty()) {
             result.put("status", "error");

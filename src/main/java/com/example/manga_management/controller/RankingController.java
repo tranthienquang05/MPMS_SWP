@@ -282,8 +282,9 @@ public class RankingController {
             }
         } else {
             if (percent >= 60) {
-                series.setStatus("rewarded");
-                seriesRepository.save(series);
+                // Không đổi status của series — thưởng chỉ đánh dấu ở từng chapter
+                // (isReward), series vẫn tiếp tục hoạt động bình thường để có thể
+                // được xét thưởng tiếp cho các chapter mới sau này.
                 int bonus = computeAndLockRewardBonus(series, vs);
                 response.put("message", "🏆 Tất cả board đã vote. Series được KHEN THƯỞNG! (" + Math.round(percent)
                         + "% đồng ý, thưởng " + bonus + ")");

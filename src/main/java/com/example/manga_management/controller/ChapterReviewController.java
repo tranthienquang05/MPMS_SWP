@@ -170,6 +170,12 @@ public class ChapterReviewController {
             return result;
         }
 
+        if (chapter.getSeries() != null && chapter.getSeries().isLocked()) {
+            result.put("status", "error");
+            result.put("message", chapter.getSeries().getLockMessage());
+            return result;
+        }
+
         String mangakaUserId = chapter.getSeries().getProposal().getMangaka().getUser().getId();
         String seriesName = chapter.getSeries().getSeriesName();
         String chapterName = chapter.getChapterName();

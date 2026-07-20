@@ -327,6 +327,11 @@ public class AssistantController {
             return Map.of("status", "error", "message", "Trạng thái không hợp lệ");
         }
 
+        var lockChapter = submission.getPageId().getChapter();
+        if (lockChapter != null && lockChapter.getSeries() != null && lockChapter.getSeries().isLocked()) {
+            return Map.of("status", "error", "message", lockChapter.getSeries().getLockMessage());
+        }
+
         submission.setStatus("done");
         submission.setSubmittedAt(java.time.LocalDateTime.now());
         submissionRepository.save(submission);

@@ -102,6 +102,13 @@ public class PageController {
                 return result;
             }
 
+            if (page.getChapter() != null && page.getChapter().getSeries() != null
+                    && page.getChapter().getSeries().isLocked()) {
+                result.put("status", "error");
+                result.put("message", page.getChapter().getSeries().getLockMessage());
+                return result;
+            }
+
             String base64 = body.get("imageBase64");
             if (base64 != null && base64.contains(",")) {
                 base64 = base64.split(",")[1];
@@ -595,6 +602,13 @@ public class PageController {
         if ("finish".equals(page.getStatus())) {
             result.put("status", "error");
             result.put("message", "Trang đã hoàn thành, không thể thêm nhận xét!");
+            return result;
+        }
+
+        if (page.getChapter() != null && page.getChapter().getSeries() != null
+                && page.getChapter().getSeries().isLocked()) {
+            result.put("status", "error");
+            result.put("message", page.getChapter().getSeries().getLockMessage());
             return result;
         }
 

@@ -132,6 +132,10 @@ public class BoardController {
             proposalData.put("filePath", proposal.getFilePath());
             proposalData.put("fileOfTantou", proposal.getFileOfTantou());
             proposalData.put("voteCount", boardProposalCommentRepository.countByProposal_Id(proposal.getId()));
+            proposalData.put("submittedAt",
+                    proposal.getSubmittedAt() != null ? proposal.getSubmittedAt() : proposal.getCreatedAt());
+            proposalData.put("reviewedAt", proposal.getReviewedAt());
+            proposalData.put("boardSubmittedAt", proposal.getBoardSubmittedAt());
 
             Map<String, Object> mangakaData = new HashMap<>();
             Map<String, Object> userData = new HashMap<>();

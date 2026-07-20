@@ -108,6 +108,10 @@ public class RankingController {
             long positive = rankingRepository.countSeriesVoteByChoiceAndSession(vs.getId(), positiveChoice);
             boolean alreadyVoted = boardId != null &&
                     rankingRepository.countSeriesVoteByBoardAndSession(vs.getId(), boardId) > 0;
+            LocalDate votedAt = boardId == null ? null
+                    : seriesVoteRepository.findFirstBySession_IdAndBoard_Id(vs.getId(), boardId)
+                            .map(SeriesVote::getVoteDate)
+                            .orElse(null);
 
             double percent = (totalBoards > 0 && voted >= totalBoards)
                     ? (positive * 100.0 / totalBoards) : 0;
@@ -119,6 +123,8 @@ public class RankingController {
             map.put("voteType", vs.getVoteType());
             map.put("sessionStatus", vs.getStatus());
             map.put("createdAt", vs.getCreatedAt().toString());
+            map.put("closedAt", vs.getClosedAt());
+            map.put("votedAt", votedAt);
             map.put("autoCreated", vs.isAutoCreated());
             map.put("createdBy", vs.getCreatedBy() != null
                     ? vs.getCreatedBy().getUser().getFullname()

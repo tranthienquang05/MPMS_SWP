@@ -2,6 +2,8 @@
 <html lang="vi" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
+    <script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
+    <script defer src="/js/profile-security.js" th:src="@{/js/profile-security.js}"></script>
     <title>Tantou</title>
     <link
       rel="stylesheet"
@@ -9,8 +11,8 @@
     />
     <link
       rel="stylesheet"
-      href="../static/css/all.css"
-      th:href="@{/css/all.css}"
+      href="../static/css/all.css?v=20260721-fixed-chat"
+      th:href="@{/css/all.css(v='20260721-fixed-chat')}"
     />
     <link
       rel="stylesheet"
@@ -18,7 +20,7 @@
     />
   </head>
 
-  <body data-editorial-role="tantou" th:attr="data-user-id=${currentUserId},data-tantou-id=${tantouId}">
+  <body class="role-workspaces-ready" data-editorial-role="tantou" th:attr="data-user-id=${currentUserId},data-tantou-id=${tantouId}">
     <!-- Header -->
     <div class="header">
       <div class="logo">
@@ -66,9 +68,6 @@
           </div>
         </div>
 
-        <button type="button" class="btn-icon" id="btnChangePassword" aria-label="Đổi mật khẩu" onclick="openChangePasswordModal()" title="Đổi mật khẩu">
-          <i class="fa-solid fa-key"></i>
-        </button>
 
         <a th:href="@{/login/logout}">
           <button type="button" class="btn-icon" aria-label="Logout">
@@ -167,12 +166,13 @@
                 <th>Series</th>
                 <th>Mangaka</th>
                 <th>Lý do bị vote dừng</th>
+                <th>Ngày nộp bảo vệ</th>
                 <th>Hành động</th>
               </tr>
             </thead>
             <tbody id="pendingCancelTbody">
               <tr>
-                <td colspan="4" class="u-inline-style-048">Đang tải...</td>
+                <td colspan="5" class="u-inline-style-048">Đang tải...</td>
               </tr>
             </tbody>
           </table>
@@ -192,13 +192,14 @@
                 <th>Mã Đề Xuất</th>
                 <th>Tên Tác Giả</th>
                 <th>Tên Series</th>
+                <th>Ngày nộp</th>
                 <th>Tập tin bản thảo</th>
                 <th>Hành động</th>
               </tr>
             </thead>
             <tbody id="proposalTableBody">
               <tr>
-                <td colspan="5" class="u-inline-style-048">Đang tải...</td>
+                <td colspan="6" class="u-inline-style-048">Đang tải...</td>
               </tr>
             </tbody>
           </table>
@@ -209,12 +210,14 @@
               <tr>
                 <th>Mã Đề Xuất</th>
                 <th>Tên Series</th>
+                <th>Ngày nộp</th>
+                <th>Ngày duyệt</th>
                 <th>Hành động</th>
               </tr>
             </thead>
             <tbody id="approvedTableBody">
               <tr>
-                <td colspan="3" class="u-inline-style-048">Đang tải...</td>
+                <td colspan="5" class="u-inline-style-048">Đang tải...</td>
               </tr>
             </tbody>
           </table>
@@ -351,6 +354,7 @@
             <tr>
               <th>Series</th>
               <th>Chapter</th>
+              <th>Ngày nộp</th>
               <th>Xem trang</th>
               <th>Nhận xét</th>
               <th>Hành động</th>
@@ -489,9 +493,13 @@
         </div>
       </div>
 
-      <div id="tab-chat" class="tab-pane">
-        <h2>Tin nhắn</h2>
-        <div class="chat-layout">
+      <div id="tab-chat" class="tab-pane" data-workspace-shell="true">
+        <section class="role-workspace-surface" aria-labelledby="tantouChatWorkspaceTitle">
+          <header class="role-workspace-header">
+            <div><h1 id="tantouChatWorkspaceTitle">Tin nhắn</h1></div>
+          </header>
+          <div class="role-workspace-content">
+            <div class="chat-layout">
           <div class="chat-contact-list" id="chatContactList">
             <div class="chat-empty">Đang tải danh sách liên hệ...</div>
           </div>
@@ -510,12 +518,17 @@
               <button type="button" id="chatSendBtn" disabled></button>
             </div>
           </div>
-        </div>
+            </div>
+          </div>
+        </section>
       </div>
 
-      <div id="tab-profile" class="tab-pane">
-        <h2>Thông tin cá nhân</h2>
-
+      <div id="tab-profile" class="tab-pane" data-workspace-shell="true">
+        <section class="role-workspace-surface" aria-labelledby="tantouProfileWorkspaceTitle">
+        <header class="role-workspace-header">
+          <div><h1 id="tantouProfileWorkspaceTitle">Thông tin cá nhân</h1></div>
+        </header>
+        <div class="role-workspace-content">
         <div class="profile-workspace">
           <div class="profile-primary-column">
 
@@ -592,19 +605,21 @@
           <div id="profileRoleInfoContent"></div>
         </aside>
         </div>
+        </div>
+        </section>
       </div>
     </div>
 
     <!-- Modal xem thông tin series — đặt ngoài mọi tab-pane để không bị display:none theo tab đang active -->
-    <div id="seriesInfoModalOverlay" class="modal-overlay u-inline-style-002">
+    <div id="seriesInfoModalOverlay" class="modal-overlay u-inline-style-002 series-info-modal">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="seriesInfoTitle">Thông tin series</h5>
-          <button type="button" onclick="closeSeriesInfoModal()">X</button>
+          <button type="button" class="modal-close-btn" onclick="closeSeriesInfoModal()" aria-label="Đóng">×</button>
         </div>
         <div class="modal-body" id="seriesInfoBody">Đang tải...</div>
         <div class="modal-footer">
-          <button type="button" onclick="closeSeriesInfoModal()">Đóng</button>
+          <button type="button" class="btn-modal-cancel" onclick="closeSeriesInfoModal()">Đóng</button>
         </div>
       </div>
     </div>
@@ -644,7 +659,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
 
-    <script th:src="@{/js/chat.js}"></script>
+    <script src="/js/chat.js?v=20260721-fixed-chat" th:src="@{/js/chat.js(v='20260721-fixed-chat')}"></script>
 
     <script>
 // ===== STATUS DISPLAY I18N =====
@@ -758,12 +773,12 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
             const tbody = document.getElementById("proposalTableBody");
             const countEl = document.getElementById("proposalCount");
             if (data.status === "error") {
-              tbody.innerHTML = `<tr><td colspan="5" class="u-inline-style-049">${data.message}</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="6" class="u-inline-style-049">${data.message}</td></tr>`;
               return;
             }
             countEl.textContent = "Tổng số bản thảo chờ duyệt: " + data.total;
             if (!data.proposals || data.proposals.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="5" class="u-inline-style-019">Không có bản thảo nào chờ duyệt.</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="6" class="u-inline-style-019">Không có bản thảo nào chờ duyệt.</td></tr>`;
               return;
             }
             tbody.innerHTML = data.proposals
@@ -773,6 +788,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           <td>${p.id}</td>
           <td>${p.mangaka?.user?.fullname ?? "—"}</td>
           <td>${p.seriesName}</td>
+          <td><span class="date-value">${formatAppDateTime(p.submittedAt || p.createdAt)}</span></td>
           <td>${
             p.filePath
               ? `<a href="${p.filePath}" class="btn-link" target="_blank">Xem bản thảo</a>`
@@ -788,7 +804,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           })
           .catch(() => {
             document.getElementById("proposalTableBody").innerHTML =
-              `<tr><td colspan="5" class="u-inline-style-049">Lỗi tải dữ liệu</td></tr>`;
+              `<tr><td colspan="6" class="u-inline-style-049">Lỗi tải dữ liệu</td></tr>`;
           });
       }
 
@@ -874,7 +890,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
               !data.proposals ||
               data.proposals.length === 0
             ) {
-              tbody.innerHTML = `<tr><td colspan="3" class="u-inline-style-019">Chưa có đề xuất nào chờ nộp.</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="5" class="u-inline-style-019">Chưa có đề xuất nào chờ nộp.</td></tr>`;
               return;
             }
             tbody.innerHTML = data.proposals
@@ -883,6 +899,8 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         <tr>
           <td>${p.id}</td>
           <td>${p.seriesName}</td>
+          <td><span class="date-value">${formatAppDateTime(p.submittedAt || p.createdAt)}</span></td>
+          <td><span class="date-value">${formatAppDateTime(p.reviewedAt)}</span></td>
           <td><button type="button" onclick="openSubmitBoardModal('${p.id}','${p.seriesName}')" class="btn-approve">Nộp lên hội đồng</button></td>
         </tr>`,
               )
@@ -890,7 +908,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           })
           .catch(() => {
             document.getElementById("approvedTableBody").innerHTML =
-              `<tr><td colspan="3" class="u-inline-style-049">Lỗi tải dữ liệu</td></tr>`;
+              `<tr><td colspan="5" class="u-inline-style-049">Lỗi tải dữ liệu</td></tr>`;
           });
       }
 
@@ -962,6 +980,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                     <tr id="cr-row-${c.id}">
                         <td>${c.series.seriesName}</td>
                         <td><b>Chapter ${c.chapterNumber}</b><br><small class="u-inline-style-156">${c.chapterName}</small></td>
+                        <td><span class="date-value">${formatAppDateTime(c.submittedAt)}</span></td>
                         <td>
                             <button type="button" onclick="openChapterPreview('${c.id}','Chapter ${c.chapterNumber} — ${c.chapterName}')"
                                 class="btn-action primary u-inline-style-134">Xem trang</button>
@@ -985,17 +1004,18 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           });
       }
 
-      function reviewChapter(chapterId, action) {
+      async function reviewChapter(chapterId, action) {
         const comment =
           document.getElementById("cr-comment-" + chapterId)?.value ?? "";
-        if (
-          !confirm(
-            "Bạn chắc chắn muốn " +
-              (action === "approve" ? "DUYỆT" : "TỪ CHỐI") +
-              " chapter này?",
-          )
-        )
-          return;
+        const confirmed = await window.showUiConfirm(
+          "Bạn chắc chắn muốn " + (action === "approve" ? "duyệt" : "từ chối") + " chapter này?",
+          {
+            title: action === "approve" ? "Duyệt chapter" : "Từ chối chapter",
+            okText: action === "approve" ? "Duyệt" : "Từ chối",
+            cancelText: "Hủy",
+          },
+        );
+        if (!confirmed) return;
         const params = new URLSearchParams();
         params.append("action", action);
         if (comment) params.append("comment", comment);
@@ -1148,13 +1168,17 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                   ? `<div><a href="${vs.defenseFilePath}" target="_blank">Hồ sơ bảo vệ (PDF)</a></div>`
                   : "";
                 const defenseNoteLine = vs.defenseNote ? `<div>Ghi chú: ${vs.defenseNote}</div>` : "";
+                const dateLine = `<div class="review-date-line"><span>Ngày mở/nộp: <strong>${formatAppDate(vs.createdAt)}</strong></span><span>Ngày kết thúc: <strong>${formatAppDate(vs.closedAt)}</strong></span></div>`;
+                const votesLine = (vs.votes || []).length
+                  ? `<div class="vote-date-list">${vs.votes.map((vote) => `<span>${vote.boardName}: ${formatVoteChoiceVi(vote.choice)} · ${formatAppDate(vote.votedAt)}</span>`).join("")}</div>`
+                  : `<div class="vote-date-list"><span>Chưa có phiếu bầu.</span></div>`;
                 const resultLine =
                   vs.status === "closed" && vs.totalBoards != null
                     ? `<div>Kết quả: ${vs.votedCount}/${vs.totalBoards} đã vote — ${vs.positivePercent}% đồng ý (${vs.passed ? "Đạt" : "Không đạt"})</div>`
                     : "";
                 return `<div class="series-info-vote-item">
-                  <b>${label}</b> — ${statusLabel} (${vs.createdAt || "—"})
-                  ${reasonLine}${defenseLine}${defenseNoteLine}${resultLine}
+                  <b>${label}</b> — ${statusLabel}
+                  ${dateLine}${reasonLine}${defenseLine}${defenseNoteLine}${votesLine}${resultLine}
                 </div>`;
               })
               .join("")
@@ -1171,6 +1195,10 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           <h4>Đề xuất gốc (proposal)</h4>
           <ul>
             <li>Mã đề xuất: ${p.id || "—"}</li>
+            <li>Ngày nộp: ${formatAppDateTime(p.submittedAt || p.createdAt)}</li>
+            <li>Tantou xử lý: ${formatAppDateTime(p.reviewedAt)}</li>
+            <li>Nộp hội đồng: ${formatAppDateTime(p.boardSubmittedAt)}</li>
+            <li>Hội đồng kết luận: ${formatAppDateTime(p.boardReviewedAt)}</li>
             <li>Điểm biên tập viên chấm: ${p.editorScore != null ? Number(p.editorScore).toFixed(2) : "Chưa chấm"}</li>
             <li>Nhận xét: ${p.comment || "Không có"}</li>
           </ul>
@@ -1191,22 +1219,22 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       function openSeriesInfoModal(seriesId) {
         const overlay = document.getElementById("seriesInfoModalOverlay");
         const body = document.getElementById("seriesInfoBody");
-        body.innerHTML = "Đang tải...";
+        body.innerHTML = window.renderSeriesInfoState("Đang tải thông tin series...");
         overlay.style.display = "flex";
 
         fetch(`/api/series/${seriesId}/info`)
           .then((r) => r.json())
           .then((data) => {
             if (data.status !== "success") {
-              body.innerHTML = `<p>Lỗi: ${data.message}</p>`;
+              body.innerHTML = window.renderSeriesInfoState(`Không thể tải thông tin: ${data.message}`, "error");
               return;
             }
             document.getElementById("seriesInfoTitle").textContent =
               "Thông tin series: " + (data.series.seriesName || "");
-            body.innerHTML = renderSeriesInfoBody(data);
+            body.innerHTML = window.renderSeriesInfoAccordion(data);
           })
           .catch((err) => {
-            body.innerHTML = `<p>Lỗi: ${err.message}</p>`;
+            body.innerHTML = window.renderSeriesInfoState(`Không thể tải thông tin: ${err.message}`, "error");
           });
       }
 
@@ -1273,7 +1301,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                     <td>${s.viewCount}</td>
                     <td>
                       <button class="btn-action primary u-inline-style-049" onclick="mmViewChapters('${s.seriesId}', '${s.seriesName.replace(/'/g, "\\'")}')">Xem Chapter</button>
-                      <button class="btn-action primary" onclick="openSeriesInfoModal('${s.seriesId}')">Xem thông tin</button>
+                      <button class="project-action-btn series-info-trigger" onclick="openSeriesInfoModal('${s.seriesId}')">Xem thông tin</button>
                     </td>
                   </tr>
                 `,
@@ -1344,12 +1372,12 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           .then((r) => r.json())
           .then((data) => {
             if (data.status !== "success") {
-              tbody.innerHTML = `<tr><td colspan="4" class="u-inline-style-049">Lỗi: ${data.message}</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="5" class="u-inline-style-049">Lỗi: ${data.message}</td></tr>`;
               return;
             }
             const list = data.data || [];
             if (list.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="4" class="u-inline-style-048">Không có series nào đang chờ hồ sơ bảo vệ.</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="5" class="u-inline-style-048">Không có series nào đang chờ hồ sơ bảo vệ.</td></tr>`;
               return;
             }
             tbody.innerHTML = list
@@ -1361,13 +1389,14 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                   <td>${s.seriesName}</td>
                   <td>${s.mangakaName || "—"}</td>
                   <td>${s.reason || "—"}</td>
+                  <td><span class="date-value">${formatAppDate(s.defenseSubmittedAt)}</span></td>
                   <td>${actionBtn}</td>
                 </tr>`;
               })
               .join("");
           })
           .catch((err) => {
-            tbody.innerHTML = `<tr><td colspan="4" class="u-inline-style-049">Lỗi: ${err.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="u-inline-style-049">Lỗi: ${err.message}</td></tr>`;
           });
       }
 
@@ -1563,7 +1592,8 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           });
       }
     </script>
-    <script src="/js/ui-alert.js" th:src="@{/js/ui-alert.js}"></script>
+    <script src="/js/series-info.js?v=20260721" th:src="@{/js/series-info.js(v='20260721')}"></script>
+    <script src="/js/ui-alert.js?v=20260721-fullscreen-modal" th:src="@{/js/ui-alert.js(v='20260721-fullscreen-modal')}"></script>
 
     <!-- ===== Change Password Modal ===== -->
     <div id="changePasswordModalOverlay" class="app-floating-modal" style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
@@ -1904,7 +1934,7 @@ async function loadProfile() {
     if (!data || data.status !== 'success') return;
 
     const avatarImg = document.getElementById('profileAvatarImg');
-    if (avatarImg && data.avatar) avatarImg.src = data.avatar;
+    if (avatarImg && data.avatar) avatarImg.src = window.withFreshAssetUrl ? window.withFreshAssetUrl(data.avatar) : data.avatar;
 
     const dn = document.getElementById('profileDisplayName');
     if (dn) dn.textContent = data.fullname || '';
@@ -1923,7 +1953,7 @@ async function loadProfile() {
     const badge = document.getElementById('profileEmailVerifiedBadge');
     if (badge) {
       badge.textContent = data.emailVerified ? '✓ Đã xác thực' : '⚠ Chưa xác thực';
-      badge.style.color = data.emailVerified ? '#4caf50' : '#ff9800';
+      badge.dataset.state = data.emailVerified ? 'verified' : 'unverified';
     }
 
     renderProfileRoleInfo(data);
@@ -1967,7 +1997,7 @@ async function uploadAvatar(input) {
     const data = await res.json();
     if (data.status === 'success') {
       const avatarImg = document.getElementById('profileAvatarImg');
-      if (avatarImg) avatarImg.src = data.avatarUrl + '?t=' + Date.now();
+      if (avatarImg) avatarImg.src = window.withFreshAssetUrl ? window.withFreshAssetUrl(data.avatarUrl) : data.avatarUrl;
       if (typeof showToast === 'function') showToast('Cập nhật ảnh thành công', 'success');
     } else {
       if (typeof showToast === 'function') showToast(data.message, 'error');
@@ -2316,5 +2346,6 @@ async function cpnConfirmOtp() {
 
 </script>
     <script src="/js/editorial-ai.js" th:src="@{/js/editorial-ai.js}"></script>
+    <script src="/js/workspace-density.js" th:src="@{/js/workspace-density.js}"></script>
   </body>
 </html>

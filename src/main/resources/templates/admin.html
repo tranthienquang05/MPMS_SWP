@@ -3,9 +3,11 @@
 
 <head>
   <meta charset="UTF-8" />
+  <script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
+  <script defer src="/js/profile-security.js" th:src="@{/js/profile-security.js}"></script>
   <title>Quản trị viên</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="../static/css/all.css" th:href="@{/css/all.css}" />
+  <link rel="stylesheet" href="../static/css/all.css?v=20260721-fixed-chat" th:href="@{/css/all.css(v='20260721-fixed-chat')}" />
   <link rel="stylesheet" href="../static/css/icon.css" th:href="@{/css/icon.css}" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
@@ -19,9 +21,6 @@
       </div>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn-icon" id="btnChangePassword" aria-label="Đổi mật khẩu" onclick="openChangePasswordModal()" title="Đổi mật khẩu">
-        <i class="fa-solid fa-key"></i>
-      </button>
       <a th:href="@{/login/logout}">
         <button type="button" class="btn-icon" aria-label="Logout">
           <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -294,6 +293,8 @@
               <th>Phiên</th>
               <th>Series</th>
               <th>Loại Vote</th>
+              <th>Ngày mở</th>
+              <th>Ngày đóng</th>
               <th>Người Tạo</th>
               <th>Tiến Độ</th>
               <th>Kết Quả</th>
@@ -301,7 +302,7 @@
           </thead>
           <tbody id="vote-sessions-tbody">
             <tr>
-              <td colspan="6" class="text-center-muted">Đang tải...</td>
+              <td colspan="8" class="text-center-muted">Đang tải...</td>
             </tr>
           </tbody>
         </table>
@@ -725,7 +726,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
 
-  <script th:src="@{/js/chat.js}"></script>
+  <script src="/js/chat.js?v=20260721-fixed-chat" th:src="@{/js/chat.js(v='20260721-fixed-chat')}"></script>
 
   <script>
 // ===== STATUS DISPLAY I18N =====
@@ -819,7 +820,12 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
     }
 
     async function publishChapter(chapterId) {
-      if (!confirm("Xác nhận xuất bản chapter này?")) return;
+      const confirmed = await window.showUiConfirm("Chapter sẽ được xuất bản cho người đọc.", {
+        title: "Xuất bản chapter",
+        okText: "Xuất bản",
+        cancelText: "Hủy",
+      });
+      if (!confirmed) return;
       try {
         const res = await fetch(`/manga/system-admin/chapters/${chapterId}/publish`, {
           method: "POST",
@@ -908,6 +914,13 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
     }
 
     function showToast(msg, type = "success") {
+      if (typeof window.showUiAlert === "function") {
+        window.showUiAlert(msg, {
+          type: type === "error" ? "error" : "success",
+          title: type === "error" ? "Không thể hoàn tất" : "Đã hoàn tất",
+        });
+        return;
+      }
       const t = document.getElementById("toast");
       t.textContent = (type === "success" ? "" : "") + msg;
       t.className = "show " + type;
@@ -1458,7 +1471,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           const tbody = document.getElementById("vote-sessions-tbody");
           if (!data || data.length === 0) {
             tbody.innerHTML =
-              '<tr><td colspan="6" class="u-inline-style-016">Chưa có phiên vote nào</td></tr>';
+              '<tr><td colspan="8" class="u-inline-style-016">Chưa có phiên vote nào</td></tr>';
             return;
           }
           tbody.innerHTML = data
@@ -1492,6 +1505,8 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                             <td class="u-inline-style-027">${s.sessionId}</td>
                             <td>${s.seriesName}<br><small class="u-inline-style-028">${s.seriesId}</small></td>
                             <td class="u-inline-style-019">${typeLabel}</td>
+                            <td><span class="date-value">${formatAppDate(s.createdAt)}</span></td>
+                            <td><span class="date-value">${formatAppDate(s.closedAt)}</span></td>
                             <td>${s.createdBy}</td>
                             <td class="u-inline-style-019">${progress}</td>
                             <td class="u-inline-style-019">${result}</td>
@@ -1501,8 +1516,13 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         });
     }
 
-    function createBottomVoteSessionsAdmin() {
-      if (!confirm("Phiên vote cho 3 series cuối sẽ được khởi tạo.")) return;
+    async function createBottomVoteSessionsAdmin() {
+      const confirmed = await window.showUiConfirm("Phiên vote cho 3 series cuối sẽ được khởi tạo.", {
+        title: "Tạo phiên vote",
+        okText: "Tạo phiên",
+        cancelText: "Hủy",
+      });
+      if (!confirmed) return;
       const month = document.getElementById("vote-rank-month").value;
       const quarter = document.getElementById("vote-rank-quarter").value;
       const year = document.getElementById("vote-rank-year").value;
@@ -1572,12 +1592,12 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       if (type === "stop") {
         hint.textContent =
           "Nếu ≥ 60% board đồng ý → Series sẽ bị DỪNG phát hành.";
-        hint.style.color = "#e74c3c";
+        hint.style.color = "var(--app-danger-text)";
         reasonLabel.innerHTML = 'Lý do <span class="text-danger-span">*</span>';
       } else {
         hint.textContent =
           "Nếu ≥ 60% board đồng ý → Series sẽ được KHEN THƯỞNG.";
-        hint.style.color = "#f59e0b";
+        hint.style.color = "var(--app-warning-text)";
         reasonLabel.textContent = "Lý do (không bắt buộc)";
       }
     }
@@ -1606,7 +1626,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           { method: "POST" },
         )
           .then((r) => r.json())
-          .then((data) => {
+          .then(async (data) => {
             showToast(data.message, data.success ? "success" : "error");
             if (data.success) {
               closeModal("modal-create-vote");
@@ -1621,18 +1641,16 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         const year = new Date().getFullYear();
         fetch("/manga/ranking?month=0&year=" + year)
           .then((r) => r.json())
-          .then((data) => {
+          .then(async (data) => {
             const top5 = (data || []).slice(0, 5);
             const inTop5 = top5.find((s) => s.seriesId === seriesId);
-            if (
-              inTop5 &&
-              !confirm(
-                'Series "' +
-                inTop5.seriesName +
-                '" đang trong TOP 5 có lượt xem cao. Bạn có chắc muốn tạo vote dừng?',
-              )
-            )
-              return;
+            if (inTop5) {
+              const confirmed = await window.showUiConfirm(
+                'Series "' + inTop5.seriesName + '" đang trong TOP 5 lượt xem cao. Vẫn tạo vote dừng?',
+                { title: "Series đang trong TOP 5", okText: "Vẫn tạo vote", cancelText: "Hủy" },
+              );
+              if (!confirmed) return;
+            }
             doCreate();
           })
           // Không lấy được ranking thì vẫn cho tạo vote (cảnh báo top5 chỉ là phụ),
@@ -1761,7 +1779,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       // ════════════════════════════════════════════
       document.addEventListener("DOMContentLoaded", loadData);
     </script>
-    <script src="/js/ui-alert.js" th:src="@{/js/ui-alert.js}"></script>
+    <script src="/js/ui-alert.js?v=20260721-fullscreen-modal" th:src="@{/js/ui-alert.js(v='20260721-fullscreen-modal')}"></script>
 
     <!-- ===== Change Password Modal ===== -->
     <div id="changePasswordModalOverlay" class="app-floating-modal" style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
@@ -2102,7 +2120,7 @@ async function loadProfile() {
     if (!data || data.status !== 'success') return;
 
     const avatarImg = document.getElementById('profileAvatarImg');
-    if (avatarImg && data.avatar) avatarImg.src = data.avatar;
+    if (avatarImg && data.avatar) avatarImg.src = window.withFreshAssetUrl ? window.withFreshAssetUrl(data.avatar) : data.avatar;
 
     const dn = document.getElementById('profileDisplayName');
     if (dn) dn.textContent = data.fullname || '';
@@ -2121,7 +2139,7 @@ async function loadProfile() {
     const badge = document.getElementById('profileEmailVerifiedBadge');
     if (badge) {
       badge.textContent = data.emailVerified ? '✓ Đã xác thực' : '⚠ Chưa xác thực';
-      badge.style.color = data.emailVerified ? '#4caf50' : '#ff9800';
+      badge.dataset.state = data.emailVerified ? 'verified' : 'unverified';
     }
 
     renderProfileRoleInfo(data);
@@ -2165,7 +2183,7 @@ async function uploadAvatar(input) {
     const data = await res.json();
     if (data.status === 'success') {
       const avatarImg = document.getElementById('profileAvatarImg');
-      if (avatarImg) avatarImg.src = data.avatarUrl + '?t=' + Date.now();
+      if (avatarImg) avatarImg.src = window.withFreshAssetUrl ? window.withFreshAssetUrl(data.avatarUrl) : data.avatarUrl;
       if (typeof showToast === 'function') showToast('Cập nhật ảnh thành công', 'success');
     } else {
       if (typeof showToast === 'function') showToast(data.message, 'error');
@@ -2513,5 +2531,6 @@ async function cpnConfirmOtp() {
 
 </script>
 
+  <script src="/js/workspace-density.js" th:src="@{/js/workspace-density.js}"></script>
   </body>
 </html>

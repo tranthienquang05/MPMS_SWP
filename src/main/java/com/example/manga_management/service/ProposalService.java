@@ -86,6 +86,7 @@ public class ProposalService {
 
         String finalStatus = passVotes > rejectVotes ? "passed" : "locked";
         proposal.setStatus(finalStatus);
+        proposal.setBoardReviewedAt(java.time.LocalDateTime.now());
         proposalRepository.save(proposal);
 
         // Thông báo KẾT QUẢ CHUNG CUỘC (khác thông báo từng phiếu lẻ đã gửi ở

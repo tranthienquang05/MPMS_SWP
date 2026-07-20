@@ -2386,8 +2386,12 @@ document.getElementById("toolRedo").addEventListener("click", () => {
   restoreHistorySnapshot(snapshot);
 });
 
-document.getElementById("toolClear").addEventListener("click", () => {
-  if (!confirm("Xóa toàn bộ nội dung của layer đang chọn?")) return;
+document.getElementById("toolClear").addEventListener("click", async () => {
+  const confirmed = await window.showUiConfirm(
+    "Toàn bộ nội dung của layer đang chọn sẽ bị xóa.",
+    { title: "Xóa nội dung layer", okText: "Xóa layer", cancelText: "Hủy" },
+  );
+  if (!confirmed) return;
   clearEditableShapeSelection();
   const layer = getActiveLayer();
   layer.ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);

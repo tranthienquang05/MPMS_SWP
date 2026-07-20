@@ -51,9 +51,21 @@ public class Proposal {
     @Column(name = "CreatedAt", updatable = false)
     private LocalDateTime createdAt;
 
+    /** Thời điểm Mangaka nộp hoặc nộp lại bản thảo gần nhất. */
+    @Column(name = "SubmittedAt")
+    private LocalDateTime submittedAt;
+
     /** Thời điểm tantou duyệt / yêu cầu sửa / từ chối đề xuất này. */
     @Column(name = "ReviewedAt")
     private LocalDateTime reviewedAt;
+
+    /** Thời điểm Tantou nộp hồ sơ đề xuất lên hội đồng. */
+    @Column(name = "BoardSubmittedAt")
+    private LocalDateTime boardSubmittedAt;
+
+    /** Thời điểm hội đồng hoàn tất biểu quyết đề xuất. */
+    @Column(name = "BoardReviewedAt")
+    private LocalDateTime boardReviewedAt;
 
     // Quan hệ OneToOne với Series
     // mappedBy trỏ tới tên biến 'proposal' trong entity Series

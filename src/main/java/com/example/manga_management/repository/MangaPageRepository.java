@@ -16,6 +16,8 @@ public interface MangaPageRepository extends JpaRepository<MangaPage, String> {
         // Lấy tất cả page của chapter
     List<MangaPage> findByChapterIdOrderByPageNumberAsc(String chapterId);
 
+    Optional<MangaPage> findFirstByChapterAndPageTypeOrderByPageNumberAsc(Chapter chapter, String pageType);
+
     // Lấy page có ID lớn nhất để sinh MGP001, MGP002,...
 
 

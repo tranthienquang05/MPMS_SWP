@@ -123,6 +123,11 @@ public class SeriesController {
             proposalInfo.put("editorScore", proposal.getEditorScore());
             proposalInfo.put("comment", proposal.getComment());
             proposalInfo.put("createdAt", proposal.getCreatedAt());
+            proposalInfo.put("submittedAt",
+                    proposal.getSubmittedAt() != null ? proposal.getSubmittedAt() : proposal.getCreatedAt());
+            proposalInfo.put("reviewedAt", proposal.getReviewedAt());
+            proposalInfo.put("boardSubmittedAt", proposal.getBoardSubmittedAt());
+            proposalInfo.put("boardReviewedAt", proposal.getBoardReviewedAt());
             proposalInfo.put("mangakaName",
                     proposal.getMangaka() != null && proposal.getMangaka().getUser() != null
                             ? proposal.getMangaka().getUser().getFullname()
@@ -156,9 +161,20 @@ public class SeriesController {
                     map.put("voteType", vs.getVoteType());
                     map.put("status", vs.getStatus());
                     map.put("createdAt", vs.getCreatedAt());
+                    map.put("closedAt", vs.getClosedAt());
                     map.put("reason", vs.getReason());
                     map.put("defenseFilePath", vs.getDefenseFilePath());
                     map.put("defenseNote", vs.getDefenseNote());
+                    map.put("votes", seriesVoteRepository.findBySeries_IdOrderByVoteDateDesc(seriesId)
+                            .stream()
+                            .filter(vote -> vote.getSession() != null && vs.getId().equals(vote.getSession().getId()))
+                            .map(vote -> Map.<String, Object>of(
+                                    "boardName", vote.getBoard() != null && vote.getBoard().getUser() != null
+                                            ? vote.getBoard().getUser().getFullname()
+                                            : "Hội đồng",
+                                    "choice", vote.getVote(),
+                                    "votedAt", vote.getVoteDate()))
+                            .toList());
 
                     if ("closed".equals(vs.getStatus())) {
                         String positiveChoice = switch (vs.getVoteType()) {

@@ -4,25 +4,24 @@
 
   function getAlertMeta(message) {
     const text = String(message || "");
-    if (/^\s*(|success|thành công)/i.test(text)) {
-      return { type: "success", title: "Thành công" };
-    }
-    if (/^\s*(|error|lỗi)/i.test(text)) {
+    if (/(lỗi|error|thất bại|không thể)/i.test(text)) {
       return { type: "error", title: "Lỗi" };
     }
-    if (/^\s*(||warning|cảnh báo)/i.test(text)) {
+    if (/(cảnh báo|warning|vui lòng|chưa|thiếu|không tìm thấy)/i.test(text)) {
       return {
         type: "warning",
         title: "Cảnh báo",
-        icon: "fa-circle-info",
       };
+    }
+    if (/(success|thành công|hoàn thành|đã lưu|đã gửi|đã cập nhật)/i.test(text)) {
+      return { type: "success", title: "Thành công" };
     }
     return { type: "info", title: "Thông báo" };
   }
 
   function cleanMessage(message) {
     return String(message || "")
-      .replace(/^\s*(|||)\s*/u, "")
+      .replace(/^[\s✅❌⚠️ℹ️]+/u, "")
       .trim();
   }
 
@@ -77,14 +76,19 @@
     previousFocus = null;
   }
 
-  window.showUiAlert = function showUiAlert(message) {
+  window.showUiAlert = function showUiAlert(message, options) {
     if (!document.body) {
       if (nativeAlert) nativeAlert(message);
       return;
     }
 
     const overlay = ensureAlertModal();
-    const meta = getAlertMeta(message);
+    const inferredMeta = getAlertMeta(message);
+    const config = options || {};
+    const meta = {
+      type: config.type || inferredMeta.type,
+      title: config.title || inferredMeta.title,
+    };
     const dialog = overlay.querySelector(".ui-alert-dialog");
     const title = overlay.querySelector("#uiAlertTitle");
     const messageEl = overlay.querySelector("#uiAlertMessage");
@@ -114,8 +118,65 @@
   });
 })();
 
+/* Shared Vietnamese date formatting for all role templates. */
+(function () {
+  function parseDate(value) {
+    if (!value) return null;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  window.formatAppDate = function formatAppDate(value, fallback) {
+    const parsed = parseDate(value);
+    return parsed
+      ? parsed.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
+      : (fallback || "\u2014");
+  };
+
+  window.formatAppDateTime = function formatAppDateTime(value, fallback) {
+    const parsed = parseDate(value);
+    return parsed
+      ? parsed.toLocaleString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : (fallback || "\u2014");
+  };
+
+  window.formatVoteChoiceVi = function formatVoteChoiceVi(value) {
+    const labels = {
+      pass: "Thông qua",
+      reject: "Từ chối",
+      stop: "Dừng series",
+      keep: "Giữ series",
+      approve: "Duyệt bảo vệ",
+      reward: "Đồng ý khen thưởng",
+      against: "Không đồng ý",
+    };
+    return labels[value] || value || "\u2014";
+  };
+})();
+
 /* Viewport floating modal normalization */
 (function () {
+  const modalSelector = [
+    ".app-floating-modal",
+    ".modal-overlay",
+    ".ai-modal-overlay",
+    ".ui-alert-overlay",
+    ".frame-dialog-overlay",
+    '[id$="ModalOverlay"]',
+    '[id$="ImgZoomOverlay"]',
+    "#proposalDetailModal",
+    "#resubmitModal",
+    "#startSeriesModal",
+    "#assistantTaskDetailModal",
+    "#assistantTaskImageZoom",
+    "#editSubmissionModal",
+  ].join(",");
   const floatingModalIds = [
     "scriptModalOverlay",
     "kanbanScriptModalOverlay",
@@ -138,6 +199,74 @@
     "aiModalOverlay",
     "editSubmissionModal",
   ];
+  const backgroundState = new Map();
+  let previousModalFocus = null;
+
+  function isOpenModal(modal) {
+    if (!modal || modal.hidden || modal.getAttribute("aria-hidden") === "true") return false;
+    const style = window.getComputedStyle(modal);
+    return style.display !== "none" && style.visibility !== "hidden";
+  }
+
+  function restoreBackgroundInteraction() {
+    backgroundState.forEach((state, element) => {
+      element.inert = state.inert;
+      if (state.ariaHidden === null) element.removeAttribute("aria-hidden");
+      else element.setAttribute("aria-hidden", state.ariaHidden);
+    });
+    backgroundState.clear();
+  }
+
+  function syncModalInteraction() {
+    if (!document.body) return;
+    const modalRoots = Array.from(document.body.querySelectorAll(modalSelector));
+    const openModals = modalRoots.filter(isOpenModal);
+    const hasOpenModal = openModals.length > 0;
+    document.documentElement.classList.toggle("app-modal-open", hasOpenModal);
+
+    if (!hasOpenModal) {
+      restoreBackgroundInteraction();
+      if (previousModalFocus && typeof previousModalFocus.focus === "function") {
+        previousModalFocus.focus({ preventScroll: true });
+      }
+      previousModalFocus = null;
+      return;
+    }
+
+    if (!previousModalFocus) previousModalFocus = document.activeElement;
+
+    const blockedElements = new Set(Array.from(document.body.children).filter((element) => (
+      !element.matches(modalSelector) && !element.matches("script, style, #toast")
+    )));
+
+    backgroundState.forEach((state, element) => {
+      if (blockedElements.has(element)) return;
+      element.inert = state.inert;
+      if (state.ariaHidden === null) element.removeAttribute("aria-hidden");
+      else element.setAttribute("aria-hidden", state.ariaHidden);
+      backgroundState.delete(element);
+    });
+
+    blockedElements.forEach((element) => {
+      if (backgroundState.has(element)) return;
+      backgroundState.set(element, {
+        inert: element.inert,
+        ariaHidden: element.getAttribute("aria-hidden"),
+      });
+      element.inert = true;
+      element.setAttribute("aria-hidden", "true");
+    });
+
+    const activeModal = openModals[openModals.length - 1];
+    if (!activeModal.contains(document.activeElement)) {
+      const focusTarget = activeModal.querySelector(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusTarget && typeof focusTarget.focus === "function") {
+        focusTarget.focus({ preventScroll: true });
+      }
+    }
+  }
 
   function liftFloatingModals() {
     if (!document.body) return;
@@ -149,6 +278,32 @@
         document.body.appendChild(modal);
       }
     });
+
+    document.querySelectorAll(modalSelector).forEach((modal) => {
+      if (!modal.classList.contains("app-floating-modal")) modal.classList.add("app-floating-modal");
+      if (!modal.classList.contains("app-viewport-modal")) modal.classList.add("app-viewport-modal");
+      if (!modal.hasAttribute("role")) modal.setAttribute("role", "dialog");
+      if (modal.getAttribute("aria-modal") !== "true") modal.setAttribute("aria-modal", "true");
+      const fullViewportStyles = {
+        position: "fixed",
+        top: "0px",
+        right: "0px",
+        bottom: "0px",
+        left: "0px",
+        width: "100vw",
+        height: "100dvh",
+        zIndex: "5000",
+      };
+      Object.entries(fullViewportStyles).forEach(([property, value]) => {
+        const cssProperty = property.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+        if (modal.style.getPropertyValue(cssProperty) !== value
+          || modal.style.getPropertyPriority(cssProperty) !== "important") {
+          modal.style.setProperty(cssProperty, value, "important");
+        }
+      });
+      if (modal.parentElement !== document.body) document.body.appendChild(modal);
+    });
+    syncModalInteraction();
   }
 
   window.normalizeFloatingModals = liftFloatingModals;
@@ -158,6 +313,16 @@
   } else {
     liftFloatingModals();
   }
+
+  const modalObserver = new MutationObserver(() => {
+    window.requestAnimationFrame(liftFloatingModals);
+  });
+  modalObserver.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["class", "style", "hidden", "aria-hidden"],
+  });
 })();
 
 
@@ -226,7 +391,7 @@
   }
 
   window.showUiConfirm = function showUiConfirm(message, options) {
-    if (!document.body) return Promise.resolve(window.confirm(message));
+    if (!document.body) return Promise.resolve(false);
 
     const overlay = ensureConfirmModal();
     const title = overlay.querySelector("#uiConfirmTitle");
@@ -242,6 +407,13 @@
     messageEl.textContent = String(message || "");
     okButton.textContent = config.okText || "X\u00e1c nh\u1eadn";
     cancelButton.textContent = config.cancelText || "H\u1ee7y";
+    const isDanger = config.danger === true
+      || /(xóa|từ chối|dừng|thu hồi)/i.test(okButton.textContent);
+    const isWarning = config.warning === true
+      || /(cảnh báo|không thể hoàn tác|top 5|khóa chỉnh sửa)/i.test(String(message || ""));
+    const dialog = overlay.querySelector(".ui-confirm-dialog");
+    dialog.classList.toggle("ui-confirm-danger", isDanger);
+    dialog.classList.toggle("ui-confirm-warning", !isDanger && isWarning);
 
     overlay.style.display = "flex";
     requestAnimationFrame(() => overlay.classList.add("show"));
@@ -252,6 +424,305 @@
       confirmResolver = resolve;
     });
   };
+
+  window.appConfirm = window.showUiConfirm;
+
+  /** Refresh server-rendered regions without reloading the document. */
+  window.refreshUiRegions = async function refreshUiRegions(selectors, options) {
+    const config = options || {};
+    const selectorList = Array.isArray(selectors) ? selectors : [selectors];
+    const validSelectors = selectorList.filter(Boolean);
+    if (validSelectors.length === 0) return false;
+
+    const response = await fetch(config.url || window.location.href, {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    });
+    if (!response.ok) {
+      throw new Error(`Không thể cập nhật giao diện (${response.status})`);
+    }
+
+    const html = await response.text();
+    const freshDocument = new DOMParser().parseFromString(html, "text/html");
+    let updatedCount = 0;
+
+    validSelectors.forEach((selector) => {
+      const current = document.querySelector(selector);
+      const fresh = freshDocument.querySelector(selector);
+      if (!current || !fresh) return;
+
+      const scrollTop = current.scrollTop;
+      const scrollLeft = current.scrollLeft;
+      current.replaceChildren(...Array.from(fresh.childNodes, (node) => node.cloneNode(true)));
+      if (config.preserveScroll !== false) {
+        current.scrollTop = scrollTop;
+        current.scrollLeft = scrollLeft;
+      }
+      updatedCount += 1;
+    });
+
+    window.dispatchEvent(new CustomEvent("app:data-updated", {
+      detail: { selectors: validSelectors, updatedCount },
+    }));
+    return updatedCount > 0;
+  };
+
+  /*
+   * Central live-update channel for every role. Mutating requests publish one
+   * event after the server has accepted the change; each workspace then reloads
+   * only its affected data instead of reloading the whole document.
+   */
+  const liveRefreshTimers = new Map();
+
+  window.scheduleLiveRefresh = function scheduleLiveRefresh(key, callback, delay) {
+    if (typeof callback !== "function") return;
+    const refreshKey = key || "default";
+    const wait = Number.isFinite(delay) ? delay : 120;
+    const currentTimer = liveRefreshTimers.get(refreshKey);
+    if (currentTimer) window.clearTimeout(currentTimer);
+
+    liveRefreshTimers.set(refreshKey, window.setTimeout(async () => {
+      liveRefreshTimers.delete(refreshKey);
+      try {
+        await callback();
+      } catch (error) {
+        console.warn("Không thể đồng bộ dữ liệu mới lên giao diện:", error);
+      }
+    }, wait));
+  };
+
+  function callGlobal(name, ...args) {
+    const callback = window[name];
+    if (typeof callback !== "function") return undefined;
+    return callback(...args);
+  }
+
+  function scheduleGlobal(key, name, ...args) {
+    if (typeof window[name] !== "function") return;
+    window.scheduleLiveRefresh(key, () => callGlobal(name, ...args));
+  }
+
+  function mutationPath(rawUrl) {
+    try {
+      return new URL(rawUrl || window.location.href, window.location.origin).pathname;
+    } catch (_error) {
+      return String(rawUrl || "").split("?")[0];
+    }
+  }
+
+  window.withFreshAssetUrl = function withFreshAssetUrl(rawUrl) {
+    if (!rawUrl || String(rawUrl).startsWith("data:") || String(rawUrl).startsWith("blob:")) {
+      return rawUrl;
+    }
+    try {
+      const url = new URL(rawUrl, window.location.origin);
+      url.searchParams.set("v", Date.now().toString());
+      return url.origin === window.location.origin
+        ? `${url.pathname}${url.search}${url.hash}`
+        : url.href;
+    } catch (_error) {
+      const separator = String(rawUrl).includes("?") ? "&" : "?";
+      return `${rawUrl}${separator}v=${Date.now()}`;
+    }
+  };
+
+  const pendingAssetPreviews = new Map();
+
+  function settleAssetPreview(inputId, finalUrl) {
+    const pending = pendingAssetPreviews.get(inputId);
+    if (!pending) return;
+    if (pending.objectUrl) URL.revokeObjectURL(pending.objectUrl);
+    if (!finalUrl && pending.image && pending.previousSrc) {
+      pending.image.src = pending.previousSrc;
+    }
+    pendingAssetPreviews.delete(inputId);
+  }
+
+  document.addEventListener("change", (event) => {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement) || input.type !== "file") return;
+    const file = input.files && input.files[0];
+    if (!file || !file.type.startsWith("image/")) return;
+
+    const targetSelector = input.dataset.previewTarget
+      || (input.id === "avatarFileInput" ? "#profileAvatarImg" : "");
+    if (!targetSelector) return;
+    const image = document.querySelector(targetSelector);
+    if (!(image instanceof HTMLImageElement)) return;
+
+    settleAssetPreview(input.id);
+    const objectUrl = URL.createObjectURL(file);
+    pendingAssetPreviews.set(input.id, {
+      image,
+      objectUrl,
+      previousSrc: image.currentSrc || image.src,
+    });
+    image.src = objectUrl;
+  });
+
+  function showFreshAvatar(data) {
+    const avatarUrl = data && (data.avatarUrl || data.avatar);
+    if (!avatarUrl) return;
+    settleAssetPreview("avatarFileInput", avatarUrl);
+    const freshUrl = window.withFreshAssetUrl(avatarUrl);
+    document.querySelectorAll("#profileAvatarImg, [data-current-user-avatar]").forEach((image) => {
+      image.src = freshUrl;
+    });
+    const input = document.getElementById("avatarFileInput");
+    if (input) input.value = "";
+  }
+
+  function refreshRoleAfterMutation(event) {
+    const path = mutationPath(event.detail && event.detail.url);
+    const pagePath = window.location.pathname;
+
+    if (/^\/api\/account\/(update-profile|upload-avatar|change-password|confirm-change-email-otp|confirm-change-phone-otp)$/.test(path)) {
+      if (path.endsWith("/upload-avatar")) {
+        showFreshAvatar(event.detail && event.detail.data);
+      }
+      scheduleGlobal("account-profile", "loadProfile");
+    }
+
+    if (pagePath.startsWith("/manga/system-admin")) {
+      if (/^\/manga\/system-admin\/chapters\/[^/]+\/publish$/.test(path)) {
+        scheduleGlobal("admin-publish", "loadPendingPublishChapters");
+      }
+      if (/^\/manga\/system-admin\/(accounts\/|assign\/|import-excel)/.test(path)) {
+        scheduleGlobal("admin-data", "loadData");
+      }
+      if (path.includes("/ranking") || path.includes("/vote")) {
+        scheduleGlobal("admin-ranking", "loadVoteRanking");
+        scheduleGlobal("admin-vote-sessions", "loadVoteSessionsAdmin");
+      }
+      return;
+    }
+
+    if (pagePath.startsWith("/manga/tantou")) {
+      if (/^\/manga\/tantou\/(review|submit-to-board)$/.test(path)) {
+        scheduleGlobal("tantou-proposals", "loadProposals");
+        scheduleGlobal("tantou-approved-proposals", "loadApprovedProposals");
+      }
+      if (/^\/api\/chapter-review\//.test(path)) {
+        scheduleGlobal("tantou-chapter-reviews", "loadChapterReviews");
+      }
+      if (/^\/manga\/tantou\/(series\/[^/]+\/submit-defense|chapters\/[^/]+\/deadline)$/.test(path)) {
+        scheduleGlobal("tantou-cancel-series", "loadPendingCancelSeries");
+        scheduleGlobal("tantou-chapter-reviews", "loadChapterReviews");
+      }
+      return;
+    }
+
+    if (pagePath.startsWith("/manga/editor")) {
+      if (path.includes("/vote") || path.includes("/ranking")) {
+        scheduleGlobal("editor-vote-proposals", "loadVoteProposals");
+        scheduleGlobal("editor-ranking", "loadAll");
+        scheduleGlobal("editor-vote-sessions", "loadActiveSessions");
+      }
+      return;
+    }
+
+    if (pagePath.startsWith("/manga/assistant")) {
+      if (/^\/manga\/assistant\/submission\//.test(path)) {
+        scheduleGlobal("assistant-tasks", "refreshAssistantTasks", "waiting");
+      }
+      return;
+    }
+
+    if (!pagePath.startsWith("/manga/mangaka")) return;
+
+    if (/^\/manga\/mangaka\/(submit-proposal|resubmit-proposal|start-series)$/.test(path)) {
+      scheduleGlobal("mangaka-proposals", "refreshMangakaProposalLists");
+      if (path.endsWith("/start-series")) {
+        scheduleGlobal("mangaka-series", "loadMySeriesList");
+      }
+      return;
+    }
+
+    // Cover replacement has a dedicated immediate preview and must not rebuild
+    // the surrounding series table while its confirmation dialog is closing.
+    if (path.endsWith("/edit-jacket")) return;
+
+    const affectsChapter = /^\/api\/(page\/|chapter-review\/|chapters\/)/.test(path)
+      || /^\/manga\/mangaka\/(myseries\/|submission\/)/.test(path);
+    if (!affectsChapter || path.endsWith("/savefile")) return;
+
+    window.scheduleLiveRefresh("mangaka-chapter", () => {
+      if (window._inlineChapterMode && typeof window.refreshActiveChapterPages === "function") {
+        return window.refreshActiveChapterPages();
+      }
+      if (window._currentSid && typeof window.loadSeriesView === "function") {
+        return window.loadSeriesView(window._currentSid, window._currentCid);
+      }
+      return callGlobal("loadMySeriesList");
+    });
+  }
+
+  window.addEventListener("app:mutation-success", refreshRoleAfterMutation);
+  window.addEventListener("app:mutation-failure", (event) => {
+    if (mutationPath(event.detail && event.detail.url) === "/api/account/upload-avatar") {
+      settleAssetPreview("avatarFileInput");
+    }
+  });
+
+  if (!window.__liveMutationFetchInstalled && typeof window.fetch === "function") {
+    window.__liveMutationFetchInstalled = true;
+    const nativeFetch = window.fetch.bind(window);
+
+    window.fetch = async function liveUpdatingFetch(input, init) {
+      const method = String(
+        (init && init.method) || (input && input.method) || "GET"
+      ).toUpperCase();
+      let response;
+      try {
+        response = await nativeFetch(input, init);
+      } catch (error) {
+        if (method !== "GET" && method !== "HEAD") {
+          const rawUrl = typeof input === "string" ? input : (input && input.url) || "";
+          window.dispatchEvent(new CustomEvent("app:mutation-failure", {
+            detail: { url: rawUrl, method, error },
+          }));
+        }
+        throw error;
+      }
+
+      if (method !== "GET" && method !== "HEAD") {
+        const responseCopy = response.clone();
+        const rawUrl = typeof input === "string" ? input : (input && input.url) || "";
+
+        Promise.resolve().then(async () => {
+          let data = null;
+          const contentType = responseCopy.headers.get("content-type") || "";
+          if (contentType.includes("application/json")) {
+            try {
+              data = await responseCopy.json();
+            } catch (_error) {
+              data = null;
+            }
+          }
+
+          const explicitlyFailed = data && (
+            data.success === false
+            || data.status === "error"
+            || data.status === "failed"
+          );
+          if (!response.ok || explicitlyFailed) {
+            window.dispatchEvent(new CustomEvent("app:mutation-failure", {
+              detail: { url: rawUrl, method, data, status: response.status },
+            }));
+            return;
+          }
+
+          window.dispatchEvent(new CustomEvent("app:mutation-success", {
+            detail: { url: rawUrl, method, data },
+          }));
+        });
+      }
+
+      return response;
+    };
+  }
 
   window.showUiAlertAsync = function showUiAlertAsync(message) {
     if (!window.showUiAlert) return Promise.resolve();

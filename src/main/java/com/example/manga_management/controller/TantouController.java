@@ -306,6 +306,7 @@ public class TantouController {
 
             p.setFileOfTantou("/tantou-profile/" + fileName);
             p.setStatus("board_check");
+            p.setBoardSubmittedAt(LocalDateTime.now());
             proposalRepository.save(p);
 
             notificationController.send("board", null,
@@ -457,10 +458,12 @@ public class TantouController {
                     .findFirstBySeriesIdAndVoteTypeAndStatus(s.getId(), "stop", "closed").orElse(null);
             map.put("reason", stopSession != null ? stopSession.getReason() : null);
 
-            boolean hasActiveDefense = voteSessionRepository.existsBySeriesIdAndVoteType(s.getId(), "defense")
-                    && voteSessionRepository.findFirstBySeriesIdAndVoteTypeAndStatus(s.getId(), "defense", "active")
-                            .isPresent();
+            VoteSession activeDefense = voteSessionRepository
+                    .findFirstBySeriesIdAndVoteTypeAndStatus(s.getId(), "defense", "active")
+                    .orElse(null);
+            boolean hasActiveDefense = activeDefense != null;
             map.put("hasActiveDefense", hasActiveDefense);
+            map.put("defenseSubmittedAt", activeDefense != null ? activeDefense.getCreatedAt() : null);
             return map;
         }).collect(Collectors.toList());
 

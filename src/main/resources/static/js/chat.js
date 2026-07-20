@@ -15,6 +15,10 @@
   let activeContactId = null;
   let stompClient = null;
 
+  function sameContactId(left, right) {
+    return left != null && right != null && String(left) === String(right);
+  }
+
   function escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text == null ? "" : String(text);
@@ -59,7 +63,7 @@
         return (
           "" +
           '<div class="chat-contact-item' +
-          (c.id === activeContactId ? " active" : "") +
+          (sameContactId(c.id, activeContactId) ? " active" : "") +
           (unread ? " unread" : "") +
           '" data-contact-id="' +
           c.id +
@@ -99,7 +103,7 @@
   function renderMessages(messages) {
     messagesEl.innerHTML = messages
       .map((m) => {
-        const mine = m.senderId === currentUserId;
+        const mine = sameContactId(m.senderId, currentUserId);
         return (
           "" +
           '<div class="chat-bubble ' +
@@ -120,15 +124,29 @@
     fetch("/api/user-chat/contacts")
       .then((res) => res.json())
       .then((data) => {
-        contacts = data;
+        contacts = Array.isArray(data) ? data : [];
+        const activeContactStillExists = contacts.some((contact) =>
+          sameContactId(contact.id, activeContactId),
+        );
+        const shouldOpenFirstContact =
+          contacts.length > 0 && !activeContactStillExists;
+
+        if (shouldOpenFirstContact) {
+          activeContactId = contacts[0].id;
+        }
+
         renderContacts();
+
+        if (shouldOpenFirstContact) {
+          openThread(activeContactId);
+        }
       })
       .catch((err) => console.error("[Chat] load contacts failed", err));
   }
 
   function openThread(contactId) {
     activeContactId = contactId;
-    const contact = contacts.find((c) => c.id === contactId);
+    const contact = contacts.find((c) => sameContactId(c.id, contactId));
     if (threadHeaderEl) {
       threadHeaderEl.textContent = contact ? contact.fullname : "";
     }
@@ -139,7 +157,7 @@
       .then((res) => res.json())
       .then((messages) => {
         renderMessages(messages);
-        const c = contacts.find((x) => x.id === contactId);
+        const c = contacts.find((x) => sameContactId(x.id, contactId));
         if (c) c.unreadCount = 0;
         renderContacts();
       })
@@ -159,20 +177,20 @@
 
   function handleIncoming(message) {
     const isActiveThread =
-      message.senderId === activeContactId ||
-      message.receiverId === activeContactId;
+      sameContactId(message.senderId, activeContactId) ||
+      sameContactId(message.receiverId, activeContactId);
     const partnerId =
-      message.senderId === currentUserId
+      sameContactId(message.senderId, currentUserId)
         ? message.receiverId
         : message.senderId;
-    let contact = contacts.find((c) => c.id === partnerId);
+    let contact = contacts.find((c) => sameContactId(c.id, partnerId));
 
     if (contact) {
       contact.lastMessage = message.content;
       contact.lastTime = message.createdAt;
       if (
-        message.receiverId === currentUserId &&
-        activeContactId !== partnerId
+        sameContactId(message.receiverId, currentUserId) &&
+        !sameContactId(activeContactId, partnerId)
       ) {
         contact.unreadCount = (contact.unreadCount || 0) + 1;
       }
@@ -181,7 +199,7 @@
       return;
     }
 
-    if (activeContactId === partnerId && isActiveThread) {
+    if (sameContactId(activeContactId, partnerId) && isActiveThread) {
       openThread(activeContactId);
     } else {
       renderContacts();

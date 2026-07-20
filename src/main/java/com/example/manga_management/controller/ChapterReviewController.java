@@ -95,6 +95,8 @@ public class ChapterReviewController {
         }
 
         chapter.setStatus("finish");
+        chapter.setSubmittedAt(java.time.LocalDateTime.now());
+        chapter.setReviewedAt(null);
         chapterRepository.save(chapter);
 
         String editorUserId = chapter.getSeries()

@@ -1,13 +1,19 @@
 :root {
-  --draw-bg: #090b10;
-  --draw-panel: rgba(20, 24, 33, 0.94);
-  --draw-panel-2: rgba(28, 33, 44, 0.94);
-  --draw-border: rgba(255, 255, 255, 0.12);
-  --draw-text: #f6f3ed;
-  --draw-muted: #a7adba;
-  --draw-brand: #ef3b36;
-  --draw-cyan: #52d1ff;
-  --draw-gold: #e7bd68;
+  --draw-bg: #0f172a;
+  --draw-panel: #1e293b;
+  --draw-panel-2: #273449;
+  --draw-border: rgba(148, 163, 184, 0.24);
+  --draw-text: #f9fafb;
+  --draw-muted: #94a3b8;
+  --draw-hint: #94a3b8;
+  --draw-brand: #60a5fa;
+  --draw-cyan: #2dd4bf;
+  --draw-gold: #60a5fa;
+  --draw-bg-soft: #111827;
+  --draw-action-text: #0f172a;
+  --draw-danger: #f87171;
+  --draw-danger-text: #fca5a5;
+  --draw-danger-action-text: #0f172a;
   --draw-radius: 12px;
 }
 
@@ -1929,6 +1935,31 @@ body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw[style*="block"]) .m
   }
 }
 
+/* High-contrast secondary and apply actions inside Draw. */
+.draw-modal-close {
+  border-color: var(--draw-border);
+  background: var(--draw-panel-2);
+  color: var(--draw-text);
+}
+
+.draw-modal-close:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--draw-brand) 52%, var(--draw-border));
+  background: color-mix(in srgb, var(--draw-brand) 13%, var(--draw-panel-2));
+  color: var(--draw-text);
+}
+
+.manga-chat-apply {
+  border-color: var(--draw-brand);
+  background: var(--draw-brand);
+  color: var(--draw-action-text);
+}
+
+.manga-chat-apply:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--draw-brand) 78%, var(--draw-text));
+  background: color-mix(in srgb, var(--draw-brand) 84%, var(--draw-bg));
+  color: var(--draw-action-text);
+}
+
 @media (max-width: 520px) {
   .frame-template-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -1943,5 +1974,529 @@ body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw[style*="block"]) .m
   .layer-show-all-button,
   .frame-dialog-actions .header-btn {
     transition: none;
+  }
+}
+
+/* Draw workspace in global Light mode */
+:root[data-theme="light"] {
+  --draw-bg: #f3f4f6;
+  --draw-panel: #ffffff;
+  --draw-panel-2: #f8fafc;
+  --draw-border: rgba(17, 24, 39, 0.16);
+  --draw-text: #111827;
+  --draw-muted: #4b5563;
+  --draw-hint: #6b7280;
+  --draw-brand: #2563eb;
+  --draw-cyan: #0d9488;
+  --draw-gold: #2563eb;
+  --draw-bg-soft: #f8f9fa;
+  --draw-action-text: #ffffff;
+  --draw-danger: #dc2626;
+  --draw-danger-text: #991b1b;
+  --draw-danger-action-text: #ffffff;
+}
+
+/* Draw workspace follows the shared Slate + Blue theme tokens. */
+.draw-wrapper {
+  background: var(--draw-bg);
+}
+
+.lt-btn:hover,
+.lt-btn.active,
+.tool-btn:hover,
+.tool-btn.active {
+  border-color: color-mix(in srgb, var(--draw-brand) 58%, transparent);
+  background: color-mix(in srgb, var(--draw-brand) 16%, transparent);
+  color: var(--draw-text);
+}
+
+:root[data-theme="light"] .draw-wrapper,
+:root[data-theme="light"] .left-toolbar,
+:root[data-theme="light"] .top-property-bar,
+:root[data-theme="light"] .right-panel {
+  background: var(--draw-panel);
+  color: var(--draw-text);
+}
+
+:root[data-theme="light"] .draw-wrapper {
+  background: var(--draw-bg);
+  box-shadow: 0 20px 48px rgba(34, 48, 73, 0.14);
+}
+
+:root[data-theme="light"] .left-toolbar,
+:root[data-theme="light"] .top-property-bar,
+:root[data-theme="light"] .right-panel,
+:root[data-theme="light"] .color-palette-bar,
+:root[data-theme="light"] .status-bar,
+:root[data-theme="light"] .panel-section,
+:root[data-theme="light"] .prop-group {
+  border-color: var(--draw-border);
+  background: var(--draw-panel);
+  color: var(--draw-text);
+}
+
+:root[data-theme="light"] .lt-btn,
+:root[data-theme="light"] .tool-btn,
+:root[data-theme="light"] .brush-btn,
+:root[data-theme="light"] .palette-command-button,
+:root[data-theme="light"] .palette-action-button,
+:root[data-theme="light"] .zoom-btn,
+:root[data-theme="light"] .layer-item {
+  border-color: var(--draw-border);
+  background: var(--draw-panel-2);
+  color: var(--draw-muted);
+  box-shadow: none;
+}
+
+:root[data-theme="light"] .lt-btn:hover,
+:root[data-theme="light"] .lt-btn.active,
+:root[data-theme="light"] .tool-btn:hover,
+:root[data-theme="light"] .tool-btn.active,
+:root[data-theme="light"] .layer-item.selected {
+  border-color: color-mix(in srgb, var(--draw-brand) 52%, transparent);
+  background: color-mix(in srgb, var(--draw-brand) 11%, transparent);
+  color: #1d4ed8;
+}
+
+:root[data-theme="light"] .canvas-viewport,
+:root[data-theme="light"] .frame-editor-stage {
+  background-color: #e5e7eb;
+  background-image:
+    linear-gradient(45deg, rgba(21, 32, 51, 0.045) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(21, 32, 51, 0.045) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(21, 32, 51, 0.045) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(21, 32, 51, 0.045) 75%);
+}
+
+:root[data-theme="light"] .draw-tool-menu[popover],
+:root[data-theme="light"] .frame-dialog,
+:root[data-theme="light"] .frame-editor-controls,
+:root[data-theme="light"] .frame-template-option {
+  border-color: var(--draw-border);
+  background: #fff;
+  color: var(--draw-text);
+  box-shadow: 0 18px 44px rgba(34, 48, 73, 0.16);
+}
+
+:root[data-theme="light"] .draw-tool-menu-item,
+:root[data-theme="light"] .selection-tool-menu .lt-btn.draw-tool-menu-item {
+  background: var(--draw-panel-2);
+  color: var(--draw-text);
+}
+
+:root[data-theme="light"] .frame-dialog-overlay {
+  background: rgba(34, 48, 73, 0.36);
+}
+
+:root[data-theme="light"] .manga-chat-box,
+:root[data-theme="light"] .manga-chat-message,
+:root[data-theme="light"] .manga-chat-input {
+  border-color: var(--draw-border);
+  background: var(--draw-panel-2);
+  color: var(--draw-text);
+}
+
+/* Legacy drawing accents now follow the active theme accent. */
+.shape-transform-handle:hover,
+.shape-transform-handle:focus-visible,
+.frame-corner-handle:hover,
+.frame-corner-handle:focus-visible {
+  background: var(--draw-brand);
+  fill: var(--draw-brand);
+}
+
+.ai-feature-card:hover,
+.ai-feature-card.active,
+.frame-dialog-actions .header-btn.primary {
+  border-color: color-mix(in srgb, var(--draw-brand) 56%, transparent);
+  background: color-mix(in srgb, var(--draw-brand) 16%, transparent);
+  color: var(--draw-text);
+}
+
+/* Draw controls use the same semantic color system as the rest of the app. */
+.lt-btn,
+.tool-btn,
+.brush-btn,
+.palette-command-button,
+.palette-action-button,
+.zoom-btn,
+.layer-show-all-button,
+.frame-dialog-actions .header-btn,
+.shape-fill-btn {
+  border-color: var(--draw-border);
+  background: var(--draw-panel-2);
+  color: var(--draw-muted);
+  box-shadow: none;
+}
+
+.lt-btn:hover:not(:disabled),
+.tool-btn:hover:not(:disabled),
+.brush-btn:hover:not(:disabled),
+.palette-command-button:hover:not(:disabled),
+.palette-action-button:hover:not(:disabled),
+.zoom-btn:hover:not(:disabled),
+.layer-show-all-button:hover:not(:disabled),
+.frame-dialog-actions .header-btn:hover:not(:disabled),
+.shape-fill-btn:hover:not(:disabled),
+.lt-btn.active,
+.tool-btn.active,
+.brush-btn.active,
+.shape-fill-btn.active,
+.layer-show-all-button.peeking {
+  border-color: color-mix(in srgb, var(--draw-brand) 54%, var(--draw-border));
+  background: color-mix(in srgb, var(--draw-brand) 13%, var(--draw-panel-2));
+  color: var(--draw-text);
+  box-shadow: none;
+}
+
+.layer-add-button,
+.frame-add-inside-button,
+.frame-dialog-actions .header-btn.primary,
+.manga-chat-send {
+  border-color: var(--draw-brand);
+  background: var(--draw-brand);
+  color: var(--draw-action-text);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--draw-brand) 22%, transparent);
+}
+
+.layer-add-button:hover:not(:disabled),
+.frame-add-inside-button:hover:not(:disabled),
+.frame-dialog-actions .header-btn.primary:hover:not(:disabled),
+.manga-chat-send:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--draw-brand) 78%, var(--draw-text));
+  background: color-mix(in srgb, var(--draw-brand) 84%, var(--draw-bg));
+  color: var(--draw-action-text);
+}
+
+.frame-delete-button {
+  border-color: color-mix(in srgb, var(--draw-danger) 58%, var(--draw-border));
+  background: color-mix(in srgb, var(--draw-danger) 13%, var(--draw-panel-2));
+  color: var(--draw-danger-text);
+  box-shadow: none;
+}
+
+.frame-delete-button:hover:not(:disabled) {
+  border-color: var(--draw-danger);
+  background: var(--draw-danger);
+  color: var(--draw-danger-action-text);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--draw-danger) 22%, transparent);
+}
+
+.lt-btn:disabled,
+.tool-btn:disabled,
+.brush-btn:disabled,
+.palette-command-button:disabled,
+.palette-action-button:disabled,
+.zoom-btn:disabled,
+.layer-show-all-button:disabled,
+.frame-dialog-actions .header-btn:disabled,
+.frame-add-inside-button:disabled,
+.frame-delete-button:disabled {
+  border-color: var(--draw-border);
+  background: var(--draw-bg-soft);
+  color: var(--draw-hint);
+  box-shadow: none;
+  opacity: 0.62;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lt-btn,
+  .tool-btn,
+  .brush-btn,
+  .palette-command-button,
+  .palette-action-button,
+  .zoom-btn,
+  .layer-show-all-button,
+  .frame-dialog-actions .header-btn {
+    transition: none;
+  }
+}
+
+/* Full-bleed drawing workspace: the page shell stays fixed while every
+   scrollable workflow is contained inside Draw itself. */
+body.draw-workspace-active {
+  overflow: hidden;
+}
+
+body.draw-workspace-active .flex-container {
+  position: fixed;
+  top: var(--app-header-height);
+  right: 0;
+  bottom: 0;
+  left: var(--app-sidebar-width);
+  width: auto !important;
+  max-width: none;
+  height: auto;
+  margin: 0 !important;
+  padding: 0;
+  overflow: hidden;
+}
+
+body.draw-workspace-active:has(.topnav:hover) .flex-container,
+body.draw-workspace-active:has(.topnav:has(.btn-icon:focus-visible)) .flex-container {
+  left: var(--app-sidebar-expanded-width);
+  width: auto !important;
+  margin: 0 !important;
+}
+
+#tab-draw.tab-pane.active,
+#tab-draw.tab-pane.show,
+#tab-draw.tab-pane[style*="block"] {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  animation: none;
+}
+
+#tab-draw .draw-wrapper {
+  grid-template-areas: "tools work side";
+  grid-template-columns: 92px minmax(0, 1fr) clamp(284px, 22vw, 340px);
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  gap: 8px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 8px;
+  overflow: hidden;
+}
+
+#tab-draw .left-toolbar {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-area: tools;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: auto;
+  align-content: start;
+  gap: 6px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+#tab-draw .left-toolbar .lt-btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  height: 40px;
+  padding: 0;
+}
+
+#tab-draw .left-toolbar .lt-divider,
+#tab-draw .left-toolbar .lt-swatch-wrap {
+  grid-column: 1 / -1;
+}
+
+#tab-draw .left-toolbar .lt-divider {
+  height: 1px;
+  align-self: center;
+  margin: 0;
+}
+
+#tab-draw .left-toolbar .lt-swatch-wrap {
+  min-height: 36px;
+  align-self: center;
+  justify-self: center;
+}
+
+#tab-draw .center-area {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  grid-area: work;
+  grid-column: auto;
+  grid-row: auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 8px;
+  overflow: hidden;
+}
+
+#tab-draw .top-property-bar {
+  min-height: 0;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px;
+}
+
+#tab-draw .top-property-bar .prop-group {
+  min-height: 40px;
+  flex: 0 0 auto;
+  padding: 4px 8px;
+}
+
+#tab-draw .top-property-bar .prop-divider {
+  flex: 0 0 1px;
+}
+
+#tab-draw .color-palette-bar,
+#tab-draw .status-bar {
+  min-height: 44px;
+  flex-wrap: nowrap;
+  gap: 6px;
+  padding: 6px 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+#tab-draw .palette-command-actions {
+  width: auto;
+  min-width: max-content;
+  flex: 1 0 auto;
+  flex-wrap: nowrap;
+}
+
+#tab-draw .canvas-viewport {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 10px;
+  padding: 12px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+#tab-draw .status-bar {
+  justify-content: space-between;
+}
+
+#tab-draw .right-panel {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  grid-area: side;
+  grid-column: auto;
+  grid-row: auto;
+  gap: 8px;
+  overflow: hidden;
+  padding: 8px;
+}
+
+#tab-draw .right-panel > .panel-section {
+  min-width: 0;
+  padding: 8px;
+}
+
+#tab-draw .right-panel > .panel-section:first-child {
+  display: flex;
+  min-height: 150px;
+  max-height: 38%;
+  flex: 0 1 38%;
+  flex-direction: column;
+}
+
+#tab-draw #layerList {
+  min-height: 0;
+  max-height: none;
+  flex: 1 1 auto;
+  overscroll-behavior: contain;
+}
+
+#tab-draw .right-panel .manga-chat-panel {
+  min-height: 180px;
+  flex: 1 1 0;
+  gap: 6px;
+}
+
+#tab-draw .manga-chat-panel .chat-history-list {
+  min-height: 0;
+  max-height: none;
+  flex: 1 1 0;
+  overscroll-behavior: contain;
+}
+
+#tab-draw .manga-chat-panel .chat-history-list:empty::before {
+  min-height: 96px;
+}
+
+#tab-draw .submission-update-panel {
+  flex: 0 0 auto;
+}
+
+#tab-draw .submission-update-panel .panel-section-header {
+  margin-bottom: 6px;
+}
+
+@media (max-width: 1180px) {
+  #tab-draw .draw-wrapper {
+    grid-template-columns: 58px minmax(0, 1fr) 270px;
+  }
+
+  #tab-draw .left-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  #tab-draw .left-toolbar .lt-divider,
+  #tab-draw .left-toolbar .lt-swatch-wrap {
+    grid-column: 1;
+  }
+
+  #tab-draw .right-panel > .panel-section:first-child {
+    max-height: 34%;
+    flex-basis: 34%;
+  }
+}
+
+@media (max-width: 900px) {
+  body.draw-workspace-active .flex-container,
+  body.draw-workspace-active:has(.topnav:hover) .flex-container,
+  body.draw-workspace-active:has(.topnav:has(.btn-icon:focus-visible)) .flex-container {
+    top: var(--app-header-height);
+    right: 0;
+    bottom: 70px;
+    left: 0;
+    width: auto !important;
+    margin: 0 !important;
+  }
+}
+
+@media (max-width: 760px) {
+  #tab-draw .draw-wrapper {
+    grid-template-areas:
+      "tools"
+      "work"
+      "side";
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(520px, 1fr) minmax(420px, auto);
+    overflow-y: auto;
+  }
+
+  #tab-draw .left-toolbar {
+    display: flex;
+    min-height: 52px;
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  #tab-draw .left-toolbar .lt-btn {
+    width: 40px;
+    min-width: 40px;
+    flex: 0 0 40px;
+  }
+
+  #tab-draw .left-toolbar .lt-divider {
+    width: 1px;
+    height: 32px;
+    flex: 0 0 1px;
+  }
+
+  #tab-draw .left-toolbar .lt-swatch-wrap {
+    min-width: 40px;
+    flex: 0 0 40px;
+  }
+
+  #tab-draw .right-panel {
+    min-height: 420px;
+    overflow-y: auto;
   }
 }

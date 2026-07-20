@@ -2,6 +2,8 @@
 <html lang="vi" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
+    <script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
+    <script defer src="/js/profile-security.js" th:src="@{/js/profile-security.js}"></script>
     <title>Hội đồng biên tập</title>
     <link
       rel="stylesheet"
@@ -9,8 +11,8 @@
     />
     <link
       rel="stylesheet"
-      href="../static/css/all.css"
-      th:href="@{/css/all.css}"
+      href="../static/css/all.css?v=20260721-fixed-chat"
+      th:href="@{/css/all.css(v='20260721-fixed-chat')}"
     />
     <link
       rel="stylesheet"
@@ -65,9 +67,6 @@
           </div>
         </div>
 
-        <button type="button" class="btn-icon" id="btnChangePassword" aria-label="Đổi mật khẩu" onclick="openChangePasswordModal()" title="Đổi mật khẩu">
-          <i class="fa-solid fa-key"></i>
-        </button>
 
         <a th:href="@{/login/logout}">
           <button type="button" class="btn-icon" aria-label="Logout">
@@ -203,7 +202,9 @@
               <tr>
                 <th>Phiên</th>
                 <th>Series</th>
-                <th>Số người đã vote</th>
+                <th>Loại phiên</th>
+                <th>Ngày mở / nộp</th>
+                <th>Ngày bạn vote</th>
                 <th>Người Tạo</th>
                 <th>Tiến độ</th>
                 <th>Hành động</th>
@@ -234,6 +235,7 @@
               <th>Mã Dự án</th>
               <th>Tên Tác Giả</th>
               <th>Tên Series</th>
+              <th>Ngày nộp hội đồng</th>
               <th>Tệp tin</th>
               <th>Số người đã vote</th>
               <th>Biểu Quyết</th>
@@ -241,7 +243,7 @@
           </thead>
           <tbody id="proposalVoteBody">
             <tr>
-              <td colspan="6" class="u-inline-style-048">Đang tải...</td>
+              <td colspan="7" class="u-inline-style-048">Đang tải...</td>
             </tr>
           </tbody>
         </table>
@@ -370,7 +372,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
 
-    <script th:src="@{/js/chat.js}"></script>
+    <script src="/js/chat.js?v=20260721-fixed-chat" th:src="@{/js/chat.js(v='20260721-fixed-chat')}"></script>
 
     <script>
 // ===== STATUS DISPLAY I18N =====
@@ -426,7 +428,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           .then((data) => {
             if (data.status === "error") {
               document.getElementById("proposalVoteBody").innerHTML =
-                '<tr><td colspan="6" class="u-inline-style-049">' +
+                '<tr><td colspan="7" class="u-inline-style-049">' +
                 data.message +
                 "</td></tr>";
               return;
@@ -437,7 +439,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
             const tbody = document.getElementById("proposalVoteBody");
             if (!data.proposals || data.proposals.length === 0) {
               tbody.innerHTML =
-                '<tr><td colspan="6" class="u-inline-style-050">' +
+                '<tr><td colspan="7" class="u-inline-style-050">' +
                 "Hiện không có dự án nào chờ bình chọn.</td></tr>";
               return;
             }
@@ -455,6 +457,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                             <td>${p.id}</td>
                             <td>${p.mangaka?.user?.fullname ?? "-"}</td>
                             <td>${p.seriesName}</td>
+                            <td><span class="date-value">${formatAppDateTime(p.boardSubmittedAt)}</span></td>
                             <td>
                                 ${p.filePath ? `<a href="${p.filePath}" class="btn-link" target="_blank">Bản thảo</a><br>` : ""}
                                 ${p.fileOfTantou ? `<a href="${p.fileOfTantou}" class="btn-link" target="_blank">Hồ sơ đề xuất</a>` : ""}
@@ -473,7 +476,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           })
           .catch(() => {
             document.getElementById("proposalVoteBody").innerHTML =
-              '<tr><td colspan="6" class="u-inline-style-049">Lỗi tải dữ liệu</td></tr>';
+              '<tr><td colspan="7" class="u-inline-style-049">Lỗi tải dữ liệu</td></tr>';
           });
       }
 
@@ -490,16 +493,16 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           .then((res) => res.json())
           .then((data) => {
             if (data.status === "success") {
-              const msgEl = document.getElementById("voteMessage");
-              msgEl.textContent = "" + data.message;
-              msgEl.style.display = "block";
-              setTimeout(() => (msgEl.style.display = "none"), 3000);
+              window.showUiAlert("" + data.message, {
+                type: "success",
+                title: "Đã ghi nhận biểu quyết",
+              });
               loadVoteProposals();
             } else {
-              const errEl = document.getElementById("voteError");
-              errEl.textContent = "Lỗi: " + data.message;
-              errEl.style.display = "block";
-              setTimeout(() => (errEl.style.display = "none"), 3000);
+              window.showUiAlert("" + data.message, {
+                type: "error",
+                title: "Không thể ghi nhận biểu quyết",
+              });
             }
           })
           .catch((err) => alert("Lỗi: " + err.message));
@@ -679,13 +682,19 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                 s.seriesId +
                 "</small>" +
                 (infoHtml ? '<div class="u-inline-style-060">' + infoHtml + "</div>" : "") +
-                '<div><button type="button" class="btn-link" onclick="openSeriesInfoModal(\'' +
+                '<div><button type="button" class="project-action-btn series-info-trigger" onclick="openSeriesInfoModal(\'' +
                 s.seriesId +
-                "')\">Xem thông tin series</button></div>" +
+                "')\">Xem thông tin</button></div>" +
                 "</td>" +
                 '<td class="u-inline-style-019">' +
                 typeLabel +
                 "</td>" +
+                '<td><span class="date-value">' +
+                formatAppDate(s.createdAt) +
+                "</span></td>" +
+                '<td><span class="date-value">' +
+                formatAppDate(s.votedAt) +
+                "</span></td>" +
                 "<td>" +
                 s.createdBy +
                 "</td>" +
@@ -734,13 +743,17 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                 ? `<div><a href="${vs.defenseFilePath}" target="_blank">Hồ sơ bảo vệ (PDF)</a></div>`
                 : "";
               const defenseNoteLine = vs.defenseNote ? `<div>Ghi chú: ${vs.defenseNote}</div>` : "";
+              const dateLine = `<div class="review-date-line"><span>Ngày mở/nộp: <strong>${formatAppDate(vs.createdAt)}</strong></span><span>Ngày kết thúc: <strong>${formatAppDate(vs.closedAt)}</strong></span></div>`;
+              const votesLine = (vs.votes || []).length
+                ? `<div class="vote-date-list">${vs.votes.map((vote) => `<span>${vote.boardName}: ${formatVoteChoiceVi(vote.choice)} · ${formatAppDate(vote.votedAt)}</span>`).join("")}</div>`
+                : `<div class="vote-date-list"><span>Chưa có phiếu bầu.</span></div>`;
               const resultLine =
                 vs.status === "closed" && vs.totalBoards != null
                   ? `<div>Kết quả: ${vs.votedCount}/${vs.totalBoards} đã vote — ${vs.positivePercent}% đồng ý (${vs.passed ? "Đạt" : "Không đạt"})</div>`
                   : "";
               return `<div class="series-info-vote-item">
-                    <b>${label}</b> — ${statusLabel} (${vs.createdAt || "—"})
-                    ${reasonLine}${defenseLine}${defenseNoteLine}${resultLine}
+                    <b>${label}</b> — ${statusLabel}
+                    ${dateLine}${reasonLine}${defenseLine}${defenseNoteLine}${votesLine}${resultLine}
                   </div>`;
             })
             .join("")
@@ -757,6 +770,10 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
             <h4>Đề xuất gốc (proposal)</h4>
             <ul>
               <li>Mã đề xuất: ${p.id || "—"}</li>
+              <li>Ngày nộp: ${formatAppDateTime(p.submittedAt || p.createdAt)}</li>
+              <li>Tantou xử lý: ${formatAppDateTime(p.reviewedAt)}</li>
+              <li>Nộp hội đồng: ${formatAppDateTime(p.boardSubmittedAt)}</li>
+              <li>Hội đồng kết luận: ${formatAppDateTime(p.boardReviewedAt)}</li>
               <li>Điểm biên tập viên chấm: ${p.editorScore != null ? Number(p.editorScore).toFixed(2) : "Chưa chấm"}</li>
               <li>Nhận xét: ${p.comment || "Không có"}</li>
             </ul>
@@ -777,22 +794,22 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       function openSeriesInfoModal(seriesId) {
         const overlay = document.getElementById("seriesInfoModalOverlay");
         const body = document.getElementById("seriesInfoBody");
-        body.innerHTML = "Đang tải...";
+        body.innerHTML = window.renderSeriesInfoState("Đang tải thông tin series...");
         overlay.style.display = "flex";
 
         fetch(`/api/series/${seriesId}/info`)
           .then((r) => r.json())
           .then((data) => {
             if (data.status !== "success") {
-              body.innerHTML = `<p>Lỗi: ${data.message}</p>`;
+              body.innerHTML = window.renderSeriesInfoState(`Không thể tải thông tin: ${data.message}`, "error");
               return;
             }
             document.getElementById("seriesInfoTitle").textContent =
               "Thông tin series: " + (data.series.seriesName || "");
-            body.innerHTML = renderSeriesInfoBody(data);
+            body.innerHTML = window.renderSeriesInfoAccordion(data);
           })
           .catch((err) => {
-            body.innerHTML = `<p>Lỗi: ${err.message}</p>`;
+            body.innerHTML = window.renderSeriesInfoState(`Không thể tải thông tin: ${err.message}`, "error");
           });
       }
 
@@ -800,7 +817,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         document.getElementById("seriesInfoModalOverlay").style.display = "none";
       }
 
-      function castSessionVote(sessionId, voteChoice) {
+      async function castSessionVote(sessionId, voteChoice) {
         var labels = {
           stop: "DỪNG",
           keep: "GIỮ",
@@ -809,14 +826,11 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           approve: "DUYỆT HỒ SƠ BẢO VỆ",
           reject: "TỪ CHỐI HỒ SƠ BẢO VỆ",
         };
-        if (
-          !confirm(
-            "Bạn chắc chắn muốn vote " +
-              (labels[voteChoice] || voteChoice) +
-              "?",
-          )
-        )
-          return;
+        const confirmed = await window.showUiConfirm(
+          "Bạn chắc chắn muốn vote " + (labels[voteChoice] || voteChoice) + "?",
+          { title: "Xác nhận biểu quyết", okText: "Xác nhận vote", cancelText: "Hủy" },
+        );
+        if (!confirmed) return;
 
         fetch(
           "/manga/ranking/cast-session-vote?sessionId=" +
@@ -864,7 +878,8 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         loadActiveSessions();
       });
     </script>
-    <script src="/js/ui-alert.js" th:src="@{/js/ui-alert.js}"></script>
+    <script src="/js/series-info.js?v=20260721" th:src="@{/js/series-info.js(v='20260721')}"></script>
+    <script src="/js/ui-alert.js?v=20260721-fullscreen-modal" th:src="@{/js/ui-alert.js(v='20260721-fullscreen-modal')}"></script>
 
     <!-- ===== Change Password Modal ===== -->
     <div id="changePasswordModalOverlay" class="app-floating-modal" style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
@@ -1128,15 +1143,15 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
   </div>
 
   <!-- Modal xem thông tin series — dùng khi board đang cân nhắc bỏ phiếu -->
-  <div id="seriesInfoModalOverlay" class="modal-overlay" style="display:none;">
+  <div id="seriesInfoModalOverlay" class="modal-overlay series-info-modal" style="display:none;">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="seriesInfoTitle">Thông tin series</h5>
-        <button type="button" onclick="closeSeriesInfoModal()">X</button>
+        <button type="button" class="modal-close-btn" onclick="closeSeriesInfoModal()" aria-label="Đóng">×</button>
       </div>
       <div class="modal-body" id="seriesInfoBody">Đang tải...</div>
       <div class="modal-footer">
-        <button type="button" onclick="closeSeriesInfoModal()">Đóng</button>
+        <button type="button" class="btn-modal-cancel" onclick="closeSeriesInfoModal()">Đóng</button>
       </div>
     </div>
   </div>
@@ -1219,7 +1234,7 @@ async function loadProfile() {
     if (!data || data.status !== 'success') return;
 
     const avatarImg = document.getElementById('profileAvatarImg');
-    if (avatarImg && data.avatar) avatarImg.src = data.avatar;
+    if (avatarImg && data.avatar) avatarImg.src = window.withFreshAssetUrl ? window.withFreshAssetUrl(data.avatar) : data.avatar;
 
     const dn = document.getElementById('profileDisplayName');
     if (dn) dn.textContent = data.fullname || '';
@@ -1238,7 +1253,7 @@ async function loadProfile() {
     const badge = document.getElementById('profileEmailVerifiedBadge');
     if (badge) {
       badge.textContent = data.emailVerified ? '✓ Đã xác thực' : '⚠ Chưa xác thực';
-      badge.style.color = data.emailVerified ? '#4caf50' : '#ff9800';
+      badge.dataset.state = data.emailVerified ? 'verified' : 'unverified';
     }
 
     renderProfileRoleInfo(data);
@@ -1282,7 +1297,7 @@ async function uploadAvatar(input) {
     const data = await res.json();
     if (data.status === 'success') {
       const avatarImg = document.getElementById('profileAvatarImg');
-      if (avatarImg) avatarImg.src = data.avatarUrl + '?t=' + Date.now();
+      if (avatarImg) avatarImg.src = window.withFreshAssetUrl ? window.withFreshAssetUrl(data.avatarUrl) : data.avatarUrl;
       if (typeof showToast === 'function') showToast('Cập nhật ảnh thành công', 'success');
     } else {
       if (typeof showToast === 'function') showToast(data.message, 'error');
@@ -1631,5 +1646,6 @@ async function cpnConfirmOtp() {
 
 </script>
     <script src="/js/editorial-ai.js" th:src="@{/js/editorial-ai.js}"></script>
+    <script src="/js/workspace-density.js" th:src="@{/js/workspace-density.js}"></script>
   </body>
 </html>

@@ -5,6 +5,7 @@ import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.*;
 import com.example.manga_management.service.EmailService;
 import com.example.manga_management.service.OtpService;
+import com.example.manga_management.service.SmsService;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,6 +36,7 @@ public class AccountController {
     private final UserRepository userRepository;
     private final OtpService otpService;
     private final EmailService emailService;
+    private final SmsService smsService;
     private final MangakaRepository mangakaRepository;
     private final AssistantRepository assistantRepository;
     private final TantoEditorRepository tantoEditorRepository;
@@ -46,6 +48,7 @@ public class AccountController {
     public AccountController(UserRepository userRepository,
                              OtpService otpService,
                              EmailService emailService,
+                             SmsService smsService,
                              MangakaRepository mangakaRepository,
                              AssistantRepository assistantRepository,
                              TantoEditorRepository tantoEditorRepository,
@@ -56,6 +59,7 @@ public class AccountController {
         this.userRepository = userRepository;
         this.otpService = otpService;
         this.emailService = emailService;
+        this.smsService = smsService;
         this.mangakaRepository = mangakaRepository;
         this.assistantRepository = assistantRepository;
         this.tantoEditorRepository = tantoEditorRepository;
@@ -90,29 +94,31 @@ public class AccountController {
         )
     })
     @PostMapping("/send-otp")
-    public ResponseEntity<ApiResult> sendOtp(HttpSession session) {
+    public ResponseEntity<ApiResult> sendOtp(@RequestBody(required = false) Map<String, String> body,
+                                             HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null) {
             return ResponseEntity.status(401)
                     .body(new ApiResult("error", "Chưa đăng nhập"));
         }
-        if (user.getEmail() == null || user.getEmail().isBlank()) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResult("error", "Tài khoản chưa có email"));
-        }
-        if (!user.isEmailVerified()) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResult("error", "Vui lòng xác thực email trước khi đổi mật khẩu"));
+        String channel = body == null ? "email" : body.getOrDefault("channel", "email");
+        ApiResult channelError = validateOtpChannel(user, channel);
+        if (channelError != null) {
+            return ResponseEntity.badRequest().body(channelError);
         }
         try {
             session.removeAttribute("otpVerified");
             session.removeAttribute("otpVerifiedAt");
-            String otp = otpService.generateOtp(user.getId());
-            emailService.sendOtpEmail(user.getEmail(), otp);
-            return ResponseEntity.ok(new ApiResult("success", "Đã gửi OTP tới email của bạn"));
+            String otpKey = user.getId() + "_password_" + channel;
+            String otp = otpService.generateOtp(otpKey);
+            sendOtpByChannel(user, channel, otp);
+            session.setAttribute("passwordOtpKey", otpKey);
+            return ResponseEntity.ok(new ApiResult("success", channel.equals("phone")
+                    ? "Đã gửi OTP tới số điện thoại của bạn"
+                    : "Đã gửi OTP tới email của bạn"));
         } catch (Exception e) {
             return ResponseEntity.status(500)
-                    .body(new ApiResult("error", "Không thể gửi email: " + e.getMessage()));
+                    .body(new ApiResult("error", e.getMessage()));
         }
     }
 
@@ -153,10 +159,12 @@ public class AccountController {
             return ResponseEntity.badRequest()
                     .body(new ApiResult("error", "Vui lòng nhập đúng mã OTP gồm 6 số"));
         }
-        boolean valid = otpService.verifyOtp(user.getId(), otp);
+        String otpKey = (String) session.getAttribute("passwordOtpKey");
+        boolean valid = otpKey != null && otpService.verifyOtp(otpKey, otp);
         if (valid) {
             session.setAttribute("otpVerified", true);
             session.setAttribute("otpVerifiedAt", System.currentTimeMillis());
+            session.removeAttribute("passwordOtpKey");
             return ResponseEntity.ok(new ApiResult("success", "Xác thực OTP thành công"));
         } else {
             return ResponseEntity.badRequest()
@@ -261,6 +269,7 @@ public class AccountController {
         result.put("avatar", user.getAvatar());
         result.put("profile", user.getProfile());
         result.put("phone", user.getPhone());
+        result.put("phoneVerified", user.isPhoneVerified());
         result.put("socialLinks", user.getSocialLinks());
         result.put("emailVerified", user.isEmailVerified());
         result.put("role", user.getRole());
@@ -514,14 +523,11 @@ public class AccountController {
             result.put("message", "Chưa đăng nhập");
             return result;
         }
-        if (user.getEmail() == null || user.getEmail().isBlank()) {
+        String channel = body.getOrDefault("channel", user.isPhoneVerified() ? "phone" : "email");
+        ApiResult channelError = validateOtpChannel(user, channel);
+        if (channelError != null) {
             result.put("status", "error");
-            result.put("message", "Tài khoản chưa có email hiện tại để nhận OTP");
-            return result;
-        }
-        if (!user.isEmailVerified()) {
-            result.put("status", "error");
-            result.put("message", "Vui lòng xác thực email hiện tại trước khi đổi email mới");
+            result.put("message", channelError.getMessage());
             return result;
         }
         String newEmail = body.get("newEmail");
@@ -542,14 +548,18 @@ public class AccountController {
             return result;
         }
         try {
-            String otp = otpService.generateOtp(user.getId() + "_changeEmail");
-            emailService.sendOtpEmail(user.getEmail(), otp);
+            String otpKey = user.getId() + "_changeEmail_" + channel;
+            String otp = otpService.generateOtp(otpKey);
+            sendOtpByChannel(user, channel, otp);
             session.setAttribute("pendingEmail", newEmail);
+            session.setAttribute("pendingEmailOtpKey", otpKey);
             result.put("status", "success");
-            result.put("message", "Đã gửi OTP về email hiện tại của bạn");
+            result.put("message", channel.equals("phone")
+                    ? "Đã gửi OTP về số điện thoại đã xác thực"
+                    : "Đã gửi OTP về email hiện tại của bạn");
         } catch (Exception e) {
             result.put("status", "error");
-            result.put("message", "Không thể gửi email: " + e.getMessage());
+            result.put("message", e.getMessage());
         }
         return result;
     }
@@ -579,7 +589,8 @@ public class AccountController {
             result.put("message", "Vui lòng nhập mã OTP");
             return result;
         }
-        boolean valid = otpService.verifyOtp(user.getId() + "_changeEmail", otp);
+        String otpKey = (String) session.getAttribute("pendingEmailOtpKey");
+        boolean valid = otpKey != null && otpService.verifyOtp(otpKey, otp);
         if (!valid) {
             result.put("status", "error");
             result.put("message", "OTP không đúng hoặc đã hết hạn");
@@ -591,6 +602,7 @@ public class AccountController {
             User savedUser = userRepository.save(user);
             session.setAttribute("user", savedUser);
             session.removeAttribute("pendingEmail");
+            session.removeAttribute("pendingEmailOtpKey");
             result.put("status", "success");
             result.put("message", "Đổi email thành công");
         } catch (Exception e) {
@@ -678,15 +690,53 @@ public class AccountController {
 
         try {
             user.setPhone(pendingPhone);
+            user.setPhoneVerified(false);
             User savedUser = userRepository.save(user);
             session.setAttribute("user", savedUser);
             session.removeAttribute("pendingPhone");
             result.put("status", "success");
-            result.put("message", "Đổi số điện thoại thành công");
+            result.put("message", "Đổi số điện thoại thành công. Hãy xác thực số mới để nhận OTP qua SMS");
         } catch (Exception e) {
             result.put("status", "error");
             result.put("message", "Lỗi hệ thống: " + e.getMessage());
         }
+        return result;
+    }
+
+    @PostMapping("/send-phone-verification-otp")
+    @ResponseBody
+    public Map<String, Object> sendPhoneVerificationOtp(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null) return errorResult("Chưa đăng nhập");
+        if (user.getPhone() == null || user.getPhone().isBlank()) return errorResult("Tài khoản chưa liên kết số điện thoại");
+        if (user.isPhoneVerified()) return errorResult("Số điện thoại đã được xác thực");
+        try {
+            String otp = otpService.generateOtp(user.getId() + "_verifyPhone");
+            smsService.sendOtp(user.getPhone(), otp);
+            result.put("status", "success");
+            result.put("message", "Đã gửi OTP tới số điện thoại của bạn");
+        } catch (Exception exception) {
+            return errorResult(exception.getMessage());
+        }
+        return result;
+    }
+
+    @PostMapping("/confirm-phone-verification-otp")
+    @ResponseBody
+    public Map<String, Object> confirmPhoneVerificationOtp(@RequestBody Map<String, String> body,
+                                                            HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) return errorResult("Chưa đăng nhập");
+        String otp = body.get("otp");
+        if (otp == null || !otp.matches("\\d{6}")) return errorResult("Vui lòng nhập đúng mã OTP gồm 6 số");
+        if (!otpService.verifyOtp(user.getId() + "_verifyPhone", otp)) return errorResult("OTP không đúng hoặc đã hết hạn");
+        user.setPhoneVerified(true);
+        User savedUser = userRepository.save(user);
+        session.setAttribute("user", savedUser);
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "success");
+        result.put("message", "Xác thực số điện thoại thành công");
         return result;
     }
 
@@ -739,6 +789,37 @@ public class AccountController {
             return null;
         }
         return phone.trim().replaceAll("[\\s().-]", "");
+    }
+
+    private ApiResult validateOtpChannel(User user, String channel) {
+        if ("phone".equals(channel)) {
+            if (user.getPhone() == null || user.getPhone().isBlank() || !user.isPhoneVerified()) {
+                return new ApiResult("error", "Số điện thoại chưa được liên kết hoặc chưa xác thực");
+            }
+            return null;
+        }
+        if (!"email".equals(channel)) {
+            return new ApiResult("error", "Kênh nhận OTP không hợp lệ");
+        }
+        if (user.getEmail() == null || user.getEmail().isBlank() || !user.isEmailVerified()) {
+            return new ApiResult("error", "Email chưa được liên kết hoặc chưa xác thực");
+        }
+        return null;
+    }
+
+    private void sendOtpByChannel(User user, String channel, String otp) {
+        if ("phone".equals(channel)) {
+            smsService.sendOtp(user.getPhone(), otp);
+        } else {
+            emailService.sendOtpEmail(user.getEmail(), otp);
+        }
+    }
+
+    private Map<String, Object> errorResult(String message) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "error");
+        result.put("message", message);
+        return result;
     }
 
     // ─────────────────────────────────────────────────────────────────────────

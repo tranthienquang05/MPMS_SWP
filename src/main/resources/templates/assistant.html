@@ -2,6 +2,8 @@
 <html lang="vi" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
+    <script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
+    <script defer src="/js/profile-security.js" th:src="@{/js/profile-security.js}"></script>
     <title>Trợ lý</title>
     <link
       rel="stylesheet"
@@ -9,8 +11,8 @@
     />
     <link
       rel="stylesheet"
-      href="../static/css/all.css"
-      th:href="@{/css/all.css}"
+      href="../static/css/all.css?v=20260721-fixed-chat"
+      th:href="@{/css/all.css(v='20260721-fixed-chat')}"
     />
     <link
       rel="stylesheet"
@@ -24,7 +26,7 @@
     />
   </head>
 
-  <body th:attr="data-user-id=${currentUserId}">
+  <body class="role-workspaces-ready" th:attr="data-user-id=${currentUserId}">
     <div class="header">
       <div class="logo">
         <div class="brand-stack">
@@ -68,9 +70,6 @@
           </div>
         </div>
 
-        <button type="button" class="btn-icon" id="btnChangePassword" aria-label="Đổi mật khẩu" onclick="openChangePasswordModal()" title="Đổi mật khẩu">
-          <i class="fa-solid fa-key"></i>
-        </button>
 
         <a th:href="@{/login/logout}">
           <button type="button" class="btn-icon" aria-label="Logout">
@@ -878,7 +877,12 @@
                 <td
                   th:text="${frameCounts != null ? (frameCounts.get(s.id) ?: 0) : 0}"
                 ></td>
-                <td class="assistant-task-note">Đã nộp, đang chờ duyệt.</td>
+                <td class="assistant-task-note">
+                  <span th:if="${s.submittedAt != null}"
+                    th:text="|Nộp lúc ${#temporals.format(s.submittedAt, 'dd/MM/yyyy HH:mm')} — đang chờ duyệt.|"
+                  ></span>
+                  <span th:unless="${s.submittedAt != null}">Đã nộp, đang chờ duyệt.</span>
+                </td>
                 <td>
                   <div class="assistant-task-actions">
                     <button
@@ -924,9 +928,12 @@
                   th:text="${frameCounts != null ? (frameCounts.get(s.id) ?: 0) : 0}"
                 ></td>
                 <td class="assistant-task-note">
-                  <span th:if="${s.approvedAt != null}"
-                    th:text="|Duyệt lúc ${#temporals.format(s.approvedAt, 'dd/MM/yyyy HH:mm')} — +${salaryPerTask != null ? #numbers.formatInteger(salaryPerTask, 0, 'COMMA') : 0} VNĐ|"
-                  ></span>
+                  <span th:if="${s.approvedAt != null}">
+                    <span th:if="${s.submittedAt != null}"
+                      th:text="|Nộp ${#temporals.format(s.submittedAt, 'dd/MM/yyyy HH:mm')} — |"></span>
+                    <span
+                      th:text="|Duyệt ${#temporals.format(s.approvedAt, 'dd/MM/yyyy HH:mm')} — +${salaryPerTask != null ? #numbers.formatInteger(salaryPerTask, 0, 'COMMA') : 0} VNĐ|"></span>
+                  </span>
                   <span th:unless="${s.approvedAt != null}">Đã hoàn thành.</span>
                 </td>
                 <td>
@@ -1021,9 +1028,13 @@
         <p>Tính năng đang phát triển...</p>
       </div>
 
-      <div id="tab-chat" class="tab-pane">
-        <h2>Tin nhắn</h2>
-        <div class="chat-layout">
+      <div id="tab-chat" class="tab-pane" data-workspace-shell="true">
+        <section class="role-workspace-surface" aria-labelledby="assistantChatWorkspaceTitle">
+          <header class="role-workspace-header">
+            <div><h1 id="assistantChatWorkspaceTitle">Tin nhắn</h1></div>
+          </header>
+          <div class="role-workspace-content">
+            <div class="chat-layout">
           <div class="chat-contact-list" id="chatContactList">
             <div class="chat-empty">Đang tải danh sách liên hệ...</div>
           </div>
@@ -1044,11 +1055,16 @@
               </button>
             </div>
           </div>
-        </div>
+            </div>
+          </div>
+        </section>
       </div>
-      <div id="tab-profile" class="tab-pane">
-      <h2>Thông tin cá nhân</h2>
-
+      <div id="tab-profile" class="tab-pane" data-workspace-shell="true">
+      <section class="role-workspace-surface" aria-labelledby="assistantProfileWorkspaceTitle">
+      <header class="role-workspace-header">
+        <div><h1 id="assistantProfileWorkspaceTitle">Thông tin cá nhân</h1></div>
+      </header>
+      <div class="role-workspace-content">
       <div class="profile-workspace">
         <div class="profile-primary-column">
 
@@ -1125,6 +1141,8 @@
         <div id="profileRoleInfoContent"></div>
       </aside>
       </div>
+      </div>
+      </section>
     </div>
 
     </div>
@@ -1139,7 +1157,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
 
-    <script th:src="@{/js/chat.js}"></script>
+    <script src="/js/chat.js?v=20260721-fixed-chat" th:src="@{/js/chat.js(v='20260721-fixed-chat')}"></script>
 
     <script th:inline="javascript">
       function openTab(tabId) {
@@ -1160,16 +1178,17 @@
         openTab(activeTabFromController);
       }
 
-      // Tự động làm mới trang mỗi 60s để cập nhật task đã bị tự động nộp do
-      // quá hạn deadline (danh sách "Đang làm"/"Chờ duyệt" chỉ render 1 lần
-      // lúc tải trang nên cần reload mới thấy trạng thái mới nhất).
-      // Bỏ qua khi đang ở tab vẽ để không làm mất bản vẽ chưa lưu.
+      // Đồng bộ danh sách công việc mỗi 60 giây mà không tải lại trang.
+      // Bỏ qua khi tab vẽ đang mở hoặc cửa sổ trình duyệt đang ẩn.
       setInterval(function () {
         const drawTab = document.getElementById("tab-draw");
-        if (drawTab && drawTab.classList.contains("active")) {
-          return;
-        }
-        location.reload();
+        if (
+          document.hidden ||
+          (drawTab && drawTab.classList.contains("active"))
+        ) return;
+        refreshAssistantTasks().catch((error) =>
+          console.warn("Không thể đồng bộ công việc:", error),
+        );
       }, 60000);
 
       // Load ảnh submission đã lưu lên canvas khi assistant mở edit
@@ -1198,6 +1217,28 @@
 
         const desc = document.getElementById("assistantTaskTabDesc");
         if (desc) desc.textContent = labels[status] || labels.doing;
+      }
+
+      async function refreshAssistantTasks(preferredStatus) {
+        if (!window.refreshUiRegions) return false;
+        const activeButton = document.querySelector(
+          "[data-assistant-task-tab].active",
+        );
+        const activeStatus =
+          preferredStatus ||
+          activeButton?.dataset?.assistantTaskTab ||
+          sessionStorage.getItem("assistantTaskStatusTab") ||
+          "doing";
+        const updated = await window.refreshUiRegions(
+          [
+            ".assistant-task-tabs-nav",
+            ".assistant-task-month-summary",
+            ".assistant-task-table-wrap",
+          ],
+          { url: "/manga/assistant" },
+        );
+        if (updated) setAssistantTaskTab(activeStatus);
+        return updated;
       }
 
       document.addEventListener("DOMContentLoaded", function () {
@@ -1287,7 +1328,7 @@
               okText: "X\u00e1c nh\u1eadn",
               cancelText: "H\u1ee7y",
             })
-          : confirm("X\u00e1c nh\u1eadn n\u1ed9p b\u00e0i?");
+          : false;
 
         if (!confirmed) return;
 
@@ -1316,7 +1357,8 @@
               alert("" + data.message);
             }
 
-            location.reload();
+            openTab("tab-project");
+            await refreshAssistantTasks("waiting");
           } else {
             alert("" + data.message);
           }
@@ -1378,7 +1420,7 @@
           .catch((err) => alert("Lỗi: " + err.message));
       }
     </script>
-    <script src="/js/ui-alert.js" th:src="@{/js/ui-alert.js}"></script>
+    <script src="/js/ui-alert.js?v=20260721-fullscreen-modal" th:src="@{/js/ui-alert.js(v='20260721-fullscreen-modal')}"></script>
 
     <!-- ===== Change Password Modal ===== -->
     <div id="changePasswordModalOverlay" class="app-floating-modal" style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
@@ -1757,7 +1799,7 @@ async function loadProfile() {
     if (!data || data.id === undefined) return;
 
     const avatarImg = document.getElementById('profileAvatarImg');
-    if (avatarImg && data.avatar) avatarImg.src = data.avatar;
+    if (avatarImg && data.avatar) avatarImg.src = window.withFreshAssetUrl ? window.withFreshAssetUrl(data.avatar) : data.avatar;
 
     const dn = document.getElementById('profileDisplayName');
     if (dn) dn.textContent = data.fullname || '';
@@ -1776,7 +1818,7 @@ async function loadProfile() {
     const badge = document.getElementById('profileEmailVerifiedBadge');
     if (badge) {
       badge.textContent = data.emailVerified ? '✓ Đã xác thực' : '⚠ Chưa xác thực';
-      badge.style.color = data.emailVerified ? '#4caf50' : '#ff9800';
+      badge.dataset.state = data.emailVerified ? 'verified' : 'unverified';
     }
 
     renderProfileRoleInfo(data);
@@ -1820,7 +1862,7 @@ async function uploadAvatar(input) {
     const data = await res.json();
     if (data.status === 'success') {
       const avatarImg = document.getElementById('profileAvatarImg');
-      if (avatarImg) avatarImg.src = data.avatarUrl + '?t=' + Date.now();
+      if (avatarImg) avatarImg.src = window.withFreshAssetUrl ? window.withFreshAssetUrl(data.avatarUrl) : data.avatarUrl;
       if (typeof showToast === 'function') showToast('Cập nhật ảnh thành công', 'success');
     } else {
       if (typeof showToast === 'function') showToast(data.message, 'error');
@@ -2168,5 +2210,6 @@ async function cpnConfirmOtp() {
 }
 
 </script>
+  <script src="/js/workspace-density.js" th:src="@{/js/workspace-density.js}"></script>
   </body>
 </html>

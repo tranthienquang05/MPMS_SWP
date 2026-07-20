@@ -42,6 +42,9 @@ public class User {
     @Column(name = "Phone", length = 20)
     private String phone;
 
+    @Column(name = "PhoneVerified", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    private boolean phoneVerified = false;
+
     @Column(name = "SocialLinks", length = 500)
     private String socialLinks;
 }

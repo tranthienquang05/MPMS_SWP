@@ -44,6 +44,7 @@ import com.example.manga_management.repository.SeriesRepository;
 import com.example.manga_management.repository.SubmissionRepository;
 import com.example.manga_management.repository.VoteSessionRepository;
 import com.example.manga_management.service.ActivityLogService;
+import com.example.manga_management.service.BookJacketStorageService;
 import com.example.manga_management.service.ProposalService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -67,6 +68,7 @@ public class MangakaController {
     private NotificationController notificationController;
     private final ActivityLogService activityLogService;
     private final VoteSessionRepository voteSessionRepository;
+    private final BookJacketStorageService bookJacketStorageService;
 
     public MangakaController(ProposalRepository proposalRepository, MangakaRepository mangakaRepository,
             SeriesRepository seriesRepository,
@@ -74,7 +76,8 @@ public class MangakaController {
             MangaPageRepository mangaPageRepository, SubmissionRepository submissionRepository,
             NotificationController notificationController, AssistantRepository assistantRepository,
             ProposalService proposalService, ActivityLogService activityLogService,
-            VoteSessionRepository voteSessionRepository) {
+            VoteSessionRepository voteSessionRepository,
+            BookJacketStorageService bookJacketStorageService) {
         this.proposalRepository = proposalRepository;
         this.mangakaRepository = mangakaRepository;
         this.assistantRepository = assistantRepository;
@@ -86,6 +89,7 @@ public class MangakaController {
         this.proposalService = proposalService;
         this.activityLogService = activityLogService;
         this.voteSessionRepository = voteSessionRepository;
+        this.bookJacketStorageService = bookJacketStorageService;
     }
 
     @GetMapping({ "" })
@@ -102,6 +106,11 @@ public class MangakaController {
             model.addAttribute("approvedList",
                     proposalRepository.findByStatusInAndMangaka_Id(List.of("approved", "board_check", "passed"),
                             mangaka.getId()));
+            model.addAttribute("tantouApprovedList",
+                    proposalRepository.findByStatusInAndMangaka_Id(List.of("approved", "board_check"),
+                            mangaka.getId()));
+            model.addAttribute("boardApprovedList",
+                    proposalRepository.findByStatusAndMangaka_Id("passed", mangaka.getId()));
             model.addAttribute("revisionList",
                     proposalRepository.findByStatusAndMangaka_Id("revision", mangaka.getId()));
             model.addAttribute("lockedList",
@@ -167,6 +176,11 @@ public class MangakaController {
         model.addAttribute("approvedList",
                 proposalRepository.findByStatusInAndMangaka_Id(List.of("approved", "board_check", "passed"),
                         mangaka.getId()));
+        model.addAttribute("tantouApprovedList",
+                proposalRepository.findByStatusInAndMangaka_Id(List.of("approved", "board_check"),
+                        mangaka.getId()));
+        model.addAttribute("boardApprovedList",
+                proposalRepository.findByStatusAndMangaka_Id("passed", mangaka.getId()));
         model.addAttribute("revisionList",
                 proposalRepository.findByStatusAndMangaka_Id("revision", mangaka.getId()));
         model.addAttribute("lockedList",
@@ -178,6 +192,11 @@ public class MangakaController {
         result.put("approvedList",
                 proposalRepository.findByStatusInAndMangaka_Id(List.of("approved", "board_check", "passed"),
                         mangaka.getId()));
+        result.put("tantouApprovedList",
+                proposalRepository.findByStatusInAndMangaka_Id(List.of("approved", "board_check"),
+                        mangaka.getId()));
+        result.put("boardApprovedList",
+                proposalRepository.findByStatusAndMangaka_Id("passed", mangaka.getId()));
         result.put("revisionList",
                 proposalRepository.findByStatusAndMangaka_Id("revision", mangaka.getId()));
         result.put("lockedList",
@@ -262,6 +281,7 @@ public class MangakaController {
             proposal.setGenre(genre != null ? genre.trim() : null);
             proposal.setFilePath("/proposal/" + shortFileName);
             proposal.setStatus("new");
+            proposal.setSubmittedAt(java.time.LocalDateTime.now());
             proposalRepository.save(proposal);
 
             notificationController.send("tantou", null, "Có đề xuất mới từ Mangaka đang chờ duyệt: " + txtSeriesName,
@@ -350,6 +370,8 @@ public class MangakaController {
             proposal.setComment(null);
             proposal.setEditorScore(null);
             proposal.setRevisionDeadline(null);
+            proposal.setSubmittedAt(java.time.LocalDateTime.now());
+            proposal.setReviewedAt(null);
             proposalRepository.save(proposal);
 
             notificationController.send("tantou", null, "Mangaka đã nộp lại bản thảo: " + txtSeriesName,
@@ -386,6 +408,10 @@ public class MangakaController {
         result.put("editorScore", p.getEditorScore());
         result.put("revisionDeadline", p.getRevisionDeadline()); // FE tự so sánh với thời gian hiện tại nếu muốn hiển
         // thị "còn X ngày"
+        result.put("submittedAt", p.getSubmittedAt() != null ? p.getSubmittedAt() : p.getCreatedAt());
+        result.put("reviewedAt", p.getReviewedAt());
+        result.put("boardSubmittedAt", p.getBoardSubmittedAt());
+        result.put("boardReviewedAt", p.getBoardReviewedAt());
 
         List<Map<String, Object>> boardComments = proposalService
                 .getCommentsForProposal(p.getId())
@@ -421,36 +447,11 @@ public class MangakaController {
             return result;
         }
 
+        String storedBookJacket = null;
         try {
-            String uploadDir = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
-                    + File.separator + "resources" + File.separator + "static" + File.separator + "bookjackets"
-                    + File.separator;
-
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
             long count = seriesRepository.count();
             String seriesId = String.format("SER%03d", count + 1);
-            String originalName = fileBookJacket.getOriginalFilename();
-            String extension = "";
-            if (originalName != null && originalName.lastIndexOf('.') >= 0) {
-                extension = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
-            }
-            String contentType = fileBookJacket.getContentType();
-            boolean validImage = ".png".equals(extension) || ".jpg".equals(extension) || ".jpeg".equals(extension)
-                    || "image/png".equals(contentType) || "image/jpeg".equals(contentType);
-            if (!validImage) {
-                result.put("status", "error");
-                result.put("message", "Ảnh bìa chỉ hỗ trợ file PNG, JPG hoặc JPEG!");
-                return result;
-            }
-            if (extension.isBlank()) {
-                extension = "image/png".equals(contentType) ? ".png" : ".jpg";
-            }
-            String fileName = seriesId + extension;
-            fileBookJacket.transferTo(uploadPath.resolve(fileName).toFile());
+            storedBookJacket = bookJacketStorageService.store(fileBookJacket, seriesId);
 
             Series series = new Series();
             series.setId(seriesId);
@@ -458,7 +459,7 @@ public class MangakaController {
             series.setSeriesName(txtSeriesName);
             series.setDescription(txtDescription);
             series.setGenre(proposal.getGenre());
-            series.setBookJacket("/bookjackets/" + fileName);
+            series.setBookJacket(storedBookJacket);
             series.setStartDate(LocalDate.now());
             series.setStatus("unfinish");
             seriesRepository.save(series);
@@ -473,9 +474,20 @@ public class MangakaController {
             result.put("seriesId", seriesId);
             result.put("message", "Khởi động tác phẩm thành công!");
 
-        } catch (IOException e) {
+        } catch (IllegalArgumentException e) {
+            bookJacketStorageService.deleteIfManaged(storedBookJacket);
             result.put("status", "error");
-            result.put("message", "Lỗi hệ thống: " + e.getMessage());
+            result.put("message", e.getMessage());
+        } catch (IOException e) {
+            bookJacketStorageService.deleteIfManaged(storedBookJacket);
+            result.put("status", "error");
+            result.put("message", "Lỗi lưu ảnh bìa: " + e.getMessage());
+        } catch (RuntimeException e) {
+            // A repository or notification failure can happen after the series has
+            // already been saved. Keep the uploaded file so a persisted series never
+            // points to a cover that this error handler just deleted.
+            result.put("status", "error");
+            result.put("message", "Không thể lưu series. Vui lòng thử lại!");
         }
         return result;
     }
@@ -529,7 +541,19 @@ public class MangakaController {
         }
         result.put("status", "success");
         result.put("series", series);
-        result.put("chapters", chapterRepository.findBySeries(series));
+        List<Chapter> chapters = chapterRepository.findBySeries(series);
+        Map<String, Map<String, Object>> chapterCoverMap = new HashMap<>();
+        for (Chapter chapter : chapters) {
+            mangaPageRepository.findFirstByChapterAndPageTypeOrderByPageNumberAsc(chapter, "cover")
+                    .ifPresent(coverPage -> {
+                        Map<String, Object> cover = new HashMap<>();
+                        cover.put("pageId", coverPage.getId());
+                        cover.put("filePath", coverPage.getFilePath());
+                        chapterCoverMap.put(chapter.getId(), cover);
+                    });
+        }
+        result.put("chapters", chapters);
+        result.put("chapterCoverMap", chapterCoverMap);
         return result;
     }
 
@@ -597,7 +621,7 @@ public class MangakaController {
             return result;
         }
         try {
-            List<MangaPage> pages = mangaPageRepository.findByChapterId(cid);
+            List<MangaPage> pages = mangaPageRepository.findByChapterIdOrderByPageNumberAsc(cid);
             Map<String, Submission> submissionMap = new HashMap<>();
             for (MangaPage page : pages) {
                 submissionRepository.findTopByPageIdIdOrderByCreatedAtDesc(page.getId())
@@ -652,50 +676,34 @@ public class MangakaController {
             return result;
         }
 
+        String oldBookJacket = series.getBookJacket();
+        String newBookJacket = null;
         try {
-            String uploadDir = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
-                    + File.separator + "resources" + File.separator + "static" + File.separator + "bookjackets"
-                    + File.separator;
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            String originalName = fileBookJacket.getOriginalFilename();
-            String extension = "";
-            if (originalName != null && originalName.lastIndexOf('.') >= 0) {
-                extension = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
-            }
-            String contentType = fileBookJacket.getContentType();
-            boolean validImage = ".png".equals(extension) || ".jpg".equals(extension) || ".jpeg".equals(extension)
-                    || "image/png".equals(contentType) || "image/jpeg".equals(contentType);
-            if (!validImage) {
-                result.put("status", "error");
-                result.put("message", "Ảnh bìa chỉ hỗ trợ file PNG, JPG hoặc JPEG!");
-                return result;
-            }
-            if (extension.isBlank()) {
-                extension = "image/png".equals(contentType) ? ".png" : ".jpg";
-            }
-
-            // Xóa file bìa cũ (nếu có, kể cả khác đuôi file) để tránh rác
-            if (series.getBookJacket() != null) {
-                Path oldFile = Paths.get(uploadDir + Paths.get(series.getBookJacket()).getFileName());
-                Files.deleteIfExists(oldFile);
-            }
-
-            String fileName = seriesId + extension;
-            fileBookJacket.transferTo(uploadPath.resolve(fileName).toFile());
-
-            series.setBookJacket("/bookjackets/" + fileName);
+            // Store a versioned file first. The old cover stays valid until both the
+            // upload and database update have succeeded.
+            newBookJacket = bookJacketStorageService.store(fileBookJacket, seriesId);
+            series.setBookJacket(newBookJacket);
             seriesRepository.save(series);
+            bookJacketStorageService.deleteIfManaged(oldBookJacket);
 
             result.put("status", "success");
             result.put("message", "Đã cập nhật ảnh bìa!");
             result.put("bookJacket", series.getBookJacket());
-        } catch (IOException e) {
+        } catch (IllegalArgumentException e) {
+            series.setBookJacket(oldBookJacket);
+            bookJacketStorageService.deleteIfManaged(newBookJacket);
             result.put("status", "error");
-            result.put("message", "Lỗi hệ thống: " + e.getMessage());
+            result.put("message", e.getMessage());
+        } catch (IOException e) {
+            series.setBookJacket(oldBookJacket);
+            bookJacketStorageService.deleteIfManaged(newBookJacket);
+            result.put("status", "error");
+            result.put("message", "Lỗi lưu ảnh bìa: " + e.getMessage());
+        } catch (RuntimeException e) {
+            series.setBookJacket(oldBookJacket);
+            bookJacketStorageService.deleteIfManaged(newBookJacket);
+            result.put("status", "error");
+            result.put("message", "Không thể cập nhật ảnh bìa. Vui lòng thử lại!");
         }
         return result;
     }
@@ -764,6 +772,12 @@ public class MangakaController {
             String pageId = String.format("PG%05d", maxId + 1);
 
             List<MangaPage> existing = mangaPageRepository.findByChapter(chapter);
+            if ("cover".equals(pageType) && existing.stream()
+                    .anyMatch(page -> "cover".equalsIgnoreCase(page.getPageType()))) {
+                result.put("status", "error");
+                result.put("message", "Chapter này đã có trang bìa. Hãy xóa trang bìa hiện tại trước khi tạo trang bìa mới!");
+                return result;
+            }
             int nextNum = existing.size() + 1;
 
             MangaPage page = new MangaPage();

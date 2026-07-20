@@ -47,6 +47,10 @@ public class Chapter {
     @Column(name = "Script", length = 3000)
     private String script;
 
+    /** Thời điểm Mangaka nộp chapter gần nhất để Tantou duyệt. */
+    @Column(name = "SubmittedAt")
+    private LocalDateTime submittedAt;
+
     /** Thời điểm tantou duyệt hoặc từ chối chapter này (dùng cho lịch sử hoạt động). */
     @Column(name = "ReviewedAt")
     private LocalDateTime reviewedAt;

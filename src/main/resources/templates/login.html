@@ -19,12 +19,14 @@
     />
   </head>
   <body class="login-page no-sidebar">
+    <!-- Thanh đầu trang: hiển thị thương hiệu và nút chuyển giao diện. -->
     <div class="header">
       <div class="logo">
         <span class="brand-word">SANKYUU</span>
       </div>
     </div>
 
+    <!-- Nội dung đăng nhập: giới thiệu hệ thống và xác thực tài khoản. -->
     <div class="main-background">
       <div class="login-hero-copy">
         <h1 class="main-title">SANKYUU</h1>
@@ -53,6 +55,7 @@
       </form>
     </div>
 
+    <!-- Cửa sổ quên mật khẩu: gửi OTP và đặt lại mật khẩu. -->
     <div id="forgotPasswordModal" class="app-floating-modal forgot-password-modal" hidden>
       <div class="modal-box forgot-password-dialog" role="dialog" aria-modal="true" aria-labelledby="forgotPasswordTitle">
         <div class="modal-header">
@@ -89,12 +92,21 @@
         </div>
       </div>
     </div>
-    <script
+
+  <!-- Tập lệnh cuối trang: khởi tạo thư viện và kết nối chức năng với API. -->
+  <script
       defer
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     ></script>
-    <script src="/js/ui-alert.js?v=20260721-fullscreen-modal" th:src="@{/js/ui-alert.js(v='20260721-fullscreen-modal')}"></script>
-    <script>
+
+  <script src="/js/ui-alert.js?v=20260721-fullscreen-modal" th:src="@{/js/ui-alert.js(v='20260721-fullscreen-modal')}"></script>
+
+  <script>
+      /**
+       * API khôi phục mật khẩu:
+       * - /login/forgot-password/send-otp: gửi mã OTP.
+       * - /login/forgot-password/reset: xác nhận OTP và đặt mật khẩu mới.
+       */
       function setForgotPasswordStatus(message, type) {
         const status = document.getElementById("forgotPasswordStatus");
         status.textContent = message || "";
@@ -187,5 +199,5 @@
         }
       });
     </script>
-  </body>
+</body>
 </html>

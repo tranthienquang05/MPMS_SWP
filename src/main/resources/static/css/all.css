@@ -1,3 +1,4 @@
+/* Giao diện dùng chung: biến màu, bố cục, bảng, biểu mẫu và component cho mọi role. */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@600;700&display=swap");
 
 :root {
@@ -463,7 +464,7 @@ body.no-sidebar .header {
   padding: clamp(1rem, 2vw, 1.35rem);
 }
 
-/* Profile pages: editable account details on the left, role data on the right. */
+/* Hồ sơ cá nhân: thông tin tài khoản bên trái, dữ liệu theo vai trò bên phải. */
 .profile-workspace {
   display: grid;
   grid-template-columns: minmax(0, 520px) minmax(420px, 1fr);
@@ -2295,7 +2296,7 @@ tr:hover td {
   background: linear-gradient(135deg, #f59e0b, #b45309);
 }
 
-/* New interface finishing layer: keeps old functional hooks but not old visuals. */
+/* Lớp hoàn thiện giao diện: giữ điểm móc chức năng cũ và thay phần hiển thị. */
 .u-inline-style-001,
 .u-inline-style-002,
 .u-inline-style-003,
@@ -2315,7 +2316,7 @@ tr:hover td {
   animation: contentIn 240ms ease both;
 }
 
-/* Login page alignment refinements */
+/* Căn chỉnh bố cục trang đăng nhập. */
 body.login-page .header {
   padding-left: clamp(1rem, 3vw, 2rem);
 }
@@ -2387,7 +2388,7 @@ body.login-page .login-form {
   }
 }
 
-/* Login form title sizing */
+/* Kích thước tiêu đề biểu mẫu đăng nhập. */
 body.login-page .login-form h1.form-group {
   margin-bottom: 1.25rem;
   font-size: 2.05rem;
@@ -2522,7 +2523,7 @@ body.login-page .forgot-password-link:focus-visible {
   }
 }
 
-/* Mangaka header and project chapter view refinements */
+/* Tinh chỉnh header Mangaka và giao diện chapter trong dự án. */
 body:not(.login-page) .header .logo {
   align-items: center;
 }
@@ -2635,7 +2636,7 @@ body:not(.login-page) .header .logo .name {
   }
 }
 
-/* Mangaka modal header overlap fix */
+/* Tránh chồng lấn đầu cửa sổ của Mangaka. */
 #chapterScriptModalOverlay,
 #addPageModalOverlay {
   top: 0;
@@ -2658,7 +2659,7 @@ body:not(.login-page) .header .logo .name {
   }
 }
 
-/* Header action button polish */
+/* Hoàn thiện các nút thao tác trên thanh đầu trang. */
 .header-actions {
   gap: 0.55rem;
 }
@@ -2906,7 +2907,7 @@ body:has(.topnav:has(.btn-icon:focus-visible)) .page-shell {
   }
 }
 
-/* Unified page action buttons */
+/* Đồng bộ nút thao tác trên trang. */
 .chapter-create-inline-form {
   display: flex;
   flex-wrap: wrap;
@@ -2995,7 +2996,7 @@ body:has(.topnav:has(.btn-icon:focus-visible)) .page-shell {
   }
 }
 
-/* Start series cover modal and my series table */
+/* Cửa sổ khởi tạo ảnh bìa và bảng series của tôi. */
 #startSeriesModalOverlay {
   position: fixed;
   inset: var(--app-header-height) 0 0;
@@ -3144,7 +3145,7 @@ body:has(.topnav:has(.btn-icon:focus-visible)) .page-shell {
   padding: 0.5rem 0.75rem;
 }
 
-/* Chapter creation toolbar and modal */
+/* Thanh công cụ và cửa sổ tạo chapter. */
 .chapter-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -3295,7 +3296,7 @@ body:has(.topnav:has(.btn-icon:focus-visible)) .page-shell {
   }
 }
 
-/* Chapter page toolbar and add-page modal */
+/* Thanh công cụ chapter và cửa sổ thêm trang. */
 .chapter-page-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -3338,7 +3339,7 @@ body:has(.topnav:has(.btn-icon:focus-visible)) .page-shell {
   }
 }
 
-/* Assistant task table and floating script modal */
+/* Bảng công việc trợ lý và cửa sổ kịch bản nổi. */
 .assistant-task-table-wrap {
   overflow: auto;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -3484,7 +3485,7 @@ body:has(.topnav:has(.btn-icon:focus-visible)) .page-shell {
   }
 }
 
-/* Global custom alert modal */
+/* Cửa sổ thông báo tùy chỉnh dùng chung. */
 .ui-alert-overlay {
   position: fixed;
   top: var(--app-header-height, 72px);
@@ -3626,7 +3627,7 @@ body:not(:has(.topnav)) .ui-alert-overlay {
   display: none !important;
 }
 
-/* Viewport anchored floating modal windows */
+/* Cửa sổ nổi được neo theo toàn bộ khung nhìn. */
 .app-floating-modal,
 #scriptModalOverlay,
 #kanbanScriptModalOverlay,
@@ -3720,7 +3721,7 @@ body:not(:has(.topnav)) .app-floating-modal {
   }
 }
 
-/* Assistant task status tabs */
+/* Các tab trạng thái công việc của trợ lý. */
 .assistant-task-tabs-nav {
   margin: 1rem 0 0.55rem;
 }
@@ -3757,7 +3758,7 @@ body:not(:has(.topnav)) .app-floating-modal {
   display: none !important;
 }
 
-/* Draw icon restore and compact actions */
+/* Khôi phục biểu tượng vẽ và thu gọn nhóm thao tác. */
 .lt-btn i,
 .zoom-btn i,
 .header-btn i,
@@ -3796,7 +3797,7 @@ body:not(:has(.topnav)) .app-floating-modal {
   }
 }
 
-/* Final compact draw action grid */
+/* Lưới thao tác vẽ thu gọn hoàn chỉnh. */
 .compact-draw-actions {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -3808,7 +3809,7 @@ body:not(:has(.topnav)) .app-floating-modal {
 
 
 
-/* Mangaka page cards grid polish */
+/* Hoàn thiện lưới thẻ trang của Mangaka. */
 .pages-grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 280px));
@@ -3927,7 +3928,7 @@ body:not(:has(.topnav)) .app-floating-modal {
 }
 
 
-/* Mangaka page detail modal */
+/* Cửa sổ chi tiết trang của Mangaka. */
 .page-detail-card {
   display: flex;
   flex-direction: column;
@@ -4154,7 +4155,7 @@ body:not(:has(.topnav)) .app-floating-modal {
 }
 
 
-/* Keep global alerts above nested page action modals */
+/* Luôn hiển thị thông báo chung phía trên cửa sổ thao tác lồng nhau. */
 #uiAlertOverlay,
 #uiConfirmOverlay {
   z-index: 9000 !important;
@@ -4194,7 +4195,7 @@ body:not(:has(.topnav)) .app-floating-modal {
   color: #f4c866 !important;
 }
 
-/* Editorial AI for Tantou and Board */
+/* Trợ lý AI biên tập dành cho Tantou và Hội đồng. */
 .header-actions > .editorial-ai-trigger {
   width: 52px; min-width: 52px;
   border-color: rgba(82, 209, 255, 0.34);
@@ -4207,7 +4208,7 @@ body:not(:has(.topnav)) .app-floating-modal {
   color: #fff;
 }
 
-/* Unified action feedback: centered inside the workspace below the header. */
+/* Phản hồi thao tác dùng chung: căn giữa workspace bên dưới header. */
 .ui-alert-overlay,
 .ui-confirm-overlay {
   top: var(--app-header-height, 72px);
@@ -4270,7 +4271,7 @@ body:not(:has(.topnav)) .app-floating-modal {
   }
 }
 
-/* Final Light mode coverage for role-specific surfaces */
+/* Bổ sung Light mode cho các bề mặt giao diện theo từng role. */
 :root[data-theme="light"] .theme-toggle {
   border-color: var(--app-border-strong);
   background: linear-gradient(180deg, #ffffff, #edf1f6);
@@ -4561,7 +4562,7 @@ body:not(:has(.topnav)) .app-floating-modal {
   opacity: 1;
 }
 
-/* Shared account and security settings */
+/* Thiết lập tài khoản và bảo mật dùng chung. */
 .profile-identity-details {
   min-width: 0;
   flex: 1;
@@ -4956,7 +4957,7 @@ body:not(:has(.topnav)) .app-floating-modal {
   .editorial-ai-footer { align-items: stretch; flex-direction: column; }
 }
 
-/* Unified Slate + Blue color contract */
+/* Hệ màu Slate và Blue dùng chung. */
 body,
 :root[data-theme="light"] body {
   background: var(--app-bg);
@@ -5106,7 +5107,7 @@ button[type="submit"]:hover {
   color: var(--app-brand);
 }
 
-/* Replace legacy red accents; red remains reserved for danger and errors. */
+/* Thay màu đỏ cũ; chỉ dùng đỏ cho thao tác nguy hiểm và lỗi. */
 .btn-action.primary,
 .btn-approve,
 .project-action-primary,
@@ -5166,7 +5167,7 @@ textarea:focus-visible,
   color: var(--app-action-text);
 }
 
-/* Semantic action colors for page detail dialogs across every workflow. */
+/* Màu ngữ nghĩa cho thao tác trong cửa sổ chi tiết trang. */
 .page-action-modal-actions .page-action-btn {
   border-color: var(--app-border-strong);
   background: var(--app-surface-2);
@@ -5238,8 +5239,8 @@ textarea:focus-visible,
   color: #1d4ed8;
 }
 
-/* Global semantic button contract shared by Login, Admin, Mangaka, Assistant,
-   Tantou and Editor. Keep color tied to intent instead of individual screens. */
+/* Quy ước màu nút theo ngữ nghĩa dùng chung cho Login, Admin, Mangaka,
+   Assistant, Tantou và Editor; màu sắc thể hiện hành động thay vì từng màn hình. */
 button,
 .btn,
 .btn-sm,
@@ -5437,7 +5438,7 @@ button:disabled,
   }
 }
 
-/* Mangaka proposal filters and row actions. */
+/* Bộ lọc bản thảo và thao tác từng hàng của Mangaka. */
 #tab-proposal .proposal-create-button {
   border-color: var(--app-brand);
   background: var(--app-brand);
@@ -5515,7 +5516,7 @@ button:disabled,
   color: var(--app-action-text);
 }
 
-/* Project-wide contrast repair for legacy text, tabs and table actions. */
+/* Cải thiện độ tương phản cho chữ, tab và thao tác bảng cũ. */
 .u-inline-style-004,
 .u-inline-style-016,
 .u-inline-style-017,
@@ -5735,7 +5736,7 @@ table .btn-link:focus-visible {
   color: #1d4ed8;
 }
 
-/* Review and voting timestamps shared by every role. */
+/* Mốc thời gian duyệt và bình chọn dùng chung cho mọi role. */
 .date-value {
   color: var(--app-text);
   font-size: 0.88rem;
@@ -5795,7 +5796,7 @@ table .btn-link:focus-visible {
   color: var(--app-text);
 }
 
-/* Final geometry for action alerts: centered in the content viewport, not the page. */
+/* Hình học thông báo thao tác: căn giữa vùng nội dung thay vì toàn trang. */
 .ui-alert-dialog,
 .ui-confirm-dialog {
   display: flex;
@@ -5835,7 +5836,7 @@ table .btn-link:focus-visible {
   }
 }
 
-/* Approved proposals are separated by the authority that completed the review. */
+/* Tách proposal đã duyệt theo cấp có thẩm quyền hoàn tất xét duyệt. */
 .approved-proposal-groups {
   min-width: 760px;
   background: var(--app-surface-2);
@@ -5924,7 +5925,7 @@ table .btn-link:focus-visible {
   }
 }
 
-/* Reliable close control for every modal and shared alert dialog. */
+/* Nút đóng ổn định cho mọi cửa sổ và hộp thoại thông báo dùng chung. */
 .modal-close-btn,
 .btn-close,
 .modal-header > button,
@@ -6278,7 +6279,7 @@ table .btn-link:focus-visible {
   }
 }
 
-/* Inline chapter and page management */
+/* Quản lý chapter và trang trực tiếp trong cùng màn hình. */
 .chapter-expand-btn {
   display: inline-flex;
   gap: 0.6rem;
@@ -6492,7 +6493,7 @@ table .btn-link:focus-visible {
   }
 }
 
-/* Chapter master-detail workspace */
+/* Workspace chapter theo bố cục danh sách và chi tiết. */
 body.chapter-workspace-active {
   overflow: hidden;
 }
@@ -6881,7 +6882,7 @@ body.chapter-workspace-active #project-view-chapter {
   }
 }
 
-/* Mangaka proposal workspace: full-bleed shell with local table scrolling. */
+/* Workspace proposal của Mangaka: tràn viền và cuộn nội bộ trong bảng. */
 body.proposal-workspace-active {
   overflow: hidden;
 }
@@ -7194,7 +7195,7 @@ body.proposal-workspace-active #tab-proposal.tab-pane[style*="block"] {
   }
 }
 
-/* Unified add-page workflow and semantic page-type colors. */
+/* Đồng bộ quy trình thêm trang và màu ngữ nghĩa theo loại trang. */
 #addPageModalOverlay .add-page-dialog {
   width: min(860px, calc(100vw - 2rem));
   padding: 1.25rem;
@@ -7397,7 +7398,7 @@ body.proposal-workspace-active #tab-proposal.tab-pane[style*="block"] {
   }
 }
 
-/* Cross-role workspace density: combine small utilities with their parent workflow. */
+/* Mật độ workspace giữa các role: ghép tiện ích nhỏ vào quy trình chính. */
 .workspace-quick-actions {
   display: flex;
   flex-wrap: wrap;
@@ -7556,7 +7557,7 @@ body.proposal-workspace-active #tab-proposal.tab-pane[style*="block"] {
   }
 }
 
-/* Every blocking popup owns the full viewport, including header and sidebar. */
+/* Mọi popup chặn thao tác phủ toàn bộ viewport, gồm header và sidebar. */
 :root {
   --app-z-modal-backdrop: 5000;
   --app-z-modal-feedback: 5100;
@@ -7928,7 +7929,7 @@ html.app-modal-open body {
   }
 }
 
-/* Mangaka project workspace: the shell is fixed, each project view scrolls locally. */
+/* Workspace dự án Mangaka: khung cố định và từng vùng cuộn nội bộ. */
 body.project-workspace-active {
   overflow: hidden;
 }
@@ -8101,7 +8102,7 @@ body.project-workspace-active #project-view-page {
   }
 }
 
-/* Full-viewport role workspaces: the page never scrolls; each content surface owns scrolling. */
+/* Workspace toàn màn hình: trang không cuộn, từng vùng nội dung tự quản lý cuộn. */
 html:has(body:not(.login-page)),
 html:has(body:not(.login-page)) body {
   width: 100%;
@@ -8295,18 +8296,17 @@ body.role-workspaces-ready:not(.login-page) .flex-container > .tab-pane.active {
   }
 }
 
-/* Full-bleed role workspaces -------------------------------------------------
-   Profile, chat and comparable utility tabs use one continuous surface like
-   the proposal workspace. The browser viewport stays fixed; only the useful
-   data region inside each workspace can scroll. */
+/* Không gian làm việc tràn viền theo vai trò ---------------------------------
+   Hồ sơ, tin nhắn và các tab tiện ích dùng một bề mặt liên tục như tab bản thảo.
+   Khung trình duyệt được cố định; chỉ vùng dữ liệu cần thiết được phép cuộn. */
 .role-workspace-content:has(> :is(.chat-layout, .chat-shell, .profile-workspace)) {
   overflow: hidden;
   padding: 0;
   scrollbar-gutter: auto;
 }
 
-/* Chat: contacts and conversation are two columns of the same table-like
-   surface, rather than two floating cards inside the page. */
+/* Tin nhắn: danh bạ và cuộc trò chuyện là hai cột của cùng một bề mặt,
+   không tách thành các thẻ nổi độc lập. */
 .role-workspace-content > :is(.chat-layout, .chat-shell) {
   flex: 1 1 auto;
   width: 100%;
@@ -8350,8 +8350,8 @@ body.role-workspaces-ready:not(.login-page) .flex-container > .tab-pane.active {
   background: var(--app-surface-2);
 }
 
-/* Profile: both columns belong to one full-height data surface. Individual
-   form groups remain readable, but no longer float as unrelated outer cards. */
+/* Hồ sơ: hai cột nằm trong cùng một bề mặt dữ liệu đủ chiều cao.
+   Các nhóm biểu mẫu vẫn rõ ràng nhưng không còn là các thẻ nổi rời rạc. */
 .role-workspace-content > .profile-workspace {
   display: grid;
   width: 100%;
@@ -8406,8 +8406,8 @@ body.role-workspaces-ready:not(.login-page) .flex-container > .tab-pane.active {
   border-top: 0;
 }
 
-/* Standard card/table tabs also meet the workspace edges. Padding belongs to
-   the card contents, not to an empty page gutter. */
+/* Các tab dạng thẻ hoặc bảng bám sát cạnh vùng làm việc; khoảng đệm nằm trong
+   nội dung thay vì tạo khoảng trống bên ngoài trang. */
 .role-workspace-content:not(:has(> :is(.chat-layout, .chat-shell, .profile-workspace))) {
   padding: 0;
 }
@@ -8461,11 +8461,10 @@ body.role-workspaces-ready:not(.login-page) .flex-container > .tab-pane.active {
   }
 }
 
-/* Unified role panels -------------------------------------------------------
-   Profile, messages and the remaining utility tabs use the same full-bleed
-   geometry as the proposal table: one surface, one header and local scrolling.
-   These rules intentionally sit last because older role templates still carry
-   card sizing and margins as inline styles. */
+/* Đồng bộ bảng theo vai trò --------------------------------------------------
+   Hồ sơ, tin nhắn và các tab tiện ích dùng cùng bố cục tràn viền như bảng bản thảo:
+   một bề mặt, một tiêu đề và vùng cuộn nội bộ. Các quy tắc đặt cuối để ghi đè
+   kích thước và khoảng cách nội tuyến còn tồn tại trong các mẫu giao diện cũ. */
 body.role-workspaces-ready:not(.login-page) .role-workspace-surface {
   border: 0 !important;
   border-radius: 0 !important;
@@ -8489,7 +8488,7 @@ body.role-workspaces-ready:not(.login-page) .role-workspace-content {
   background: var(--app-surface);
 }
 
-/* Chat is one two-column data panel, flush with every edge of the content. */
+/* Tin nhắn là bảng dữ liệu hai cột bám sát mọi cạnh nội dung. */
 body.role-workspaces-ready:not(.login-page)
   .role-workspace-content
   > :is(.chat-layout, .chat-shell) {
@@ -8513,8 +8512,8 @@ body.role-workspaces-ready:not(.login-page)
   box-shadow: none !important;
 }
 
-/* Profile becomes a two-column table-like surface. The old cards are rows
-   inside that surface instead of separate floating blocks. */
+/* Hồ sơ trở thành bề mặt hai cột dạng bảng; các thẻ cũ được trình bày như
+   từng hàng bên trong thay vì các khối nổi riêng biệt. */
 body.role-workspaces-ready:not(.login-page)
   .role-workspace-content
   > .profile-workspace
@@ -8556,8 +8555,8 @@ body.role-workspaces-ready:not(.login-page)
   box-shadow: none !important;
 }
 
-/* Older role tabs may not use one of the specialized wrappers above. Their
-   top-level cards and tables still join into the same continuous panel. */
+/* Các tab cũ có thể chưa dùng lớp bọc chuyên biệt; thẻ và bảng cấp cao nhất
+   vẫn được nối thành cùng một bảng liên tục. */
 body.role-workspaces-ready:not(.login-page)
   .role-workspace-content
   > :is(.section-card, .card, .box, .data-table, table) {
@@ -8579,9 +8578,9 @@ body.role-workspaces-ready:not(.login-page)
   }
 }
 
-/* Fixed chat workspace ------------------------------------------------------
-   The contact count and message count must never change the outer geometry.
-   Contacts and history scroll independently while the composer stays pinned. */
+/* Cố định vùng tin nhắn ------------------------------------------------------
+   Số liên hệ và số tin nhắn không làm thay đổi kích thước ngoài.
+   Danh bạ và lịch sử cuộn độc lập trong khi ô soạn tin luôn được ghim cố định. */
 body.role-workspaces-ready:not(.login-page) #tab-chat.tab-pane,
 body.role-workspaces-ready:not(.login-page) #tab-chat.tab-pane.active,
 body.role-workspaces-ready:not(.login-page) #tab-chat.tab-pane.show,
@@ -8699,9 +8698,9 @@ body.role-workspaces-ready:not(.login-page)
   }
 }
 
-/* Square, full-bleed role workspaces ---------------------------------------
-   The outer data surface meets the fixed header/sidebar. Spacing belongs to
-   the inner toolbar and headings, so controls never sit against navigation. */
+/* Bảng vuông, tràn viền theo vai trò ----------------------------------------
+   Bề mặt dữ liệu ngoài bám sát header/sidebar cố định. Khoảng cách thuộc về
+   thanh công cụ và tiêu đề bên trong để nút điều khiển không sát thanh điều hướng. */
 body.role-workspaces-ready:not(.login-page)
   :is(
     .role-workspace-surface,

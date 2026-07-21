@@ -1,3 +1,9 @@
+/**
+ * Hồ sơ và bảo mật dùng chung cho mọi role.
+ * API hồ sơ: GET /api/account/profile; POST /api/account/update-profile.
+ * API OTP: /api/account/send-otp, /send-change-email-otp,
+ * /confirm-change-phone-otp và /send-phone-verification-otp.
+ */
 (function () {
   "use strict";
 
@@ -34,7 +40,7 @@
           .filter((item) => item.url);
       }
     } catch (_error) {
-      // Older accounts stored one raw URL; keep it usable after the upgrade.
+      // Tài khoản cũ có thể chỉ lưu một URL; tiếp tục hỗ trợ dữ liệu đó sau khi nâng cấp.
     }
     const url = safeUrl(value);
     return url ? [{ name: new URL(url).hostname.replace(/^www\./, ""), url }] : [];

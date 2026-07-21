@@ -1,3 +1,9 @@
+/**
+ * Không gian vẽ: công cụ, layer, frame, vùng chọn, chat AI và lưu bản vẽ.
+ * API chat: GET /api/chat/history; POST /api/chat/message.
+ * API lưu: POST /api/page/{pageId}/savefile; POST /api/submission/{submissionId}/savefile.
+ * API nộp bản: POST /manga/mangaka/submission/{submissionId}/submit/data.
+ */
 const CANVAS_W = 400,
   CANVAS_H = 600;
 const canvasStack = document.getElementById("canvasStack");
@@ -119,7 +125,7 @@ function getActiveLayer() {
 function renderLayerList() {
   const listEl = document.getElementById("layerList");
   listEl.innerHTML = "";
-  // hiá»‡n tá»« layer trÃªn cÃ¹ng (cuá»‘i array) xuá»‘ng dÆ°á»›i
+  // Hiển thị layer từ trên cùng (cuối mảng) xuống dưới.
   for (let i = layers.length - 1; i >= 0; i--) {
     const layer = layers[i];
     const item = document.createElement("div");
@@ -188,10 +194,10 @@ document.getElementById("btnAddLayer").addEventListener("click", () => {
 });
 
 // ========================================================
-// PHáº¦N 2: Váº½ trÃªn layer Ä‘ang active (váº½ trá»±c tiáº¿p vÃ o canvas cá»§a layer Ä‘Ã³)
+// PHẦN 2: Vẽ trực tiếp trên layer đang được chọn.
 // ========================================================
-// Äá»ƒ Ä‘Æ¡n giáº£n hoÃ¡ viá»‡c báº¯t sá»± kiá»‡n chuá»™t, ta dÃ¹ng 1 lá»›p "input layer" trong suá»‘t
-// náº±m trÃªn cÃ¹ng Ä‘á»ƒ nháº­n event, rá»“i váº½ vÃ o canvas cá»§a activeLayer.
+// Dùng một lớp nhập liệu trong suốt ở trên cùng để nhận sự kiện chuột,
+// sau đó chuyển thao tác vẽ vào canvas của layer đang được chọn.
 const inputLayer = document.getElementById("drawCanvas");
 inputLayer.style.zIndex = 999;
 inputLayer.style.pointerEvents = "auto";
@@ -1179,7 +1185,7 @@ function setupDrawingEnhancements() {
 setupDrawingEnhancements();
 
 function snapshotAllLayers() {
-  // LÆ°u tráº¡ng thÃ¡i toÃ n bá»™ layer hiá»‡n cÃ³ (Ä‘Æ¡n giáº£n hoÃ¡: lÆ°u canvas cá»§a activeLayer)
+    // Lưu trạng thái canvas của layer đang được chọn để phục vụ hoàn tác.
   return {
     activeLayerIndex,
     layerCounter,
@@ -1334,7 +1340,7 @@ function drawFreehandStart(ctx, point, tool) {
   ctx.moveTo(point.x, point.y);
 }
 
-// ---- Bucket fill (flood fill) ----
+// Công cụ đổ màu theo vùng liên thông.
 function floodFill(ctxTarget, startX, startY, fillColorHex) {
   startX = Math.floor(startX);
   startY = Math.floor(startY);
@@ -1398,7 +1404,7 @@ function hexToRgba(hex, alpha) {
 }
 
 // ========================================================
-// TEXT TOOL â€” Canva-style (fixed + enhanced)
+// CÔNG CỤ CHỮ: chỉnh sửa trực tiếp với thanh điều khiển nổi.
 // ========================================================
 let activeTextBox = null;
 
@@ -1430,7 +1436,7 @@ function createTextBox(x, y) {
     parseInt(document.getElementById("textSize").value) * scaleX;
   const color = getFgColor();
 
-  // ---- Wrapper ----
+  // Khung bao quanh vùng chữ đang chỉnh sửa.
   const box = document.createElement("div");
   box.style.cssText = `
         position: absolute;
@@ -1446,7 +1452,7 @@ function createTextBox(x, y) {
         background: transparent;
     `;
 
-  // ---- Toolbar (font, bold, italic, align, delete) ----
+  // Thanh công cụ chữ: font, đậm, nghiêng, căn lề và xóa.
   const toolbar = document.createElement("div");
   toolbar.style.cssText = `
         position: absolute;
@@ -1464,7 +1470,7 @@ function createTextBox(x, y) {
         pointer-events: auto;
     `;
 
-  // Font selector
+  // Bộ chọn font chữ.
   const fontSelect = document.createElement("select");
   fontSelect.style.cssText = `
         background:#2a2a2a; color:#fff; border:1px solid #555;
@@ -1478,7 +1484,7 @@ function createTextBox(x, y) {
     fontSelect.appendChild(opt);
   });
 
-  // Bold button
+  // Nút chữ đậm.
   const btnBold = makeToolbarBtn("<b>B</b>", "font-weight:bold;");
   let isBold = false;
   btnBold.addEventListener("mousedown", (e) => {
@@ -1489,7 +1495,7 @@ function createTextBox(x, y) {
     btnBold.style.background = isBold ? "#3d8eff" : "#2a2a2a";
   });
 
-  // Italic button
+  // Nút chữ nghiêng.
   const btnItalic = makeToolbarBtn("<i>I</i>", "font-style:italic;");
   let isItalic = false;
   btnItalic.addEventListener("mousedown", (e) => {
@@ -1500,7 +1506,7 @@ function createTextBox(x, y) {
     btnItalic.style.background = isItalic ? "#3d8eff" : "#2a2a2a";
   });
 
-  // Align buttons
+  // Các nút căn lề.
   let textAlign = "left";
   const alignBtns = ["left", "center", "right"].map((align) => {
     const icons = { left: "\u2261", center: "\u2630", right: "\u2263" };
@@ -1518,7 +1524,7 @@ function createTextBox(x, y) {
     return btn;
   });
 
-  // Delete button
+  // Nút xóa vùng chữ.
   const btnDelete = makeToolbarBtn("\u2715", "color:#ff5c5c;");
   btnDelete.addEventListener("mousedown", (e) => {
     e.preventDefault();
@@ -1537,7 +1543,7 @@ function createTextBox(x, y) {
   toolbar.appendChild(btnDelete);
   box.appendChild(toolbar);
 
-  // ---- Textarea ----
+  // Ô nhập nội dung chữ.
   const ta = document.createElement("textarea");
   ta.style.cssText = `
         width: 100%;
@@ -1558,19 +1564,19 @@ function createTextBox(x, y) {
     `;
   ta.placeholder = "Nh\u1eadp ch\u1eef...";
 
-  // Sync font family
+  // Đồng bộ font chữ đang chọn.
   fontSelect.addEventListener("change", () => {
     ta.style.fontFamily = fontSelect.value;
   });
 
-  // Auto height
+  // Tự động điều chỉnh chiều cao.
   ta.addEventListener("input", () => {
     ta.style.height = "auto";
     ta.style.height = ta.scrollHeight + "px";
     box.style.height = "auto";
   });
 
-  // ---- 8 resize handles ----
+  // Tám điểm điều chỉnh kích thước.
   const handlePositions = [
     { id: "nw", style: "top:-6px;left:-6px;cursor:nw-resize;" },
     {
@@ -1605,7 +1611,7 @@ function createTextBox(x, y) {
     box.appendChild(handle);
   });
 
-  // ---- Rotate handle ----
+  // Điểm điều chỉnh góc xoay.
   const rotateHandle = document.createElement("div");
   rotateHandle.style.cssText = `
         position:absolute;bottom:-28px;left:50%;
@@ -1639,7 +1645,7 @@ function createTextBox(x, y) {
     getAlign: () => textAlign,
   };
 
-  // ---- Drag move ----
+  // Kéo để di chuyển vùng chữ.
   let dragging = false,
     dragStartX,
     dragStartY,
@@ -1662,7 +1668,7 @@ function createTextBox(x, y) {
     e.preventDefault();
   });
 
-  // ---- Resize ----
+  // Thay đổi kích thước vùng chữ.
   let resizing = false,
     activeHandle = null;
   let resizeStartX,
@@ -1689,7 +1695,7 @@ function createTextBox(x, y) {
     });
   });
 
-  // ---- Rotate ----
+  // Xoay vùng chữ.
   let rotating = false;
   rotateHandle.addEventListener("mousedown", (e) => {
     rotating = true;
@@ -1715,7 +1721,7 @@ function createTextBox(x, y) {
         box.style.width = newW + "px";
         box.style.left = resizeStartL + resizeStartW - newW + "px";
       }
-      // Scale font proportionally for corner handles
+    // Co giãn cỡ chữ theo tỷ lệ khi kéo điểm ở góc.
       if (activeHandle === "se" || activeHandle === "sw") {
         const scale = Math.max(0.1, (resizeStartH + dy) / resizeStartH);
         ta.style.fontSize = Math.max(8, resizeStartFontSize * scale) + "px";
@@ -1731,7 +1737,7 @@ function createTextBox(x, y) {
         box.style.top = resizeStartT + resizeStartH - newH + "px";
       }
       if (activeHandle === "s") {
-        // no-op height â€” auto height from content
+      // Chiều cao được tính tự động theo nội dung.
       }
     }
 
@@ -1756,7 +1762,7 @@ function createTextBox(x, y) {
   document.addEventListener("mousemove", onMouseMove);
   document.addEventListener("mouseup", onMouseUp);
 
-  // ---- Click ngoÃ i â†’ commit ----
+  // Nhấn ra ngoài để ghi nội dung chữ vào canvas.
   setTimeout(() => {
     document.addEventListener("mousedown", onOutsideClick);
   }, 100);
@@ -1771,7 +1777,7 @@ function createTextBox(x, y) {
   }
 }
 
-// ---- Helper: táº¡o toolbar button ----
+// Hàm hỗ trợ tạo nút trên thanh công cụ chữ.
 function makeToolbarBtn(html, extraStyle = "") {
   const btn = document.createElement("button");
   btn.innerHTML = html;
@@ -1784,7 +1790,7 @@ function makeToolbarBtn(html, extraStyle = "") {
   return btn;
 }
 
-// ---- Commit: váº½ text lÃªn canvas ----
+  // Ghi nội dung chữ đã chỉnh sửa lên canvas.
 function commitTextBox() {
   if (!activeTextBox) return;
   const {
@@ -1810,7 +1816,7 @@ function commitTextBox() {
     const boxTop = parseInt(box.style.top);
     const boxW = box.offsetWidth;
 
-    // box.style.left/top relative to viewport; canvasStack offset cÅ©ng tÃ­nh tá»« viewport
+  // Tọa độ của hộp chữ và canvas đều được tính theo khung nhìn.
     const canvasOffX = canvasRect.left - viewportRect.left;
     const canvasOffY = canvasRect.top - viewportRect.top;
     const canvasX = (boxLeft - canvasOffX) / scaleX;
@@ -1837,12 +1843,12 @@ function commitTextBox() {
     layerCtx.fillStyle = ta.style.color;
     layerCtx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
     layerCtx.textBaseline = "top";
-    layerCtx.textAlign = "left"; // luÃ´n dÃ¹ng left, tá»± tÃ­nh x bÃªn dÆ°á»›i
+    layerCtx.textAlign = "left"; // Luôn căn trái tại canvas; vị trí hiển thị được tính ở bên dưới.
 
     const padding = 4;
     const maxW = canvasBoxW - padding * 2;
 
-    // TÃ­nh lines trÆ°á»›c (word-wrap)
+  // Tính các dòng trước khi vẽ để tự động xuống dòng.
     const allLines = [];
     text.split("\n").forEach((paragraph) => {
       if (paragraph.trim() === "") {
@@ -1863,7 +1869,7 @@ function commitTextBox() {
       if (current) allLines.push(current);
     });
 
-    // Váº½ tá»«ng dÃ²ng vá»›i x tÃ­nh Ä‘Ãºng theo align
+  // Vẽ từng dòng theo vị trí căn lề đã chọn.
     let lineY = canvasY + padding;
     allLines.forEach((line) => {
       let drawX;
@@ -1880,7 +1886,7 @@ function commitTextBox() {
       lineY += fontSize * 1.2;
     });
 
-    layerCtx.restore(); // â† FIX: restore canvas state
+    layerCtx.restore(); // Khôi phục trạng thái canvas sau khi hoàn tất.
     pushHistoryEntry("Chèn chữ");
   }
 
@@ -1892,7 +1898,7 @@ function placeTextAt(pos) {
   createTextBox(pos.x, pos.y);
 }
 
-// ---- Mouse events chÃ­nh ----
+// Các sự kiện chuột chính của canvas.
 inputLayer.addEventListener("pointerdown", (e) => {
   if (isSelectTool(currentTool)) return;
   clearEditableShapeSelection();
@@ -1945,8 +1951,7 @@ inputLayer.addEventListener("pointermove", (e) => {
       currentTool === "brush" ? getOpacity() * 0.6 : getOpacity();
     layerCtx.strokeStyle = currentTool === "eraser" ? "rgba(0,0,0,1)" : getFgColor();
     if (currentTool === "eraser") {
-      // Tẩy: váº½ láº¡i mÃ u tráº¯ng Ä‘Ã¨ lÃªn (Ä‘Æ¡n giáº£n hoÃ¡, khÃ´ng dÃ¹ng destination-out
-      // Ä‘á»ƒ layer ná»n tráº¯ng khÃ´ng bá»‹ áº£nh hÆ°á»Ÿng khi xoÃ¡ layer trÃªn)
+    // Tẩy bằng cách vẽ màu trắng đè lên để không ảnh hưởng layer nền.
       layerCtx.globalCompositeOperation = getActiveLayer().isBase
         ? "source-over"
         : "destination-out";
@@ -1961,7 +1966,7 @@ inputLayer.addEventListener("pointermove", (e) => {
     currentTool === "rect" ||
     currentTool === "oval"
   ) {
-    // Váº½ shape preview lÃªn input layer (canvas táº¡m phÃ­a trÃªn), xoÃ¡ sau khi xong
+      // Vẽ trước hình dạng trên layer nhập liệu rồi xóa khi hoàn tất.
     p = constrainShapeEnd(shapeStart, p, e.shiftKey);
     redrawShapePreview(shapeStart, p);
   }
@@ -2004,7 +2009,7 @@ window.addEventListener("pointerup", (e) => {
   isDrawing = false;
 });
 
-// ---- Shape preview (váº½ táº¡m lÃªn input layer rá»“i commit vÃ o layer tháº­t) ----
+// Xem trước hình dạng trên layer nhập liệu trước khi ghi vào layer thật.
 const previewCtx = inputLayer.getContext("2d");
 
 function clearShapePreview() {
@@ -2210,7 +2215,7 @@ function selectEditableShape(tool, start, end, basePixels) {
 }
 
 // ========================================================
-// PHáº¦N 3: Toolbar â€” chá»n tool, fill mode, eyedropper
+// PHẦN 3: Thanh công cụ, chế độ tô và lấy màu.
 // ========================================================
 document.querySelectorAll(".lt-btn[data-tool]").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -2271,7 +2276,7 @@ document.querySelectorAll(".lt-btn[data-tool]").forEach((btn) => {
         ? textCursor
         : darkCrosshair;
 
-    // Hiá»‡n/áº©n property phÃ¹ há»£p
+  // Chỉ hiển thị thuộc tính phù hợp với công cụ đang chọn.
     updateToolPropertyVisibility(currentTool);
   });
 });
@@ -2358,19 +2363,19 @@ document.getElementById("toolEyedrop").addEventListener("click", () => {
   inputLayer.addEventListener("click", handler);
 });
 
-// Palette nhanh
+// Bảng màu nhanh.
 document.querySelectorAll(".palette-swatch").forEach((sw) => {
   sw.addEventListener("click", () => {
     document.getElementById("penColor").value = sw.dataset.color;
   });
 });
 
-// Äá»“ng bá»™ hai chiá»u giá»¯a thanh kÃ©o vÃ  Ã´ nháº­p sá»‘.
+// Đồng bộ hai chiều giữa thanh kéo và ô nhập số.
 bindRangeNumber("penSize", "penSizeValue");
 bindRangeNumber("penOpacity", "penOpacityValue");
 bindRangeNumber("textSize", "textSizeValue");
 
-// Undo / Clear
+// Hoàn tác và xóa nội dung.
 document.getElementById("toolUndo").addEventListener("click", () => {
   if (history.length <= 1) return;
   redoStack.push(history.pop());
@@ -2403,11 +2408,11 @@ document.getElementById("toolClear").addEventListener("click", async () => {
 });
 
 // ========================================================
-// PHáº¦N 4: Region selection
+// PHẦN 4: Chọn vùng.
 // ========================================================
 let selectionRect = null;
 let selectionShape = "rect"; // rect | oval | free | triangle | diamond | hexagon
-let selectionPath = []; // array of {x, y} for freehand selection
+let selectionPath = []; // Danh sách điểm {x, y} của vùng chọn tự do.
 let isSelecting = false;
 let selStart = null;
 let selectionPointerId = null;
@@ -2549,7 +2554,7 @@ inputLayer.addEventListener("pointermove", (e) => {
     }
   } else if (selectionShape === "free") {
     selectionPath.push(p);
-    // Draw freehand selection preview on input layer
+// Xem trước vùng chọn tự do trên layer nhập liệu.
     clearShapePreview();
     previewCtx.save();
     previewCtx.setLineDash([6, 4]);
@@ -2575,7 +2580,7 @@ window.addEventListener("pointerup", (event) => {
   }
 
   if (selectionShape === "free" && selectionPath.length > 2) {
-    // Close the freehand path visually
+// Khép kín đường bao của vùng chọn tự do.
     clearShapePreview();
     previewCtx.save();
     previewCtx.setLineDash([6, 4]);
@@ -2593,7 +2598,7 @@ window.addEventListener("pointerup", (event) => {
     previewCtx.stroke();
     previewCtx.restore();
 
-    // Compute bounding box from selectionPath
+// Tính khung bao từ đường đi của vùng chọn.
     let minX = Infinity,
       minY = Infinity,
       maxX = -Infinity,
@@ -2641,7 +2646,7 @@ inputLayer.addEventListener("pointercancel", () => {
 });
 
 // ========================================================
-// PHáº¦N 5: Zoom canvas (CSS transform scale Ä‘Æ¡n giáº£n)
+// PHẦN 5: Thu phóng canvas bằng CSS transform.
 // ========================================================
 let zoomLevel = 1;
 
@@ -2675,7 +2680,7 @@ canvasViewport.addEventListener("wheel", (e) => {
 });
 
 // ========================================================
-// MANGA CHATBOX LOGIC
+// PHẦN 6: Chat AI hỗ trợ vẽ manga.
 // ========================================================
 let currentChatImageFile = null;
 
@@ -2979,7 +2984,7 @@ function ensureImageDataUrl(value) {
 document.addEventListener("DOMContentLoaded", loadChatHistory);
 
 // ========================================================
-// PHáº¦N 7: Gá»™p táº¥t cáº£ layer thÃ nh 1 áº£nh rá»“i gá»i /api/ai/run
+// PHẦN 7: Gộp các layer thành một ảnh để gửi tới API AI.
 // ========================================================
 function flattenAllLayers() {
   const flat = document.createElement("canvas");
@@ -2997,14 +3002,14 @@ function flattenAllLayers() {
 
 // Lưu trang
 // ========================================================
-// PHáº¦N 8: Lưu trang & Submission
+// PHẦN 8: Lưu trang và bản nộp.
 // ========================================================
 const btnSavePage = document.getElementById("btnSavePage");
 
 // Lưu trang
 if (btnSavePage) {
   btnSavePage.addEventListener("click", async () => {
-    const pageId = btnSavePage.dataset.pageId; // ðŸ‘ˆ Ä‘á»c táº¡i thá»i Ä‘iá»ƒm click, khÃ´ng Ä‘á»c lÃºc load file
+    const pageId = btnSavePage.dataset.pageId; // Đọc dữ liệu tại thời điểm nhấn, không đọc khi tải tệp JavaScript.
     if (!pageId) {
       alert("Không tìm thấy pageId, vui lòng tải lại trang!");
       return;
@@ -3090,8 +3095,8 @@ if (btnSubmitSubmission) {
   });
 }
 
-// Äáº·t toÃ n bá»™ vÃ o má»™t khá»‘i IIFE Ä‘á»™c láº­p Ä‘á»ƒ trÃ¡nh xung Ä‘á»™t biáº¿n há»‡ thá»‘ng
-// Khá»‘i tÃ¡c vá»¥ trang: má»Ÿ modal, lÆ°u Ä‘Ãºng page/submission vÃ  trÃ¡nh lá»—i thiáº¿u submissionId.
+// Tách tác vụ trang trong IIFE để tránh xung đột biến toàn cục.
+// Mở cửa sổ tác vụ và lưu đúng page/submission đang thao tác.
 (() => {
   const actionButton = document.getElementById("btnEditSubmission");
   const btnModalLoadPage = document.getElementById("btnModalLoadPage");
@@ -3262,19 +3267,19 @@ if (btnSubmitSubmission) {
     });
 })();
 
-// HÃ m há»— trá»£ Ä‘Ã³ng modal nhanh khi ngÆ°á»i dÃ¹ng báº¥m nÃºt Há»§y
+// Hàm hỗ trợ đóng nhanh cửa sổ khi người dùng nhấn Hủy.
 function closeEditSubmissionModal() {
   const modal = document.getElementById("editSubmissionModal");
   if (modal) modal.style.display = "none";
 }
 
-// --- LOGIC Xá»¬ LÃ Äá»ŒC FILE LÃŠN KHÃ”NG GIAN Váº¼ THá»¦ CÃ”NG ---
+// Đọc tệp người dùng tải lên và đưa vào không gian vẽ.
 const btnLoadPage = document.getElementById("btnLoadPage");
 const inputLoadPage = document.getElementById("inputLoadPage");
 
 if (btnLoadPage && inputLoadPage) {
   btnLoadPage.addEventListener("click", () => {
-    inputLoadPage.click(); // KÃ­ch hoáº¡t sá»± kiá»‡n click giáº£ láº­p vÃ o tháº» input file áº©n
+    inputLoadPage.click(); // Kích hoạt ô chọn tệp đang được ẩn khỏi giao diện.
   });
 
   inputLoadPage.addEventListener("change", (e) => {
@@ -3285,7 +3290,7 @@ if (btnLoadPage && inputLoadPage) {
     reader.onload = (ev) => {
       const img = new Image();
       img.onload = () => {
-        // XÃ³a vÃ¹ng canvas cÅ© trÃªn layer chá»‰ Ä‘á»‹nh vÃ  váº½ Ä‘Ã¨ file má»›i táº£i lÃªn lÃªn
+// Xóa canvas cũ trên layer đích rồi vẽ tệp mới lên layer đó.
         layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
         layers[1].ctx.drawImage(img, 0, 0);
         pushHistoryEntry("Load file thủ công");
@@ -3295,16 +3300,16 @@ if (btnLoadPage && inputLoadPage) {
     reader.readAsDataURL(file);
   });
 }
-// Khá»Ÿi táº¡o layer list láº§n Ä‘áº§u
+// Khởi tạo danh sách layer lần đầu.
 renderLayerList();
 // ========================================
-// DOWNLOAD Má»ŒI Layer thÃ nh 1 file áº£nh
+// Tải toàn bộ layer dưới dạng một tệp ảnh.
 // ========================================
 document.getElementById("btnDownload")?.addEventListener("click", () => {
-  // Gá»™p táº¥t cáº£ layer thÃ nh 1 áº£nh
+// Gộp tất cả layer thành một ảnh.
   const flatCanvas = flattenAllLayers();
 
-  // Táº¡o link download tá»± Ä‘á»™ng
+  // Tạo liên kết tải xuống tự động.
   const link = document.createElement("a");
   link.download = "manga-page-" + Date.now() + ".png";
   link.href = flatCanvas.toDataURL("image/png");

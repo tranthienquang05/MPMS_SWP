@@ -1,3 +1,7 @@
+/**
+ * Hộp thoại thông báo/xác nhận dùng chung và cơ chế cập nhật giao diện tức thời.
+ * API: gọi lại URL được truyền vào cấu hình bằng fetch với X-Requested-With.
+ */
 (function () {
   const nativeAlert = window.alert ? window.alert.bind(window) : null;
   let previousFocus = null;
@@ -118,7 +122,7 @@
   });
 })();
 
-/* Shared Vietnamese date formatting for all role templates. */
+  /* Định dạng ngày tiếng Việt dùng chung cho mọi template role. */
 (function () {
   function parseDate(value) {
     if (!value) return null;
@@ -160,7 +164,7 @@
   };
 })();
 
-/* Viewport floating modal normalization */
+/* Chuẩn hóa cửa sổ nổi theo toàn bộ khung nhìn. */
 (function () {
   const modalSelector = [
     ".app-floating-modal",
@@ -326,7 +330,7 @@
 })();
 
 
-/* Project confirm modal */
+/* Cửa sổ xác nhận dùng chung của project. */
 (function () {
   let confirmResolver = null;
   let previousConfirmFocus = null;
@@ -427,7 +431,7 @@
 
   window.appConfirm = window.showUiConfirm;
 
-  /** Refresh server-rendered regions without reloading the document. */
+/** Cập nhật vùng HTML do máy chủ render mà không tải lại toàn bộ trang. */
   window.refreshUiRegions = async function refreshUiRegions(selectors, options) {
     const config = options || {};
     const selectorList = Array.isArray(selectors) ? selectors : [selectors];
@@ -469,11 +473,10 @@
     return updatedCount > 0;
   };
 
-  /*
-   * Central live-update channel for every role. Mutating requests publish one
-   * event after the server has accepted the change; each workspace then reloads
-   * only its affected data instead of reloading the whole document.
-   */
+/*
+ * Kênh cập nhật tức thời dùng chung cho mọi role. Sau khi máy chủ chấp nhận
+ * thao tác thay đổi dữ liệu, từng workspace chỉ tải lại vùng bị ảnh hưởng.
+ */
   const liveRefreshTimers = new Map();
 
   window.scheduleLiveRefresh = function scheduleLiveRefresh(key, callback, delay) {
@@ -640,13 +643,11 @@
       return;
     }
 
-    // Cover replacement has a dedicated immediate preview and must not rebuild
-    // the surrounding series table while its confirmation dialog is closing.
+      // Ảnh bìa có cơ chế xem trước riêng nên không dựng lại bảng series khi cửa sổ xác nhận đang đóng.
     if (path.endsWith("/edit-jacket")) return;
 
-    // The create-chapter form refreshes its current series view itself. Letting
-    // the generic mutation handler run as well can race with that refresh and
-    // incorrectly fall back to the outer series list.
+      // Form tạo chapter tự cập nhật series hiện tại. Nếu bộ xử lý chung chạy
+      // đồng thời, giao diện có thể quay nhầm về danh sách series bên ngoài.
     if (/^\/manga\/mangaka\/myseries\/[^/]+\/createchapter\/data$/.test(path)) return;
 
     const affectsChapter = /^\/api\/(page\/|chapter-review\/|chapters\/)/.test(path)

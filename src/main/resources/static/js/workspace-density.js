@@ -1,3 +1,7 @@
+/**
+ * Chuẩn hóa workspace giữa các role và ghép các tab ít chức năng.
+ * API ranking: GET /manga/ranking?month={month}&quarter={quarter}&year={year}.
+ */
 (function () {
   "use strict";
 

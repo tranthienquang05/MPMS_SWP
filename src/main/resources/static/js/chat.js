@@ -1,3 +1,8 @@
+/**
+ * Tin nhắn dùng chung cho các role.
+ * API: GET /api/user-chat/contacts; GET /api/user-chat/thread/{contactId}.
+ * WebSocket: /ws-chat; gửi tin qua /app/chat.send và nhận tại /user/queue/messages.
+ */
 (function () {
   const currentUserId = document.body.getAttribute("data-user-id");
   if (!currentUserId) return;

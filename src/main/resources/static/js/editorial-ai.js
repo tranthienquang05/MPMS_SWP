@@ -1,3 +1,8 @@
+/**
+ * Trợ lý AI cho quy trình duyệt của Biên tập viên và Hội đồng biên tập.
+ * API dữ liệu: GET /manga/tantou/proposals; GET /manga/editor/data.
+ * API AI: POST /manga/tantou/ai/*; POST /manga/editor/ai/*.
+ */
 (function () {
   "use strict";
 

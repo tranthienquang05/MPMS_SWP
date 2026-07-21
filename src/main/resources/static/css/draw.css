@@ -1,3 +1,4 @@
+/* Không gian Draw: thanh công cụ, canvas, layer, frame và các bảng điều khiển. */
 :root {
   --draw-bg: #0f172a;
   --draw-panel: #1e293b;
@@ -544,7 +545,7 @@
   }
 }
 
-/* Draw workspace reflow: centered paper and right-side workflow */
+/* Bố cục workspace vẽ: giấy ở giữa và quy trình ở bên phải. */
 .draw-wrapper {
   grid-template-columns: 76px minmax(620px, 1fr) minmax(300px, 360px);
   grid-template-rows: auto 1fr;
@@ -1167,7 +1168,7 @@
   }
 }
 
-/* Manga Chat panel polish */
+/* Hoàn thiện bảng Manga Chat. */
 .right-panel .manga-chat-panel {
   display: flex;
   min-height: 300px;
@@ -1351,7 +1352,7 @@
   }
 }
 
-/* Keep the drawing workspace flush inside the available content width. */
+/* Giữ workspace vẽ bám sát chiều rộng nội dung khả dụng. */
 #tab-draw.tab-pane,
 #tab-draw .draw-wrapper {
   width: 100%;
@@ -1362,7 +1363,7 @@
 #tab-draw .center-area {
   min-width: 0;
 }
-/* Drawing pages need the full application width, not the generic 1500px content cap. */
+/* Trang vẽ sử dụng toàn bộ chiều rộng ứng dụng, không giới hạn ở 1500px. */
 body:has(#tab-draw.active) .flex-container,
 body:has(#tab-draw.show) .flex-container,
 body:has(#tab-draw[style*="block"]) .flex-container,
@@ -1390,7 +1391,7 @@ body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw[style*="block"]) .m
   max-width: none;
 }
 
-/* Draw feature controls: complete layer visibility and frame editor actions. */
+/* Điều khiển vẽ: hiển thị layer và thao tác chỉnh sửa frame. */
 .layer-show-all-button,
 .frame-dialog-actions .header-btn,
 .frame-dialog-close {
@@ -1935,7 +1936,7 @@ body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw[style*="block"]) .m
   }
 }
 
-/* High-contrast secondary and apply actions inside Draw. */
+/* Tăng tương phản cho thao tác phụ và nút áp dụng trong Draw. */
 .draw-modal-close {
   border-color: var(--draw-border);
   background: var(--draw-panel-2);
@@ -1977,7 +1978,7 @@ body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw[style*="block"]) .m
   }
 }
 
-/* Draw workspace in global Light mode */
+/* Workspace vẽ trong Light mode. */
 :root[data-theme="light"] {
   --draw-bg: #f3f4f6;
   --draw-panel: #ffffff;
@@ -1996,7 +1997,7 @@ body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw[style*="block"]) .m
   --draw-danger-action-text: #ffffff;
 }
 
-/* Draw workspace follows the shared Slate + Blue theme tokens. */
+/* Workspace vẽ dùng token giao diện Slate và Blue chung. */
 .draw-wrapper {
   background: var(--draw-bg);
 }
@@ -2096,7 +2097,7 @@ body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw[style*="block"]) .m
   color: var(--draw-text);
 }
 
-/* Legacy drawing accents now follow the active theme accent. */
+/* Màu nhấn vẽ cũ đi theo màu nhấn của theme hiện tại. */
 .shape-transform-handle:hover,
 .shape-transform-handle:focus-visible,
 .frame-corner-handle:hover,
@@ -2113,7 +2114,7 @@ body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw[style*="block"]) .m
   color: var(--draw-text);
 }
 
-/* Draw controls use the same semantic color system as the rest of the app. */
+/* Điều khiển vẽ dùng cùng hệ màu ngữ nghĩa với toàn ứng dụng. */
 .lt-btn,
 .tool-btn,
 .brush-btn,
@@ -2212,8 +2213,8 @@ body:has(.topnav:has(.btn-icon:focus-visible)):has(#tab-draw[style*="block"]) .m
   }
 }
 
-/* Full-bleed drawing workspace: the page shell stays fixed while every
-   scrollable workflow is contained inside Draw itself. */
+/* Vùng vẽ tràn viền: khung trang được cố định và mọi thao tác cần cuộn
+   đều nằm bên trong chính khu vực Draw. */
 body.draw-workspace-active {
   overflow: hidden;
 }

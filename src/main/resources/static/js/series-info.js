@@ -1,3 +1,7 @@
+/**
+ * Hiển thị cửa sổ thông tin series và các nhóm dữ liệu có thể thu gọn.
+ * Không gọi API trực tiếp; dữ liệu được truyền từ chức năng mở cửa sổ của từng role.
+ */
 (function () {
   const chapterLabels = {
     total: "Tổng số chapter",

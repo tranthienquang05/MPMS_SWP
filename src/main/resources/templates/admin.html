@@ -13,6 +13,7 @@
 </head>
 
 <body th:attr="data-user-id=${currentUserId}">
+  <!-- Thanh đầu trang: hiển thị thương hiệu và thao tác tài khoản. -->
   <div class="header">
     <div class="logo">
       <div class="brand-stack">
@@ -30,6 +31,7 @@
   </div>
 
 
+  <!-- Thanh điều hướng: mở các khu vực quản trị hệ thống. -->
   <ul class="topnav">
     <li>
       <button title="Tài khoản" aria-label="Tài khoản" data-nav-label="Tài khoản" type="button" class="btn-icon"
@@ -82,9 +84,9 @@
   </ul>
 
   <div id="toast"></div>
-  <!-- Tab content -->
+  <!-- Nội dung chính: chứa các tab quản lý dành cho quản trị viên. -->
   <div class="flex-container">
-    <!-- Tab quản lý -->
+    <!-- Quản lý tài khoản: lọc, tạo, cập nhật và khóa tài khoản. -->
     <div id="tab-accounts" class="tab-pane active">
       <h2>Tài khoản</h2>
       <div class="section-card">
@@ -387,7 +389,7 @@
       </div>
     </div>
 
-    <!-- Tab Import Excel -->
+    <!-- Nhập Excel: cập nhật dữ liệu hệ thống từ tệp bảng tính. -->
     <div id="tab-import" class="tab-pane">
       <h2>Import dữ liệu Excel</h2>
       <div class="section-card">
@@ -417,7 +419,7 @@
     <div id="tab-profile" class="tab-pane">
       <h2>Thông tin cá nhân</h2>
 
-      <!-- Avatar -->
+        <!-- Ảnh đại diện: cho phép tải và xem avatar hiện tại. -->
       <div class="section-card" style="max-width:520px; display:flex; align-items:center; gap:1.5rem; margin-bottom:1rem;">
         <div style="position:relative; flex-shrink:0;">
           <img id="profileAvatarImg"
@@ -437,7 +439,7 @@
         </div>
       </div>
 
-      <!-- Form chỉnh sửa -->
+        <!-- Thông tin tài khoản: chỉnh sửa dữ liệu cá nhân và bảo mật. -->
       <div class="section-card" style="max-width:520px;">
 
         <div class="field">
@@ -482,7 +484,7 @@
         </div>
       </div>
 
-      <!-- Thông tin tĩnh theo role -->
+        <!-- Thông tin theo vai trò: hiển thị dữ liệu nghiệp vụ liên quan. -->
       <div id="profileRoleInfo" class="section-card" style="max-width:520px; margin-top:1.5rem; display:none;">
         <h3 id="profileRoleInfoTitle" style="margin-bottom:1rem;"></h3>
         <div id="profileRoleInfoContent"></div>
@@ -720,6 +722,171 @@
       </div>
     </div>
   </div>
+
+
+
+
+
+
+
+
+
+    <!-- Cửa sổ đổi mật khẩu bằng OTP. -->
+    <div id="changePasswordModalOverlay" class="app-floating-modal" style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
+      <div class="modal-box" style="width:min(440px,100%); max-height:calc(100dvh - var(--app-header-height,72px) - 2.5rem); overflow:auto;">
+      <!-- Bước 1: chọn kênh và gửi OTP. -->
+        <div id="cpStep1">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+            <h4 style="margin:0;">Đổi mật khẩu</h4>
+            <button type="button" class="modal-close-btn" onclick="closeChangePasswordModal()">×</button>
+          </div>
+          <p style="color:var(--app-muted); margin-bottom:1rem;">Mã OTP sẽ được gửi tới email của bạn để xác thực.</p>
+          <div id="cpStep1Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+          <button type="button" class="btn-primary" style="width:100%;" id="btnSendOtp" onclick="cpSendOtp()">Gửi mã OTP</button>
+        </div>
+      <!-- Bước 2: nhập và xác thực OTP. -->
+        <div id="cpStep2" style="display:none;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+            <h4 style="margin:0;">Nhập mã OTP</h4>
+            <button type="button" class="modal-close-btn" onclick="closeChangePasswordModal()">×</button>
+          </div>
+          <p style="color:var(--app-muted); margin-bottom:1rem;">Mã OTP đã được gửi tới email của bạn. Có hiệu lực 5 phút.</p>
+          <input type="text" id="cpOtpInput" placeholder="Nhập mã 6 số..." maxlength="6" style="margin-bottom:0.75rem;" />
+          <div id="cpStep2Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+          <div style="display:flex; gap:0.75rem;">
+            <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="cpGoStep(1)">Quay lại</button>
+            <button type="button" class="btn-modal-confirm" style="flex:1;" onclick="cpVerifyOtp()">Xác nhận</button>
+          </div>
+        </div>
+      <!-- Bước 3: nhập mật khẩu mới. -->
+        <div id="cpStep3" style="display:none;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+            <h4 style="margin:0;">Mật khẩu mới</h4>
+            <button type="button" class="modal-close-btn" onclick="closeChangePasswordModal()">×</button>
+          </div>
+          <input type="password" id="cpNewPassword" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)" style="margin-bottom:0.75rem;" />
+          <input type="password" id="cpConfirmPassword" placeholder="Nhập lại mật khẩu mới" style="margin-bottom:0.75rem;" />
+          <div id="cpStep3Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+          <button type="button" class="btn-primary" style="width:100%;" onclick="cpChangePassword()">Xác nhận đổi mật khẩu</button>
+        </div>
+      </div>
+    </div>
+
+
+
+  <div id="emailVerifyOverlay" class="app-floating-modal"
+    style="display:none; background:rgba(4,5,8,0.85); backdrop-filter:blur(14px);">
+    <div class="modal-box" style="width:min(440px,100%); max-height:calc(100dvh - 5rem); overflow:auto;">
+      <div id="evStep1">
+        <h4 style="margin:0 0 1rem;">Xác thực email</h4>
+        <p style="color:var(--app-muted); margin-bottom:1rem;">
+          Tài khoản của bạn được gắn email: <strong id="evEmailDisplay"></strong><br>
+          Vui lòng xác thực để sử dụng đầy đủ tính năng.
+        </p>
+        <div id="evStep1Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+        <button type="button" class="btn-primary" style="width:100%;"
+          id="btnSendVerifyOtp" onclick="evSendOtp()">Nhận mã OTP</button>
+      </div>
+      <div id="evStep2" style="display:none;">
+        <h4 style="margin:0 0 1rem;">Nhập mã OTP</h4>
+        <p style="color:var(--app-muted); margin-bottom:1rem;">
+          Mã OTP đã được gửi tới email của bạn. Có hiệu lực 5 phút.
+        </p>
+        <input type="text" id="evOtpInput" placeholder="Nhập mã 6 số..."
+          maxlength="6" style="margin-bottom:0.75rem;" />
+        <div id="evStep2Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+        <button type="button" class="btn-modal-confirm" style="width:100%;"
+          onclick="evConfirmOtp()">Xác nhận</button>
+      </div>
+    </div>
+  </div>
+
+    <div id="changeEmailOverlay" class="app-floating-modal"
+    style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
+    <div class="modal-box change-email-modal" style="width:min(460px,100%);">
+      <div id="ceStep1">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h4 style="margin:0;">Đổi email</h4>
+          <button type="button" class="modal-close-btn" onclick="closeChangeEmailModal()">×</button>
+        </div>
+        <p style="color:var(--app-muted); margin-bottom:1rem;">
+          Nhập email mới bạn muốn sử dụng. Mã OTP xác nhận sẽ được gửi về email hiện tại đã xác thực:
+          <strong id="ceCurrentEmailText"></strong>
+        </p>
+        <div class="field">
+          <label>Email mới</label>
+          <input type="email" id="ceNewEmail" placeholder="email@example.com" autocomplete="email" />
+        </div>
+        <div id="ceStep1Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+        <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+          <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="closeChangeEmailModal()">Hủy</button>
+          <button type="button" class="btn-modal-confirm" style="flex:1;" onclick="ceSendOtp()">Xác nhận</button>
+        </div>
+      </div>
+      <div id="ceStep2" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h4 style="margin:0;">Xác nhận OTP</h4>
+          <button type="button" class="modal-close-btn" onclick="closeChangeEmailModal()">×</button>
+        </div>
+        <p style="color:var(--app-muted); margin-bottom:1rem;">
+          Mã OTP đã được gửi về email hiện tại của bạn. Nhập mã 6 số để xác nhận đổi sang
+          <strong id="cePendingEmailText"></strong>.
+        </p>
+        <div class="field">
+          <label>Mã OTP</label>
+          <input type="text" id="ceOtpInput" placeholder="Nhập mã 6 số..." maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
+        </div>
+        <div id="ceStep2Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+        <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+          <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="closeChangeEmailModal()">Hủy</button>
+          <button type="button" class="btn-modal-confirm" style="flex:1;" onclick="ceConfirmOtp()">Xác nhận</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="changePhoneOverlay" class="app-floating-modal"
+    style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
+    <div class="modal-box" style="width:min(460px,100%);">
+      <div id="cpnStep1">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h4 style="margin:0;">Đổi số điện thoại</h4>
+          <button type="button" class="modal-close-btn" onclick="closeChangePhoneModal()" aria-label="Đóng">×</button>
+        </div>
+        <p style="color:var(--app-muted); margin-bottom:1rem;">
+          Nhập số điện thoại mới. Mã OTP xác nhận sẽ được gửi về email hiện tại đã xác thực của bạn.
+        </p>
+        <div class="field">
+          <label for="cpnNewPhone">Số điện thoại mới</label>
+          <input type="tel" id="cpnNewPhone" placeholder="Ví dụ: 0912345678" autocomplete="tel" inputmode="tel" />
+        </div>
+        <div id="cpnStep1Error" role="alert" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+        <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+          <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="closeChangePhoneModal()">Hủy</button>
+          <button type="button" class="btn-modal-confirm" id="cpnSendButton" style="flex:1;" onclick="cpnSendOtp()">Gửi OTP</button>
+        </div>
+      </div>
+      <div id="cpnStep2" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h4 style="margin:0;">Xác nhận số điện thoại</h4>
+          <button type="button" class="modal-close-btn" onclick="closeChangePhoneModal()" aria-label="Đóng">×</button>
+        </div>
+        <p style="color:var(--app-muted); margin-bottom:1rem;">
+          Nhập mã OTP 6 số để xác nhận đổi sang <strong id="cpnPendingPhoneText"></strong>.
+        </p>
+        <div class="field">
+          <label for="cpnOtpInput">Mã OTP</label>
+          <input type="text" id="cpnOtpInput" placeholder="Nhập mã 6 số..." maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
+        </div>
+        <div id="cpnStep2Error" role="alert" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
+        <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+          <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="closeChangePhoneModal()">Hủy</button>
+          <button type="button" class="btn-modal-confirm" id="cpnConfirmButton" style="flex:1;" onclick="cpnConfirmOtp()">Xác nhận</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tập lệnh cuối trang: khởi tạo thư viện và kết nối chức năng với API. -->
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
@@ -729,7 +896,12 @@
   <script src="/js/chat.js?v=20260721-fixed-chat" th:src="@{/js/chat.js(v='20260721-fixed-chat')}"></script>
 
   <script>
-// ===== STATUS DISPLAY I18N =====
+/**
+ * API quản trị hệ thống:
+ * - /manga/system-admin/*: tài khoản, phân quyền, xuất bản và bảng xếp hạng.
+ * - /api/account/*: hồ sơ cá nhân và xác thực bảo mật.
+ */
+// ===== CHUYỂN TRẠNG THÁI SANG TIẾNG VIỆT =====
 const STATUS_VI_MAP = {
   unfinish: "Đang thực hiện",
   unfinished: "Đang thực hiện",
@@ -1022,7 +1194,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       document.getElementById("extra-mangaka").style.display = "none";
       document.getElementById("extra-assistant").style.display = "none";
 
-      // FIX: dùng tantoEditors để lấy đúng profile ID thay vì user ID
+      // Dùng danh sách Tantou để lấy đúng mã hồ sơ thay vì mã người dùng.
       const editors = (allData.tantoEditors || []).map((e) => ({
         id: e.id,
         fullname: e.user?.fullname ?? e.id,
@@ -1244,7 +1416,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                 <td>${m.user?.fullname ?? "—"}</td>
                 <td>${m.editor?.user?.fullname ?? "—"}</td>
                 <td>
-                    <!-- FIX: gọi openChangeTantoModal thay vì prompt() -->
+                    <!-- Mở cửa sổ chọn Tantou thay cho hộp nhập liệu mặc định của trình duyệt. -->
                     <button class="btn-sm btn-warning"
                         onclick="openChangeTantoModal('${m.id}', '${m.user?.fullname ?? ""}')">Đổi Tantou
                     </button>
@@ -1269,7 +1441,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                 <td>${a.user?.fullname ?? "—"}</td>
                 <td>${a.mangaka?.user?.fullname ?? "—"}</td>
                 <td>
-                    <!-- FIX: gọi openChangeMangakaModal thay vì prompt() -->
+                    <!-- Mở cửa sổ chọn Mangaka thay cho hộp nhập liệu mặc định của trình duyệt. -->
                     <button class="btn-sm btn-warning"
                         onclick="openChangeMangakaModal('${a.id}', '${a.user?.fullname ?? ""}')">Đổi Mangaka
                     </button>
@@ -1332,7 +1504,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       }
     }
 
-    // FIX: Mở modal đổi Tantou (thay prompt())
+    // Mở cửa sổ đổi Tantou thay cho hộp nhập liệu mặc định.
     function openChangeTantoModal(mangakaId, mangakaName) {
       document.getElementById("ct-mangakaId").value = mangakaId;
       document.getElementById("ct-mangaka-name").value = mangakaName;
@@ -1376,7 +1548,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       }
     }
 
-    // FIX: Mở modal đổi Mangaka (thay prompt())
+    // Mở cửa sổ đổi Mangaka thay cho hộp nhập liệu mặc định.
     function openChangeMangakaModal(assistantId, assistantName) {
       document.getElementById("cm-assistantId").value = assistantId;
       document.getElementById("cm-assistant-name").value = assistantName;
@@ -1779,50 +1951,11 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       // ════════════════════════════════════════════
       document.addEventListener("DOMContentLoaded", loadData);
     </script>
-    <script src="/js/ui-alert.js?v=20260721-fullscreen-modal" th:src="@{/js/ui-alert.js(v='20260721-fullscreen-modal')}"></script>
 
-    <!-- ===== Change Password Modal ===== -->
-    <div id="changePasswordModalOverlay" class="app-floating-modal" style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
-      <div class="modal-box" style="width:min(440px,100%); max-height:calc(100dvh - var(--app-header-height,72px) - 2.5rem); overflow:auto;">
-        <!-- Step 1: Gửi OTP -->
-        <div id="cpStep1">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
-            <h4 style="margin:0;">Đổi mật khẩu</h4>
-            <button type="button" class="modal-close-btn" onclick="closeChangePasswordModal()">×</button>
-          </div>
-          <p style="color:var(--app-muted); margin-bottom:1rem;">Mã OTP sẽ được gửi tới email của bạn để xác thực.</p>
-          <div id="cpStep1Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
-          <button type="button" class="btn-primary" style="width:100%;" id="btnSendOtp" onclick="cpSendOtp()">Gửi mã OTP</button>
-        </div>
-        <!-- Step 2: Nhập OTP -->
-        <div id="cpStep2" style="display:none;">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
-            <h4 style="margin:0;">Nhập mã OTP</h4>
-            <button type="button" class="modal-close-btn" onclick="closeChangePasswordModal()">×</button>
-          </div>
-          <p style="color:var(--app-muted); margin-bottom:1rem;">Mã OTP đã được gửi tới email của bạn. Có hiệu lực 5 phút.</p>
-          <input type="text" id="cpOtpInput" placeholder="Nhập mã 6 số..." maxlength="6" style="margin-bottom:0.75rem;" />
-          <div id="cpStep2Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
-          <div style="display:flex; gap:0.75rem;">
-            <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="cpGoStep(1)">Quay lại</button>
-            <button type="button" class="btn-modal-confirm" style="flex:1;" onclick="cpVerifyOtp()">Xác nhận</button>
-          </div>
-        </div>
-        <!-- Step 3: Đổi mật khẩu -->
-        <div id="cpStep3" style="display:none;">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
-            <h4 style="margin:0;">Mật khẩu mới</h4>
-            <button type="button" class="modal-close-btn" onclick="closeChangePasswordModal()">×</button>
-          </div>
-          <input type="password" id="cpNewPassword" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)" style="margin-bottom:0.75rem;" />
-          <input type="password" id="cpConfirmPassword" placeholder="Nhập lại mật khẩu mới" style="margin-bottom:0.75rem;" />
-          <div id="cpStep3Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
-          <button type="button" class="btn-primary" style="width:100%;" onclick="cpChangePassword()">Xác nhận đổi mật khẩu</button>
-        </div>
-      </div>
-    </div>
+  <script src="/js/ui-alert.js?v=20260721-fullscreen-modal" th:src="@{/js/ui-alert.js(v='20260721-fullscreen-modal')}"></script>
 
-    <script>
+  <script>
+    // API /api/account/change-password/*: gửi OTP và cập nhật mật khẩu.
     function openChangePasswordModal() {
       cpGoStep(1);
       document.getElementById('changePasswordModalOverlay').style.display = 'flex';
@@ -1930,120 +2063,9 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
     }
     </script>
 
-  <div id="emailVerifyOverlay" class="app-floating-modal"
-    style="display:none; background:rgba(4,5,8,0.85); backdrop-filter:blur(14px);">
-    <div class="modal-box" style="width:min(440px,100%); max-height:calc(100dvh - 5rem); overflow:auto;">
-      <div id="evStep1">
-        <h4 style="margin:0 0 1rem;">Xác thực email</h4>
-        <p style="color:var(--app-muted); margin-bottom:1rem;">
-          Tài khoản của bạn được gắn email: <strong id="evEmailDisplay"></strong><br>
-          Vui lòng xác thực để sử dụng đầy đủ tính năng.
-        </p>
-        <div id="evStep1Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
-        <button type="button" class="btn-primary" style="width:100%;"
-          id="btnSendVerifyOtp" onclick="evSendOtp()">Nhận mã OTP</button>
-      </div>
-      <div id="evStep2" style="display:none;">
-        <h4 style="margin:0 0 1rem;">Nhập mã OTP</h4>
-        <p style="color:var(--app-muted); margin-bottom:1rem;">
-          Mã OTP đã được gửi tới email của bạn. Có hiệu lực 5 phút.
-        </p>
-        <input type="text" id="evOtpInput" placeholder="Nhập mã 6 số..."
-          maxlength="6" style="margin-bottom:0.75rem;" />
-        <div id="evStep2Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
-        <button type="button" class="btn-modal-confirm" style="width:100%;"
-          onclick="evConfirmOtp()">Xác nhận</button>
-      </div>
-    </div>
-  </div>
-
-    <div id="changeEmailOverlay" class="app-floating-modal"
-    style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
-    <div class="modal-box change-email-modal" style="width:min(460px,100%);">
-      <div id="ceStep1">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-          <h4 style="margin:0;">Đổi email</h4>
-          <button type="button" class="modal-close-btn" onclick="closeChangeEmailModal()">×</button>
-        </div>
-        <p style="color:var(--app-muted); margin-bottom:1rem;">
-          Nhập email mới bạn muốn sử dụng. Mã OTP xác nhận sẽ được gửi về email hiện tại đã xác thực:
-          <strong id="ceCurrentEmailText"></strong>
-        </p>
-        <div class="field">
-          <label>Email mới</label>
-          <input type="email" id="ceNewEmail" placeholder="email@example.com" autocomplete="email" />
-        </div>
-        <div id="ceStep1Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
-        <div style="display:flex; gap:0.75rem; margin-top:1rem;">
-          <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="closeChangeEmailModal()">Hủy</button>
-          <button type="button" class="btn-modal-confirm" style="flex:1;" onclick="ceSendOtp()">Xác nhận</button>
-        </div>
-      </div>
-      <div id="ceStep2" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-          <h4 style="margin:0;">Xác nhận OTP</h4>
-          <button type="button" class="modal-close-btn" onclick="closeChangeEmailModal()">×</button>
-        </div>
-        <p style="color:var(--app-muted); margin-bottom:1rem;">
-          Mã OTP đã được gửi về email hiện tại của bạn. Nhập mã 6 số để xác nhận đổi sang
-          <strong id="cePendingEmailText"></strong>.
-        </p>
-        <div class="field">
-          <label>Mã OTP</label>
-          <input type="text" id="ceOtpInput" placeholder="Nhập mã 6 số..." maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
-        </div>
-        <div id="ceStep2Error" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
-        <div style="display:flex; gap:0.75rem; margin-top:1rem;">
-          <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="closeChangeEmailModal()">Hủy</button>
-          <button type="button" class="btn-modal-confirm" style="flex:1;" onclick="ceConfirmOtp()">Xác nhận</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div id="changePhoneOverlay" class="app-floating-modal"
-    style="display:none; background:rgba(4,5,8,0.76); backdrop-filter:blur(14px);">
-    <div class="modal-box" style="width:min(460px,100%);">
-      <div id="cpnStep1">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-          <h4 style="margin:0;">Đổi số điện thoại</h4>
-          <button type="button" class="modal-close-btn" onclick="closeChangePhoneModal()" aria-label="Đóng">×</button>
-        </div>
-        <p style="color:var(--app-muted); margin-bottom:1rem;">
-          Nhập số điện thoại mới. Mã OTP xác nhận sẽ được gửi về email hiện tại đã xác thực của bạn.
-        </p>
-        <div class="field">
-          <label for="cpnNewPhone">Số điện thoại mới</label>
-          <input type="tel" id="cpnNewPhone" placeholder="Ví dụ: 0912345678" autocomplete="tel" inputmode="tel" />
-        </div>
-        <div id="cpnStep1Error" role="alert" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
-        <div style="display:flex; gap:0.75rem; margin-top:1rem;">
-          <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="closeChangePhoneModal()">Hủy</button>
-          <button type="button" class="btn-modal-confirm" id="cpnSendButton" style="flex:1;" onclick="cpnSendOtp()">Gửi OTP</button>
-        </div>
-      </div>
-      <div id="cpnStep2" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-          <h4 style="margin:0;">Xác nhận số điện thoại</h4>
-          <button type="button" class="modal-close-btn" onclick="closeChangePhoneModal()" aria-label="Đóng">×</button>
-        </div>
-        <p style="color:var(--app-muted); margin-bottom:1rem;">
-          Nhập mã OTP 6 số để xác nhận đổi sang <strong id="cpnPendingPhoneText"></strong>.
-        </p>
-        <div class="field">
-          <label for="cpnOtpInput">Mã OTP</label>
-          <input type="text" id="cpnOtpInput" placeholder="Nhập mã 6 số..." maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
-        </div>
-        <div id="cpnStep2Error" role="alert" style="display:none; color:#ff7772; margin-bottom:0.75rem;"></div>
-        <div style="display:flex; gap:0.75rem; margin-top:1rem;">
-          <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="closeChangePhoneModal()">Hủy</button>
-          <button type="button" class="btn-modal-confirm" id="cpnConfirmButton" style="flex:1;" onclick="cpnConfirmOtp()">Xác nhận</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-<script>
-// ===== EMAIL VERIFY POPUP =====
+  <script>
+// API /api/account/profile và /api/account/verify-email/*: kiểm tra, gửi và xác nhận OTP email.
+// ===== CỬA SỔ XÁC THỰC EMAIL =====
 (function() {
   async function checkEmailVerified() {
     try {
@@ -2532,5 +2554,5 @@ async function cpnConfirmOtp() {
 </script>
 
   <script src="/js/workspace-density.js?v=20260721-square-ranking" th:src="@{/js/workspace-density.js(v='20260721-square-ranking')}"></script>
-  </body>
+</body>
 </html>

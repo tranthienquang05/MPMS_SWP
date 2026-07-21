@@ -1,3 +1,7 @@
+/**
+ * Quản lý Light mode/Dark mode và lưu lựa chọn trong localStorage.
+ * Không gọi API; giao diện được cập nhật hoàn toàn tại trình duyệt.
+ */
 (function () {
   "use strict";
 
@@ -32,7 +36,7 @@
       try {
         localStorage.setItem(storageKey, nextTheme);
       } catch (_error) {
-        // The theme still works when storage is unavailable.
+      // Giao diện vẫn hoạt động khi trình duyệt không cho phép dùng bộ nhớ cục bộ.
       }
     }
 

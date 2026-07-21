@@ -8765,6 +8765,146 @@ body.role-workspaces-ready:not(.login-page)
   display: none !important;
 }
 
+/* Popup nghiệp vụ của Hội đồng dùng cùng kích thước và hành vi với Ranking. */
+.shared-workflow-modal[hidden] {
+  display: none !important;
+}
+
+.shared-workflow-modal {
+  z-index: 100000 !important;
+}
+
+.shared-workflow-modal .workflow-modal-content {
+  border-radius: 0 !important;
+}
+
+.shared-workflow-modal .workflow-modal-body {
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.shared-workflow-modal .workflow-modal-body > :is(#activeSessionsSection, #tab-project, .admin-workflow-content) {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+.shared-workflow-modal .admin-workflow-content > .section-card {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.shared-workflow-modal .admin-relation-content {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.shared-workflow-modal .admin-workflow-content > .section-card > h3 {
+  margin-top: 0;
+}
+
+/* Thanh công cụ bảng tài khoản của Quản trị viên. */
+#tab-accounts .account-management-panel {
+  display: flex;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+#tab-accounts .account-management-toolbar {
+  display: flex;
+  min-height: 92px;
+  padding: 1rem 1.35rem;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--app-border);
+  background: var(--app-surface);
+}
+
+#tab-accounts .account-management-toolbar h3 {
+  margin: 0;
+  color: var(--app-text);
+  white-space: nowrap;
+}
+
+#tab-accounts .account-management-controls {
+  display: flex;
+  min-width: min(100%, 560px);
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0.75rem;
+}
+
+#tab-accounts .account-management-controls .field {
+  width: min(360px, 100%);
+  margin: 0;
+}
+
+#tab-accounts .account-management-controls label {
+  display: block;
+  margin-bottom: 0.45rem;
+}
+
+#tab-accounts .account-management-controls select {
+  width: 100%;
+  min-height: 42px;
+}
+
+#tab-accounts .account-create-button {
+  min-height: 42px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+#tab-accounts .account-management-panel > .data-table {
+  width: 100%;
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  #tab-accounts .account-management-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  #tab-accounts .account-management-toolbar h3 {
+    margin: 0;
+  }
+
+  #tab-accounts .account-management-controls {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.shared-workflow-modal .workflow-modal-body .data-table {
+  width: 100%;
+  margin: 0;
+}
+
+.shared-workflow-modal .workflow-modal-body .data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
 @media (max-width: 700px) {
   body.role-workspaces-ready:not(.login-page) .workspace-quick-actions,
   body.role-workspaces-ready:not(.login-page)

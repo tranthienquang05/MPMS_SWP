@@ -95,7 +95,7 @@
       button.className = action.primary
         ? "workspace-quick-action is-primary"
         : "workspace-quick-action";
-      button.innerHTML = `<i class="${action.icon}" aria-hidden="true"></i><span>${action.label}</span>`;
+      button.textContent = action.label;
       button.addEventListener("click", action.run);
       bar.appendChild(button);
     });
@@ -252,6 +252,65 @@
 
   window.openSharedRankingModal = openSharedRankingModal;
 
+  let workflowReturnFocus = null;
+
+  function ensureSharedWorkflowModal({ id, title, description, content }) {
+    let overlay = document.getElementById(id);
+    if (overlay) return overlay;
+
+    overlay = document.createElement("div");
+    overlay.id = id;
+    overlay.className = "modal-overlay ranking-modal-overlay shared-workflow-modal";
+    overlay.hidden = true;
+    overlay.innerHTML = `
+      <div class="modal-content ranking-modal-content workflow-modal-content" role="dialog" aria-modal="true" aria-labelledby="${id}Title">
+        <div class="modal-header ranking-modal-header">
+          <div>
+            <h5 id="${id}Title">${title}</h5>
+            <p>${description}</p>
+          </div>
+          <button type="button" class="modal-close-btn" data-workflow-close aria-label="Đóng ${title}">&times;</button>
+        </div>
+        <div class="modal-body ranking-modal-body workflow-modal-body"></div>
+      </div>`;
+    overlay.querySelector(".workflow-modal-body").appendChild(content);
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay || event.target.closest("[data-workflow-close]")) {
+        closeSharedWorkflowModal(overlay);
+      }
+    });
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function openSharedWorkflowModal(id, trigger) {
+    const overlay = document.getElementById(id);
+    if (!overlay) return;
+    workflowReturnFocus = trigger || document.activeElement;
+    overlay.hidden = false;
+    overlay.classList.add("show");
+    document.documentElement.classList.add("app-modal-open");
+    requestAnimationFrame(() => overlay.querySelector("[data-workflow-close]")?.focus());
+  }
+
+  function closeSharedWorkflowModal(overlay) {
+    const target = typeof overlay === "string" ? document.getElementById(overlay) : overlay;
+    if (!target || target.hidden) return;
+    target.classList.remove("show");
+    target.hidden = true;
+    document.documentElement.classList.remove("app-modal-open");
+    workflowReturnFocus?.focus?.();
+    workflowReturnFocus = null;
+  }
+
+  function removeContentTabIcons() {
+    document
+      .querySelectorAll(
+        ".workspace-quick-actions i, .shared-workflow-modal i, [role='tablist'] > button i, .proposal-tabs-nav .proposal-tab-btn i, .approved-proposal-tabs .approved-proposal-tab i",
+      )
+      .forEach((icon) => icon.remove());
+  }
+
   function removeDeadPlaceholders() {
     document.querySelectorAll("#tab-assistant, #tab-other").forEach((tab) => {
       if (!/tính năng đang phát triển/i.test(tab.textContent || "")) return;
@@ -261,34 +320,159 @@
   }
 
   function initAdmin() {
-    if (!document.getElementById("tab-accounts") || !document.getElementById("tab-import")) return;
-    mergeAsDetails("tab-import", "tab-accounts", {
+    const voteTab = document.getElementById("tab-vote");
+    const importTab = document.getElementById("tab-import");
+    const publishTab = document.getElementById("tab-publish");
+    if (!voteTab || !importTab || !publishTab) return;
+
+    const voteHeading = voteTab.querySelector(":scope > h2");
+    if (voteHeading) voteHeading.textContent = "Bình chọn";
+
+    const cards = [...voteTab.querySelectorAll(":scope > .section-card")];
+    const rankingCard = cards[0];
+    const sessionsCard = cards[1];
+    rankingCard?.remove();
+    sessionsCard?.querySelector(":scope > h3")?.remove();
+
+    const sessionsContent = document.createElement("div");
+    sessionsContent.className = "admin-workflow-content";
+    if (sessionsCard) sessionsContent.appendChild(sessionsCard);
+    ensureSharedWorkflowModal({
+      id: "adminVoteSessionsModal",
+      title: "Phiên vote đang mở",
+      description: "Tạo phiên vote, theo dõi tiến độ và xem kết quả trong cùng một cửa sổ.",
+      content: sessionsContent,
+    });
+
+    const prepareTabContent = (tab, className) => {
+      const wasActive = tab.classList.contains("active");
+      tab.classList.remove("tab-pane", "active");
+      stripRedundantHeading(tab);
+      tab.classList.add("admin-workflow-content", className);
+      removeNavigation(tab.id);
+      return wasActive;
+    };
+
+    const importWasActive = prepareTabContent(importTab, "admin-import-content");
+    ensureSharedWorkflowModal({
+      id: "adminExcelImportModal",
       title: "Nhập dữ liệu Excel",
-      description: "Cập nhật lượt xem và phiếu đánh giá ngay trong khu vực quản lý dữ liệu.",
-      open: false,
+      description: "Cập nhật lượt xem chapter và phiếu Like/Dislike từ tệp Excel.",
+      content: importTab,
     });
-    const publishDetails = mergeAsDetails("tab-publish", "tab-vote", {
+
+    const publishWasActive = prepareTabContent(publishTab, "admin-publish-content");
+    ensureSharedWorkflowModal({
+      id: "adminPendingPublishModal",
       title: "Chapter chờ xuất bản",
-      description: "Hoàn tất bước xuất bản ngay sau quy trình duyệt và bình chọn.",
-      open: false,
+      description: "Kiểm tra các chapter đã được Tantou duyệt và hoàn tất xuất bản.",
+      content: publishTab,
     });
-    publishDetails?.addEventListener("toggle", () => {
-      if (publishDetails.open && typeof window.loadPendingPublishChapters === "function") {
-        window.loadPendingPublishChapters();
-      }
+
+    if (importWasActive || publishWasActive) voteTab.classList.add("active");
+
+    addQuickActions("tab-vote", [
+      { label: "Ranking", run: openSharedRankingModal },
+      {
+        label: "Phiên vote đang mở",
+        primary: true,
+        run: (event) => {
+          window.loadVoteSessionsAdmin?.();
+          openSharedWorkflowModal("adminVoteSessionsModal", event.currentTarget);
+        },
+      },
+      {
+        label: "Nhập dữ liệu Excel",
+        run: (event) => openSharedWorkflowModal("adminExcelImportModal", event.currentTarget),
+      },
+      {
+        label: "Chapter chờ xuất bản",
+        run: (event) => {
+          window.loadPendingPublishChapters?.();
+          openSharedWorkflowModal("adminPendingPublishModal", event.currentTarget);
+        },
+      },
+    ]);
+
+    const relationsTab = document.getElementById("tab-relations");
+    const relationCards = relationsTab
+      ? [...relationsTab.querySelectorAll(":scope > .section-card")]
+      : [];
+    const tantouRelations = relationCards[0];
+    const assistantRelations = relationCards[1];
+
+    const moveRelationCardToModal = (card, options) => {
+      if (!card) return;
+      card.querySelector(":scope > h3")?.remove();
+      card.classList.add("admin-workflow-content", "admin-relation-content");
+      ensureSharedWorkflowModal({ ...options, content: card });
+    };
+
+    moveRelationCardToModal(tantouRelations, {
+      id: "adminTantouRelationsModal",
+      title: "Tantou phụ trách Mangaka",
+      description: "Phân công Tantou phụ trách và cập nhật quan hệ quản lý của từng Mangaka.",
     });
+    moveRelationCardToModal(assistantRelations, {
+      id: "adminAssistantRelationsModal",
+      title: "Assistant làm việc với Mangaka",
+      description: "Phân công Assistant và cập nhật Mangaka mà từng trợ lý hỗ trợ.",
+    });
+
+    if (relationsTab) {
+      addQuickActions("tab-relations", [
+        {
+          label: "Tantou phụ trách Mangaka",
+          primary: true,
+          run: (event) => {
+            window.loadRelations?.();
+            openSharedWorkflowModal("adminTantouRelationsModal", event.currentTarget);
+          },
+        },
+        {
+          label: "Assistant làm việc với Mangaka",
+          run: (event) => {
+            window.loadRelations?.();
+            openSharedWorkflowModal("adminAssistantRelationsModal", event.currentTarget);
+          },
+        },
+      ]);
+    }
   }
 
   function initEditor() {
     if (!document.getElementById("activeSessionsBody") || !document.getElementById("proposalVoteBody")) return;
-    mergeAsSection("tab-project", "tab-home", {
-      title: "Đề xuất chờ biểu quyết",
-      description: "Xem hồ sơ, tiến độ bỏ phiếu và đưa ra quyết định trong cùng một màn hình.",
+    const home = document.getElementById("tab-home");
+    const sessions = document.getElementById("activeSessionsSection");
+    const sessionsHeading = sessions?.previousElementSibling;
+    const proposal = document.getElementById("tab-project");
+    const proposalWasActive = proposal?.classList.contains("active");
+
+    if (!home || !sessions || !proposal) return;
+
+    if (sessionsHeading?.matches("h1, h2, h3")) sessionsHeading.remove();
+    ensureSharedWorkflowModal({
+      id: "editorVoteSessionsModal",
+      title: "Phiên vote",
+      description: "Theo dõi các phiên đang mở và gửi lựa chọn của bạn.",
+      content: sessions,
     });
+
+    proposal.classList.remove("tab-pane", "active");
+    stripRedundantHeading(proposal);
+    ensureSharedWorkflowModal({
+      id: "editorPendingProposalsModal",
+      title: "Đề xuất chờ duyệt",
+      description: "Xem hồ sơ, tiến độ bỏ phiếu và đưa ra quyết định.",
+      content: proposal,
+    });
+    removeNavigation("tab-project");
+    if (proposalWasActive) home.classList.add("active");
+
     addQuickActions("tab-home", [
-      { label: "Ranking", icon: "fa-solid fa-chart-column", run: openSharedRankingModal },
-      { label: "Phiên vote", icon: "fa-solid fa-check-to-slot", run: () => document.getElementById("activeSessionsSection")?.scrollIntoView({ behavior: "smooth" }) },
-      { label: "Đề xuất chờ duyệt", icon: "fa-solid fa-file-circle-check", primary: true, run: () => document.getElementById("tab-project-merged")?.scrollIntoView({ behavior: "smooth" }) },
+      { label: "Ranking", run: openSharedRankingModal },
+      { label: "Phiên vote", run: (event) => openSharedWorkflowModal("editorVoteSessionsModal", event.currentTarget) },
+      { label: "Đề xuất chờ duyệt", primary: true, run: (event) => openSharedWorkflowModal("editorPendingProposalsModal", event.currentTarget) },
     ]);
   }
 
@@ -309,20 +493,20 @@
   function initAssistant() {
     if (!document.querySelector(".assistant-task-table") || !document.getElementById("tab-home")) return;
     addQuickActions("tab-home", [
-      { label: "Ranking", icon: "fa-solid fa-chart-column", run: openSharedRankingModal },
-      { label: "Công việc được giao", icon: "fa-solid fa-list-check", primary: true, run: () => window.openTab?.("tab-project") },
-      { label: "Mở bảng vẽ", icon: "fa-solid fa-brush", run: () => window.openTab?.("tab-draw") },
-      { label: "Tin nhắn", icon: "fa-solid fa-comments", run: () => window.openTab?.("tab-chat") },
+      { label: "Ranking", run: openSharedRankingModal },
+      { label: "Công việc được giao", primary: true, run: () => window.openTab?.("tab-project") },
+      { label: "Mở bảng vẽ", run: () => window.openTab?.("tab-draw") },
+      { label: "Tin nhắn", run: () => window.openTab?.("tab-chat") },
     ]);
   }
 
   function initTantou() {
     if (!document.getElementById("pendingCancelTbody") || !document.getElementById("tab-home")) return;
     addQuickActions("tab-home", [
-      { label: "Ranking", icon: "fa-solid fa-chart-column", run: openSharedRankingModal },
-      { label: "Duyệt bản thảo", icon: "fa-solid fa-file-circle-check", primary: true, run: () => window.openTab?.("tab-proposal") },
-      { label: "Duyệt chapter", icon: "fa-solid fa-book-open", run: () => window.openTab?.("tab-chapter-review") },
-      { label: "Quản lý Mangaka", icon: "fa-solid fa-users", run: () => { window.openTab?.("tab-manage-mangaka"); window.mmLoadMangakas?.(); } },
+      { label: "Ranking", run: openSharedRankingModal },
+      { label: "Duyệt bản thảo", primary: true, run: () => window.openTab?.("tab-proposal") },
+      { label: "Duyệt chapter", run: () => window.openTab?.("tab-chapter-review") },
+      { label: "Quản lý Mangaka", run: () => { window.openTab?.("tab-manage-mangaka"); window.mmLoadMangakas?.(); } },
     ]);
   }
 
@@ -390,8 +574,13 @@
     initAssistant();
     initTantou();
     normalizeWorkspaceShells();
+    removeContentTabIcons();
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") closeSharedRankingModal();
+      if (event.key !== "Escape") return;
+      closeSharedRankingModal();
+      document
+        .querySelectorAll(".shared-workflow-modal.show")
+        .forEach((overlay) => closeSharedWorkflowModal(overlay));
     });
   }
 

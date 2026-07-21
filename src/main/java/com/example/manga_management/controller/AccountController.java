@@ -6,7 +6,6 @@ import com.example.manga_management.repository.*;
 import com.example.manga_management.service.EmailService;
 import com.example.manga_management.service.OtpService;
 import com.example.manga_management.service.SmsService;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,11 +14,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -826,9 +827,12 @@ public class AccountController {
     // Endpoint 10: Upload Avatar
     // ─────────────────────────────────────────────────────────────────────────
     @Operation(summary = "[SWAGGER] Upload ảnh đại diện")
-    @PostMapping("/upload-avatar")
+    @PostMapping(
+            value = "/upload-avatar",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Map<String, Object> uploadAvatar(@RequestParam("file") MultipartFile file,
+    public Map<String, Object> uploadAvatar(@RequestPart("file") MultipartFile file,
                                              HttpSession session) {
         Map<String, Object> result = new HashMap<>();
         User user = (User) session.getAttribute("user");

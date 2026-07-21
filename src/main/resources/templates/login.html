@@ -141,7 +141,15 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        const data = await response.json().catch(() => ({ message: "Không thể xử lý yêu cầu" }));
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+          throw new Error(
+            response.redirected
+              ? "Phiên yêu cầu không hợp lệ. Vui lòng tải lại trang và thử lại"
+              : "Máy chủ không trả về dữ liệu hợp lệ",
+          );
+        }
+        const data = await response.json();
         if (!response.ok || data.success === false) throw new Error(data.message || "Không thể xử lý yêu cầu");
         return data;
       }

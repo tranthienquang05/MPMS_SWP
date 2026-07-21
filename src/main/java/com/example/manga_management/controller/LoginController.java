@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -102,7 +103,12 @@ public class LoginController {
         if (user != null && user.getEmail() != null && !user.getEmail().isBlank()) {
             String otpKey = user.getId() + "_forgot_password";
             String otp = otpService.generateOtp(otpKey);
-            emailService.sendOtpEmail(user.getEmail(), otp);
+            try {
+                emailService.sendOtpEmail(user.getEmail(), otp);
+            } catch (MailException exception) {
+                return ResponseEntity.status(503).body(result(false,
+                        "Không thể gửi OTP lúc này. Vui lòng thử lại sau"));
+            }
             session.setAttribute("forgotPasswordUserId", user.getId());
             session.setAttribute("forgotPasswordOtpKey", otpKey);
         }

@@ -6,7 +6,8 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "SeriesVote")
+@Table(name = "SeriesVote",
+       uniqueConstraints = @UniqueConstraint(columnNames = { "SessionID", "BoardID" }))
 @Getter
 @Setter
 @NoArgsConstructor

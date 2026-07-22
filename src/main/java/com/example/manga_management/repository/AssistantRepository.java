@@ -12,4 +12,6 @@ public interface AssistantRepository extends JpaRepository<Assistant, String> {
     List<Assistant> findByMangakaId(String mangakaId);
 
     Optional<Assistant> findByUserId(String userId);
+
+    Optional<Assistant> findTopByOrderByIdDesc();
 }

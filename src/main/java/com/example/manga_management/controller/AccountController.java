@@ -380,11 +380,6 @@ public class AccountController {
             } catch (Exception e) {
                 result.put("status", "error");
                 result.put("message", "Lỗi backend: " + e.getMessage());
-                try {
-                    java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter("debug_error.log"));
-                    e.printStackTrace(pw);
-                    pw.close();
-                } catch (Exception ex) {}
             }
 
         } else if ("tantou".equalsIgnoreCase(role)) {
@@ -420,11 +415,6 @@ public class AccountController {
                 result.put("voteStats", stats);
             });
         }
-
-        try {
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            mapper.writeValue(new java.io.File("debug_result.json"), result);
-        } catch (Exception e) {}
 
         return result;
     }

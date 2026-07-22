@@ -231,7 +231,16 @@ public class RankingController {
         sv.setVote(voteChoice);
         sv.setVoteDate(LocalDate.now());
         sv.setContent(content);
-        seriesVoteRepository.save(sv);
+        try {
+            // save + flush ngay để ràng buộc unique (SessionID, BoardID) ở DB bắt
+            // được 2 request đồng thời cùng vượt qua check countSeriesVoteByBoardAndSession
+            // ở trên (race condition) — chỉ 1 trong 2 được ghi.
+            seriesVoteRepository.saveAndFlush(sv);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            response.put("success", false);
+            response.put("message", "Bạn đã vote trong phiên này rồi!");
+            return response;
+        }
 
         long voted = votedBefore + 1;
         long positive = positiveBefore + (voteChoice.equals(positiveChoice) ? 1 : 0);

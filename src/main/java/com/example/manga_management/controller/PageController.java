@@ -75,6 +75,40 @@ public class PageController {
                 + " - " + seriesName + ")";
     }
 
+    /** Mangaka gọi request này có phải chủ sở hữu series chứa trang này không. */
+    private boolean isOwnerMangaka(MangaPage page, User user) {
+        return page != null && user != null && page.getChapter() != null
+                && page.getChapter().getSeries() != null
+                && page.getChapter().getSeries().getProposal() != null
+                && page.getChapter().getSeries().getProposal().getMangaka() != null
+                && page.getChapter().getSeries().getProposal().getMangaka().getUser() != null
+                && page.getChapter().getSeries().getProposal().getMangaka().getUser().getId().equals(user.getId());
+    }
+
+    /** Tantou gọi request này có phải người phụ trách mangaka của series này không. */
+    private boolean isAssignedTantou(MangaPage page, User user) {
+        return page != null && user != null && page.getChapter() != null
+                && page.getChapter().getSeries() != null
+                && page.getChapter().getSeries().getProposal() != null
+                && page.getChapter().getSeries().getProposal().getMangaka() != null
+                && page.getChapter().getSeries().getProposal().getMangaka().getEditor() != null
+                && page.getChapter().getSeries().getProposal().getMangaka().getEditor().getUser() != null
+                && page.getChapter().getSeries().getProposal().getMangaka().getEditor().getUser().getId()
+                        .equals(user.getId());
+    }
+
+    /** Assistant gọi request này có đang là người được giao vòng task gần nhất của trang không. */
+    private boolean isCurrentAssignedAssistant(MangaPage page, User user) {
+        if (page == null || user == null) {
+            return false;
+        }
+        Optional<Submission> latest = submissionRepository.findTopByPageIdIdOrderByCreatedAtDesc(page.getId());
+        return latest.isPresent() && "intask".equals(latest.get().getStatus())
+                && latest.get().getAssistant() != null
+                && latest.get().getAssistant().getUser() != null
+                && latest.get().getAssistant().getUser().getId().equals(user.getId());
+    }
+
     /**
      * Chỉ về "untask" khi tất cả task của assistant đã được duyệt hết (không còn
      * submission intask hoặc done chờ duyệt).
@@ -91,14 +125,27 @@ public class PageController {
     @PostMapping("/{pageId}/savefile")
     @ResponseBody
     public Map<String, String> savePageFile(@PathVariable String pageId,
-            @RequestBody Map<String, String> body) {
+            @RequestBody Map<String, String> body, HttpSession session) {
         Map<String, String> result = new HashMap<>();
 
         try {
+            User user = (User) session.getAttribute("user");
+            if (user == null) {
+                result.put("status", "error");
+                result.put("message", "Chưa đăng nhập");
+                return result;
+            }
+
             MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
             if (page == null) {
                 result.put("status", "error");
                 result.put("message", "Không tìm thấy page: " + pageId);
+                return result;
+            }
+
+            if (!isOwnerMangaka(page, user) && !isCurrentAssignedAssistant(page, user)) {
+                result.put("status", "error");
+                result.put("message", "Bạn không có quyền chỉnh sửa trang này!");
                 return result;
             }
 
@@ -179,7 +226,7 @@ public class PageController {
     @ResponseBody
     @Transactional
     public Map<String, Object> assignPage(@PathVariable String pageId,
-            @RequestBody Map<String, Object> body,
+            @RequestBody AssignPageRequest body,
             HttpSession session) {
         Map<String, Object> result = new HashMap<>();
 
@@ -195,6 +242,12 @@ public class PageController {
             if (page == null) {
                 result.put("status", "error");
                 result.put("message", "Không tìm thấy page: " + pageId);
+                return result;
+            }
+
+            if (!isOwnerMangaka(page, user)) {
+                result.put("status", "error");
+                result.put("message", "Bạn không có quyền giao việc trên trang này!");
                 return result;
             }
 
@@ -236,15 +289,21 @@ public class PageController {
                 }
             }
 
-            String assistantId = (String) body.get("assistantId");
-            String comment = (String) body.get("comment");
-            String deadlineStr = (String) body.get("deadline");
-            List<?> frameNotes = body.get("frameNotes") instanceof List<?> notes ? notes : null;
+            String assistantId = body != null ? body.assistantId() : null;
+            String comment = body != null ? body.comment() : null;
+            String deadlineStr = body != null ? body.deadline() : null;
+            List<String> frameNotes = body != null ? body.frameNotes() : null;
 
             Assistant assistant = assistantRepository.findById(assistantId).orElse(null);
             if (assistant == null) {
                 result.put("status", "error");
                 result.put("message", "Không tìm thấy assistant: " + assistantId);
+                return result;
+            }
+            if (assistant.getMangaka() == null || assistant.getMangaka().getUser() == null
+                    || !assistant.getMangaka().getUser().getId().equals(user.getId())) {
+                result.put("status", "error");
+                result.put("message", "Trợ lý này không thuộc quyền quản lý của bạn!");
                 return result;
             }
 
@@ -349,13 +408,25 @@ public class PageController {
     @Operation(summary = "Đánh dấu 1 trang đã hoàn thành xong (kết thúc vòng làm việc)")
     @PostMapping("/{pageId}/finish")
     @ResponseBody
-    public Map<String, Object> finishPage(@PathVariable String pageId) {
+    public Map<String, Object> finishPage(@PathVariable String pageId, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
+
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập");
+            return result;
+        }
 
         MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
         if (page == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy trang!");
+            return result;
+        }
+        if (!isOwnerMangaka(page, user)) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền thao tác trên trang này!");
             return result;
         }
         if (page.getChapter() != null && page.getChapter().getSeries() != null
@@ -395,13 +466,25 @@ public class PageController {
     @Operation(summary = "Mangaka duyệt bài trợ lý vừa nộp cho 1 trang")
     @PostMapping("/{pageId}/approve-done")
     @ResponseBody
-    public Map<String, Object> approvePageDone(@PathVariable String pageId) {
+    public Map<String, Object> approvePageDone(@PathVariable String pageId, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
+
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập");
+            return result;
+        }
 
         MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
         if (page == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy trang!");
+            return result;
+        }
+        if (!isOwnerMangaka(page, user)) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền thao tác trên trang này!");
             return result;
         }
         if (page.getChapter() != null && page.getChapter().getSeries() != null
@@ -469,7 +552,7 @@ public class PageController {
     @PostMapping("/{pageId}/reassign")
     @ResponseBody
     public Map<String, Object> reassignPage(@PathVariable String pageId,
-            @RequestBody Map<String, String> body,
+            @RequestBody ReassignPageRequest body,
             HttpSession session) {
         Map<String, Object> result = new HashMap<>();
 
@@ -481,9 +564,9 @@ public class PageController {
                 return result;
             }
 
-            String submissionId = body.get("submissionId");
-            String comment = body.get("comment");
-            String deadlineStr = body.get("deadline");
+            String submissionId = body != null ? body.submissionId() : null;
+            String comment = body != null ? body.comment() : null;
+            String deadlineStr = body != null ? body.deadline() : null;
 
             Submission submission = submissionRepository.findById(submissionId).orElse(null);
             if (submission == null) {
@@ -505,6 +588,12 @@ public class PageController {
                 return result;
             }
 
+            if (!isOwnerMangaka(page, user)) {
+                result.put("status", "error");
+                result.put("message", "Bạn không có quyền thao tác trên trang này!");
+                return result;
+            }
+
             if (page.getChapter() == null || !"unfinish".equals(page.getChapter().getStatus())) {
                 result.put("status", "error");
                 result.put("message", "Chỉ có thể giao lại khi chapter đang ở trạng thái unfinish");
@@ -521,6 +610,15 @@ public class PageController {
             if ("finish".equals(page.getStatus())) {
                 result.put("status", "error");
                 result.put("message", "Trang này đã được đánh dấu hoàn thành");
+                return result;
+            }
+
+            // Chỉ được "giao lại" submission đang chờ duyệt ("done") — nếu đã
+            // "finish" (đã duyệt/tính lương) hoặc đang "intask" thì không được phép
+            // đẩy lùi trạng thái, tránh làm sai lệch dữ liệu đã duyệt/lương.
+            if (!"done".equals(submission.getStatus())) {
+                result.put("status", "error");
+                result.put("message", "Chỉ có thể giao lại task đang chờ duyệt (trạng thái 'done')!");
                 return result;
             }
 
@@ -582,7 +680,7 @@ public class PageController {
     @PostMapping("/{pageId}/tantou-comment")
     @ResponseBody
     public Map<String, Object> saveTantouComment(@PathVariable String pageId,
-            @RequestBody Map<String, String> body, HttpSession session) {
+            @RequestBody TantouCommentRequest body, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
 
         User user = (User) session.getAttribute("user");
@@ -599,6 +697,12 @@ public class PageController {
             return result;
         }
 
+        if (!isAssignedTantou(page, user)) {
+            result.put("status", "error");
+            result.put("message", "Bạn không phải tantou phụ trách series này!");
+            return result;
+        }
+
         if ("finish".equals(page.getStatus())) {
             result.put("status", "error");
             result.put("message", "Trang đã hoàn thành, không thể thêm nhận xét!");
@@ -612,7 +716,7 @@ public class PageController {
             return result;
         }
 
-        String comment = body.get("comment");
+        String comment = body != null ? body.comment() : null;
         if (comment == null || comment.trim().isEmpty()) {
             result.put("status", "error");
             result.put("message", "Vui lòng nhập nội dung nhận xét!");
@@ -645,5 +749,14 @@ public class PageController {
         result.put("status", "success");
         result.put("message", "Đã lưu nhận xét!");
         return result;
+    }
+
+    public record TantouCommentRequest(String comment) {
+    }
+
+    public record AssignPageRequest(String assistantId, String comment, String deadline, List<String> frameNotes) {
+    }
+
+    public record ReassignPageRequest(String submissionId, String comment, String deadline) {
     }
 }

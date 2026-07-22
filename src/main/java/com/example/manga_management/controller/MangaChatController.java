@@ -6,6 +6,7 @@ import com.example.manga_management.entity.MangaPage;
 import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.Series;
 import com.example.manga_management.entity.Submission;
+import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.FrameTaskRepository;
 import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.SubmissionRepository;
@@ -61,6 +62,22 @@ public class MangaChatController {
         Map<String, Object> response = new HashMap<>();
         if (message == null) {
             message = "";
+        }
+
+        User currentUser = (User) session.getAttribute("user");
+        if (currentUser == null) {
+            response.put("status", "error");
+            response.put("type", "text");
+            response.put("content", "Chưa đăng nhập!");
+            response.put("message", "Chưa đăng nhập!");
+            return ResponseEntity.status(401).body(response);
+        }
+        if (!canAccessContext(currentUser, pageId, submissionId)) {
+            response.put("status", "error");
+            response.put("type", "text");
+            response.put("content", "Bạn không có quyền truy cập dữ liệu của trang/bài nộp này!");
+            response.put("message", "Bạn không có quyền truy cập dữ liệu của trang/bài nộp này!");
+            return ResponseEntity.status(403).body(response);
         }
 
         try {
@@ -205,6 +222,50 @@ public class MangaChatController {
         submissionOpt.ifPresent(submission -> addFrameContext(context, submission.getId()));
 
         return context;
+    }
+
+    /**
+     * Chỉ mangaka chủ sở hữu series, trợ lý đang được giao task, hoặc tantou
+     * phụ trách mangaka đó mới được lấy context nội bộ của 1 page/submission.
+     * Không truyền pageId/submissionId (chat chung, không gắn ngữ cảnh) luôn
+     * được phép.
+     */
+    private boolean canAccessContext(User user, String pageId, String submissionId) {
+        if ((pageId == null || pageId.isBlank()) && (submissionId == null || submissionId.isBlank())) {
+            return true;
+        }
+        if ("admin".equalsIgnoreCase(user.getRole())) {
+            return true;
+        }
+
+        Optional<Submission> submissionOpt = findSubmission(submissionId, pageId);
+        MangaPage page = submissionOpt.map(Submission::getPageId).orElseGet(() -> findPage(pageId).orElse(null));
+        if (page == null) {
+            // Không tìm thấy tài nguyên — để luồng xử lý chính báo lỗi "không tìm thấy".
+            return true;
+        }
+
+        if (submissionOpt.isPresent()) {
+            Submission submission = submissionOpt.get();
+            if (submission.getAssistant() != null && submission.getAssistant().getUser() != null
+                    && submission.getAssistant().getUser().getId().equals(user.getId())) {
+                return true;
+            }
+        }
+
+        Chapter chapter = page.getChapter();
+        Series series = chapter != null ? chapter.getSeries() : null;
+        Proposal proposal = series != null ? series.getProposal() : null;
+        if (proposal == null || proposal.getMangaka() == null) {
+            return false;
+        }
+        if (proposal.getMangaka().getUser() != null
+                && proposal.getMangaka().getUser().getId().equals(user.getId())) {
+            return true;
+        }
+        return proposal.getMangaka().getEditor() != null
+                && proposal.getMangaka().getEditor().getUser() != null
+                && proposal.getMangaka().getEditor().getUser().getId().equals(user.getId());
     }
 
     private Optional<Submission> findSubmission(String submissionId, String pageId) {

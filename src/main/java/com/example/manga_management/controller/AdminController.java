@@ -247,9 +247,11 @@ public class AdminController {
         chapter.setStatus("published");
         chapterRepository.save(chapter);
 
-        long publicCount = publicDateRepository.count();
+        String lastPublicId = publicDateRepository.findTopByOrderByIdDesc()
+                .map(PublicDate::getId).orElse("PUB000");
+        int nextPublicNum = Integer.parseInt(lastPublicId.replaceAll("[^0-9]", "")) + 1;
         PublicDate publicDate = new PublicDate();
-        publicDate.setId(String.format("PUB%03d", publicCount + 1));
+        publicDate.setId(String.format("PUB%03d", nextPublicNum));
         publicDate.setChapter(chapter);
         publicDate.setDatePublic(LocalDate.now());
         publicDateRepository.save(publicDate);
@@ -296,52 +298,63 @@ public class AdminController {
                 return result;
             }
 
-            // Tạo User
-            String newId = String.format("%06d", userRepository.count() + 1);
+            String role = body.get("role");
+
+            // Kiểm tra trước các ràng buộc riêng theo role (TantoEditor/Mangaka phải
+            // tồn tại) TRƯỚC khi lưu User — tránh tạo ra tài khoản "mồ côi" (User đã
+            // lưu nhưng profile tương ứng lưu thất bại) như trước đây.
+            TantoEditor editorForMangaka = null;
+            Mangaka mangakaForAssistant = null;
+            if ("mangaka".equalsIgnoreCase(role)) {
+                String editorId = body.get("editorId");
+                editorForMangaka = editorId != null ? tantoEditorRepository.findById(editorId).orElse(null) : null;
+                if (editorForMangaka == null) {
+                    result.put("status", "error");
+                    result.put("message", "Không tìm thấy TantoEditor với ID: " + editorId);
+                    return result;
+                }
+            } else if ("assistant".equalsIgnoreCase(role)) {
+                String mangakaId = body.get("mangakaId");
+                mangakaForAssistant = mangakaId != null ? mangakaRepository.findById(mangakaId).orElse(null) : null;
+                if (mangakaForAssistant == null) {
+                    result.put("status", "error");
+                    result.put("message", "Không tìm thấy Mangaka với ID: " + mangakaId);
+                    return result;
+                }
+            }
+
+            // Tạo User — dựa trên ID lớn nhất hiện có, không dùng count()+1 (count()+1
+            // sẽ sinh trùng ID cũ sau khi có tài khoản bị xóa, gây đè dữ liệu tài
+            // khoản khác đang tồn tại).
+            String lastUserId = userRepository.findTopByOrderByIdDesc().map(User::getId).orElse("000000");
+            String newId = String.format("%06d", Long.parseLong(lastUserId) + 1);
             User newUser = new User();
             newUser.setId(newId);
             newUser.setUsername(body.get("username"));
             newUser.setPassword(body.get("password"));
             newUser.setFullname(body.getOrDefault("fullname", ""));
             newUser.setEmail(body.getOrDefault("email", ""));
-            newUser.setRole(body.get("role"));
+            newUser.setRole(role);
             userRepository.save(newUser);
 
             // Tạo profile tương ứng với role
-            String role = body.get("role");
-            String profileId = String.format("%06d", getNextProfileId(role));
+            String profileId = nextProfileId(role);
 
             switch (role.toLowerCase()) {
                 case "mangaka" -> {
-                    // Mangaka cần chỉ định TantoEditor
-                    String editorId = body.get("editorId");
-                    TantoEditor editor = tantoEditorRepository.findById(editorId).orElse(null);
-                    if (editor == null) {
-                        result.put("status", "error");
-                        result.put("message", "Không tìm thấy TantoEditor với ID: " + editorId);
-                        return result;
-                    }
                     Mangaka mangaka = new Mangaka();
                     mangaka.setId(profileId);
                     mangaka.setUser(newUser);
-                    mangaka.setEditor(editor);
+                    mangaka.setEditor(editorForMangaka);
                     mangaka.setSalaryPerChapter(
                             Integer.parseInt(body.getOrDefault("salaryPerChapter", "0")));
                     mangakaRepository.save(mangaka);
                 }
                 case "assistant" -> {
-                    // Assistant cần chỉ định Mangaka
-                    String mangakaId = body.get("mangakaId");
-                    Mangaka mangaka = mangakaRepository.findById(mangakaId).orElse(null);
-                    if (mangaka == null) {
-                        result.put("status", "error");
-                        result.put("message", "Không tìm thấy Mangaka với ID: " + mangakaId);
-                        return result;
-                    }
                     Assistant assistant = new Assistant();
                     assistant.setId(profileId);
                     assistant.setUser(newUser);
-                    assistant.setMangaka(mangaka);
+                    assistant.setMangaka(mangakaForAssistant);
                     assistant.setSalaryPerTask(
                             Integer.parseInt(body.getOrDefault("salaryPerTask", "0")));
                     assistantRepository.save(assistant);
@@ -856,7 +869,7 @@ public class AdminController {
         List<Map<String, Object>> activities = new ArrayList<>();
         String role = target.getRole() != null ? target.getRole().toLowerCase() : "";
 
-        // 1. Board: bỏ phiếu bản thảo / bỏ phiếu series / tạo phiên vote
+        // 1. Board: bỏ phiếu bản thảo / bỏ phiếu series 
         if ("board".equals(role)) {
             // Phiếu bầu bản thảo thật sự nằm ở board_proposal_comment (BoardProposalComment)
             // — EditorialVote là bảng không có nơi nào ghi dữ liệu vào, không dùng.
@@ -1119,19 +1132,25 @@ public class AdminController {
         return body.containsKey(key) && body.get(key) != null && !body.get(key).isBlank();
     }
 
-    private long getNextProfileId(String role) {
+    /**
+     * ID kế tiếp cho profile theo role, đúng định dạng đang dùng trong DB
+     * (MGK/AST/EDT/BRD + số) — dựa trên ID lớn nhất hiện có, không dùng
+     * count()+1 (count()+1 sinh trùng ID cũ sau khi 1 profile bị xóa, gây đè
+     * dữ liệu của profile khác đang tồn tại).
+     */
+    private String nextProfileId(String role) {
         return switch (role.toLowerCase()) {
-            case "mangaka" ->
-                mangakaRepository.count() + 1;
-            case "assistant" ->
-                assistantRepository.count() + 1;
-            case "tantou" ->
-                tantoEditorRepository.count() + 1;
-            case "board" ->
-                boardRepository.count() + 1;
-            default ->
-                0;
+            case "mangaka" -> nextId("MGK", mangakaRepository.findTopByOrderByIdDesc().map(Mangaka::getId));
+            case "assistant" -> nextId("AST", assistantRepository.findTopByOrderByIdDesc().map(Assistant::getId));
+            case "tantou" -> nextId("EDT", tantoEditorRepository.findTopByOrderByIdDesc().map(TantoEditor::getId));
+            case "board" -> nextId("BRD", boardRepository.findTopByOrderByIdDesc().map(Board::getId));
+            default -> null;
         };
+    }
+
+    private String nextId(String prefix, Optional<String> lastId) {
+        int lastNum = lastId.map(id -> Integer.parseInt(id.replaceAll("[^0-9]", ""))).orElse(0);
+        return prefix + String.format("%03d", lastNum + 1);
     }
 
     // ════════════════════════════════════════════════════════════

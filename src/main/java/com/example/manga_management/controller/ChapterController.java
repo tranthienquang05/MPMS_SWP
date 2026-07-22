@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.manga_management.entity.Chapter;
 import com.example.manga_management.entity.MangaPage;
+import com.example.manga_management.entity.Series;
 import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.MangaPageRepository;
@@ -67,6 +68,18 @@ public class ChapterController {
         if (chapter == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy chapter: " + chapterId);
+            return result;
+        }
+
+        User requester = (User) session.getAttribute("user");
+        Series chapterSeries = chapter.getSeries();
+        boolean isOwner = requester != null && chapterSeries != null && chapterSeries.getProposal() != null
+                && chapterSeries.getProposal().getMangaka() != null
+                && chapterSeries.getProposal().getMangaka().getUser() != null
+                && chapterSeries.getProposal().getMangaka().getUser().getId().equals(requester.getId());
+        if (!isOwner) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền sửa kịch bản chapter này!");
             return result;
         }
 

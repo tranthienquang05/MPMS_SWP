@@ -17,9 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.manga_management.entity.MangaPage;
 import com.example.manga_management.entity.Submission;
+import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.MangaPageRepository;
 import com.example.manga_management.repository.SubmissionRepository;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -33,14 +35,28 @@ public class SubmissionController {
     @PostMapping("/{submissionId}/savefile")
     @ResponseBody
     public Map<String, String> saveSubmissionFile(@PathVariable String submissionId,
-            @RequestBody Map<String, String> body) {
+            @RequestBody Map<String, String> body, HttpSession session) {
         Map<String, String> result = new HashMap<>();
 
         try {
+            User user = (User) session.getAttribute("user");
+            if (user == null) {
+                result.put("status", "error");
+                result.put("message", "Chưa đăng nhập");
+                return result;
+            }
+
             Submission submission = submissionRepository.findById(submissionId).orElse(null);
             if (submission == null) {
                 result.put("status", "error");
                 result.put("message", "Không tìm thấy submission: " + submissionId);
+                return result;
+            }
+
+            if (submission.getAssistant() == null || submission.getAssistant().getUser() == null
+                    || !submission.getAssistant().getUser().getId().equals(user.getId())) {
+                result.put("status", "error");
+                result.put("message", "Bạn không phải trợ lý được giao bài nộp này!");
                 return result;
             }
 

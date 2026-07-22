@@ -16,4 +16,6 @@ public interface MangakaRepository extends JpaRepository<Mangaka, String> {
     Optional<Mangaka> findByUserId(String userId);
 
     List<Mangaka> findByEditor_Id(String editorId);
+
+    Optional<Mangaka> findTopByOrderByIdDesc();
 }

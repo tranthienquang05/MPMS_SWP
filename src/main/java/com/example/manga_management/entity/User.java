@@ -1,5 +1,7 @@
 package com.example.manga_management.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,6 +29,8 @@ public class User {
     @Column(name = "Email", nullable = false, unique = true, length = 50)
     private String email;
 
+    // Không bao giờ được serialize ra JSON — dùng nội bộ để kiểm tra đăng nhập.
+    @JsonIgnore
     @Column(name = "Password", nullable = false, length = 30)
     private String password;
 

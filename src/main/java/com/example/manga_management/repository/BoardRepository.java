@@ -11,4 +11,6 @@ public interface BoardRepository extends JpaRepository<Board, String> {
     Optional<Board> findByUser_Id(String userId);
 
     Optional<Board> findByUser(User user);
+
+    Optional<Board> findTopByOrderByIdDesc();
 }

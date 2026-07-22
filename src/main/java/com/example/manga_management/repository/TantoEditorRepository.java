@@ -11,4 +11,6 @@ public interface TantoEditorRepository extends JpaRepository<TantoEditor, String
     Optional<TantoEditor> findByUser(User user);
 
     Optional<TantoEditor> findByUserId(String userId);
+
+    Optional<TantoEditor> findTopByOrderByIdDesc();
 }

@@ -21,6 +21,7 @@ import com.example.manga_management.entity.Chapter;
 import com.example.manga_management.entity.LikeResult;
 import com.example.manga_management.entity.Proposal;
 import com.example.manga_management.entity.Series;
+import com.example.manga_management.entity.User;
 import com.example.manga_management.repository.BoardRepository;
 import com.example.manga_management.repository.ChapterRepository;
 import com.example.manga_management.repository.LikeResultRepository;
@@ -30,6 +31,7 @@ import com.example.manga_management.repository.VoteSessionRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api/series")
@@ -48,6 +50,14 @@ public class SeriesController {
     private VoteSessionRepository voteSessionRepository;
     @Autowired
     private BoardRepository boardRepository;
+
+    /** Series này có thuộc đúng Mangaka đang đăng nhập không. */
+    private boolean isOwnSeries(Series series, User user) {
+        return series != null && user != null && series.getProposal() != null
+                && series.getProposal().getMangaka() != null
+                && series.getProposal().getMangaka().getUser() != null
+                && series.getProposal().getMangaka().getUser().getId().equals(user.getId());
+    }
 
     @GetMapping
     @Operation(summary = "[SWAGGER] Lấy danh sách tất cả series")
@@ -219,8 +229,14 @@ public class SeriesController {
     @Operation(summary = "[SWAGGER] Tạo series mới")
     @ResponseBody
     public Map<String, Object> createSeries(@RequestParam String seriesName,
-            @RequestParam String description) {
+            @RequestParam String description, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
+
+        if (session.getAttribute("user") == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập");
+            return result;
+        }
 
         try {
             long count = seriesRepository.count();
@@ -249,13 +265,20 @@ public class SeriesController {
     @ResponseBody
     public Map<String, Object> updateSeries(@PathVariable String seriesId,
             @RequestParam String seriesName,
-            @RequestParam String description) {
+            @RequestParam String description, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
 
         Series series = seriesRepository.findById(seriesId).orElse(null);
         if (series == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy series: " + seriesId);
+            return result;
+        }
+
+        User user = (User) session.getAttribute("user");
+        if (!isOwnSeries(series, user)) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền thao tác trên series này!");
             return result;
         }
 
@@ -277,12 +300,20 @@ public class SeriesController {
     @DeleteMapping("/{seriesId}")
     @Operation(summary = "[SWAGGER] Xóa một series")
     @ResponseBody
-    public Map<String, String> deleteSeries(@PathVariable String seriesId) {
+    public Map<String, String> deleteSeries(@PathVariable String seriesId, HttpSession session) {
         Map<String, String> result = new HashMap<>();
 
-        if (!seriesRepository.existsById(seriesId)) {
+        Series series = seriesRepository.findById(seriesId).orElse(null);
+        if (series == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy series: " + seriesId);
+            return result;
+        }
+
+        User user = (User) session.getAttribute("user");
+        if (!isOwnSeries(series, user)) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền thao tác trên series này!");
             return result;
         }
 

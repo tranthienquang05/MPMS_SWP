@@ -176,15 +176,32 @@ public class TantouController {
             @RequestParam String id,
             @RequestParam String action, // "approve" | "revision" | "reject"
             @RequestParam(required = false) String comment,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime deadline) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime deadline,
+            HttpSession session) {
 
         Map<String, String> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập!");
+            return result;
+        }
+
         Proposal p = proposalRepository.findById(id).orElse(null);
         if (p == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy đề xuất: " + id);
             return result;
         }
+
+        TantoEditor editor = tantoEditorRepository.findByUser(user).orElse(null);
+        if (editor == null || p.getMangaka() == null || p.getMangaka().getEditor() == null
+                || !editor.getId().equals(p.getMangaka().getEditor().getId())) {
+            result.put("status", "error");
+            result.put("message", "Bạn không phải tantou phụ trách mangaka này!");
+            return result;
+        }
+
         if (!"new".equals(p.getStatus())) {
             result.put("status", "error");
             result.put("message", "Đề xuất này không ở trạng thái chờ duyệt!");
@@ -255,15 +272,32 @@ public class TantouController {
     @ResponseBody
     public Map<String, String> submitToBoard(
             @RequestParam String proposalId,
-            @RequestPart MultipartFile fileOfTantou) {
+            @RequestPart MultipartFile fileOfTantou,
+            HttpSession session) {
 
         Map<String, String> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập!");
+            return result;
+        }
+
         Proposal p = proposalRepository.findById(proposalId).orElse(null);
         if (p == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy đề xuất: " + proposalId);
             return result;
         }
+
+        TantoEditor editor = tantoEditorRepository.findByUser(user).orElse(null);
+        if (editor == null || p.getMangaka() == null || p.getMangaka().getEditor() == null
+                || !editor.getId().equals(p.getMangaka().getEditor().getId())) {
+            result.put("status", "error");
+            result.put("message", "Bạn không phải tantou phụ trách mangaka này!");
+            return result;
+        }
+
         if (!"approved".equals(p.getStatus())) {
             result.put("status", "error");
             result.put("message", "Chỉ đề xuất đã được duyệt mới có thể nộp lên hội đồng!");
@@ -405,6 +439,17 @@ public class TantouController {
         if (chapter == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy chapter: " + chapterId);
+            return result;
+        }
+
+        if (chapter.getSeries() == null || chapter.getSeries().getProposal() == null
+                || chapter.getSeries().getProposal().getMangaka() == null
+                || chapter.getSeries().getProposal().getMangaka().getEditor() == null
+                || chapter.getSeries().getProposal().getMangaka().getEditor().getUser() == null
+                || !chapter.getSeries().getProposal().getMangaka().getEditor().getUser().getId()
+                        .equals(user.getId())) {
+            result.put("status", "error");
+            result.put("message", "Bạn không phải tantou phụ trách chapter này!");
             return result;
         }
 

@@ -28,4 +28,6 @@ public interface ProposalRepository extends JpaRepository<Proposal, String> {
     List<Proposal> findByMangaka_Editor_IdOrderByCreatedAtDesc(String editorId);
 
     List<Proposal> findByStatusAndRevisionDeadlineBefore(String status, LocalDateTime deadline);
+
+    Optional<Proposal> findTopByOrderByIdDesc();
 }

@@ -1,6 +1,7 @@
 package com.example.manga_management.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -15,4 +16,6 @@ public interface SeriesRepository extends JpaRepository<Series, String> {
     List<Series> findByStatusAndProposal_Mangaka_Editor_Id(String status, String editorId);
 
     List<Series> findByStatus(String status);
+
+    Optional<Series> findTopByOrderByIdDesc();
 }

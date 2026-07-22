@@ -92,6 +92,14 @@ public class MangakaController {
         this.bookJacketStorageService = bookJacketStorageService;
     }
 
+    /** Series này có thuộc đúng Mangaka đang đăng nhập không. */
+    private boolean isOwnSeries(Series series, User user) {
+        return series != null && user != null && series.getProposal() != null
+                && series.getProposal().getMangaka() != null
+                && series.getProposal().getMangaka().getUser() != null
+                && series.getProposal().getMangaka().getUser().getId().equals(user.getId());
+    }
+
     @GetMapping({ "" })
     public String mangakaPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
@@ -207,22 +215,19 @@ public class MangakaController {
     @Operation(summary = "[SWAGGER] Nộp bản thảo mới")
     @PostMapping(value = "/submit-proposal", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
-    public Map<String, String> handleSubmitting(@RequestParam(required = false) String mangakaId, Model model,
+    public Map<String, String> handleSubmitting(Model model,
             @RequestParam String txtSeriesName,
             @RequestParam(required = false) String genre,
             @Parameter(description = "Manuscript file") @RequestPart MultipartFile fileManuscript,
             HttpSession session) {
 
         Map<String, String> result = new HashMap<>();
+        // Đề xuất luôn được gán cho đúng Mangaka đang đăng nhập — không nhận
+        // mangakaId từ client để tránh mạo danh (nộp hộ/gán cho mangaka khác).
         Mangaka currentMangaka = null;
-
-        if (mangakaId != null && !mangakaId.isEmpty()) {
-            currentMangaka = mangakaRepository.findById(mangakaId).orElse(null);
-        } else {
-            User user = (User) session.getAttribute("user");
-            if (user != null) {
-                currentMangaka = mangakaRepository.findByUser(user).orElse(null);
-            }
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            currentMangaka = mangakaRepository.findByUser(user).orElse(null);
         }
 
         if (currentMangaka == null) {
@@ -262,8 +267,12 @@ public class MangakaController {
                 Files.createDirectories(uploadPath);
             }
 
-            long currentCount = proposalRepository.count();
-            String nextId = String.format("PPS%03d", currentCount + 1);
+            // Dựa trên ID lớn nhất hiện có (không dùng count()+1) — count()+1 sẽ
+            // sinh trùng ID cũ sau khi có đề xuất bị xoá, gây đè dữ liệu.
+            String lastProposalId = proposalRepository.findTopByOrderByIdDesc()
+                    .map(Proposal::getId).orElse("PPS000");
+            int nextNum = Integer.parseInt(lastProposalId.replaceAll("[^0-9]", "")) + 1;
+            String nextId = String.format("PPS%03d", nextNum);
 
             String originalName = fileManuscript.getOriginalFilename();
             String extension = ".pdf";
@@ -430,7 +439,8 @@ public class MangakaController {
     @PostMapping(value = "/start-series", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public Map<String, String> startSeries(@RequestParam String proposalId, @RequestParam String txtSeriesName,
-            @RequestParam String txtDescription, @RequestPart MultipartFile fileBookJacket) {
+            @RequestParam String txtDescription, @RequestPart MultipartFile fileBookJacket,
+            HttpSession session) {
 
         Map<String, String> result = new HashMap<>();
 
@@ -438,6 +448,14 @@ public class MangakaController {
         if (proposal == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy đề xuất: " + proposalId);
+            return result;
+        }
+
+        User requester = (User) session.getAttribute("user");
+        if (requester == null || proposal.getMangaka() == null || proposal.getMangaka().getUser() == null
+                || !proposal.getMangaka().getUser().getId().equals(requester.getId())) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền khởi động series từ đề xuất này!");
             return result;
         }
 
@@ -449,8 +467,12 @@ public class MangakaController {
 
         String storedBookJacket = null;
         try {
-            long count = seriesRepository.count();
-            String seriesId = String.format("SER%03d", count + 1);
+            // Dựa trên ID lớn nhất hiện có, không dùng count()+1 (tránh trùng ID sau
+            // khi có series bị xóa).
+            String lastSeriesId = seriesRepository.findTopByOrderByIdDesc()
+                    .map(Series::getId).orElse("SER000");
+            int nextSeriesNum = Integer.parseInt(lastSeriesId.replaceAll("[^0-9]", "")) + 1;
+            String seriesId = String.format("SER%03d", nextSeriesNum);
             storedBookJacket = bookJacketStorageService.store(fileBookJacket, seriesId);
 
             Series series = new Series();
@@ -567,6 +589,12 @@ public class MangakaController {
         if (series == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy series: " + seriesId);
+            return result;
+        }
+        User requester = (User) session.getAttribute("user");
+        if (!isOwnSeries(series, requester)) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền thao tác trên series này!");
             return result;
         }
         if (series.isLocked()) {
@@ -723,6 +751,13 @@ public class MangakaController {
             return result;
         }
 
+        User requester = (User) session.getAttribute("user");
+        if (!isOwnSeries(chapter.getSeries(), requester)) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền thao tác trên chapter này!");
+            return result;
+        }
+
         if (chapter.getSeries() != null && chapter.getSeries().isLocked()) {
             result.put("status", "error");
             result.put("message", chapter.getSeries().getLockMessage());
@@ -778,7 +813,10 @@ public class MangakaController {
                 result.put("message", "Chapter này đã có trang bìa. Hãy xóa trang bìa hiện tại trước khi tạo trang bìa mới!");
                 return result;
             }
-            int nextNum = existing.size() + 1;
+            // Dựa trên PageNumber lớn nhất hiện có trong chapter, không dùng
+            // existing.size()+1 — nếu 1 trang ở giữa từng bị xóa, size() sẽ tính
+            // thiếu và sinh ra PageNumber trùng với trang đang tồn tại.
+            int nextNum = existing.stream().mapToInt(MangaPage::getPageNumber).max().orElse(0) + 1;
 
             MangaPage page = new MangaPage();
             page.setId(pageId);
@@ -831,6 +869,12 @@ public class MangakaController {
         if (chapter == null || !chapter.getId().equals(cid)) {
             result.put("status", "error");
             result.put("message", "Trang không thuộc chapter này!");
+            return result;
+        }
+
+        if (!isOwnSeries(chapter.getSeries(), user)) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền thao tác trên trang này!");
             return result;
         }
 
@@ -942,7 +986,13 @@ public class MangakaController {
     // Thêm vào trong MangakaController
     @GetMapping("/{mangakaId}/assistants")
     @ResponseBody
-    public List<Assistant> getAssistants(@PathVariable String mangakaId) {
+    public List<Assistant> getAssistants(@PathVariable String mangakaId, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        Mangaka mangaka = mangakaRepository.findById(mangakaId).orElse(null);
+        if (user == null || mangaka == null || mangaka.getUser() == null
+                || !mangaka.getUser().getId().equals(user.getId())) {
+            return List.of();
+        }
         return assistantRepository.findByMangakaId(mangakaId);
     }
 
@@ -966,12 +1016,19 @@ public class MangakaController {
     @Operation(summary = "[SWAGGER] Lấy danh sách submission intask của các assistant thuộc mangaka")
     @GetMapping("/{mangakaId}/assistant-tasks")
     @ResponseBody
-    public Map<String, Object> getAssistantTasks(@PathVariable String mangakaId) {
+    public Map<String, Object> getAssistantTasks(@PathVariable String mangakaId, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
         Mangaka mangaka = mangakaRepository.findById(mangakaId).orElse(null);
         if (mangaka == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy mangaka: " + mangakaId);
+            return result;
+        }
+        User requester = (User) session.getAttribute("user");
+        if (mangaka.getUser() == null || requester == null
+                || !mangaka.getUser().getId().equals(requester.getId())) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền xem dữ liệu này!");
             return result;
         }
 

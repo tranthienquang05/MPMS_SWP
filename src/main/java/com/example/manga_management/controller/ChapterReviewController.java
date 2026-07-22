@@ -66,6 +66,15 @@ public class ChapterReviewController {
             return result;
         }
 
+        if (chapter.getSeries() == null || chapter.getSeries().getProposal() == null
+                || chapter.getSeries().getProposal().getMangaka() == null
+                || chapter.getSeries().getProposal().getMangaka().getUser() == null
+                || !chapter.getSeries().getProposal().getMangaka().getUser().getId().equals(user.getId())) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền submit chapter này!");
+            return result;
+        }
+
         if (!chapter.getStatus().equals("unfinish")) {
             result.put("status", "error");
             result.put("message", "Chapter này không thể submit lúc này (trạng thái: " + chapter.getStatus() + ")");
@@ -163,6 +172,17 @@ public class ChapterReviewController {
         if (chapter == null) {
             result.put("status", "error");
             result.put("message", "Không tìm thấy chapter!");
+            return result;
+        }
+
+        if (chapter.getSeries() == null || chapter.getSeries().getProposal() == null
+                || chapter.getSeries().getProposal().getMangaka() == null
+                || chapter.getSeries().getProposal().getMangaka().getEditor() == null
+                || chapter.getSeries().getProposal().getMangaka().getEditor().getUser() == null
+                || !chapter.getSeries().getProposal().getMangaka().getEditor().getUser().getId()
+                        .equals(user.getId())) {
+            result.put("status", "error");
+            result.put("message", "Bạn không phải tantou phụ trách chapter này!");
             return result;
         }
 

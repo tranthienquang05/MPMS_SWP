@@ -3487,11 +3487,11 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                   <div class="chapter-table-scroll">
                     <table class="data-table chapter-compact-table">
                       <thead><tr>
-                        <th>Tên chapter</th><th>Deadline</th><th>Mốc thời gian</th><th>Trạng thái</th><th>Nhận xét</th>
+                        <th>Tên chapter</th><th>Deadline</th><th>Trạng thái</th>
                       </tr></thead>
                       <tbody>`;
           if (sortedChapters.length === 0) {
-            html += `<tr><td colspan="5" class="ptab-sub-desc">Series này chưa có chapter nào.</td></tr>`;
+            html += `<tr><td colspan="3" class="ptab-sub-desc">Series này chưa có chapter nào.</td></tr>`;
           } else {
             sortedChapters.forEach((c) => {
               const deadline = formatChapterDeadline(c.deadline);
@@ -3510,13 +3510,6 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                 stopped: '<span class="badge-status-rejected">Đã dừng</span>',
               };
               const chapterLocked = isLocked && c.status !== "published";
-              const commentButton = `<button type="button"
-                    class="chapter-comment-btn"
-                    data-chapter-name="${escapeProjectHtml(c.chapterName || "Chapter") }"
-                    data-comment="${escapeProjectHtml(c.tantouComment || "") }"
-                    onclick="event.stopPropagation(); showTantouComment(this)">
-                    Nhận xét
-                  </button>`;
               // c.reward: JSON trả về "reward" (không phải "isReward") do quy ước getter boolean của Jackson/Lombok.
               const rewardBadge = c.reward
                 ? ` <span class="badge-status-passed u-inline-style-125" title="Chapter này đã được tính vào 1 lần thưởng series, không tính lại nữa">🏆 Đã thưởng</span>`
@@ -3545,12 +3538,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                     onkeydown="if(event.key === 'Enter' || event.key === ' '){event.preventDefault(); ${chapterLocked ? `alert('${lockMessage}')` : `openChapterFromRow(this)`}}">
                   <td><div class="chapter-title-cell">${chapterCover}<strong>${escapeProjectHtml(c.chapterName)}</strong></div></td>
                   <td>${deadline}</td>
-                  <td>
-                    <span class="chapter-date-line"><small>Nộp</small>${formatAppDateTime(c.submittedAt)}</span>
-                    <span class="chapter-date-line"><small>Duyệt</small>${formatAppDateTime(c.reviewedAt)}</span>
-                  </td>
                   <td>${chapterStatusMap[c.status] || formatStatusVi(c.status)}${rewardBadge}</td>
-                  <td><div class="chapter-row-actions">${commentButton}</div></td>
                 </tr>`;
             });
           }
@@ -3962,6 +3950,13 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
               <div class="chapter-review-dates">
                 <span><strong>Ngày nộp:</strong> ${formatAppDateTime(chapter.submittedAt)}</span>
                 <span><strong>Ngày duyệt:</strong> ${formatAppDateTime(chapter.reviewedAt)}</span>
+                <button type="button"
+                    class="chapter-comment-btn"
+                    data-chapter-name="${escapeProjectHtml(chapter.chapterName || "Chapter") }"
+                    data-comment="${escapeProjectHtml(chapter.tantouComment || "") }"
+                    onclick="showTantouComment(this)">
+                    Nhận xét
+                  </button>
               </div>
               <div class="chapter-page-toolbar">`;
 

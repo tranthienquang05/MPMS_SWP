@@ -6775,6 +6775,12 @@ body.chapter-workspace-active #project-view-chapter {
   outline: none;
 }
 
+/* Trong khối ngày nộp/duyệt, nút nhận xét đứng ngang hàng với 2 mốc ngày,
+   không chiếm trọn 1 dòng như khi còn nằm trong ô hành động của bảng. */
+.chapter-review-dates .chapter-comment-btn {
+  width: auto;
+}
+
 .chapter-pages-pane {
   height: 100%;
   min-height: 0;

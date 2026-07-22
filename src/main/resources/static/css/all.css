@@ -6543,14 +6543,14 @@ body.chapter-workspace-active #project-view-chapter {
   width: 100%;
   height: 100%;
   min-height: 0;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
   gap: 8px;
   align-items: stretch;
   padding: 8px;
 }
 
 .chapter-management-split.has-selection {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
 }
 
 .chapter-list-pane,

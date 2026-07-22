@@ -4641,12 +4641,27 @@ body:not(:has(.topnav)) .app-floating-modal {
 
 .profile-connections {
   grid-template-columns: 1fr;
+  grid-template-areas:
+    "connection-heading"
+    "connection-list"
+    "connection-editor"
+    "connection-save";
   border-bottom: 0;
+}
+
+.profile-connections > .profile-account-copy {
+  grid-area: connection-heading;
 }
 
 #profileConnectionList {
   display: grid;
+  grid-area: connection-list;
   gap: 0.5rem;
+  max-height: 112px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-right: 0.2rem;
 }
 
 .profile-connection-item {
@@ -4685,11 +4700,23 @@ body:not(:has(.topnav)) .app-floating-modal {
 }
 
 .profile-connection-editor {
+  grid-area: connection-editor;
   align-items: stretch;
 }
 
 .profile-connection-editor input { min-width: 0; flex: 1; }
-.profile-save-connections { justify-self: end; }
+.profile-connection-editor > button,
+.profile-save-connections {
+  width: 132px;
+  min-width: 132px;
+  min-height: 34px;
+  justify-content: center;
+}
+
+.profile-save-connections {
+  grid-area: connection-save;
+  justify-self: end;
+}
 .profile-connection-empty { margin: 0; color: var(--app-muted); }
 
 .otp-channel-picker {
@@ -6543,14 +6570,14 @@ body.chapter-workspace-active #project-view-chapter {
   width: 100%;
   height: 100%;
   min-height: 0;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
+  grid-template-columns: minmax(310px, 27fr) minmax(0, 73fr);
   gap: 8px;
   align-items: stretch;
   padding: 8px;
 }
 
 .chapter-management-split.has-selection {
-  grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
+  grid-template-columns: minmax(310px, 27fr) minmax(0, 73fr);
 }
 
 .chapter-list-pane,
@@ -6575,10 +6602,10 @@ body.chapter-workspace-active #project-view-chapter {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem 1rem;
+  gap: 0.5rem 0.75rem;
   border-bottom: 1px solid var(--app-border);
   background: var(--app-surface-2);
-  padding: 1rem;
+  padding: 0.75rem;
 }
 
 .chapter-pane-heading h2,
@@ -6588,13 +6615,13 @@ body.chapter-workspace-active #project-view-chapter {
 
 .chapter-pane-heading h2 {
   color: var(--app-text);
-  font-size: 1.25rem;
+  font-size: 1.08rem;
 }
 
 .chapter-pane-heading p {
   margin-top: 0.2rem;
   color: var(--app-muted);
-  font-size: 0.88rem;
+  font-size: 0.8rem;
 }
 
 .chapter-pane-heading p strong {
@@ -6634,7 +6661,7 @@ body.chapter-workspace-active #project-view-chapter {
 
 .chapter-compact-table th,
 .chapter-compact-table td {
-  padding: 0.75rem 0.65rem;
+  padding: 0.55rem 0.5rem;
   vertical-align: middle;
 }
 
@@ -6686,9 +6713,9 @@ body.chapter-workspace-active #project-view-chapter {
 .chapter-cover-thumb-button,
 .chapter-cover-empty {
   display: grid;
-  width: 42px;
-  height: 58px;
-  flex: 0 0 42px;
+  width: 36px;
+  height: 48px;
+  flex: 0 0 36px;
   place-items: center;
   overflow: hidden;
   border: 1px solid var(--app-border-strong);
@@ -6816,10 +6843,66 @@ body.chapter-workspace-active #project-view-chapter {
   position: sticky;
   top: -1.15rem;
   z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(210px, 0.9fr) minmax(260px, 1.4fr) auto;
+  align-items: center;
+  gap: 0.75rem;
   margin: -1.15rem -1.15rem 0.75rem;
   border-bottom: 1px solid var(--app-border);
   background: var(--app-surface);
   padding: 1rem 1.15rem 0.85rem;
+}
+
+.chapter-inline-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.chapter-inline-meta > span,
+.chapter-inline-meta > .chapter-comment-btn {
+  display: flex;
+  min-width: 0;
+  min-height: 34px;
+  align-items: center;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: var(--app-surface-2);
+  color: var(--app-muted);
+  padding: 0.4rem 0.55rem;
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.chapter-inline-meta > span strong {
+  color: var(--app-text);
+  margin-right: 0.25rem;
+}
+
+.chapter-inline-meta > .chapter-comment-btn {
+  width: auto;
+  justify-content: center;
+  color: var(--app-text);
+}
+
+.chapter-inline-title {
+  min-width: 0;
+}
+
+.chapter-inline-title h3,
+.chapter-inline-title p {
+  margin: 0;
+}
+
+.chapter-inline-title h3 {
+  color: var(--app-text);
+  font-size: 1rem;
+}
+
+.chapter-inline-title p {
+  margin-top: 0.2rem;
+  color: var(--app-muted);
+  font-size: 0.8rem;
 }
 
 .chapter-pages-pane .pages-grid-container {
@@ -6830,9 +6913,10 @@ body.chapter-workspace-active #project-view-chapter {
 }
 
 .chapter-pages-pane .pages-grid-container .page-detail-card {
+  display: grid;
   width: 100%;
   max-width: 1180px;
-  flex-direction: row;
+  grid-template-columns: minmax(240px, 3fr) minmax(0, 7fr);
   align-items: stretch;
   gap: 1rem;
 }
@@ -6846,8 +6930,8 @@ body.chapter-workspace-active #project-view-chapter {
 }
 
 .chapter-pages-pane .pages-grid-container .page-side-panel {
-  flex: 0 0 230px;
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 0.5rem;
   border: 1px solid var(--app-border);
@@ -6875,7 +6959,7 @@ body.chapter-workspace-active #project-view-chapter {
 }
 
 .chapter-pages-pane .pages-grid-container .page-side-panel textarea {
-  min-height: 130px;
+  min-height: 220px;
   width: 100%;
   resize: vertical;
   border: 1px solid var(--app-border);
@@ -6914,11 +6998,10 @@ body.chapter-workspace-active #project-view-chapter {
 
 @media (max-width: 900px) {
   .chapter-pages-pane .pages-grid-container .page-detail-card {
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .chapter-pages-pane .pages-grid-container .page-side-panel {
-    flex: 1 1 auto;
     width: 100%;
   }
 }
@@ -6928,9 +7011,12 @@ body.chapter-workspace-active #project-view-chapter {
 }
 
 .chapter-pages-pane .pages-grid-container .page-detail-preview-trigger .page-preview-box {
+  position: relative;
   width: 100%;
   height: auto;
-  min-height: 420px;
+  min-height: 320px;
+  cursor: zoom-in;
+  overscroll-behavior: contain;
   padding: 1rem;
 }
 
@@ -6940,6 +7026,41 @@ body.chapter-workspace-active #project-view-chapter {
   height: auto;
   max-height: none;
   object-fit: contain;
+  transform-origin: 0 0;
+  will-change: transform;
+  pointer-events: none;
+  user-select: none;
+}
+
+.chapter-pages-pane .pages-grid-container .page-detail-preview-trigger .page-preview-box.is-wheel-zoomed {
+  cursor: zoom-out;
+}
+
+.chapter-pages-pane .pages-grid-container .page-detail-preview-trigger .page-preview-box::after {
+  position: absolute;
+  right: 0.65rem;
+  bottom: 0.65rem;
+  content: attr(data-zoom-label);
+  opacity: 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.88);
+  color: #f9fafb;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  pointer-events: none;
+  transition: opacity 140ms ease-out;
+}
+
+.chapter-pages-pane .pages-grid-container .page-detail-preview-trigger .page-preview-box.is-wheel-zoomed::after {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chapter-pages-pane .pages-grid-container .page-detail-preview-trigger .page-preview-box::after {
+    transition: none;
+  }
 }
 
 .chapter-pages-pane .pages-grid-container .page-quick-actions,
@@ -6951,6 +7072,14 @@ body.chapter-workspace-active #project-view-chapter {
   .chapter-pane-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .chapter-pages-pane .chapter-inline-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .chapter-pages-pane .chapter-inline-meta {
+    grid-column: 1 / -1;
   }
 }
 
@@ -6970,6 +7099,14 @@ body.chapter-workspace-active #project-view-chapter {
   .chapter-management-split.has-selection {
     grid-template-columns: minmax(0, 1fr);
     overflow-y: auto;
+  }
+
+  .chapter-pages-pane .chapter-inline-heading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chapter-pages-pane .chapter-inline-page-count {
+    justify-self: start;
   }
 
   .chapter-list-pane,
@@ -8651,6 +8788,229 @@ body.role-workspaces-ready:not(.login-page)
   box-shadow: none !important;
 }
 
+/* Hồ sơ gọn: toàn bộ tài khoản và dữ liệu vai trò nằm trong một bảng, không cuộn từng cột. */
+.profile-unified-table .profile-account-row,
+.profile-unified-table .profile-connections {
+  gap: 0.3rem;
+  padding: 0.48rem 0.75rem;
+}
+
+.profile-unified-table
+  :is(.profile-account-row, .profile-connections)
+  :is(input, select, textarea, button) {
+  min-height: 34px;
+  padding-block: 0.3rem;
+}
+
+@media (min-width: 901px) {
+  body.role-workspaces-ready:not(.login-page)
+    .role-workspace-surface:has(> .role-workspace-content > .profile-unified-table)
+    > .role-workspace-header {
+    min-height: 72px;
+    padding-block: 0.7rem;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .role-workspace-content
+    > .profile-unified-table {
+    grid-template-columns: minmax(330px, 0.78fr) minmax(420px, 1.22fr);
+    overflow: hidden;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    > .profile-primary-column,
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    > .profile-role-card {
+    overflow: hidden !important;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    > .profile-primary-column {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-content: start;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    > .profile-primary-column
+    > .section-card:first-child {
+    min-height: 82px;
+    gap: 0.8rem !important;
+    padding: 0.65rem 1rem !important;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    > .profile-primary-column
+    > .section-card:first-child img {
+    width: 62px !important;
+    height: 62px !important;
+  }
+
+  body.role-workspaces-ready:not(.login-page) .profile-unified-table .profile-account-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    .profile-account-row {
+    min-width: 0;
+    gap: 0.2rem;
+    padding: 0.38rem 0.7rem;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    .profile-account-row:nth-child(odd) {
+    border-right: 0;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    .profile-account-copy label {
+    font-size: 0.78rem;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    :is(input, select, textarea, button) {
+    min-height: 32px;
+    padding-block: 0.25rem;
+    font-size: 0.82rem;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    .profile-account-control {
+    gap: 0.35rem;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    .profile-account-control
+    .btn-sm {
+    padding-inline: 0.65rem;
+    white-space: nowrap;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    .profile-connections {
+    grid-column: auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.3rem;
+    padding: 0.38rem 0.7rem 0.5rem;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    #profileConnectionList {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    .profile-connection-item {
+    min-width: 0;
+    border-radius: 8px;
+    padding: 0.2rem;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    .profile-connection-item a {
+    min-height: 32px;
+    padding: 0.25rem;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    .profile-connection-editor {
+    grid-column: 1 / -1;
+    gap: 0.35rem;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    .profile-save-connections {
+    grid-column: 1;
+    justify-self: end;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    > .profile-role-card {
+    padding: 0.75rem 1rem !important;
+  }
+
+  body.role-workspaces-ready:not(.login-page)
+    .profile-unified-table
+    > .profile-role-card
+    > h3 {
+    margin-bottom: 0.5rem !important;
+    font-size: 1rem;
+  }
+
+  .profile-role-content-grid {
+    display: grid;
+    gap: 0.45rem;
+    align-content: start;
+    overflow: hidden !important;
+  }
+
+  .profile-role-content-grid > .profile-role-summary {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 0.45rem !important;
+    margin: 0 !important;
+  }
+
+  .profile-role-content-grid > .profile-role-summary > div {
+    min-width: 0 !important;
+    padding: 0.45rem !important;
+    border-radius: 8px !important;
+  }
+
+  .profile-role-content-grid > .profile-role-summary > div > div:first-child {
+    font-size: 1.15rem !important;
+  }
+
+  .profile-role-content-grid > .profile-role-section {
+    min-width: 0;
+    margin: 0 !important;
+  }
+
+  .profile-role-content-grid > .profile-role-section > label {
+    margin-bottom: 0.25rem;
+    font-size: 0.78rem;
+  }
+
+  .profile-role-content-grid > .profile-role-section > input {
+    min-height: 34px;
+    padding-block: 0.35rem;
+  }
+
+  .profile-role-content-grid .profile-role-table {
+    margin-top: 0.25rem !important;
+    font-size: 0.75rem !important;
+    table-layout: fixed;
+  }
+
+  .profile-role-content-grid .profile-role-table :is(th, td) {
+    overflow: hidden;
+    padding: 0.22rem 0.4rem !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 /* Các tab cũ có thể chưa dùng lớp bọc chuyên biệt; thẻ và bảng cấp cao nhất
    vẫn được nối thành cùng một bảng liên tục. */
 body.role-workspaces-ready:not(.login-page)
@@ -8663,6 +9023,63 @@ body.role-workspaces-ready:not(.login-page)
   box-shadow: none !important;
 }
 
+/* Bảng dữ liệu dùng vùng cuộn riêng để số dòng tăng không làm cuộn toàn bộ trang. */
+.app-data-table-scroll {
+  width: 100%;
+  min-width: 0;
+  max-height: clamp(180px, 44dvh, 520px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: var(--app-surface);
+}
+
+.app-data-table-scroll:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: -2px;
+}
+
+.app-data-table-scroll > :is(table.data-table, table.profile-role-table) {
+  width: 100% !important;
+  min-width: 640px;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.app-data-table-scroll > table > thead {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.app-data-table-scroll > table > thead th {
+  background: var(--app-surface-3) !important;
+  box-shadow: inset 0 -1px 0 var(--app-border);
+}
+
+body.role-workspaces-ready:not(.login-page)
+  .role-workspace-content
+  > .app-data-table-scroll {
+  max-height: calc(100dvh - var(--app-header-height) - 150px);
+  margin: 0 !important;
+  border-radius: 0;
+}
+
+/* Các bảng thông tin theo vai trò có chiều cao gọn và tự cuộn độc lập. */
+.profile-role-section > .app-data-table-scroll {
+  max-height: clamp(120px, 22dvh, 210px);
+  margin-top: 0.25rem;
+  border-radius: 8px;
+}
+
+.profile-role-section > .app-data-table-scroll > .profile-role-table {
+  min-width: 520px;
+  margin-top: 0 !important;
+}
+
 @media (max-width: 900px) {
   body.role-workspaces-ready:not(.login-page) .role-workspace-header {
     min-height: 72px;
@@ -8671,6 +9088,14 @@ body.role-workspaces-ready:not(.login-page)
 
   body.role-workspaces-ready:not(.login-page) .role-workspace-header h1 {
     font-size: 1.25rem;
+  }
+
+  .app-data-table-scroll {
+    max-height: 55dvh;
+  }
+
+  .app-data-table-scroll > :is(table.data-table, table.profile-role-table) {
+    min-width: 600px;
   }
 }
 

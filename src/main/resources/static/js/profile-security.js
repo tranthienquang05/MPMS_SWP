@@ -106,6 +106,50 @@
     renderConnections();
   }
 
+  // Chuẩn hóa hồ sơ của mọi vai trò thành một bảng hai vùng dùng chung.
+  function ensureUnifiedProfileWorkspace(identityCard, formCard) {
+    const roleInfo = document.getElementById("profileRoleInfo");
+    let workspace = identityCard.closest(".profile-workspace");
+
+    if (!workspace) {
+      const host = identityCard.parentElement;
+      workspace = document.createElement("div");
+      workspace.className = "profile-workspace";
+
+      const primaryColumn = document.createElement("div");
+      primaryColumn.className = "profile-primary-column";
+      host.insertBefore(workspace, identityCard);
+      primaryColumn.append(identityCard, formCard);
+      workspace.appendChild(primaryColumn);
+      if (roleInfo) workspace.appendChild(roleInfo);
+    }
+
+    workspace.classList.add("profile-unified-table");
+    roleInfo?.classList.add("profile-role-card");
+  }
+
+  // Gắn lớp bố cục ổn định cho dữ liệu nghiệp vụ được từng role tạo động.
+  function normalizeProfileRoleInfo() {
+    const content = document.getElementById("profileRoleInfoContent");
+    if (!content) return;
+
+    content.classList.add("profile-role-content-grid");
+    Array.from(content.children).forEach((section, index) => {
+      if (section.classList.contains("field")) {
+        section.classList.add("profile-role-section");
+      } else if (
+        index === 0 &&
+        section.matches("div") &&
+        section.querySelectorAll(":scope > div").length > 1
+      ) {
+        section.classList.add("profile-role-summary");
+      }
+    });
+    content.querySelectorAll("table").forEach((table) => {
+      table.classList.add("profile-role-table");
+    });
+  }
+
   function buildProfileUi() {
     document.getElementById("btnChangePassword")?.remove();
     const displayName = document.getElementById("profileDisplayName");
@@ -113,6 +157,8 @@
     const identityCard = displayName.closest(".section-card");
     const formCard = identityCard?.nextElementSibling;
     if (!identityCard || !formCard?.classList.contains("section-card")) return;
+
+    ensureUnifiedProfileWorkspace(identityCard, formCard);
 
     const role = document.getElementById("profileDisplayRole");
     const id = document.getElementById("profileDisplayId");
@@ -188,7 +234,10 @@
     document.getElementById("verifyPhoneButton").hidden = !data.phone || data.phoneVerified;
     connections = parseConnections(data.socialLinks);
     renderConnections();
-    if (typeof window.renderProfileRoleInfo === "function") window.renderProfileRoleInfo(data);
+    if (typeof window.renderProfileRoleInfo === "function") {
+      window.renderProfileRoleInfo(data);
+      normalizeProfileRoleInfo();
+    }
     enhanceOtpChannels();
   }
 

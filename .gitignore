@@ -37,3 +37,7 @@ build/
 
 # Runtime user uploads
 /uploads/
+
+# Ignore build outputs & node_modules
+outputs/
+**/node_modules/

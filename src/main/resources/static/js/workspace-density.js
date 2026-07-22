@@ -566,6 +566,57 @@
     document.body.classList.add("role-workspaces-ready");
   }
 
+  /* Tạo vùng cuộn nội bộ cho các bảng có số dòng tăng theo dữ liệu API. */
+  const TABLE_SCROLL_CONTAINER_SELECTOR = [
+    ".app-data-table-scroll",
+    ".assistant-task-table-wrap",
+    ".proposal-table-stage",
+    ".ranking-table-scroll",
+    ".project-series-table-scroll",
+    ".chapter-list-pane",
+    ".shared-workflow-modal",
+  ].join(",");
+
+  function wrapScrollableTable(table) {
+    if (!(table instanceof HTMLTableElement)) return;
+    if (!table.closest(".role-workspace-content")) return;
+    if (table.closest(TABLE_SCROLL_CONTAINER_SELECTOR)) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "app-data-table-scroll";
+    wrapper.setAttribute("role", "region");
+    wrapper.setAttribute("aria-label", "Bảng dữ liệu có thể cuộn");
+    wrapper.tabIndex = 0;
+    table.parentNode?.insertBefore(wrapper, table);
+    wrapper.appendChild(table);
+  }
+
+  function normalizeScrollableTables(root = document) {
+    const tables = [];
+    if (root instanceof HTMLTableElement && root.matches(".data-table, .profile-role-table")) {
+      tables.push(root);
+    }
+    root
+      .querySelectorAll?.("table.data-table, table.profile-role-table")
+      .forEach((table) => tables.push(table));
+    tables.forEach(wrapScrollableTable);
+  }
+
+  /* Theo dõi bảng được render sau khi đổi tab hoặc tải dữ liệu để không cần tải lại trang. */
+  function observeScrollableTables() {
+    const workspaceRoot = document.querySelector(".flex-container");
+    if (!workspaceRoot) return;
+
+    const observer = new MutationObserver((records) => {
+      records.forEach((record) => {
+        record.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) normalizeScrollableTables(node);
+        });
+      });
+    });
+    observer.observe(workspaceRoot, { childList: true, subtree: true });
+  }
+
   function init() {
     removeDeadPlaceholders();
     initAdmin();
@@ -574,6 +625,8 @@
     initAssistant();
     initTantou();
     normalizeWorkspaceShells();
+    normalizeScrollableTables();
+    observeScrollableTables();
     removeContentTabIcons();
     document.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;

@@ -2709,7 +2709,65 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       document.querySelectorAll(".page-preview-box img").forEach((img) => {
         if (img.src) img.src = img.src + "?t=" + Date.now();
       });
+
+      // Cho phép zoom ảnh trang ngay tại vị trí con trỏ bằng con lăn chuột.
+      document.addEventListener("wheel", handlePagePreviewWheel, {
+        passive: false,
+        capture: true,
+      });
     });
+
+    function handlePagePreviewWheel(event) {
+      if (!(event.target instanceof Element)) return;
+      if (event.ctrlKey) return;
+
+      const previewBox = event.target.closest(
+        ".chapter-pages-pane .page-preview-box",
+      );
+      if (!previewBox) return;
+
+      const image = previewBox.querySelector("img");
+      if (!image) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const imageRect = image.getBoundingClientRect();
+      if (!imageRect.width || !imageRect.height) return;
+
+      const currentScale = Number(previewBox.dataset.zoomScale || 1);
+      const currentX = Number(previewBox.dataset.zoomX || 0);
+      const currentY = Number(previewBox.dataset.zoomY || 0);
+      const zoomFactor = event.deltaY < 0 ? 1.14 : 1 / 1.14;
+      const nextScale = Math.min(4, Math.max(1, currentScale * zoomFactor));
+
+      if (Math.abs(nextScale - 1) < 0.01) {
+        resetPagePreviewZoom(previewBox, image);
+        return;
+      }
+
+      const scaleRatio = nextScale / currentScale;
+      const nextX =
+        currentX + (event.clientX - imageRect.left) * (1 - scaleRatio);
+      const nextY =
+        currentY + (event.clientY - imageRect.top) * (1 - scaleRatio);
+
+      previewBox.dataset.zoomScale = String(nextScale);
+      previewBox.dataset.zoomX = String(nextX);
+      previewBox.dataset.zoomY = String(nextY);
+      previewBox.dataset.zoomLabel = `${Math.round(nextScale * 100)}%`;
+      previewBox.classList.add("is-wheel-zoomed");
+      image.style.transform = `translate3d(${nextX}px, ${nextY}px, 0) scale(${nextScale})`;
+    }
+
+    function resetPagePreviewZoom(previewBox, image) {
+      previewBox.dataset.zoomScale = "1";
+      previewBox.dataset.zoomX = "0";
+      previewBox.dataset.zoomY = "0";
+      previewBox.dataset.zoomLabel = "100%";
+      previewBox.classList.remove("is-wheel-zoomed");
+      image.style.transform = "";
+    }
 
     function openAssignModal(pageId) {
       closePageActionModal();
@@ -3989,24 +4047,23 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           let html = `
               <div id="mangaka-meta" data-mangaka-id="${mangakaId}" class="u-inline-style-126"></div>
               <div class="chapter-inline-heading">
-                <div>
+                <div class="chapter-inline-meta" aria-label="Thông tin tiến độ chapter">
+                  <span><strong>Deadline:</strong> ${chapter.deadline ? formatChapterDeadline(chapter.deadline) : "Chưa đặt deadline"}</span>
+                  <span><strong>Ngày nộp:</strong> ${formatAppDateTime(chapter.submittedAt)}</span>
+                  <span><strong>Ngày duyệt:</strong> ${formatAppDateTime(chapter.reviewedAt)}</span>
+                  <button type="button"
+                      class="chapter-comment-btn"
+                      data-chapter-name="${escapeProjectHtml(chapter.chapterName || "Chapter") }"
+                      data-comment="${escapeProjectHtml(chapter.tantouComment || "") }"
+                      onclick="showTantouComment(this)">
+                      Nhận xét của Tantou
+                  </button>
+                </div>
+                <div class="chapter-inline-title">
                   <h3>Trang của ${escapeProjectHtml(chapter.chapterName || "chapter chưa đặt tên")}</h3>
                   <p>Vẽ, giao việc và quản lý tiến độ trang ngay tại đây.</p>
                 </div>
                 <span class="chapter-inline-page-count">${pages.length} trang</span>
-              </div>
-              <p class="ptab-sub-desc u-inline-style-127">Deadline: <strong>${chapter.deadline ? formatChapterDeadline(chapter.deadline) : "Chưa đặt deadline"}</strong>
-              </p>
-              <div class="chapter-review-dates">
-                <span><strong>Ngày nộp:</strong> ${formatAppDateTime(chapter.submittedAt)}</span>
-                <span><strong>Ngày duyệt:</strong> ${formatAppDateTime(chapter.reviewedAt)}</span>
-                <button type="button"
-                    class="chapter-comment-btn"
-                    data-chapter-name="${escapeProjectHtml(chapter.chapterName || "Chapter") }"
-                    data-comment="${escapeProjectHtml(chapter.tantouComment || "") }"
-                    onclick="showTantouComment(this)">
-                    Nhận xét
-                  </button>
               </div>
               <div class="chapter-page-toolbar">`;
 
@@ -4092,23 +4149,12 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
               }
 
               const scriptForView = escapeProjectHtml(pageScript.trim());
-              const commentForView = escapeProjectHtml((p.tantouComment || "").trim());
               html += `<div class="page-grid-item page-detail-card"
                     data-page-id="${p.id}"
                     data-page-type-code="${escapeProjectHtml(p.pageType || "") }"
                     data-page-title="${escapeProjectHtml(pageTitle)}"
                     data-page-type="${escapeProjectHtml(pageTypeLabel)}"
                     data-page-status="${escapeProjectHtml(pageStatusLabel)}">
-                  <div class="page-side-panel page-script-panel">
-                    <span class="page-side-panel-label">Kịch bản trang</span>
-                    <p class="page-script-view" id="pageScriptView-${p.id}">${scriptForView || "Trang này chưa có kịch bản."}</p>
-                    <textarea class="page-script-edit" id="pageScriptEdit-${p.id}" hidden>${scriptForView}</textarea>
-                    <div class="page-side-panel-actions">
-                      <button type="button" class="page-side-panel-btn" id="pageScriptEditBtn-${p.id}" onclick="togglePageScriptEdit('${p.id}')">Sửa kịch bản</button>
-                      <button type="button" class="page-side-panel-btn page-side-panel-btn-primary" id="pageScriptSaveBtn-${p.id}" onclick="savePageScript('${sid}','${cid}','${p.id}')" hidden>Lưu</button>
-                      <button type="button" class="page-side-panel-btn" id="pageScriptCancelBtn-${p.id}" onclick="cancelPageScriptEdit('${p.id}')" hidden>Hủy</button>
-                    </div>
-                  </div>
                   <div class="page-detail-card-main">
                     <button
                       type="button"
@@ -4130,9 +4176,15 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                     </div>
                     <div class="page-action-template" id="pageActions-${p.id}" hidden>${actions}</div>
                   </div>
-                  <div class="page-side-panel page-comment-panel">
-                    <span class="page-side-panel-label">Nhận xét của Tantou</span>
-                    <p>${commentForView || "Chưa có nhận xét."}</p>
+                  <div class="page-side-panel page-script-panel">
+                    <span class="page-side-panel-label">Kịch bản trang</span>
+                    <p class="page-script-view" id="pageScriptView-${p.id}">${scriptForView || "Trang này chưa có kịch bản."}</p>
+                    <textarea class="page-script-edit" id="pageScriptEdit-${p.id}" hidden>${scriptForView}</textarea>
+                    <div class="page-side-panel-actions">
+                      <button type="button" class="page-side-panel-btn" id="pageScriptEditBtn-${p.id}" onclick="togglePageScriptEdit('${p.id}')">Sửa kịch bản</button>
+                      <button type="button" class="page-side-panel-btn page-side-panel-btn-primary" id="pageScriptSaveBtn-${p.id}" onclick="savePageScript('${sid}','${cid}','${p.id}')" hidden>Lưu</button>
+                      <button type="button" class="page-side-panel-btn" id="pageScriptCancelBtn-${p.id}" onclick="cancelPageScriptEdit('${p.id}')" hidden>Hủy</button>
+                    </div>
                   </div>
                 </div>`;
             });

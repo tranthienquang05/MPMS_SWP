@@ -844,6 +844,74 @@ public class MangakaController {
         return result;
     }
 
+    @Operation(summary = "[SWAGGER] Sửa lại kịch bản của 1 trang đã tạo")
+    @PostMapping("/myseries/{seriesId}/{chapterId}/{pageId}/editscript")
+    @ResponseBody
+    public Map<String, Object> editPageScript(@PathVariable String seriesId,
+            @PathVariable String chapterId,
+            @PathVariable String pageId,
+            @org.springframework.web.bind.annotation.RequestBody(required = false) Map<String, String> body,
+            HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+
+        MangaPage page = mangaPageRepository.findById(pageId).orElse(null);
+        if (page == null || page.getChapter() == null || !page.getChapter().getId().equals(chapterId)) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy trang: " + pageId);
+            return result;
+        }
+
+        User user = (User) session.getAttribute("user");
+        if (!isOwnSeries(page.getChapter().getSeries(), user)) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền sửa trang này!");
+            return result;
+        }
+
+        if (page.getChapter().getSeries() != null && page.getChapter().getSeries().isLocked()) {
+            result.put("status", "error");
+            result.put("message", page.getChapter().getSeries().getLockMessage());
+            return result;
+        }
+
+        if ("finish".equals(page.getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Trang đã hoàn thành, không thể sửa kịch bản!");
+            return result;
+        }
+
+        String script = body != null ? body.get("script") : null;
+        if (script == null || script.trim().isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng nhập kịch bản trang!");
+            return result;
+        }
+        if (script.trim().length() > 1000) {
+            result.put("status", "error");
+            result.put("message", "Kịch bản trang tối đa 1000 chữ!");
+            return result;
+        }
+
+        try {
+            page.setScript(script.trim());
+            mangaPageRepository.save(page);
+
+            if (user != null) {
+                activityLogService.log(user.getId(), "edit-page-script",
+                        "Đã sửa kịch bản trang " + page.getPageNumber() + " trong chapter \""
+                                + page.getChapter().getChapterName() + "\"");
+            }
+
+            result.put("status", "success");
+            result.put("message", "Đã lưu kịch bản trang!");
+            result.put("script", page.getScript());
+        } catch (Exception e) {
+            result.put("status", "error");
+            result.put("message", "Lỗi hệ thống: " + e.getMessage());
+        }
+        return result;
+    }
+
     @Operation(summary = "[SWAGGER] Xóa trang trong chapter (chỉ khi trang chưa giao việc và chưa hoàn thành)")
     @PostMapping("/myseries/{sid}/{cid}/{pid}/delete-page")
     @ResponseBody

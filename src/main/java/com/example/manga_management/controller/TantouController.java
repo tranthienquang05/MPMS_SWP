@@ -540,6 +540,15 @@ public class TantouController {
             return result;
         }
 
+        if (series.getProposal() == null || series.getProposal().getMangaka() == null
+                || series.getProposal().getMangaka().getEditor() == null
+                || series.getProposal().getMangaka().getEditor().getUser() == null
+                || !series.getProposal().getMangaka().getEditor().getUser().getId().equals(user.getId())) {
+            result.put("status", "error");
+            result.put("message", "Bạn không phải tantou phụ trách series này!");
+            return result;
+        }
+
         if (!"pending_cancel".equals(series.getStatus())) {
             result.put("status", "error");
             result.put("message", "Series này không ở trạng thái chờ hồ sơ bảo vệ!");

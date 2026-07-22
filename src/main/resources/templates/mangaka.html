@@ -3659,10 +3659,67 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       overlay.style.display = "none";
     }
 
-    function togglePageScriptPanel() {
-      const panel = document.getElementById("pageActionScriptPanel");
-      if (!panel) return;
-      panel.hidden = !panel.hidden;
+    function togglePageScriptEdit(pageId) {
+      const view = document.getElementById(`pageScriptView-${pageId}`);
+      const edit = document.getElementById(`pageScriptEdit-${pageId}`);
+      const editBtn = document.getElementById(`pageScriptEditBtn-${pageId}`);
+      const saveBtn = document.getElementById(`pageScriptSaveBtn-${pageId}`);
+      const cancelBtn = document.getElementById(`pageScriptCancelBtn-${pageId}`);
+      if (!view || !edit) return;
+      view.hidden = true;
+      edit.hidden = false;
+      if (editBtn) editBtn.hidden = true;
+      if (saveBtn) saveBtn.hidden = false;
+      if (cancelBtn) cancelBtn.hidden = false;
+      edit.focus();
+    }
+
+    function cancelPageScriptEdit(pageId) {
+      const view = document.getElementById(`pageScriptView-${pageId}`);
+      const edit = document.getElementById(`pageScriptEdit-${pageId}`);
+      const editBtn = document.getElementById(`pageScriptEditBtn-${pageId}`);
+      const saveBtn = document.getElementById(`pageScriptSaveBtn-${pageId}`);
+      const cancelBtn = document.getElementById(`pageScriptCancelBtn-${pageId}`);
+      if (!view || !edit) return;
+      edit.value = edit.defaultValue;
+      view.hidden = false;
+      edit.hidden = true;
+      if (editBtn) editBtn.hidden = false;
+      if (saveBtn) saveBtn.hidden = true;
+      if (cancelBtn) cancelBtn.hidden = true;
+    }
+
+    async function savePageScript(sid, cid, pageId) {
+      const edit = document.getElementById(`pageScriptEdit-${pageId}`);
+      if (!edit) return;
+      const script = edit.value.trim();
+      if (!script) {
+        if (window.showUiAlertAsync) await window.showUiAlertAsync("Vui lòng nhập kịch bản trang!");
+        else alert("Vui lòng nhập kịch bản trang!");
+        return;
+      }
+      try {
+        const res = await fetch(
+          `/manga/mangaka/myseries/${sid}/${cid}/${pageId}/editscript`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ script }),
+          },
+        );
+        const data = await res.json();
+        if (data.status === "success") {
+          refreshActiveChapterPages();
+        } else if (window.showUiAlertAsync) {
+          await window.showUiAlertAsync(data.message || "Không thể lưu kịch bản!");
+        } else {
+          alert(data.message || "Không thể lưu kịch bản!");
+        }
+      } catch (err) {
+        const message = "Lỗi: " + err.message;
+        if (window.showUiAlertAsync) await window.showUiAlertAsync(message);
+        else alert(message);
+      }
     }
 
     function openPageActionModal(pageId) {
@@ -3680,19 +3737,12 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         `pageActions-${pageId}`,
       );
       const title = card.dataset.pageTitle || "Trang";
-      const type = card.dataset.pageType || "Trang truy\u1ec7n";
-      const status = card.dataset.pageStatus || "Ch\u01b0a x\u00e1c \u0111\u1ecbnh";
-      const script = card.dataset.pageScript || "";
-      const tantouComment = card.dataset.tantouComment || "";
+      const type = card.dataset.pageType || "Trang truyện";
+      const status = card.dataset.pageStatus || "Chưa xác định";
 
       overlay.querySelector("#pageActionModalTitle").textContent = title;
       overlay.querySelector("#pageActionModalType").textContent = type;
       overlay.querySelector("#pageActionModalStatus").textContent = status;
-      overlay.querySelector("#pageActionScriptText").textContent =
-        script.trim() || "Trang n\u00e0y ch\u01b0a c\u00f3 k\u1ecbch b\u1ea3n.";
-      overlay.querySelector("#pageActionScriptPanel").hidden = true;
-      overlay.querySelector("#pageActionModalTantouComment").textContent =
-        tantouComment.trim() || "Ch\u01b0a c\u00f3 nh\u1eadn x\u00e9t.";
       overlay.querySelector("#pageActionModalActions").innerHTML =
         actionsTemplate ? actionsTemplate.innerHTML : "";
 
@@ -3968,7 +4018,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
             const hasScript = !!(
               chapter.script && chapter.script.trim() !== ""
             );
-            html += `<button type="button" class="project-action-btn" onclick="activateInlineChapter('${sid}','${cid}'); openChapterScriptModal()">${hasScript ? "Sửa kịch bản" : "Tạo kịch bản"}</button>`;
+            html += `<button type="button" class="project-action-btn" onclick="activateInlineChapter('${sid}','${cid}'); openChapterScriptModal()">${hasScript ? "Sửa kịch bản chapter" : "Tạo kịch bản chapter"}</button>`;
             html += `<button type="button" class="project-action-btn" onclick="activateInlineChapter('${sid}','${cid}'); openAddPageModal('${sid}','${cid}')">Thêm trang mới</button>`;
             if (pages.length > 0) {
               html += `<button type="button" class="project-action-btn project-action-primary btn-submit-chapter"
@@ -3993,8 +4043,6 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
 
               let actions = "";
               let quickActions = "";
-
-              actions += `<button type="button" class="page-action-btn page-action-script btn-toggle-page-script" onclick="togglePageScriptPanel()">Xem k\u1ecbch b\u1ea3n trang</button>`;
 
               if (chapter.status === "unfinish" && p.status !== "finish") {
                 actions += `<a href="/manga/mangaka/myseries/${sid}/${cid}/${p.id}/edit" class="page-action-btn page-action-draw">M\u1edf trang v\u1ebd</a>`;
@@ -4043,33 +4091,49 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                   </div>`;
               }
 
+              const scriptForView = escapeProjectHtml(pageScript.trim());
+              const commentForView = escapeProjectHtml((p.tantouComment || "").trim());
               html += `<div class="page-grid-item page-detail-card"
                     data-page-id="${p.id}"
                     data-page-type-code="${escapeProjectHtml(p.pageType || "") }"
                     data-page-title="${escapeProjectHtml(pageTitle)}"
                     data-page-type="${escapeProjectHtml(pageTypeLabel)}"
-                    data-page-status="${escapeProjectHtml(pageStatusLabel)}"
-                    data-page-script="${escapeProjectHtml(pageScript)}"
-                    data-tantou-comment="${escapeProjectHtml(p.tantouComment || "")}">
-                  <button
-                    type="button"
-                    class="page-detail-trigger page-detail-preview-trigger"
-                    onclick="openPageActionModal('${p.id}')"
-                    aria-label="Mở tác vụ ${escapeProjectHtml(pageTitle)}"
-                  >
-                    <span class="page-preview-box">${imgHtml}</span>
-                    <span class="page-detail-trigger-title">${pageTitle}</span>
-                    <span class="page-detail-card-meta">
-                      <span>${pageTypeLabel}</span>
-                      <span>${pageStatusLabel}</span>
-                    </span>
-                  </button>
-                  ${assignmentInfo}
-                  <div class="page-quick-actions">
-                    ${quickActions}
-                    <button type="button" class="page-quick-action page-quick-more" onclick="openPageActionModal('${p.id}')">T\u00e1c v\u1ee5 kh\u00e1c</button>
+                    data-page-status="${escapeProjectHtml(pageStatusLabel)}">
+                  <div class="page-side-panel page-script-panel">
+                    <span class="page-side-panel-label">Kịch bản trang</span>
+                    <p class="page-script-view" id="pageScriptView-${p.id}">${scriptForView || "Trang này chưa có kịch bản."}</p>
+                    <textarea class="page-script-edit" id="pageScriptEdit-${p.id}" hidden>${scriptForView}</textarea>
+                    <div class="page-side-panel-actions">
+                      <button type="button" class="page-side-panel-btn" id="pageScriptEditBtn-${p.id}" onclick="togglePageScriptEdit('${p.id}')">Sửa kịch bản</button>
+                      <button type="button" class="page-side-panel-btn page-side-panel-btn-primary" id="pageScriptSaveBtn-${p.id}" onclick="savePageScript('${sid}','${cid}','${p.id}')" hidden>Lưu</button>
+                      <button type="button" class="page-side-panel-btn" id="pageScriptCancelBtn-${p.id}" onclick="cancelPageScriptEdit('${p.id}')" hidden>Hủy</button>
+                    </div>
                   </div>
-                  <div class="page-action-template" id="pageActions-${p.id}" hidden>${actions}</div>
+                  <div class="page-detail-card-main">
+                    <button
+                      type="button"
+                      class="page-detail-trigger page-detail-preview-trigger"
+                      onclick="openPageActionModal('${p.id}')"
+                      aria-label="Mở tác vụ ${escapeProjectHtml(pageTitle)}"
+                    >
+                      <span class="page-preview-box">${imgHtml}</span>
+                      <span class="page-detail-trigger-title">${pageTitle}</span>
+                      <span class="page-detail-card-meta">
+                        <span>${pageTypeLabel}</span>
+                        <span>${pageStatusLabel}</span>
+                      </span>
+                    </button>
+                    ${assignmentInfo}
+                    <div class="page-quick-actions">
+                      ${quickActions}
+                      <button type="button" class="page-quick-action page-quick-more" onclick="openPageActionModal('${p.id}')">Tác vụ khác</button>
+                    </div>
+                    <div class="page-action-template" id="pageActions-${p.id}" hidden>${actions}</div>
+                  </div>
+                  <div class="page-side-panel page-comment-panel">
+                    <span class="page-side-panel-label">Nhận xét của Tantou</span>
+                    <p>${commentForView || "Chưa có nhận xét."}</p>
+                  </div>
                 </div>`;
             });
           }
@@ -4101,14 +4165,6 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                       <span>Tr\u1ea1ng th\u00e1i trang</span>
                       <strong id="pageActionModalStatus"></strong>
                     </div>
-                  </div>
-                  <div class="page-action-script-panel">
-                    <span>Nh\u1eadn x\u00e9t c\u1ee7a Tantou</span>
-                    <p id="pageActionModalTantouComment"></p>
-                  </div>
-                  <div id="pageActionScriptPanel" class="page-action-script-panel" hidden>
-                    <span>K\u1ecbch b\u1ea3n trang</span>
-                    <p id="pageActionScriptText"></p>
                   </div>
                   <div id="pageActionModalActions" class="page-action-modal-actions"></div>
                 </div>

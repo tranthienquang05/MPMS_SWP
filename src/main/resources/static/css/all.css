@@ -6830,7 +6830,97 @@ body.chapter-workspace-active #project-view-chapter {
 }
 
 .chapter-pages-pane .pages-grid-container .page-detail-card {
-  width: min(100%, 680px);
+  width: 100%;
+  max-width: 1180px;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.chapter-pages-pane .pages-grid-container .page-detail-card-main {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.chapter-pages-pane .pages-grid-container .page-side-panel {
+  flex: 0 0 230px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: var(--app-surface-2);
+  padding: 0.85rem;
+}
+
+.chapter-pages-pane .pages-grid-container .page-side-panel-label {
+  color: var(--app-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.chapter-pages-pane .pages-grid-container .page-side-panel p,
+.chapter-pages-pane .pages-grid-container .page-side-panel textarea {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chapter-pages-pane .pages-grid-container .page-side-panel textarea {
+  min-height: 130px;
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: var(--app-surface);
+  padding: 0.5rem;
+  font-family: inherit;
+}
+
+.chapter-pages-pane .pages-grid-container .page-side-panel-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.chapter-pages-pane .pages-grid-container .page-side-panel-btn {
+  flex: 1 1 auto;
+  min-height: 32px;
+  border: 1px solid var(--app-border-strong);
+  border-radius: 8px;
+  background: var(--app-surface-2);
+  color: var(--app-text);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chapter-pages-pane .pages-grid-container .page-side-panel-btn:hover {
+  border-color: var(--app-brand);
+}
+
+.chapter-pages-pane .pages-grid-container .page-side-panel-btn-primary {
+  border-color: var(--app-brand);
+  background: var(--app-brand);
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .chapter-pages-pane .pages-grid-container .page-detail-card {
+    flex-direction: column;
+  }
+
+  .chapter-pages-pane .pages-grid-container .page-side-panel {
+    flex: 1 1 auto;
+    width: 100%;
+  }
 }
 
 .chapter-pages-pane .pages-grid-container .page-detail-preview-trigger {

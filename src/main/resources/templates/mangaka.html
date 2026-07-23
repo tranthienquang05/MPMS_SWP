@@ -1768,7 +1768,6 @@ const STATUS_VI_MAP = {
   stopped: "Đã dừng",
   locked: "Bị khóa",
   published: "Đã xuất bản",
-  rewarded: "Đã khen thưởng",
   active: "Đang mở",
   closed: "Đã đóng",
   assigned: "Đã giao",
@@ -3457,8 +3456,6 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                   '<span class="badge-status-waiting">Chờ BTV duyệt</span>',
                 pass: '<span class="badge-status-passed">Đã duyệt</span>',
                 stopped: '<span class="badge-status-rejected">Đã dừng</span>',
-                rewarded:
-                  '<span class="badge-status-passed">Đã khen thưởng</span>',
               };
               html += `<tr>
                   <td>

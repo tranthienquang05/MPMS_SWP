@@ -3031,9 +3031,6 @@ if (btnSavePage) {
         btnSavePage.innerHTML = "Đã lưu!";
         setTimeout(() => {
           btnSavePage.innerHTML = "Lưu trang";
-          if (data.redirectUrl) {
-            window.location.href = data.redirectUrl;
-          }
         }, 2000);
       } else {
         alert("" + data.message);
@@ -3207,6 +3204,30 @@ if (btnSubmitSubmission) {
     return data;
   }
 
+  async function finishArtworkSave() {
+    closeEditSubmissionModal();
+
+    const refreshPromise =
+      typeof window.refreshDrawChapterPages === "function"
+        ? Promise.resolve(window.refreshDrawChapterPages())
+        : Promise.resolve();
+
+    if (typeof window.showUiAlertAsync === "function") {
+      await Promise.allSettled([
+        refreshPromise,
+        window.showUiAlertAsync("Lưu thành công"),
+      ]);
+      return;
+    }
+
+    if (typeof window.showUiAlert === "function") {
+      window.showUiAlert("Lưu thành công");
+    } else {
+      alert("Lưu thành công");
+    }
+    await refreshPromise;
+  }
+
   function openActionModal(e) {
     e?.preventDefault();
     e?.stopPropagation();
@@ -3230,7 +3251,7 @@ if (btnSubmitSubmission) {
   btnModalDownload?.addEventListener("click", () => btnDownloadLegacy?.click());
   btnModalSaveArtwork?.addEventListener("click", async (e) => {
     const saved = await saveArtwork(e.currentTarget, { redirect: false });
-    if (saved) closeEditSubmissionModal();
+    if (saved) await finishArtworkSave();
   });
 
   btnConfirmEdit?.addEventListener("click", async (e) => {
@@ -3244,15 +3265,7 @@ if (btnSubmitSubmission) {
         await updateSubmissionMeta(button);
       }
       button.innerHTML = "Hoàn tất";
-      closeEditSubmissionModal();
-
-      const { returnUrl } = getDrawContext();
-      const nextUrl = returnUrl || saved.redirectUrl;
-      if (nextUrl) {
-        setTimeout(() => {
-          window.location.href = nextUrl;
-        }, 650);
-      }
+      await finishArtworkSave();
     } catch (err) {
       alert("Lỗi: " + err.message);
     }

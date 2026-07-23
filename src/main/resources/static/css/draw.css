@@ -545,6 +545,310 @@
   }
 }
 
+/* Danh sách trang và bộ chuyển chapter của không gian Draw. */
+#tab-draw .draw-wrapper {
+  grid-template-areas: "pages tools work side";
+  grid-template-columns: 224px 92px minmax(0, 1fr) clamp(284px, 22vw, 340px);
+}
+
+#tab-draw .draw-page-navigator {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  grid-area: pages;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--draw-border);
+  border-radius: 10px;
+  background: var(--draw-panel);
+}
+
+#tab-draw .draw-page-navigator-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-bottom: 1px solid var(--draw-border);
+  padding: 10px;
+}
+
+#tab-draw .draw-page-heading,
+#tab-draw .draw-page-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#tab-draw .draw-page-heading strong {
+  color: var(--draw-text);
+}
+
+#tab-draw .draw-page-heading span {
+  color: var(--draw-muted);
+  font-size: 0.76rem;
+}
+
+#tab-draw .draw-page-header-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+#tab-draw .draw-chapter-switch-button,
+#tab-draw .draw-page-add-button {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(96, 165, 250, 0.46);
+  border-radius: 8px;
+  padding: 7px 8px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+#tab-draw .draw-chapter-switch-button {
+  background: var(--draw-panel-2);
+  color: var(--draw-text);
+}
+
+#tab-draw .draw-page-add-button {
+  background: var(--draw-brand);
+  color: #0f172a;
+}
+
+#tab-draw .draw-chapter-switch-button:hover,
+#tab-draw .draw-chapter-switch-button:focus-visible {
+  border-color: var(--draw-brand);
+  background: rgba(96, 165, 250, 0.18);
+}
+
+#tab-draw .draw-page-add-button:hover,
+#tab-draw .draw-page-add-button:focus-visible {
+  filter: brightness(1.08);
+}
+
+#tab-draw .draw-chapter-switch-button:focus-visible,
+#tab-draw .draw-page-add-button:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.28);
+  outline-offset: 2px;
+}
+
+#tab-draw .draw-page-button-caret {
+  color: var(--draw-muted);
+  font-size: 0.62rem;
+}
+
+#tab-draw .draw-page-grid {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 10px;
+}
+
+#tab-draw .draw-page-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--draw-border);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.64);
+  color: var(--draw-text);
+  padding: 5px;
+  text-decoration: none;
+}
+
+#tab-draw .draw-page-card:hover,
+#tab-draw .draw-page-card.is-current {
+  border-color: var(--draw-brand);
+  background: rgba(96, 165, 250, 0.14);
+}
+
+#tab-draw .draw-page-thumb {
+  display: grid;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 5px;
+  background: #fff;
+}
+
+#tab-draw .draw-page-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#tab-draw .draw-page-placeholder {
+  color: #64748b;
+}
+
+#tab-draw .draw-page-card-copy {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+#tab-draw .draw-page-card-copy strong {
+  font-size: 0.75rem;
+}
+
+#tab-draw .draw-page-card-copy small {
+  overflow: hidden;
+  color: var(--draw-muted);
+  font-size: 0.62rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#tab-draw .draw-page-empty {
+  grid-column: 1 / -1;
+  color: var(--draw-muted);
+  padding: 18px 6px;
+  text-align: center;
+}
+
+#tab-draw .draw-page-empty.is-error {
+  color: var(--draw-danger-text);
+}
+
+.draw-chapter-switch-menu {
+  position: fixed;
+  z-index: 10050;
+  max-height: min(420px, calc(100vh - 100px));
+  overflow-y: auto;
+  border: 1px solid rgba(96, 165, 250, 0.42);
+  border-radius: 10px;
+  background: #1e293b;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  padding: 6px;
+}
+
+.draw-chapter-option {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #f9fafb;
+  padding: 8px 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.draw-chapter-option:hover,
+.draw-chapter-option:focus-visible,
+.draw-chapter-option.is-current {
+  background: rgba(96, 165, 250, 0.16);
+}
+
+.draw-chapter-option.is-loading {
+  opacity: 0.62;
+  pointer-events: none;
+}
+
+.draw-chapter-option-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.draw-chapter-option-copy strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.draw-chapter-option-copy small,
+.draw-chapter-menu-state {
+  color: #94a3b8;
+}
+
+.draw-chapter-menu-state {
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.draw-chapter-menu-state.is-error {
+  color: #fca5a5;
+}
+
+@media (max-width: 1280px) {
+  #tab-draw .draw-wrapper {
+    grid-template-columns: 190px 58px minmax(0, 1fr) 270px;
+  }
+}
+
+@media (max-width: 900px) {
+  #tab-draw .draw-wrapper {
+    grid-template-areas:
+      "pages tools"
+      "pages work"
+      "side side";
+    grid-template-columns: 176px minmax(0, 1fr);
+    grid-template-rows: auto minmax(520px, 1fr) minmax(360px, auto);
+    overflow-y: auto;
+  }
+
+  #tab-draw .left-toolbar {
+    display: flex;
+    min-height: 52px;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+}
+
+@media (max-width: 640px) {
+  #tab-draw .draw-wrapper {
+    grid-template-areas:
+      "pages"
+      "tools"
+      "work"
+      "side";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #tab-draw .draw-page-navigator {
+    min-height: 220px;
+    max-height: 32vh;
+  }
+
+  #tab-draw .draw-page-header-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+:root[data-theme="light"] .draw-chapter-switch-menu {
+  border-color: rgba(37, 99, 235, 0.34);
+  background: #fff;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.2);
+}
+
+:root[data-theme="light"] .draw-chapter-option {
+  color: #111827;
+}
+
+:root[data-theme="light"] .draw-chapter-option:hover,
+:root[data-theme="light"] .draw-chapter-option:focus-visible,
+:root[data-theme="light"] .draw-chapter-option.is-current {
+  background: rgba(37, 99, 235, 0.1);
+}
+
 /* Bố cục workspace vẽ: giấy ở giữa và quy trình ở bên phải. */
 .draw-wrapper {
   grid-template-columns: 76px minmax(620px, 1fr) minmax(300px, 360px);
@@ -2499,5 +2803,448 @@ body.draw-workspace-active:has(.topnav:has(.btn-icon:focus-visible)) .flex-conta
   #tab-draw .right-panel {
     min-height: 420px;
     overflow-y: auto;
+  }
+}
+
+/* Bố cục cuối cùng của Draw sau khi hợp nhất: trang, công cụ, canvas và bảng phụ. */
+#tab-draw .draw-wrapper {
+  grid-template-areas: "pages tools work side";
+  grid-template-columns: 224px 92px minmax(0, 1fr) clamp(284px, 22vw, 340px);
+}
+
+@media (max-width: 1280px) {
+  #tab-draw .draw-wrapper {
+    grid-template-columns: 190px 58px minmax(0, 1fr) 270px;
+  }
+}
+
+@media (max-width: 900px) {
+  #tab-draw .draw-wrapper {
+    grid-template-areas:
+      "pages tools"
+      "pages work"
+      "side side";
+    grid-template-columns: 176px minmax(0, 1fr);
+    grid-template-rows: auto minmax(520px, 1fr) minmax(360px, auto);
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  #tab-draw .draw-wrapper {
+    grid-template-areas:
+      "pages"
+      "tools"
+      "work"
+      "side";
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 220px auto minmax(520px, 1fr) minmax(360px, auto);
+  }
+}
+
+/* Không gian Draw hợp nhất: danh sách trang bên trái, canvas bên phải và một thanh lệnh duy nhất. */
+#tab-draw .draw-wrapper {
+  grid-template-areas: "pages work";
+  grid-template-columns: clamp(184px, 15vw, 220px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px;
+}
+
+#tab-draw .left-toolbar[hidden],
+#tab-draw .right-panel[hidden],
+#tab-draw #topPropertyBar[hidden] {
+  display: none !important;
+}
+
+#tab-draw .center-area {
+  grid-area: work;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+#tab-draw .draw-page-navigator {
+  grid-area: pages;
+  min-width: 0;
+  min-height: 0;
+}
+
+#tab-draw .draw-unified-command-bar {
+  display: flex;
+  min-width: 0;
+  min-height: 48px;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--draw-border);
+  border-radius: 8px;
+  background: var(--draw-panel);
+  padding: 5px 6px;
+  scrollbar-width: thin;
+}
+
+#tab-draw .draw-unified-actions {
+  display: flex;
+  width: max-content;
+  min-width: max-content;
+  align-items: center;
+  flex: 1 0 auto;
+  flex-wrap: nowrap;
+  gap: 5px;
+}
+
+#tab-draw .draw-workspace-command,
+#tab-draw .palette-command-button,
+#tab-draw .palette-command-actions .palette-action-button {
+  width: auto;
+  min-width: 36px;
+  height: 34px;
+  min-height: 34px;
+  flex: 0 0 auto;
+  gap: 5px;
+  border-color: var(--draw-border);
+  border-radius: 7px;
+  padding: 0 8px;
+  white-space: nowrap;
+  font-size: 0.74rem;
+}
+
+#tab-draw .palette-command-actions .palette-action-button {
+  width: 36px;
+  padding: 0;
+}
+
+#tab-draw .draw-command-value,
+#tab-draw .draw-command-count {
+  display: inline-flex;
+  min-width: 24px;
+  min-height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.16);
+  color: #93c5fd;
+  padding: 0 6px;
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+#tab-draw .draw-command-count {
+  min-width: 20px;
+  padding: 0 5px;
+}
+
+#tab-draw .palette-color-picker {
+  width: 36px;
+  min-width: 36px;
+  height: 34px;
+  flex-basis: 36px;
+}
+
+#tab-draw .palette-history-actions {
+  margin-left: 6px;
+  padding-left: 6px;
+  border-left: 1px solid var(--draw-border);
+}
+
+/* Các bảng chức năng được đưa lên top layer để không bị canvas hoặc content cắt mất. */
+.draw-workspace-popover[popover] {
+  position: fixed;
+  inset: auto;
+  width: min(330px, calc(100vw - 16px));
+  max-height: min(620px, calc(100vh - 24px));
+  overflow: auto;
+  margin: 0;
+  border: 1px solid var(--draw-border);
+  border-radius: 10px;
+  background: var(--draw-panel);
+  color: var(--draw-text);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.46);
+  padding: 8px;
+}
+
+.draw-workspace-popover[popover]:popover-open,
+.draw-workspace-popover.is-open {
+  display: block;
+}
+
+.draw-workspace-menu-heading {
+  padding: 5px 6px;
+  color: var(--draw-muted);
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.draw-workspace-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.draw-workspace-tools-menu .lt-btn.draw-tool-menu-item,
+.draw-workspace-tools-menu .selection-menu-trigger {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: var(--draw-panel-2);
+  color: var(--draw-text);
+  padding: 7px 9px;
+}
+
+.draw-workspace-tools-menu .lt-btn.draw-tool-menu-item:hover,
+.draw-workspace-tools-menu .lt-btn.draw-tool-menu-item.active,
+.draw-workspace-tools-menu .selection-menu-trigger:hover {
+  border-color: #60a5fa;
+  background: rgba(96, 165, 250, 0.14);
+}
+
+.draw-workspace-tools-menu .draw-tool-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.draw-workspace-tools-menu .selection-menu-trigger {
+  margin-top: 0;
+}
+
+.draw-workspace-tools-menu .selection-menu-caret {
+  position: static;
+  margin-left: auto;
+}
+
+.draw-workspace-property-menu {
+  width: min(350px, calc(100vw - 16px)) !important;
+}
+
+.draw-workspace-property-menu .draw-property-popover-group {
+  display: flex !important;
+  width: 100%;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--draw-border);
+  border-radius: 8px;
+  background: var(--draw-panel-2);
+  padding: 10px;
+}
+
+.draw-workspace-property-menu .draw-property-popover-group .prop-label {
+  display: none;
+}
+
+.draw-workspace-property-menu input[type="range"] {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.draw-workspace-layer-menu {
+  width: min(350px, calc(100vw - 16px)) !important;
+}
+
+.draw-workspace-layer-menu > .panel-section,
+.draw-workspace-ai-menu > .panel-section {
+  display: flex;
+  min-height: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.draw-workspace-layer-menu #layerList {
+  max-height: min(420px, 55vh);
+  overflow-y: auto;
+}
+
+.draw-workspace-ai-menu {
+  width: min(400px, calc(100vw - 16px)) !important;
+  height: min(520px, calc(100vh - 24px));
+  overflow: hidden !important;
+}
+
+.draw-workspace-ai-menu .manga-chat-panel {
+  height: 100%;
+}
+
+.draw-workspace-ai-menu .chat-history-list {
+  min-height: 160px;
+  overflow-y: auto;
+}
+
+/* Danh sách trang luôn hiển thị hai trang mỗi hàng, số trang nằm dưới thumbnail. */
+#tab-draw .draw-page-navigator-header {
+  gap: 7px;
+  padding: 9px;
+}
+
+#tab-draw .draw-page-heading strong {
+  font-size: 0.84rem;
+}
+
+#tab-draw .draw-page-heading span {
+  font-size: 0.68rem;
+}
+
+#tab-draw .draw-page-header-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+}
+
+#tab-draw .draw-chapter-switch-button,
+#tab-draw .draw-page-add-button {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  justify-content: flex-start;
+  border-radius: 7px;
+  padding: 0 8px;
+  font-size: 0.7rem;
+}
+
+#tab-draw .draw-page-add-button {
+  border-color: #60a5fa;
+  background: #60a5fa;
+  color: #0f172a;
+}
+
+#tab-draw .draw-page-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 7px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+#tab-draw .draw-page-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  padding: 5px;
+}
+
+#tab-draw .draw-page-card.is-current {
+  border-color: #60a5fa;
+  background: rgba(96, 165, 250, 0.12);
+}
+
+#tab-draw .draw-page-thumb {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border: 1px solid var(--draw-border);
+  border-radius: 5px;
+  background: #0b1018;
+}
+
+#tab-draw .draw-page-card-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  text-align: center;
+}
+
+#tab-draw .draw-page-card-copy strong,
+#tab-draw .draw-page-card-copy small {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#tab-draw .draw-page-card-copy strong {
+  color: var(--draw-text);
+  font-size: 0.7rem;
+}
+
+#tab-draw .draw-page-card-copy small {
+  color: var(--draw-muted);
+  font-size: 0.6rem;
+}
+
+#tab-draw .draw-page-empty {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+  #tab-draw .draw-wrapper {
+    grid-template-areas:
+      "pages"
+      "work";
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 230px minmax(500px, 1fr);
+    overflow-y: auto;
+  }
+
+  #tab-draw .draw-page-header-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #tab-draw .draw-page-grid {
+    grid-template-columns: repeat(2, minmax(82px, 120px));
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  #tab-draw .draw-page-card {
+    width: 110px;
+  }
+}
+
+@media (max-width: 640px) {
+  #tab-draw .draw-wrapper {
+    grid-template-rows: 210px minmax(460px, 1fr);
+    padding: 5px;
+  }
+
+  #tab-draw .draw-unified-command-bar {
+    min-height: 44px;
+  }
+
+  #tab-draw .draw-workspace-command,
+  #tab-draw .palette-command-button {
+    min-width: 34px;
+    height: 32px;
+    min-height: 32px;
+    padding: 0 7px;
+  }
+
+  #tab-draw .draw-command-label {
+    display: none;
+  }
+
+  #tab-draw .draw-command-value,
+  #tab-draw .draw-command-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+  }
+
+  #tab-draw .draw-workspace-command {
+    position: relative;
   }
 }

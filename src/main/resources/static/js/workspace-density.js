@@ -331,18 +331,8 @@
     const cards = [...voteTab.querySelectorAll(":scope > .section-card")];
     const rankingCard = cards[0];
     const sessionsCard = cards[1];
-    rankingCard?.remove();
-    sessionsCard?.querySelector(":scope > h3")?.remove();
-
-    const sessionsContent = document.createElement("div");
-    sessionsContent.className = "admin-workflow-content";
-    if (sessionsCard) sessionsContent.appendChild(sessionsCard);
-    ensureSharedWorkflowModal({
-      id: "adminVoteSessionsModal",
-      title: "Phiên vote đang mở",
-      description: "Tạo phiên vote, theo dõi tiến độ và xem kết quả trong cùng một cửa sổ.",
-      content: sessionsContent,
-    });
+    rankingCard?.classList.add("admin-vote-ranking-panel");
+    sessionsCard?.classList.add("admin-vote-sessions-panel");
 
     const prepareTabContent = (tab, className) => {
       const wasActive = tab.classList.contains("active");
@@ -372,17 +362,9 @@
     if (importWasActive || publishWasActive) voteTab.classList.add("active");
 
     addQuickActions("tab-vote", [
-      { label: "Ranking", run: openSharedRankingModal },
-      {
-        label: "Phiên vote đang mở",
-        primary: true,
-        run: (event) => {
-          window.loadVoteSessionsAdmin?.();
-          openSharedWorkflowModal("adminVoteSessionsModal", event.currentTarget);
-        },
-      },
       {
         label: "Nhập dữ liệu Excel",
+        primary: true,
         run: (event) => openSharedWorkflowModal("adminExcelImportModal", event.currentTarget),
       },
       {
@@ -394,50 +376,7 @@
       },
     ]);
 
-    const relationsTab = document.getElementById("tab-relations");
-    const relationCards = relationsTab
-      ? [...relationsTab.querySelectorAll(":scope > .section-card")]
-      : [];
-    const tantouRelations = relationCards[0];
-    const assistantRelations = relationCards[1];
-
-    const moveRelationCardToModal = (card, options) => {
-      if (!card) return;
-      card.querySelector(":scope > h3")?.remove();
-      card.classList.add("admin-workflow-content", "admin-relation-content");
-      ensureSharedWorkflowModal({ ...options, content: card });
-    };
-
-    moveRelationCardToModal(tantouRelations, {
-      id: "adminTantouRelationsModal",
-      title: "Tantou phụ trách Mangaka",
-      description: "Phân công Tantou phụ trách và cập nhật quan hệ quản lý của từng Mangaka.",
-    });
-    moveRelationCardToModal(assistantRelations, {
-      id: "adminAssistantRelationsModal",
-      title: "Assistant làm việc với Mangaka",
-      description: "Phân công Assistant và cập nhật Mangaka mà từng trợ lý hỗ trợ.",
-    });
-
-    if (relationsTab) {
-      addQuickActions("tab-relations", [
-        {
-          label: "Tantou phụ trách Mangaka",
-          primary: true,
-          run: (event) => {
-            window.loadRelations?.();
-            openSharedWorkflowModal("adminTantouRelationsModal", event.currentTarget);
-          },
-        },
-        {
-          label: "Assistant làm việc với Mangaka",
-          run: (event) => {
-            window.loadRelations?.();
-            openSharedWorkflowModal("adminAssistantRelationsModal", event.currentTarget);
-          },
-        },
-      ]);
-    }
+    // Tab Phân công giữ hai bảng ngay trong content; admin.html quản lý việc chuyển bảng.
   }
 
   function initEditor() {

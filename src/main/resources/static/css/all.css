@@ -9333,6 +9333,154 @@ body.role-workspaces-ready:not(.login-page)
   margin-top: 0;
 }
 
+/* Phân công Admin: chuyển hai bảng trong cùng workspace thay vì mở modal cha. */
+#tab-relations .role-workspace-content {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.admin-relation-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--app-border);
+  background: var(--app-surface);
+  padding: 0.85rem 1.35rem;
+}
+
+.admin-relation-tab {
+  min-height: 42px;
+  border: 1px solid var(--app-border-strong);
+  border-radius: 9px;
+  background: var(--app-surface-2);
+  color: var(--app-text);
+  padding: 0.58rem 0.9rem;
+  font-size: 0.86rem;
+  font-weight: 780;
+  white-space: nowrap;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.admin-relation-tab:hover:not(:disabled),
+.admin-relation-tab:focus-visible {
+  border-color: color-mix(in srgb, var(--app-brand) 48%, var(--app-border-strong));
+  background: color-mix(in srgb, var(--app-brand) 10%, var(--app-surface-2));
+  color: var(--app-text);
+}
+
+.admin-relation-tab.active,
+.admin-relation-tab[aria-selected="true"] {
+  border-color: var(--app-brand);
+  background: var(--app-brand);
+  color: var(--app-action-text);
+}
+
+#tab-relations .admin-relation-panel {
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  margin: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+#tab-relations .admin-relation-panel[hidden] {
+  display: none !important;
+}
+
+#tab-relations .admin-relation-description {
+  flex: 0 0 auto;
+  margin: 0 0 0.85rem;
+  color: var(--app-text-muted);
+  font-size: 0.88rem;
+}
+
+#tab-relations .admin-relation-panel > .app-data-table-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+/* Modal đổi quan hệ luôn nằm trên mọi popup nghiệp vụ khác. */
+#modal-change-tanto,
+#modal-change-mangaka {
+  z-index: 100100 !important;
+}
+
+/* Bộ lọc Ranking của Admin: nhãn nằm trên và ba ô chọn cùng một hàng. */
+#tab-vote .admin-ranking-filters {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
+  align-items: end;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+#tab-vote .admin-ranking-filters .field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+#tab-vote .admin-ranking-filters label {
+  margin: 0;
+}
+
+#tab-vote .admin-ranking-filters select {
+  width: 100%;
+  min-width: 0;
+}
+
+#tab-vote .admin-ranking-filters .flex-end-layout {
+  display: flex;
+  align-items: flex-end;
+}
+
+#tab-vote .admin-ranking-filters .btn-sm {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+@media (max-width: 1050px) {
+  #tab-vote .admin-ranking-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  #tab-vote .admin-ranking-filters .flex-end-layout {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 700px) {
+  .admin-relation-tabs {
+    padding-inline: 1rem;
+  }
+
+  .admin-relation-tab {
+    flex: 1 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-relation-tab {
+    transition: none;
+  }
+}
+
 /* Thanh công cụ bảng tài khoản của Quản trị viên. */
 #tab-accounts .account-management-panel {
   display: flex;

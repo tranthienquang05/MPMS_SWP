@@ -5,11 +5,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <script src="/js/theme.js" th:src="@{/js/theme.js}"></script>
-  <script defer src="/js/profile-security.js?v=20260721-profile-compact" th:src="@{/js/profile-security.js(v='20260721-profile-compact')}"></script>
+  <script defer src="/js/profile-security.js?v=20260723-esms-carriers" th:src="@{/js/profile-security.js(v='20260723-esms-carriers')}"></script>
   <title>Mangaka</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="../static/css/all.css?v=20260721-profile-labels" th:href="@{/css/all.css(v='20260721-profile-labels')}" />
-  <link rel="stylesheet" href="../static/css/draw.css" th:href="@{/css/draw.css}" />
+  <link rel="stylesheet" href="../static/css/draw.css?v=20260723-unified-toolbar"
+    th:href="@{/css/draw.css(v='20260723-unified-toolbar')}" />
   <link rel="stylesheet" href="../static/css/icon.css" th:href="@{/css/icon.css}" />
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -197,6 +198,33 @@
       <div id="tab-draw" class="tab-pane">
       <!-- Công cụ vẽ: điều khiển nét, màu, vùng chọn và layer. -->
         <div class="draw-wrapper">
+          <!-- Danh sách trang trong chapter: chuyển trang và tạo trang mới ngay tại màn vẽ. -->
+          <aside class="draw-page-navigator" id="drawPageNavigator" aria-label="Các trang trong chapter">
+            <div class="draw-page-navigator-header">
+              <div class="draw-page-heading">
+                <strong>Trang</strong>
+                <span id="drawPageCount">0 trang</span>
+              </div>
+              <div class="draw-page-header-actions">
+                <button type="button" class="draw-chapter-switch-button" id="drawChapterSwitchButton"
+                  title="Chuyển sang chapter khác" aria-label="Chuyển chapter" aria-haspopup="menu"
+                  aria-expanded="false">
+                  <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                  <span>Chapter</span>
+                  <i class="fa-solid fa-chevron-down draw-page-button-caret" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="draw-page-add-button" id="drawAddPageButton"
+                  title="Thêm trang mới vào chapter" aria-label="Thêm trang mới">
+                  <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                  <span>Thêm trang</span>
+                </button>
+              </div>
+            </div>
+            <div class="draw-page-grid" id="drawPageGrid">
+              <div class="draw-page-empty">Đang tải danh sách trang...</div>
+            </div>
+          </aside>
+
         <!-- Thanh công cụ bên trái: chọn công cụ đang sử dụng. -->
           <div class="left-toolbar">
             <button type="button" class="lt-btn active" data-tool="pencil" title="Bút vẽ (B)">
@@ -1257,8 +1285,8 @@
             </div>
             <div class="modal-footer">
               <button type="button" id="btnCancel">Hủy</button>
-              <button type="button" onclick="submitNewProposal()">
-                Submit
+              <button type="button" onclick="submitNewProposal(event)">
+                Nộp bản thảo
               </button>
             </div>
           </div>
@@ -1730,6 +1758,7 @@
 
   <!-- Tập lệnh cuối trang: khởi tạo thư viện và kết nối chức năng với API. -->
   <script src="/js/draw.js" defer></script>
+  <script src="/js/draw-workspace.js?v=20260723-unified-toolbar" defer></script>
 
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -1768,6 +1797,7 @@ const STATUS_VI_MAP = {
   stopped: "Đã dừng",
   locked: "Bị khóa",
   published: "Đã xuất bản",
+  rewarded: "Đã khen thưởng",
   active: "Đang mở",
   closed: "Đã đóng",
   assigned: "Đã giao",
@@ -2234,7 +2264,9 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
 
     const mangakaId = '[[${mangaka != null ? mangaka.id : ""}]]';
     // Xử lý logic cho Modal nộp bản thảo
-    function submitNewProposal() {
+    function submitNewProposal(event) {
+      event?.preventDefault();
+      event?.stopPropagation();
       if (!mangakaId) {
         showSystemNotification(
           "Không tìm thấy thông tin Mangaka. Vui lòng đăng nhập lại!",
@@ -2245,13 +2277,16 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       const seriesName = document
         .getElementById("newSeriesName")
         .value.trim();
-      const file = document.getElementById("newManuscriptFile").files[0];
+      const file = window.getValidatedUploadFile
+        ? window.getValidatedUploadFile("newManuscriptFile", {
+            emptyMessage: "Vui lòng chọn file bản thảo định dạng PDF.",
+          })
+        : document.getElementById("newManuscriptFile").files[0];
       if (!seriesName) {
         showSystemNotification("Vui lòng nhập tên series!", false);
         return;
       }
       if (!file) {
-        showSystemNotification("Vui lòng chọn file bản thảo!", false);
         return;
       }
 
@@ -2267,7 +2302,9 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         method: "POST",
         body: formData,
       })
-        .then((res) => res.json())
+        .then((res) => window.readJsonResponse
+          ? window.readJsonResponse(res, "Không thể nộp bản thảo. Vui lòng thử lại.")
+          : res.json())
         .then((data) => {
           if (data.status === "success") {
             // Ẩn modal nhập liệu trước khi hiển thị modal thông báo
@@ -2287,7 +2324,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         })
         .catch((err) => {
           // Hiển thị lỗi kết nối hoặc lỗi logic hệ thống
-          showSystemNotification("Lỗi hệ thống: " + err.message, false);
+          showSystemNotification(err.message || "Không thể nộp bản thảo. Vui lòng thử lại.", false);
         });
     }
 
@@ -2464,13 +2501,16 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       const seriesName = document
         .getElementById("resubmitSeriesName")
         .value.trim();
-      const file = document.getElementById("resubmitFile").files[0];
+      const file = window.getValidatedUploadFile
+        ? window.getValidatedUploadFile("resubmitFile", {
+            emptyMessage: "Vui lòng chọn file bản thảo định dạng PDF/ZIP/RAR.",
+          })
+        : document.getElementById("resubmitFile").files[0];
       if (!seriesName) {
         alert("Vui lòng nhập tên series!");
         return;
       }
       if (!file) {
-        alert("Vui lòng chọn file bản thảo!");
         return;
       }
 
@@ -2486,7 +2526,9 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         method: "POST",
         body: formData,
       })
-        .then((res) => res.json())
+        .then((res) => window.readJsonResponse
+          ? window.readJsonResponse(res, "Không thể nộp lại bản thảo. Vui lòng thử lại.")
+          : res.json())
         .then((data) => {
           if (data.status === "success") {
             alert("" + data.message);
@@ -2498,7 +2540,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
             alert("" + data.message);
           }
         })
-        .catch((err) => alert("Lỗi: " + err.message));
+        .catch((err) => alert(err.message || "Không thể nộp lại bản thảo. Vui lòng thử lại."));
     }
 
     function openStartSeriesModal(btn) {
@@ -2523,13 +2565,16 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       const description = document
         .getElementById("modalDescription")
         .value.trim();
-      const file = document.getElementById("modalBookJacket").files[0];
+      const file = window.getValidatedUploadFile
+        ? window.getValidatedUploadFile("modalBookJacket", {
+            emptyMessage: "Vui lòng chọn ảnh bìa định dạng PNG/JPG.",
+          })
+        : document.getElementById("modalBookJacket").files[0];
       if (!description) {
         alert("Vui lòng nhập mô tả!");
         return;
       }
       if (!file) {
-        alert("Vui lòng chọn ảnh bìa sách!");
         return;
       }
       const allowedCoverTypes = ["image/png", "image/jpeg"];
@@ -2552,7 +2597,9 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         method: "POST",
         body: formData,
       })
-        .then((res) => res.json())
+        .then((res) => window.readJsonResponse
+          ? window.readJsonResponse(res, "Không thể khởi động tác phẩm. Vui lòng thử lại.")
+          : res.json())
         .then((data) => {
           if (data.status === "success") {
             alert("" + data.message + "\nMã series: " + data.seriesId);
@@ -3456,6 +3503,8 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                   '<span class="badge-status-waiting">Chờ BTV duyệt</span>',
                 pass: '<span class="badge-status-passed">Đã duyệt</span>',
                 stopped: '<span class="badge-status-rejected">Đã dừng</span>',
+                rewarded:
+                  '<span class="badge-status-passed">Đã khen thưởng</span>',
               };
               html += `<tr>
                   <td>
@@ -3870,7 +3919,9 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
     }
 
     async function submitEditJacket(input) {
-      const file = input.files[0];
+      const file = window.getValidatedUploadFile
+        ? window.getValidatedUploadFile(input, { emptyMessage: "Vui lòng chọn ảnh bìa định dạng PNG/JPG." })
+        : input.files[0];
       const seriesId = input.dataset.seriesId;
       if (!file || !seriesId) return;
 
@@ -3894,7 +3945,9 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           `/manga/mangaka/myseries/${seriesId}/edit-jacket`,
           { method: "POST", body: formData },
         );
-        const data = await response.json();
+        const data = window.readJsonResponse
+          ? await window.readJsonResponse(response, "Không thể cập nhật ảnh bìa. Vui lòng thử lại.")
+          : await response.json();
         if (data.status !== "success") {
           if (window.showUiAlertAsync) await window.showUiAlertAsync(data.message);
           else alert(data.message);
@@ -3905,8 +3958,9 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         else alert(data.message);
         updateSeriesCoverImage(seriesId, data.bookJacket);
       } catch (err) {
-        if (window.showUiAlertAsync) await window.showUiAlertAsync("Lỗi: " + err.message);
-        else alert("Lỗi: " + err.message);
+        const message = err.message || "Không thể cập nhật ảnh bìa. Vui lòng thử lại.";
+        if (window.showUiAlertAsync) await window.showUiAlertAsync(message);
+        else alert(message);
       } finally {
         coverButton?.classList.remove("is-uploading");
         input.value = "";
@@ -4029,6 +4083,23 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
             pageCount: pages.length,
             hasCover: window._chapterHasCover,
           };
+
+          // Đồng bộ danh sách thumbnail ở màn vẽ mà không cần tải lại trang.
+          if (typeof window.renderDrawChapterPages === "function") {
+            const drawRoute = window.location.pathname.match(
+              /\/myseries\/([^/]+)\/([^/]+)\/([^/]+)\/edit$/,
+            );
+            if (drawRoute && drawRoute[2] === String(cid)) {
+              window.renderDrawChapterPages(
+                chapter,
+                pages,
+                sid,
+                cid,
+                drawRoute[3],
+              );
+            }
+          }
+
           if (viewOptions.inline) {
             activateInlineChapter(sid, cid);
             const existingPageModal = document.getElementById("pageActionModalOverlay");
@@ -4446,7 +4517,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
 
   <script src="/js/series-info.js?v=20260721" th:src="@{/js/series-info.js(v='20260721')}"></script>
 
-  <script src="/js/ui-alert.js?v=20260721-chapter-stay" th:src="@{/js/ui-alert.js(v='20260721-chapter-stay')}"></script>
+  <script src="/js/ui-alert.js?v=20260723-upload-validation" th:src="@{/js/ui-alert.js(v='20260723-upload-validation')}"></script>
 
   <script>
     // API /api/account/change-password/*: gửi OTP và cập nhật mật khẩu.
@@ -4690,13 +4761,17 @@ async function saveProfile() {
 }
 
 async function uploadAvatar(input) {
-  const file = input.files[0];
+  const file = window.getValidatedUploadFile
+    ? window.getValidatedUploadFile(input, { emptyMessage: "Vui lòng chọn ảnh đại diện định dạng JPG/PNG/GIF/WEBP." })
+    : input.files[0];
   if (!file) return;
   const formData = new FormData();
   formData.append('file', file);
   try {
     const res = await fetch('/api/account/upload-avatar', { method: 'POST', body: formData });
-    const data = await res.json();
+    const data = window.readJsonResponse
+      ? await window.readJsonResponse(res, "Không thể cập nhật ảnh đại diện. Vui lòng thử lại.")
+      : await res.json();
     if (data.status === 'success') {
       const avatarImg = document.getElementById('profileAvatarImg');
       if (avatarImg) avatarImg.src = window.withFreshAssetUrl ? window.withFreshAssetUrl(data.avatarUrl) : data.avatarUrl;
@@ -4706,7 +4781,7 @@ async function uploadAvatar(input) {
       else alert(data.message);
     }
   } catch(e) {
-    alert('Lỗi upload ảnh');
+    alert(e.message || 'Không thể cập nhật ảnh đại diện. Vui lòng thử lại.');
   }
 }
 

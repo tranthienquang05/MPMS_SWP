@@ -429,6 +429,17 @@
       "drawLayersMenu",
       "draw-workspace-layer-menu",
     );
+    panel.classList.add("draw-layer-popover-panel");
+
+    const title = panel.querySelector(".layer-panel-title");
+    const addButton = panel.querySelector("#btnAddLayer");
+    if (title && addButton && !panel.querySelector(".draw-layer-popover-header")) {
+      const header = document.createElement("div");
+      header.className = "draw-layer-popover-header";
+      title.before(header);
+      header.append(title, addButton);
+    }
+
     menu.appendChild(panel);
     const trigger = createWorkspaceButton({
       id: "btnDrawLayersMenu",
@@ -457,6 +468,7 @@
     const panel = document.querySelector("#tab-draw .manga-chat-panel");
     if (!panel) return;
 
+    panel.classList.add("draw-ai-popover-panel");
     const menu = createWorkspaceMenu(
       "drawAiMenu",
       "draw-workspace-ai-menu",
@@ -602,6 +614,10 @@
   }
 
   function removeChapterMenu() {
+    chapterMenuRequest += 1;
+    if (chapterMenu?.matches?.(":popover-open")) {
+      chapterMenu.hidePopover();
+    }
     chapterMenu?.remove();
     chapterMenu = null;
     const button = document.getElementById("drawChapterSwitchButton");
@@ -694,9 +710,13 @@
     chapterMenu.className = "draw-chapter-switch-menu";
     chapterMenu.id = "drawChapterSwitchMenu";
     chapterMenu.setAttribute("role", "menu");
+    chapterMenu.setAttribute("popover", "manual");
     chapterMenu.innerHTML =
       '<div class="draw-chapter-menu-state">Đang tải chapter...</div>';
     document.body.appendChild(chapterMenu);
+    if (typeof chapterMenu.showPopover === "function") {
+      chapterMenu.showPopover();
+    }
     positionChapterMenu(button);
 
     try {
@@ -731,7 +751,9 @@
         : '<div class="draw-chapter-menu-state">Series chưa có chapter.</div>';
 
       chapterMenu.querySelectorAll(".draw-chapter-option").forEach((option) => {
-        option.addEventListener("click", () => {
+        option.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
           const chapter = chapters.find(
             (item) => String(item.id) === option.dataset.chapterId,
           );
@@ -752,6 +774,7 @@
     const addButton = document.getElementById("drawAddPageButton");
 
     switchButton?.addEventListener("click", (event) => {
+      event.preventDefault();
       event.stopPropagation();
       toggleChapterMenu(switchButton);
     });
@@ -788,7 +811,13 @@
         }
       });
     });
-    window.addEventListener("scroll", removeChapterMenu, true);
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (chapterMenu) positionChapterMenu(switchButton);
+      },
+      true,
+    );
 
     loadCurrentChapter();
   }

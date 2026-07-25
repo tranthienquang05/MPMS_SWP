@@ -237,15 +237,7 @@
             <div class="modal-body">
               <input type="hidden" id="boardProposalId" />
               <p id="boardSeriesNameLabel"></p>
-              <label class="form-label fw-bold form-label-dark"
-                >Hồ sơ đề xuất (.pdf):</label
-              >
-              <input
-                type="file"
-                id="fileOfTantouInput"
-                class="form-control"
-                accept=".pdf"
-              />
+              <p>Xác nhận nộp đề xuất này lên hội đồng để biểu quyết. Hội đồng sẽ xem trực tiếp bản thảo do mangaka nộp.</p>
             </div>
             <div class="modal-footer">
               <button type="button" onclick="closeSubmitBoardModal()">
@@ -1029,6 +1021,13 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         const id = document.getElementById("reviewModalProposalId").value;
         const comment = document.getElementById("reviewModalComment").value;
 
+        // Từ chối bắt buộc phải nêu lý do cho mangaka.
+        if (action === "reject" && !comment.trim()) {
+          alert("Vui lòng nhập lý do khi từ chối đề xuất!");
+          document.getElementById("reviewModalComment").focus();
+          return;
+        }
+
         const params = new URLSearchParams();
         params.append("id", id);
         params.append("action", action);
@@ -1101,15 +1100,9 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
 
       function submitToBoard() {
         const proposalId = document.getElementById("boardProposalId").value;
-        const file = document.getElementById("fileOfTantouInput").files[0];
-        if (!file) {
-          alert("Vui lòng chọn file hồ sơ đề xuất!");
-          return;
-        }
 
         const formData = new FormData();
         formData.append("proposalId", proposalId);
-        formData.append("fileOfTantou", file);
 
         fetch("/manga/tantou/submit-to-board", {
           method: "POST",

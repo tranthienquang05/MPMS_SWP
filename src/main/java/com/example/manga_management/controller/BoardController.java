@@ -137,6 +137,18 @@ public class BoardController {
             proposalData.put("reviewedAt", proposal.getReviewedAt());
             proposalData.put("boardSubmittedAt", proposal.getBoardSubmittedAt());
 
+            // Mục 6: nếu board hiện tại đã bỏ phiếu cho đề xuất này thì trả lại phiếu
+            // của họ để FE hiển thị (thay vì hiện lại nút vote).
+            if (board != null) {
+                boardProposalCommentRepository
+                        .findByProposal_IdAndBoard_Id(proposal.getId(), board.getId())
+                        .ifPresent(myComment -> {
+                            proposalData.put("myVote", myComment.getAction());
+                            proposalData.put("myVoteContent", myComment.getContent());
+                            proposalData.put("myVoteAt", myComment.getCreatedAt());
+                        });
+            }
+
             Map<String, Object> mangakaData = new HashMap<>();
             Map<String, Object> userData = new HashMap<>();
             if (proposal.getMangaka() != null && proposal.getMangaka().getUser() != null) {

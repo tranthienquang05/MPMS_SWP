@@ -245,6 +245,16 @@ public class NotificationService {
 
         for (Proposal proposal : overdueProposals) {
             proposal.setStatus("locked");
+            // Lưu lý do từ chối vào proposal để mangaka luôn xem lại được (không chỉ
+            // nằm ở thông báo bị trôi). Giữ lại góp ý cũ của tantou nếu có.
+            String overdueReason = "Quá hạn nộp lại sau khi được yêu cầu chỉnh sửa nên bị từ chối tự động.";
+            String oldComment = proposal.getComment();
+            if (oldComment != null && !oldComment.isBlank()
+                    && !oldComment.contains(overdueReason)) {
+                proposal.setComment(overdueReason + " (Góp ý trước đó: " + oldComment.trim() + ")");
+            } else if (oldComment == null || oldComment.isBlank()) {
+                proposal.setComment(overdueReason);
+            }
             proposalRepository.save(proposal);
 
             if (proposal.getMangaka() != null && proposal.getMangaka().getUser() != null) {

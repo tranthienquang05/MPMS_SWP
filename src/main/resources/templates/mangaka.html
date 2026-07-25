@@ -1234,6 +1234,14 @@
                 <strong>Trạng thái:</strong>
                 <span id="detailModalStatus"></span>
               </p>
+              <p id="detailModalFileBlock">
+                <strong>Tập tin bản thảo:</strong>
+                <span id="detailModalFile"></span>
+              </p>
+              <div id="detailModalRejectBlock" class="rejected-comment-box" style="display:none;">
+                <strong>Lý do từ chối:</strong>
+                <span id="detailModalRejectReason"></span>
+              </div>
               <p>
                 <strong>Điểm:</strong> <span id="detailModalScore"></span>
               </p>
@@ -2474,7 +2482,28 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           document.getElementById("detailModalTitle").textContent =
             data.seriesName + " (" + data.proposalId + ")";
           document.getElementById("detailModalStatus").textContent =
-            data.proposalStatus;
+            formatStatusVi(data.proposalStatus);
+
+          // Mục 1: link xem file bản thảo đã nộp.
+          const fileEl = document.getElementById("detailModalFile");
+          if (data.filePath) {
+            fileEl.innerHTML = `<a href="${data.filePath}" target="_blank" class="btn-link">Xem bản thảo đã nộp</a>`;
+          } else {
+            fileEl.textContent = "Chưa có tập tin";
+          }
+
+          // Mục 2: hiện lý do từ chối nổi bật khi đề xuất bị từ chối (locked).
+          const rejectBlock = document.getElementById("detailModalRejectBlock");
+          if (data.proposalStatus === "locked") {
+            rejectBlock.style.display = "block";
+            document.getElementById("detailModalRejectReason").textContent =
+              data.editorComment && data.editorComment.trim()
+                ? data.editorComment
+                : "Đề xuất đã bị từ chối.";
+          } else {
+            rejectBlock.style.display = "none";
+          }
+
           document.getElementById("detailModalScore").textContent =
             data.editorScore !== null && data.editorScore !== undefined
               ? Number(data.editorScore).toFixed(2)

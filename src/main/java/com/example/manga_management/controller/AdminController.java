@@ -300,23 +300,36 @@ public class AdminController {
         }
 
         List<Map<String, Object>> list = new ArrayList<>();
-        // "Đã xuất bản" gồm series đang phát hành (published) và đã hoàn thành (completed).
-        for (String st : new String[]{"published", "completed"}) {
-            for (Series s : seriesRepository.findByStatus(st)) {
-                Map<String, Object> map = new LinkedHashMap<>();
-                map.put("id", s.getId());
-                map.put("seriesName", s.getSeriesName());
-                map.put("status", s.getStatus());
-                map.put("genre", s.getGenre());
-                map.put("startDate", s.getStartDate() != null ? s.getStartDate().toString() : null);
-                map.put("mangakaName",
-                        s.getProposal() != null && s.getProposal().getMangaka() != null
-                        && s.getProposal().getMangaka().getUser() != null
-                        ? s.getProposal().getMangaka().getUser().getFullname() : "—");
-                long publishedCount = chapterRepository.findBySeries_IdAndStatus(s.getId(), "published").size();
-                map.put("publishedChapters", publishedCount);
-                list.add(map);
+        // "Đã xuất bản" = series đã có ít nhất 1 chapter published, hoặc series đã
+        // hoàn thành. KHÔNG chỉ dựa vào series.status vì dữ liệu cũ (chapter được
+        // xuất bản trước khi có tính năng tự nâng trạng thái) có thể vẫn đang
+        // "unfinish" dù đã phát hành — ở đây tự sửa (backfill) lại cho đúng.
+        for (Series s : seriesRepository.findAll()) {
+            long publishedCount = chapterRepository.findBySeries_IdAndStatus(s.getId(), "published").size();
+            boolean isCompleted = "completed".equals(s.getStatus());
+            if (publishedCount == 0 && !isCompleted) {
+                continue;
             }
+
+            // Backfill: series đã phát hành nhưng còn ở trạng thái đang thực hiện.
+            if (publishedCount > 0
+                    && ("unfinish".equals(s.getStatus()) || "new".equals(s.getStatus()))) {
+                s.setStatus("published");
+                seriesRepository.save(s);
+            }
+
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("id", s.getId());
+            map.put("seriesName", s.getSeriesName());
+            map.put("status", s.getStatus());
+            map.put("genre", s.getGenre());
+            map.put("startDate", s.getStartDate() != null ? s.getStartDate().toString() : null);
+            map.put("mangakaName",
+                    s.getProposal() != null && s.getProposal().getMangaka() != null
+                    && s.getProposal().getMangaka().getUser() != null
+                    ? s.getProposal().getMangaka().getUser().getFullname() : "—");
+            map.put("publishedChapters", publishedCount);
+            list.add(map);
         }
 
         result.put("status", "success");

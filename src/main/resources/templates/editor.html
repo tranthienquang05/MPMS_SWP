@@ -605,6 +605,12 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
 
       let boardId = "";
 
+      function escapeHtmlBoard(text) {
+        const div = document.createElement("div");
+        div.textContent = text == null ? "" : String(text);
+        return div.innerHTML;
+      }
+
       function loadVoteProposals() {
         fetch("/manga/editor/data")
           .then((res) => res.json())
@@ -635,6 +641,20 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                     ? `${voteCount}/${totalBoards} đã vote`
                     : `${voteCount} người đã vote`;
 
+                const actionCell = p.myVote
+                  ? `<div class="board-already-voted">
+                        <span class="badge ${p.myVote === "pass" ? "badge-status-passed" : "badge-status-rejected"}">
+                          Bạn đã ${p.myVote === "pass" ? "Chấp Thuận" : "Bác Bỏ"}
+                        </span>
+                        <div class="board-my-vote-comment">${p.myVoteContent ? escapeHtmlBoard(p.myVoteContent) : "(không có nhận xét)"}</div>
+                        <small class="date-value">${formatAppDateTime(p.myVoteAt)}</small>
+                     </div>`
+                  : `<textarea id="vote-comment-${p.id}" placeholder="Nhận xét của bạn..." class="u-inline-style-051"></textarea>
+                     <div class="u-inline-style-052">
+                        <button type="button" onclick="castVote('${p.id}', 'pass')" class="btn btn-sm btn-success">Chấp Thuận</button>
+                        <button type="button" onclick="castVote('${p.id}', 'reject')" class="btn btn-sm btn-danger">Bác Bỏ</button>
+                     </div>`;
+
                 return `
                         <tr>
                             <td>${p.id}</td>
@@ -642,17 +662,10 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                             <td>${p.seriesName}</td>
                             <td><span class="date-value">${formatAppDateTime(p.boardSubmittedAt)}</span></td>
                             <td>
-                                ${p.filePath ? `<a href="${p.filePath}" class="btn-link" target="_blank">Bản thảo</a><br>` : ""}
-                                ${p.fileOfTantou ? `<a href="${p.fileOfTantou}" class="btn-link" target="_blank">Hồ sơ đề xuất</a>` : ""}
+                                ${p.filePath ? `<a href="${p.filePath}" class="btn-link" target="_blank">Bản thảo</a>` : "<span class='tantou-comment-empty'>—</span>"}
                             </td>
                             <td>${voteProgress}</td>
-                            <td>
-                                <textarea id="vote-comment-${p.id}" placeholder="Nhận xét của bạn..." class="u-inline-style-051"></textarea>
-                                <div class="u-inline-style-052">
-                                    <button type="button" onclick="castVote('${p.id}', 'pass')" class="btn btn-sm btn-success">Chấp Thuận</button>
-                                    <button type="button" onclick="castVote('${p.id}', 'reject')" class="btn btn-sm btn-danger">Bác Bỏ</button>
-                                </div>
-                            </td>
+                            <td>${actionCell}</td>
                         </tr>`;
               })
               .join("");

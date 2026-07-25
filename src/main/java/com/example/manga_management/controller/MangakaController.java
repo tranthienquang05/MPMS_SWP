@@ -413,6 +413,7 @@ public class MangakaController {
         result.put("proposalId", p.getId());
         result.put("seriesName", p.getSeriesName());
         result.put("proposalStatus", p.getStatus());
+        result.put("filePath", p.getFilePath()); // file bản thảo mangaka đã nộp
         result.put("editorComment", p.getComment());
         result.put("editorScore", p.getEditorScore());
         result.put("revisionDeadline", p.getRevisionDeadline()); // FE tự so sánh với thời gian hiện tại nếu muốn hiển

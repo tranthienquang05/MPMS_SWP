@@ -208,6 +208,13 @@ public class TantouController {
             return result;
         }
 
+        // Từ chối bắt buộc phải có lý do để mangaka biết vì sao bị từ chối.
+        if ("reject".equals(action) && (comment == null || comment.isBlank())) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng nhập lý do khi từ chối đề xuất!");
+            return result;
+        }
+
         p.setComment(comment);
         p.setEditorScore(null);
         p.setReviewedAt(LocalDateTime.now());
@@ -272,7 +279,6 @@ public class TantouController {
     @ResponseBody
     public Map<String, String> submitToBoard(
             @RequestParam String proposalId,
-            @RequestPart MultipartFile fileOfTantou,
             HttpSession session) {
 
         Map<String, String> result = new HashMap<>();
@@ -303,57 +309,20 @@ public class TantouController {
             result.put("message", "Chỉ đề xuất đã được duyệt mới có thể nộp lên hội đồng!");
             return result;
         }
-        if (fileOfTantou.isEmpty()) {
-            result.put("status", "error");
-            result.put("message", "Vui lòng đính kèm hồ sơ đề xuất!");
-            return result;
-        }
 
-        String fileNameOfTantou = fileOfTantou.getOriginalFilename();
+        // Hội đồng sẽ xem trực tiếp bản thảo do mangaka nộp (p.filePath). Không cần
+        // tantou tải lên "hồ sơ đề xuất" riêng nữa.
+        p.setStatus("board_check");
+        p.setBoardSubmittedAt(LocalDateTime.now());
+        proposalRepository.save(p);
 
-        if (fileNameOfTantou == null ||
-                !fileNameOfTantou.toLowerCase().endsWith(".pdf")) {
+        notificationController.send("board", null,
+                "Có dự án mới '" + p.getSeriesName() + "' cần bỏ phiếu!", "/manga/editor");
 
-            result.put("status", "error");
-            result.put("message", "Chỉ được phép tải lên file PDF!");
-            return result;
-        }
-
-        try {
-            String workingDir = System.getProperty("user.dir");
-            String uploadDir = workingDir + File.separator + "src" + File.separator + "main" + File.separator
-                    + "resources" + File.separator + "static" + File.separator + "tantou-profile" + File.separator;
-
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            String originalName = fileOfTantou.getOriginalFilename();
-            String extension = ".pdf";
-            if (originalName != null && originalName.contains(".")) {
-                extension = originalName.substring(originalName.lastIndexOf("."));
-            }
-
-            String fileName = proposalId + extension;
-            fileOfTantou.transferTo(uploadPath.resolve(fileName).toFile());
-
-            p.setFileOfTantou("/tantou-profile/" + fileName);
-            p.setStatus("board_check");
-            p.setBoardSubmittedAt(LocalDateTime.now());
-            proposalRepository.save(p);
-
-            notificationController.send("board", null,
-                    "Có dự án mới '" + p.getSeriesName() + "' cần bỏ phiếu!", "/manga/editor");
-
-            result.put("status", "success");
-            result.put("proposalId", proposalId);
-            result.put("newStatus", p.getStatus());
-            result.put("message", "Đã nộp lên hội đồng!");
-        } catch (IOException e) {
-            result.put("status", "error");
-            result.put("message", "Lỗi hệ thống: " + e.getMessage());
-        }
+        result.put("status", "success");
+        result.put("proposalId", proposalId);
+        result.put("newStatus", p.getStatus());
+        result.put("message", "Đã nộp lên hội đồng!");
         return result;
     }
 

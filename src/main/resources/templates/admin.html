@@ -350,6 +350,28 @@
           </tbody>
         </table>
       </div>
+
+      <div class="section-card">
+        <h3>Series đã xuất bản</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Mã series</th>
+              <th>Tên series</th>
+              <th>Mangaka</th>
+              <th>Số chapter đã xuất bản</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="published-series-tbody">
+            <tr>
+              <td colspan="6" class="text-center-muted">Đang tải...</td>
+            </tr>
+          </tbody>
+        </table>
+        <div id="series-chapters-detail" style="margin-top:1rem;"></div>
+      </div>
     </div>
 
     <div id="tab-history" class="tab-pane">
@@ -969,7 +991,98 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       if (id === "tab-relations") loadRelations();
       if (id === "tab-vote") loadVoteSessionsAdmin();
       if (id === "tab-history") initHistoryTab();
-      if (id === "tab-publish") loadPendingPublishChapters();
+      if (id === "tab-publish") { loadPendingPublishChapters(); loadPublishedSeries(); }
+    }
+
+    // ════════════════════════════════════════════
+    // SERIES ĐÃ XUẤT BẢN (admin xem danh sách chapter)
+    // ════════════════════════════════════════════
+    const SERIES_STATUS_LABEL = {
+      published: "Đang phát hành",
+      completed: "Đã hoàn thành",
+    };
+    const CHAPTER_STATUS_CLASS = {
+      published: "#4caf50",
+      pass: "#2196f3",
+      finish: "#ff9800",
+      revision: "#e53935",
+    };
+
+    async function loadPublishedSeries() {
+      const tbody = document.getElementById("published-series-tbody");
+      if (!tbody) return;
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center-muted">Đang tải...</td></tr>`;
+      document.getElementById("series-chapters-detail").innerHTML = "";
+      try {
+        const res = await fetch("/manga/system-admin/series/published");
+        const data = await res.json();
+        if (data.status !== "success") {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center-muted">${data.message || "Lỗi tải dữ liệu"}</td></tr>`;
+          return;
+        }
+        const list = data.series || [];
+        if (list.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center-muted">Chưa có series nào được xuất bản.</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = list
+          .map(
+            (s) => `
+              <tr>
+                <td>${s.id}</td>
+                <td>${s.seriesName || "—"}</td>
+                <td>${s.mangakaName || "—"}</td>
+                <td>${s.publishedChapters}</td>
+                <td>${SERIES_STATUS_LABEL[s.status] || s.status}</td>
+                <td>
+                  <button class="btn-sm btn-primary" onclick="viewSeriesChapters('${s.id}','${(s.seriesName || "").replace(/'/g, "\\'")}')">
+                    <i class="fa-solid fa-list"></i>Xem chapter
+                  </button>
+                </td>
+              </tr>`,
+          )
+          .join("");
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center-muted">Lỗi: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function viewSeriesChapters(seriesId, seriesName) {
+      const box = document.getElementById("series-chapters-detail");
+      box.innerHTML = `<p class="text-center-muted">Đang tải chapter của "${seriesName}"...</p>`;
+      try {
+        const res = await fetch(`/manga/system-admin/series/${seriesId}/chapters`);
+        const data = await res.json();
+        if (data.status !== "success") {
+          box.innerHTML = `<p class="text-center-muted">${data.message || "Lỗi tải dữ liệu"}</p>`;
+          return;
+        }
+        const chapters = data.chapters || [];
+        let html = `<h4>Chapter của series "${data.seriesName}" (${seriesId})</h4>`;
+        if (chapters.length === 0) {
+          html += `<p class="text-center-muted">Series này chưa có chapter nào.</p>`;
+          box.innerHTML = html;
+          return;
+        }
+        html += `<table class="data-table"><thead><tr>
+            <th>Số</th><th>Tên chapter</th><th>Trạng thái</th><th>Ngày xuất bản</th>
+          </tr></thead><tbody>`;
+        html += chapters
+          .map((c) => {
+            const color = CHAPTER_STATUS_CLASS[c.status] || "inherit";
+            return `<tr>
+              <td>${c.chapterNumber != null ? c.chapterNumber : "—"}</td>
+              <td>${c.chapterName || "—"}</td>
+              <td style="color:${color};font-weight:600;">${c.statusLabel || c.status}</td>
+              <td>${c.publishDate || "—"}</td>
+            </tr>`;
+          })
+          .join("");
+        html += `</tbody></table>`;
+        box.innerHTML = html;
+      } catch (err) {
+        box.innerHTML = `<p class="text-center-muted">Lỗi: ${err.message}</p>`;
+      }
     }
 
     // ════════════════════════════════════════════

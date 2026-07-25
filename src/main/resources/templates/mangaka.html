@@ -1889,6 +1889,33 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       }
     }
 
+    async function completeSeries(seriesId, seriesName) {
+      const confirmed = window.showUiConfirm
+        ? await window.showUiConfirm(
+            `Series "${seriesName}" sẽ được đánh dấu HOÀN THÀNH. Sau khi hoàn thành, series sẽ không bị đưa vào diện vote dừng nữa. Bạn chắc chắn?`,
+            { title: "Hoàn thành series", okText: "Hoàn thành", cancelText: "Hủy" },
+          )
+        : window.confirm(`Đánh dấu series "${seriesName}" hoàn thành?`);
+      if (!confirmed) return;
+      try {
+        const res = await fetch(`/manga/mangaka/myseries/${seriesId}/complete`, {
+          method: "POST",
+        });
+        const data = await res.json();
+        if (typeof showToast === "function") {
+          showToast(data.message, data.status === "success" ? "success" : "error");
+        } else {
+          alert(data.message);
+        }
+        if (data.status === "success") {
+          loadMySeriesList();
+        }
+      } catch (err) {
+        if (typeof showToast === "function") showToast("Lỗi: " + err.message, "error");
+        else alert("Lỗi: " + err.message);
+      }
+    }
+
     function navigateProjectSeries(seriesId) {
       if (!seriesId) return;
       if (window.history && window.history.pushState) {
@@ -3502,10 +3529,20 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                 finish:
                   '<span class="badge-status-waiting">Chờ BTV duyệt</span>',
                 pass: '<span class="badge-status-passed">Đã duyệt</span>',
+                published:
+                  '<span class="badge-status-approved">Đang phát hành</span>',
+                completed:
+                  '<span class="badge-status-passed">Đã hoàn thành</span>',
+                pending_cancel:
+                  '<span class="badge-status-waiting">Chờ hồ sơ bảo vệ</span>',
                 stopped: '<span class="badge-status-rejected">Đã dừng</span>',
                 rewarded:
                   '<span class="badge-status-passed">Đã khen thưởng</span>',
               };
+              // Chỉ series đang phát hành (đã xuất bản ≥1 chapter) mới được đánh dấu hoàn thành.
+              const completeBtn = s.status === "published"
+                ? `<button type="button" class="project-action-btn" onclick="completeSeries('${s.id}','${escapeProjectHtml(s.seriesName || "").replace(/'/g, "\\'")}')">Đánh dấu hoàn thành</button>`
+                : "";
               html += `<tr>
                   <td>
                     <div class="series-title-cell">
@@ -3525,6 +3562,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                   <td>
                     <button type="button" class="project-action-btn series-info-trigger" onclick="openSeriesInfoModal('${s.id}')">Xem thông tin</button>
                     <a href="/manga/mangaka/myseries/${s.id}" class="project-action-btn series-chapter-btn" onclick="event.preventDefault(); navigateProjectSeries('${s.id}')">Quản lý chapter</a>
+                    ${completeBtn}
                   </td>
                 </tr>`;
             });

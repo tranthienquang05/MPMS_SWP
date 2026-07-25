@@ -579,6 +579,85 @@ public class MangakaController {
         return result;
     }
 
+    @Operation(summary = "[SWAGGER] Mangaka đánh dấu series đã hoàn thành")
+    @PostMapping("/myseries/{seriesId}/complete")
+    @ResponseBody
+    public Map<String, Object> completeSeries(@PathVariable String seriesId, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            result.put("status", "error");
+            result.put("message", "Chưa đăng nhập");
+            return result;
+        }
+
+        Series series = seriesRepository.findById(seriesId).orElse(null);
+        if (series == null) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy series: " + seriesId);
+            return result;
+        }
+
+        // Chỉ chính chủ mangaka của series mới được đánh dấu hoàn thành.
+        if (series.getProposal() == null || series.getProposal().getMangaka() == null
+                || series.getProposal().getMangaka().getUser() == null
+                || !series.getProposal().getMangaka().getUser().getId().equals(user.getId())) {
+            result.put("status", "error");
+            result.put("message", "Bạn không có quyền đánh dấu hoàn thành series này!");
+            return result;
+        }
+
+        if ("completed".equals(series.getStatus())) {
+            result.put("status", "error");
+            result.put("message", "Series này đã hoàn thành rồi!");
+            return result;
+        }
+        // Chỉ hoàn thành được series đang phát hành (đã xuất bản ít nhất 1 chapter).
+        if (!"published".equals(series.getStatus())) {
+            result.put("status", "error");
+            result.put("message",
+                    "Chỉ có thể hoàn thành series đã xuất bản ít nhất 1 chapter (đang phát hành)!");
+            return result;
+        }
+        // Đang có phiên vote mở (dừng/khen thưởng) thì không được chốt hoàn thành.
+        if (voteSessionRepository.existsBySeriesIdAndStatus(seriesId, "active")) {
+            result.put("status", "error");
+            result.put("message", "Series đang có phiên vote mở, không thể đánh dấu hoàn thành lúc này!");
+            return result;
+        }
+
+        // Không được hoàn thành khi còn chapter đang dở (chưa xuất bản). Chỉ chấp
+        // nhận chapter đã published (hoặc đã dừng/hủy) — mọi trạng thái khác là
+        // "đang treo" và phải xử lý xong trước khi chốt hoàn thành series.
+        List<Chapter> chapters = chapterRepository.findBySeriesId(seriesId);
+        long pending = chapters.stream()
+                .filter(c -> !"published".equals(c.getStatus())
+                        && !"stopped".equals(c.getStatus())
+                        && !"cancelled".equals(c.getStatus()))
+                .count();
+        if (pending > 0) {
+            result.put("status", "error");
+            result.put("message", "Còn " + pending
+                    + " chapter chưa xuất bản. Vui lòng hoàn tất/xuất bản hết chapter trước khi đánh dấu hoàn thành series!");
+            return result;
+        }
+
+        series.setStatus("completed");
+        seriesRepository.save(series);
+
+        // Báo cho tantou phụ trách và toàn bộ hội đồng biết series đã hoàn thành.
+        String content = "🏁 Series '" + series.getSeriesName() + "' đã được đánh dấu HOÀN THÀNH.";
+        var mangaka = series.getProposal().getMangaka();
+        if (mangaka.getEditor() != null && mangaka.getEditor().getUser() != null) {
+            notificationController.send(null, mangaka.getEditor().getUser().getId(), content, "/manga/tantou");
+        }
+        notificationController.send("board", null, content, "/manga/editor");
+
+        result.put("status", "success");
+        result.put("message", "Đã đánh dấu series '" + series.getSeriesName() + "' hoàn thành!");
+        return result;
+    }
+
     @Operation(summary = "[SWAGGER] Tạo chapter mới")
     @PostMapping("/myseries/{seriesId}/createchapter/data")
     @ResponseBody

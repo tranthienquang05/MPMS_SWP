@@ -51,12 +51,13 @@ public class Series {
     private String status;
 
     /**
-     * Series bị khoá thao tác: đang chờ hồ sơ bảo vệ (pending_cancel) hoặc đã bị
-     * dừng hẳn (stopped). Lúc này không được tạo chapter, tạo trang, giao việc,
-     * duyệt bài hay submit chapter.
+     * Series bị khoá thao tác: đang chờ hồ sơ bảo vệ (pending_cancel), đã bị dừng
+     * hẳn (stopped), hoặc đã hoàn thành (completed). Lúc này không được tạo chapter,
+     * tạo trang, giao việc, duyệt bài hay submit chapter.
      */
     public boolean isLocked() {
-        return "pending_cancel".equals(status) || "stopped".equals(status);
+        return "pending_cancel".equals(status) || "stopped".equals(status)
+                || "completed".equals(status);
     }
 
     /** Lý do bị khoá, dùng làm message trả về cho client. */
@@ -66,6 +67,9 @@ public class Series {
         }
         if ("stopped".equals(status)) {
             return "Series đã bị dừng phát hành, không thể thao tác!";
+        }
+        if ("completed".equals(status)) {
+            return "Series đã hoàn thành, không thể thêm chapter mới!";
         }
         return null;
     }

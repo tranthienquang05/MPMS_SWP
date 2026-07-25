@@ -247,6 +247,17 @@ public class AdminController {
         chapter.setStatus("published");
         chapterRepository.save(chapter);
 
+        // Khi xuất bản chapter đầu tiên của series, series đang ở trạng thái đang
+        // thực hiện ("unfinish"/"new") sẽ chuyển sang "published" (đã phát hành).
+        // Không đụng tới series đã completed/stopped/pending_cancel.
+        Series seriesOfChapter = chapter.getSeries();
+        if (seriesOfChapter != null
+                && ("unfinish".equals(seriesOfChapter.getStatus())
+                || "new".equals(seriesOfChapter.getStatus()))) {
+            seriesOfChapter.setStatus("published");
+            seriesRepository.save(seriesOfChapter);
+        }
+
         String lastPublicId = publicDateRepository.findTopByOrderByIdDesc()
                 .map(PublicDate::getId).orElse("PUB000");
         int nextPublicNum = Integer.parseInt(lastPublicId.replaceAll("[^0-9]", "")) + 1;
@@ -274,6 +285,106 @@ public class AdminController {
         result.put("status", "success");
         result.put("message", "Đã xuất bản chapter '" + chapter.getChapterName() + "'!");
         return result;
+    }
+
+    @Operation(summary = "Danh sách series đã xuất bản (đang phát hành / đã hoàn thành)")
+    @GetMapping("/series/published")
+    @ResponseBody
+    public Map<String, Object> getPublishedSeries(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"admin".equalsIgnoreCase(user.getRole())) {
+            result.put("status", "error");
+            result.put("message", "Không có quyền truy cập");
+            return result;
+        }
+
+        List<Map<String, Object>> list = new ArrayList<>();
+        // "Đã xuất bản" gồm series đang phát hành (published) và đã hoàn thành (completed).
+        for (String st : new String[]{"published", "completed"}) {
+            for (Series s : seriesRepository.findByStatus(st)) {
+                Map<String, Object> map = new LinkedHashMap<>();
+                map.put("id", s.getId());
+                map.put("seriesName", s.getSeriesName());
+                map.put("status", s.getStatus());
+                map.put("genre", s.getGenre());
+                map.put("startDate", s.getStartDate() != null ? s.getStartDate().toString() : null);
+                map.put("mangakaName",
+                        s.getProposal() != null && s.getProposal().getMangaka() != null
+                        && s.getProposal().getMangaka().getUser() != null
+                        ? s.getProposal().getMangaka().getUser().getFullname() : "—");
+                long publishedCount = chapterRepository.findBySeries_IdAndStatus(s.getId(), "published").size();
+                map.put("publishedChapters", publishedCount);
+                list.add(map);
+            }
+        }
+
+        result.put("status", "success");
+        result.put("series", list);
+        return result;
+    }
+
+    @Operation(summary = "Danh sách chapter của 1 series (kèm trạng thái) cho admin xem")
+    @GetMapping("/series/{seriesId}/chapters")
+    @ResponseBody
+    public Map<String, Object> getSeriesChapters(@PathVariable String seriesId, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"admin".equalsIgnoreCase(user.getRole())) {
+            result.put("status", "error");
+            result.put("message", "Không có quyền truy cập");
+            return result;
+        }
+
+        Optional<Series> seriesOpt = seriesRepository.findById(seriesId);
+        if (seriesOpt.isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "Không tìm thấy series: " + seriesId);
+            return result;
+        }
+
+        List<Chapter> chapters = chapterRepository.findBySeriesId(seriesId);
+        chapters.sort(java.util.Comparator.comparing(
+                c -> c.getChapterNumber() != null ? c.getChapterNumber() : Integer.MAX_VALUE));
+
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (Chapter c : chapters) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("id", c.getId());
+            map.put("chapterName", c.getChapterName());
+            map.put("chapterNumber", c.getChapterNumber());
+            map.put("status", c.getStatus());
+            map.put("statusLabel", chapterStatusLabel(c.getStatus()));
+            String publishDate = publicDateRepository.findTopByChapter_IdOrderByDatePublicDesc(c.getId())
+                    .map(pd -> pd.getDatePublic().toString()).orElse(null);
+            map.put("publishDate", publishDate);
+            list.add(map);
+        }
+
+        result.put("status", "success");
+        result.put("seriesName", seriesOpt.get().getSeriesName());
+        result.put("seriesStatus", seriesOpt.get().getStatus());
+        result.put("chapters", list);
+        return result;
+    }
+
+    /** Nhãn tiếng Việt cho trạng thái chapter, dùng khi admin xem danh sách chapter. */
+    private String chapterStatusLabel(String status) {
+        if (status == null) {
+            return "—";
+        }
+        return switch (status) {
+            case "new" -> "Mới tạo";
+            case "unfinish" -> "Đang thực hiện";
+            case "intask" -> "Đang giao việc";
+            case "finish" -> "Chờ Tantou duyệt";
+            case "revision" -> "Yêu cầu chỉnh sửa";
+            case "pass" -> "Đã duyệt, chờ xuất bản";
+            case "published" -> "Đã xuất bản";
+            case "stopped", "cancelled" -> "Đã dừng";
+            case "locked" -> "Đang khoá";
+            default -> status;
+        };
     }
 
     @Operation(summary = "Tạo tài khoản mới (mangaka/assistant/tantou/board/admin)")
@@ -647,6 +758,12 @@ public class AdminController {
                     "Series đang trong diện xem xét dừng (chờ hồ sơ bảo vệ), không thể tạo phiên vote mới!");
             return response;
         }
+        // Series đã hoàn thành thì không đưa vào diện vote dừng nữa.
+        if ("stop".equals(voteType) && "completed".equals(seriesStatus)) {
+            response.put("success", false);
+            response.put("message", "Series đã hoàn thành, không thể tạo phiên vote dừng!");
+            return response;
+        }
 
         if ("stop".equals(voteType) && (reason == null || reason.isBlank())) {
             response.put("success", false);
@@ -741,9 +858,10 @@ public class AdminController {
                 }
                 String seriesStatus = seriesOpt.get().getStatus();
 
-                // Bỏ qua series đã có kết quả cuối, đang chờ bảo vệ, hoặc đang có
-                // phiên vote mở. Phiên cũ đã đóng thì vẫn được xét dừng lại.
+                // Bỏ qua series đã có kết quả cuối, đã hoàn thành, đang chờ bảo vệ,
+                // hoặc đang có phiên vote mở. Phiên cũ đã đóng thì vẫn xét dừng lại.
                 if ("stopped".equals(seriesStatus)
+                        || "completed".equals(seriesStatus)
                         || "pending_cancel".equals(seriesStatus)
                         || voteSessionRepository.existsBySeriesIdAndStatus(sid, "active")) {
                     skippedNames.add(sname);
@@ -901,9 +1019,12 @@ public class AdminController {
                     default ->
                         choice;
                 };
+                Series votedSeries = sv.getSeries();
                 addActivity(activities, sv.getVoteDate(), "vote-series", "fa-square-poll-vertical",
                         "Đã bỏ phiếu " + label + " cho series \""
-                        + (sv.getSeries() != null ? sv.getSeries().getSeriesName() : "—") + "\"");
+                        + (votedSeries != null ? votedSeries.getSeriesName() : "—") + "\""
+                        + (votedSeries != null && votedSeries.getId() != null
+                        ? " (mã truyện: " + votedSeries.getId() + ")" : ""));
             }
 
             for (VoteSession vs : voteSessionRepository.findByCreatedBy_User_IdOrderByCreatedAtDesc(userId)) {

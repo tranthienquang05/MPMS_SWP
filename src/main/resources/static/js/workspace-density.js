@@ -380,40 +380,166 @@
     // Tab Phân công giữ hai bảng ngay trong content; admin.html quản lý việc chuyển bảng.
   }
 
+  // Bảng ranking hiển thị THẲNG trong trang (inline) cho hội đồng — không dùng
+  // modal, để các popup con (vd "Xem thông tin series") không bị chồng lớp lên nhau.
+  function buildInlineRankingPanel() {
+    const panel = document.createElement("section");
+    panel.innerHTML = `
+      <div class="ranking-filter-bar" aria-label="Bộ lọc ranking">
+        <div class="ranking-filter-field">
+          <label>Tháng</label>
+          <select data-erank-month>
+            <option value="0">-- Cả năm --</option>
+            ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}">Tháng ${i + 1}</option>`).join("")}
+          </select>
+        </div>
+        <div class="ranking-filter-field">
+          <label>Năm</label>
+          <select data-erank-year></select>
+        </div>
+        <div class="ranking-filter-field">
+          <label>Quý</label>
+          <select data-erank-quarter>
+            <option value="0">-- Tất cả --</option>
+            <option value="1">Quý 1 (T1-T3)</option>
+            <option value="2">Quý 2 (T4-T6)</option>
+            <option value="3">Quý 3 (T7-T9)</option>
+            <option value="4">Quý 4 (T10-T12)</option>
+          </select>
+        </div>
+        <div class="ranking-filter-actions">
+          <button type="button" class="ranking-filter-button" data-erank-load>Xem ranking</button>
+        </div>
+      </div>
+      <div class="ranking-table-scroll">
+        <table class="data-table" hidden>
+          <thead><tr><th>Hạng</th><th>Mã Series</th><th>Tên Series</th><th>Lượt xem</th><th>Like</th><th>Dislike</th></tr></thead>
+          <tbody data-erank-body></tbody>
+        </table>
+        <p class="empty-msg" data-erank-message>Đang tải ranking...</p>
+      </div>`;
+    const year = panel.querySelector("[data-erank-year]");
+    const currentYear = new Date().getFullYear();
+    for (let value = currentYear; value >= currentYear - 4; value -= 1) {
+      year.add(new Option(String(value), String(value)));
+    }
+    const month = panel.querySelector("[data-erank-month]");
+    const quarter = panel.querySelector("[data-erank-quarter]");
+    month.addEventListener("change", () => { if (month.value !== "0") quarter.value = "0"; });
+    quarter.addEventListener("change", () => { if (quarter.value !== "0") month.value = "0"; });
+    panel.querySelector("[data-erank-load]").addEventListener("click", () => loadInlineRanking(panel));
+    return panel;
+  }
+
+  async function loadInlineRanking(panel) {
+    const tbody = panel.querySelector("[data-erank-body]");
+    const message = panel.querySelector("[data-erank-message]");
+    const table = panel.querySelector("table");
+    const loadButton = panel.querySelector("[data-erank-load]");
+    tbody.replaceChildren();
+    table.hidden = true;
+    message.hidden = false;
+    message.textContent = "Đang tải ranking...";
+    loadButton.disabled = true;
+    const query = new URLSearchParams({
+      month: panel.querySelector("[data-erank-month]").value,
+      quarter: panel.querySelector("[data-erank-quarter]").value,
+      year: panel.querySelector("[data-erank-year]").value,
+    });
+    try {
+      const response = await fetch(`/manga/ranking?${query}`);
+      if (!response.ok) throw new Error("fail");
+      const rows = await response.json();
+      if (!rows.length) {
+        message.textContent = "Không có dữ liệu trong khoảng thời gian này.";
+        panel.dataset.loaded = "true";
+        return;
+      }
+      const medals = ["🥇", "🥈", "🥉"];
+      rows.forEach((item) => {
+        const row = document.createElement("tr");
+        row.append(
+          rankingCell(`${medals[item.rank - 1] || ""}${medals[item.rank - 1] ? " " : ""}${item.rank}`),
+          rankingCell(item.seriesId), rankingCell(item.seriesName), rankingCell(item.totalView),
+          rankingCell(item.totalLike), rankingCell(item.totalDislike),
+        );
+        tbody.appendChild(row);
+      });
+      table.hidden = false;
+      message.hidden = true;
+      panel.dataset.loaded = "true";
+    } catch (error) {
+      message.textContent = "Không thể tải ranking. Vui lòng thử lại.";
+    } finally {
+      loadButton.disabled = false;
+    }
+  }
+
   function initEditor() {
     if (!document.getElementById("activeSessionsBody") || !document.getElementById("proposalVoteBody")) return;
     const home = document.getElementById("tab-home");
     const sessions = document.getElementById("activeSessionsSection");
     const sessionsHeading = sessions?.previousElementSibling;
     const proposal = document.getElementById("tab-project");
-    const proposalWasActive = proposal?.classList.contains("active");
-
     if (!home || !sessions || !proposal) return;
 
-    if (sessionsHeading?.matches("h1, h2, h3")) sessionsHeading.remove();
-    ensureSharedWorkflowModal({
-      id: "editorVoteSessionsModal",
-      title: "Phiên vote",
-      description: "Theo dõi các phiên đang mở và gửi lựa chọn của bạn.",
-      content: sessions,
-    });
+    // Panel "Phiên vote": gộp tiêu đề + bảng phiên vote.
+    const sessionsPanel = document.createElement("section");
+    sessionsPanel.className = "editor-inline-panel";
+    sessionsPanel.dataset.panel = "sessions";
+    if (sessionsHeading && sessionsHeading.matches("h1, h2, h3")) sessionsPanel.appendChild(sessionsHeading);
+    sessionsPanel.appendChild(sessions);
 
+    // Panel "Đề xuất chờ duyệt".
     proposal.classList.remove("tab-pane", "active");
     stripRedundantHeading(proposal);
-    ensureSharedWorkflowModal({
-      id: "editorPendingProposalsModal",
-      title: "Đề xuất chờ duyệt",
-      description: "Xem hồ sơ, tiến độ bỏ phiếu và đưa ra quyết định.",
-      content: proposal,
-    });
     removeNavigation("tab-project");
-    if (proposalWasActive) home.classList.add("active");
+    const proposalPanel = document.createElement("section");
+    proposalPanel.className = "editor-inline-panel";
+    proposalPanel.dataset.panel = "proposal";
+    proposalPanel.appendChild(proposal);
+
+    // Panel "Ranking" (inline).
+    const rankingPanel = buildInlineRankingPanel();
+    rankingPanel.classList.add("editor-inline-panel");
+    rankingPanel.dataset.panel = "ranking";
+
+    // Khu chứa 3 panel ngay trong trang chủ.
+    const host = document.createElement("div");
+    host.id = "editorInlinePanels";
+    host.className = "editor-inline-panels";
+    host.append(rankingPanel, sessionsPanel, proposalPanel);
+    home.appendChild(host);
+
+    const buttons = {};
+    function showEditorPanel(name) {
+      host.querySelectorAll(":scope > .editor-inline-panel").forEach((p) => {
+        p.hidden = p.dataset.panel !== name;
+      });
+      Object.keys(buttons).forEach((key) => {
+        buttons[key] && buttons[key].classList.toggle("is-active", key === name);
+      });
+      if (name === "ranking" && rankingPanel.dataset.loaded !== "true") loadInlineRanking(rankingPanel);
+      if (name === "sessions") window.loadActiveSessions && window.loadActiveSessions();
+      if (name === "proposal") window.loadVoteProposals && window.loadVoteProposals();
+    }
 
     addQuickActions("tab-home", [
-      { label: "Ranking", run: openSharedRankingModal },
-      { label: "Phiên vote", run: (event) => openSharedWorkflowModal("editorVoteSessionsModal", event.currentTarget) },
-      { label: "Đề xuất chờ duyệt", primary: true, run: (event) => openSharedWorkflowModal("editorPendingProposalsModal", event.currentTarget) },
+      { label: "Ranking", run: () => showEditorPanel("ranking") },
+      { label: "Phiên vote", run: () => showEditorPanel("sessions") },
+      { label: "Đề xuất chờ duyệt", run: () => showEditorPanel("proposal") },
     ]);
+
+    const bar = home.querySelector(":scope > .workspace-quick-actions");
+    if (bar) {
+      const btns = bar.querySelectorAll("button");
+      buttons.ranking = btns[0];
+      buttons.sessions = btns[1];
+      buttons.proposal = btns[2];
+    }
+
+    // Mặc định mở "Đề xuất chờ duyệt".
+    showEditorPanel("proposal");
   }
 
   function initMangaka() {

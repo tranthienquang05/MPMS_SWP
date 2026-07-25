@@ -1386,6 +1386,11 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         const overlay = document.getElementById("seriesInfoModalOverlay");
         const body = document.getElementById("seriesInfoBody");
         body.innerHTML = window.renderSeriesInfoState("Đang tải thông tin series...");
+        // Đưa overlay ra làm con trực tiếp của body để không bị "nhốt" trong
+        // stacking context của modal phiên vote (nếu không sẽ hiện ra sau).
+        if (overlay.parentElement !== document.body) {
+          document.body.appendChild(overlay);
+        }
         overlay.style.display = "flex";
 
         fetch(`/api/series/${seriesId}/info`)

@@ -6185,6 +6185,12 @@ table .btn-link:focus-visible {
   color: var(--app-text) !important;
 }
 
+/* Modal "Thông tin series" mở TỪ TRONG modal "Phiên vote" (shared-workflow-modal,
+   z-index 1200). Phải nổi lên trên nó, nếu không sẽ bị vẽ đè ra sau. */
+.series-info-modal {
+  z-index: 3300;
+}
+
 .series-info-modal .modal-content {
   width: min(820px, calc(100vw - 2rem));
   max-height: min(780px, calc(100vh - var(--app-header-height, 72px) - 2rem));
@@ -7865,10 +7871,24 @@ body.proposal-workspace-active #tab-proposal.tab-pane[style*="block"] {
   outline-offset: 2px;
 }
 
-.workspace-quick-action.is-primary {
+.workspace-quick-action.is-primary,
+.workspace-quick-action.is-active {
   border-color: var(--app-brand);
   background: var(--app-brand);
   color: var(--app-action-text);
+}
+
+/* Panel hội đồng hiển thị thẳng trong trang chủ (thay cho popup). */
+.editor-inline-panels {
+  width: 100%;
+}
+
+.editor-inline-panel {
+  width: 100%;
+}
+
+.editor-inline-panel[hidden] {
+  display: none !important;
 }
 
 .workspace-merged-details,

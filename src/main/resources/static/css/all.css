@@ -7878,6 +7878,45 @@ body.proposal-workspace-active #tab-proposal.tab-pane[style*="block"] {
   color: var(--app-action-text);
 }
 
+/* So sánh "Bản tác giả giao" ↔ "Bản trợ lý nộp" trên card trang (mangaka). */
+.task-compare {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.task-compare-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.task-compare-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  opacity: 0.85;
+  text-align: center;
+}
+
+.task-compare-img {
+  width: 100%;
+  max-width: 120px;
+  height: auto;
+  border: 1px solid var(--app-border-strong, #444);
+  border-radius: 6px;
+  object-fit: contain;
+  background: var(--app-surface-2, #1a1a1a);
+}
+
+.task-compare-empty {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  padding: 0.5rem 0;
+}
+
 /* Panel hội đồng hiển thị thẳng trong trang chủ (thay cho popup). */
 .editor-inline-panels {
   width: 100%;

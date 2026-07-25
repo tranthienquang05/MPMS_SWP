@@ -354,13 +354,15 @@ public class PageController {
             submission.setDeadline(deadline);
             submission.setStatus("intask");
 
+            // Snapshot BẤT BIẾN "bản tác giả giao" — lưu ở file riêng {id}_assigned.png
+            // để lần trợ lý lưu bài sau này (ghi /Submission/{id}.png) không đè lên.
             if (page.getFilePath() != null && !page.getFilePath().isBlank()) {
-                String fileName = submission.getId() + ".png";
+                String fileName = submission.getId() + "_assigned.png";
                 Path source = Paths.get("src/main/resources/static" + page.getFilePath());
                 Path targetDir = Paths.get("src/main/resources/static/Submission");
                 Files.createDirectories(targetDir);
                 Files.copy(source, targetDir.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
-                submission.setFilePath("/Submission/" + fileName);
+                submission.setAssignedFilePath("/Submission/" + fileName);
             }
 
             submissionRepository.save(submission);

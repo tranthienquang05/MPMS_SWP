@@ -29,8 +29,17 @@ public class Submission {
     @Column(name = "Deadline", nullable = false, columnDefinition = "DATETIME")
     private LocalDateTime deadline;
 
+    /** Ảnh "bản trợ lý nộp" — bản vẽ trợ lý lưu/nộp (bị cập nhật mỗi lần trợ lý lưu). */
     @Column(name = "FilePath", length = 60)
     private String filePath;
+
+    /**
+     * Ảnh "bản tác giả giao" — snapshot BẤT BIẾN của trang tại thời điểm mangaka
+     * giao việc. Lưu ở file riêng ({id}_assigned.png) nên trợ lý lưu bài về sau
+     * KHÔNG ghi đè được, giúp mangaka so sánh bản giao ↔ bản trợ lý nộp.
+     */
+    @Column(name = "AssignedFilePath", length = 60)
+    private String assignedFilePath;
 
     @Column(name = "comment", length = 1000)
     private String comment;

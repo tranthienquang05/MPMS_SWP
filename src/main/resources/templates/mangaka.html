@@ -4275,11 +4275,41 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                                   data-assistant-name="${escapeProjectHtml(sub.assistant.user.fullname)}">Giao l\u1ea1i vi\u1ec7c cho tr\u1ee3 l\u00ed</button>`;
               }
 
+              // M\u1ee5c 8: hi\u1ec7n task \u0111\u00e3 giao & \u0111ang giao ngay trong m\u00e0n qu\u1ea3n l\u00fd chapter.
+              // M\u1ee5c 9+10: k\u00e8m so s\u00e1nh "B\u1ea3n t\u00e1c gi\u1ea3 giao" \u2194 "B\u1ea3n tr\u1ee3 l\u00fd n\u1ed9p".
               let assignmentInfo = "";
-              if (sub && p.status === "intask") {
+              if (sub) {
+                const assistantName = escapeProjectHtml(
+                  (sub.assistant && sub.assistant.user && sub.assistant.user.fullname) || "?",
+                );
+                let taskStatusText = "\u0110\u00e3 giao";
+                if (p.status === "intask") taskStatusText = "\u0110ang th\u1ef1c hi\u1ec7n";
+                else if (sub.status === "done") taskStatusText = "Ch\u1edd b\u1ea1n duy\u1ec7t";
+                else if (sub.status === "finish") taskStatusText = "\u0110\u00e3 duy\u1ec7t";
+
+                let compareHtml = "";
+                if (sub.assignedFilePath || sub.filePath) {
+                  compareHtml = `<div class="task-compare">
+                      <div class="task-compare-col">
+                        <span class="task-compare-label">B\u1ea3n t\u00e1c gi\u1ea3 giao</span>
+                        ${sub.assignedFilePath
+                          ? `<a href="${sub.assignedFilePath}" target="_blank"><img src="${sub.assignedFilePath}?t=${Date.now()}" class="task-compare-img" alt="B\u1ea3n t\u00e1c gi\u1ea3 giao" /></a>`
+                          : `<span class="task-compare-empty">\u2014</span>`}
+                      </div>
+                      <div class="task-compare-col">
+                        <span class="task-compare-label">B\u1ea3n tr\u1ee3 l\u00fd n\u1ed9p</span>
+                        ${sub.filePath
+                          ? `<a href="${sub.filePath}" target="_blank"><img src="${sub.filePath}?t=${Date.now()}" class="task-compare-img" alt="B\u1ea3n tr\u1ee3 l\u00fd n\u1ed9p" /></a>`
+                          : `<span class="task-compare-empty">Ch\u01b0a n\u1ed9p</span>`}
+                      </div>
+                    </div>`;
+                }
+
                 assignmentInfo = `<div class="assistant-assignment-badge page-detail-assignment">
-                    <div>Tr\u1ee3 l\u00ed: <b>${escapeProjectHtml(sub.assistant.user.fullname)}</b></div>
+                    <div>Tr\u1ee3 l\u00ed: <b>${assistantName}</b></div>
+                    <div>Tr\u1ea1ng th\u00e1i task: <b>${taskStatusText}</b></div>
                     <div>Deadline: ${escapeProjectHtml(sub.deadline || "Ch\u01b0a \u0111\u1eb7t")}</div>
+                    ${compareHtml}
                   </div>`;
               }
 

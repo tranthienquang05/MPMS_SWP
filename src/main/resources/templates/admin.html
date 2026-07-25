@@ -1138,6 +1138,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         if (data.status === "success") {
           alert(data.message);
           loadPendingPublishChapters();
+          loadPublishedSeries();
         } else {
           alert("Lỗi: " + data.message);
         }

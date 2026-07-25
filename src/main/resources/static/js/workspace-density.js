@@ -371,6 +371,7 @@
         label: "Chapter chờ xuất bản",
         run: (event) => {
           window.loadPendingPublishChapters?.();
+          window.loadPublishedSeries?.();
           openSharedWorkflowModal("adminPendingPublishModal", event.currentTarget);
         },
       },

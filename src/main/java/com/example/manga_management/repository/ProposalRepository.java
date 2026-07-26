@@ -30,4 +30,7 @@ public interface ProposalRepository extends JpaRepository<Proposal, String> {
     List<Proposal> findByStatusAndRevisionDeadlineBefore(String status, LocalDateTime deadline);
 
     Optional<Proposal> findTopByOrderByIdDesc();
+
+    // Kiểm tra trùng tên series/bản thảo (không phân biệt hoa thường).
+    List<Proposal> findBySeriesNameIgnoreCase(String seriesName);
 }

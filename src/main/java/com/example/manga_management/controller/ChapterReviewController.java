@@ -223,11 +223,16 @@ public class ChapterReviewController {
             result.put("message", "Đã duyệt và xuất bản chapter!");
 
         } else if ("reject".equals(action)) {
+            // Từ chối chapter BẮT BUỘC phải có nhận xét / yêu cầu chỉnh sửa để
+            // mangaka biết cần sửa gì.
+            if (comment == null || comment.isBlank()) {
+                result.put("status", "error");
+                result.put("message", "Vui lòng nhập nhận xét / yêu cầu chỉnh sửa khi từ chối chapter!");
+                return result;
+            }
             chapter.setStatus("unfinish");
             chapter.setReviewedAt(java.time.LocalDateTime.now());
-            if (comment != null && !comment.isBlank()) {
-                chapter.setTantouComment(comment.trim());
-            }
+            chapter.setTantouComment(comment.trim());
 
             // Reset status tất cả page về unfinish
             List<MangaPage> pages = mangaPageRepository.findByChapterId(chapterId);

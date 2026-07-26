@@ -1153,7 +1153,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                                 class="btn-action primary u-inline-style-134">Xem trang</button>
                         </td>
                         <td>
-                            <textarea id="cr-comment-${c.id}" placeholder="Nhận xét (tuỳ chọn, áp dụng cho cả duyệt và từ chối)..." class="u-inline-style-157"></textarea>
+                            <textarea id="cr-comment-${c.id}" placeholder="Nhận xét / yêu cầu chỉnh sửa — BẮT BUỘC khi Từ chối, tuỳ chọn khi Duyệt..." class="u-inline-style-157"></textarea>
                         </td>
                         <td>
                             <div class="u-inline-style-158">
@@ -1174,6 +1174,12 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       async function reviewChapter(chapterId, action) {
         const comment =
           document.getElementById("cr-comment-" + chapterId)?.value ?? "";
+        // Từ chối chapter bắt buộc phải có nhận xét / yêu cầu chỉnh sửa.
+        if (action === "reject" && !comment.trim()) {
+          alert("Vui lòng nhập nhận xét / yêu cầu chỉnh sửa trước khi từ chối chapter!");
+          document.getElementById("cr-comment-" + chapterId)?.focus();
+          return;
+        }
         const confirmed = await window.showUiConfirm(
           "Bạn chắc chắn muốn " + (action === "approve" ? "duyệt" : "từ chối") + " chapter này?",
           {

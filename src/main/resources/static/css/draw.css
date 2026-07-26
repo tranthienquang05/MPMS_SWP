@@ -559,6 +559,12 @@
   grid-template-columns: 92px minmax(0, 1fr) clamp(284px, 22vw, 340px);
 }
 
+/* Ẩn panel Manga Chat (AI hỗ trợ) khi demo — CHỈ ẩn hiển thị, KHÔNG xóa code.
+   Bật lại: xóa/ comment rule này. Panel + JS chat vẫn còn nguyên. */
+.manga-chat-panel {
+  display: none !important;
+}
+
 #tab-draw .draw-page-navigator {
   display: flex;
   min-width: 0;

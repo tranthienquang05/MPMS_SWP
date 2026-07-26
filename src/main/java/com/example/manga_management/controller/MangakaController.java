@@ -213,6 +213,32 @@ public class MangakaController {
     }
 
     @Operation(summary = "[SWAGGER] Nộp bản thảo mới")
+    /**
+     * Tên series/bản thảo phải duy nhất trên toàn hệ thống: không trùng series đã
+     * có và không trùng đề xuất còn hiệu lực. Bỏ qua đề xuất đã bị từ chối
+     * ("locked" — tên được dùng lại) và bỏ qua chính đề xuất đang sửa (excludeId).
+     * So sánh không phân biệt hoa thường.
+     */
+    private boolean isSeriesNameTaken(String name, String excludeProposalId) {
+        if (name == null || name.trim().isEmpty()) {
+            return false;
+        }
+        String trimmed = name.trim();
+        if (seriesRepository.existsBySeriesNameIgnoreCase(trimmed)) {
+            return true;
+        }
+        for (Proposal p : proposalRepository.findBySeriesNameIgnoreCase(trimmed)) {
+            if (excludeProposalId != null && excludeProposalId.equals(p.getId())) {
+                continue;
+            }
+            if ("locked".equals(p.getStatus())) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
     @PostMapping(value = "/submit-proposal", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public Map<String, String> handleSubmitting(Model model,
@@ -254,6 +280,12 @@ public class MangakaController {
         if (txtSeriesName == null || txtSeriesName.trim().isEmpty()) {
             result.put("status", "error");
             result.put("message", "Vui lòng nhập tên series!");
+            return result;
+        }
+        if (isSeriesNameTaken(txtSeriesName, null)) {
+            result.put("status", "error");
+            result.put("message", "Tên series \"" + txtSeriesName.trim()
+                    + "\" đã tồn tại, vui lòng chọn tên khác!");
             return result;
         }
 
@@ -344,6 +376,12 @@ public class MangakaController {
         if (txtSeriesName == null || txtSeriesName.trim().isEmpty()) {
             result.put("status", "error");
             result.put("message", "Vui lòng nhập tên series!");
+            return result;
+        }
+        if (isSeriesNameTaken(txtSeriesName, proposalId)) {
+            result.put("status", "error");
+            result.put("message", "Tên series \"" + txtSeriesName.trim()
+                    + "\" đã tồn tại, vui lòng chọn tên khác!");
             return result;
         }
 
@@ -682,6 +720,22 @@ public class MangakaController {
             result.put("message", series.getLockMessage());
             return result;
         }
+        if (txtChapterName == null || txtChapterName.trim().isEmpty()) {
+            result.put("status", "error");
+            result.put("message", "Vui lòng nhập tên chapter!");
+            return result;
+        }
+        String chapterNameTrimmed = txtChapterName.trim();
+        // Chặn trùng tên chapter trong CÙNG series (không phân biệt hoa thường).
+        boolean dupChapterName = chapterRepository.findBySeries(series).stream()
+                .anyMatch(c -> c.getChapterName() != null
+                        && c.getChapterName().trim().equalsIgnoreCase(chapterNameTrimmed));
+        if (dupChapterName) {
+            result.put("status", "error");
+            result.put("message", "Series này đã có chapter tên \"" + chapterNameTrimmed
+                    + "\", vui lòng đặt tên khác!");
+            return result;
+        }
         try {
             Optional<Chapter> lastChapter = chapterRepository.findTopByOrderByIdDesc();
             int maxId = 0;
@@ -693,7 +747,7 @@ public class MangakaController {
             Chapter chapter = new Chapter();
             chapter.setId("CPT" + String.format("%04d", maxId + 1));
             chapter.setSeries(series);
-            chapter.setChapterName(txtChapterName);
+            chapter.setChapterName(chapterNameTrimmed);
             chapter.setChapterNumber(nextNumber);
             chapter.setDeadline(resolveNextSaturday(series));
             chapter.setStatus("unfinish");

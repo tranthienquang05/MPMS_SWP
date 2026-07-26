@@ -18,4 +18,7 @@ public interface SeriesRepository extends JpaRepository<Series, String> {
     List<Series> findByStatus(String status);
 
     Optional<Series> findTopByOrderByIdDesc();
+
+    // Kiểm tra trùng tên series (không phân biệt hoa thường).
+    boolean existsBySeriesNameIgnoreCase(String seriesName);
 }

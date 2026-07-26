@@ -508,6 +508,24 @@ public class PageController {
         sub.setApprovedAt(LocalDateTime.now());
         submissionRepository.save(sub);
 
+        // Duyệt xong MỚI cập nhật bài trợ lý vào ảnh TRANG CHÍNH THỨC (pageId.png).
+        // Trước khi duyệt, bài chỉ nằm trong submission nên không đè trang tác giả.
+        if (sub.getFilePath() != null && !sub.getFilePath().isBlank()) {
+            try {
+                Path src = Paths.get("src/main/resources/static" + sub.getFilePath());
+                if (Files.exists(src)) {
+                    Path pageDir = Paths.get("src/main/resources/static/MangaPage");
+                    Files.createDirectories(pageDir);
+                    Files.copy(src, pageDir.resolve(page.getId() + ".png"),
+                            StandardCopyOption.REPLACE_EXISTING);
+                    page.setFilePath("/MangaPage/" + page.getId() + ".png");
+                    mangaPageRepository.save(page);
+                }
+            } catch (IOException e) {
+                // Không chặn việc duyệt nếu copy ảnh lỗi.
+            }
+        }
+
         // Nếu assistant không còn task nào chưa duyệt thì chuyển về untask
         if (sub.getAssistant() != null) {
             refreshAssistantStatus(sub.getAssistant());
@@ -647,6 +665,50 @@ public class PageController {
                 return result;
             }
 
+            // Chọn bản nền giao lại: bản được chọn trở thành "bản tác giả giao" mới
+            // của vòng này; "bản trợ lý nộp" reset về Chưa nộp; ảnh trang chính thức
+            // cập nhật theo bản được chọn.
+            String base = body != null ? body.base() : null;
+            if (base != null && !base.isBlank()) {
+                String chosenPath;
+                if ("assigned".equals(base)) {
+                    chosenPath = submission.getAssignedFilePath();
+                } else if ("submitted".equals(base)) {
+                    chosenPath = submission.getFilePath();
+                } else { // "current" = ảnh trang hiện tại (bản tác giả vừa vẽ)
+                    chosenPath = page.getFilePath();
+                }
+
+                if (chosenPath != null && !chosenPath.isBlank()) {
+                    try {
+                        Path srcFile = Paths.get("src/main/resources/static" + chosenPath);
+                        if (Files.exists(srcFile)) {
+                            // 1) Bản được chọn → "bản tác giả giao" mới (bất biến).
+                            String assignedRel = "/Submission/" + submission.getId() + "_assigned.png";
+                            Path assignedTarget = Paths.get("src/main/resources/static" + assignedRel);
+                            Files.createDirectories(assignedTarget.getParent());
+                            if (!srcFile.equals(assignedTarget)) {
+                                Files.copy(srcFile, assignedTarget, StandardCopyOption.REPLACE_EXISTING);
+                            }
+                            submission.setAssignedFilePath(assignedRel);
+
+                            // 2) Ảnh trang chính thức = bản được chọn (bỏ qua nếu đã trùng).
+                            String pageRel = "/MangaPage/" + page.getId() + ".png";
+                            Path pageTarget = Paths.get("src/main/resources/static" + pageRel);
+                            if (!srcFile.equals(pageTarget)) {
+                                Files.createDirectories(pageTarget.getParent());
+                                Files.copy(srcFile, pageTarget, StandardCopyOption.REPLACE_EXISTING);
+                                page.setFilePath(pageRel);
+                            }
+                        }
+                    } catch (IOException e) {
+                        // Không chặn giao lại nếu copy ảnh lỗi.
+                    }
+                }
+                // 3) Reset "bản trợ lý nộp" cho vòng mới.
+                submission.setFilePath(null);
+            }
+
             submission.setComment(comment);
             submission.setDeadline(deadline);
             submission.setStatus("intask");
@@ -759,6 +821,8 @@ public class PageController {
     public record AssignPageRequest(String assistantId, String comment, String deadline, List<String> frameNotes) {
     }
 
-    public record ReassignPageRequest(String submissionId, String comment, String deadline) {
+    // base: bản nền giao lại cho trợ lý — "current" (trang tác giả vừa vẽ),
+    // "assigned" (bản tác giả giao trước), "submitted" (bản trợ lý nộp). null = giữ nguyên.
+    public record ReassignPageRequest(String submissionId, String comment, String deadline, String base) {
     }
 }

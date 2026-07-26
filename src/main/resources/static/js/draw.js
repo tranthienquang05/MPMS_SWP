@@ -206,6 +206,19 @@ let isDrawing = false;
 let currentTool = "pencil";
 let history = [];
 let redoStack = [];
+let currentHistoryItem = null; // node lịch sử đang gắn class "current" (để bỏ O(1))
+// Đánh dấu có thay đổi chưa lưu để cảnh báo khi rời trang vẽ (vd tác giả mở bản
+// khác mà chưa lưu). markDrawClean() gọi sau khi lưu/nạp nền xong.
+let drawDirty = false;
+window.markDrawClean = () => {
+  drawDirty = false;
+};
+window.addEventListener("beforeunload", (e) => {
+  if (drawDirty) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
 let shapeStart = null;
 let shapeBasePixels = null;
 let shapeFillMode = "outline";
@@ -1266,10 +1279,17 @@ function pushHistoryEntry(label) {
   item.className = "history-item current";
   item.textContent = label;
   if (historyListEl.parentNode) {
-    Array.from(historyListEl.children).forEach((c) =>
-      c.classList.remove("current"),
-    );
+    // Chỉ bỏ class "current" ở node trước đó (O(1)) thay vì quét TOÀN BỘ node
+    // (tới 30 lần đổi class mỗi nét). Việc đổi class hàng loạt trước đây tạo ra
+    // hàng chục DOM mutation mỗi nét, khiến MutationObserver dùng chung (ui-alert)
+    // bị dội và chạy liftFloatingModals nặng → lag khi vẽ.
+    if (currentHistoryItem) currentHistoryItem.classList.remove("current");
     historyListEl.appendChild(item);
+    currentHistoryItem = item;
+    // Cắt DOM danh sách lịch sử về đúng cap 30 như mảng `history` (không phình DOM).
+    while (historyListEl.children.length > 30) {
+      historyListEl.removeChild(historyListEl.firstChild);
+    }
     historyListEl.scrollTop = historyListEl.scrollHeight;
   }
   updateHistoryButtons();
@@ -1961,6 +1981,12 @@ inputLayer.addEventListener("pointermove", (e) => {
     }
     layerCtx.lineTo(p.x, p.y);
     layerCtx.stroke();
+    // Reset path về điểm hiện tại: mỗi lần di chuột chỉ vẽ ĐOẠN MỚI thay vì
+    // stroke lại toàn bộ path đã tích luỹ (O(n²) → O(n)). Đây là nguyên nhân
+    // chính gây lag khi kéo nét dài; đồng thời tránh nét alpha<1 bị đậm dần do
+    // blend chồng nhiều lần. Pixel đã vẽ vẫn còn trên canvas nên nhìn y hệt.
+    layerCtx.beginPath();
+    layerCtx.moveTo(p.x, p.y);
   } else if (
     currentTool === "line" ||
     currentTool === "rect" ||
@@ -1974,6 +2000,7 @@ inputLayer.addEventListener("pointermove", (e) => {
 
 window.addEventListener("pointerup", (e) => {
   if (!isDrawing) return;
+  drawDirty = true; // tác giả/trợ lý vừa vẽ → có thay đổi chưa lưu
   const layerCtx = getActiveLayer().ctx;
 
   if (
@@ -3028,6 +3055,7 @@ if (btnSavePage) {
       });
       const data = await res.json();
       if (data.status === "success") {
+        drawDirty = false; // đã lưu → không còn thay đổi chưa lưu
         btnSavePage.innerHTML = "Đã lưu!";
         setTimeout(() => {
           btnSavePage.innerHTML = "Lưu trang";
@@ -3070,6 +3098,7 @@ if (btnSubmitSubmission) {
       const data = await res.json();
 
       if (data.status === "success") {
+        drawDirty = false; // đã nộp/lưu → không còn thay đổi chưa lưu
         btnSubmitSubmission.innerHTML = "Đã nộp";
 
         setTimeout(() => {
@@ -3205,6 +3234,7 @@ if (btnSubmitSubmission) {
   }
 
   async function finishArtworkSave() {
+    drawDirty = false; // lưu qua luồng artwork thành công → hết thay đổi chưa lưu
     closeEditSubmissionModal();
 
     const refreshPromise =

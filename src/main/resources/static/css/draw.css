@@ -551,6 +551,14 @@
   grid-template-columns: 224px 92px minmax(0, 1fr) clamp(284px, 22vw, 340px);
 }
 
+/* Trang vẽ của TRỢ LÝ không có panel "Trang" (pages) → bỏ cột đó, chỉ giữ
+   tools | work | side. Chỉ áp dụng khi có class .draw-wrapper--assistant nên
+   trang vẽ của TÁC GIẢ (mangaka) giữ nguyên lưới 4 cột, không bị ảnh hưởng. */
+#tab-draw .draw-wrapper.draw-wrapper--assistant {
+  grid-template-areas: "tools work side";
+  grid-template-columns: 92px minmax(0, 1fr) clamp(284px, 22vw, 340px);
+}
+
 #tab-draw .draw-page-navigator {
   display: flex;
   min-width: 0;

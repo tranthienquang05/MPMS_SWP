@@ -81,15 +81,10 @@ public class SubmissionController {
             submission.setFilePath("/Submission/" + fileName);
             submissionRepository.save(submission);
 
-            MangaPage mangaPage = mangaPageRepository.findById(submission.getPageId().getId()).orElse(null);
-            if (mangaPage != null) {
-                String pageDir = "src/main/resources/static/MangaPage/";
-                Files.createDirectories(Paths.get(pageDir));
-                Path pageFilePath = Paths.get(pageDir + mangaPage.getId() + ".png");
-                Files.write(pageFilePath, imageBytes);
-                mangaPage.setFilePath("/MangaPage/" + mangaPage.getId() + ".png");
-                mangaPageRepository.save(mangaPage);
-            }
+            // KHÔNG ghi đè ảnh TRANG CHÍNH THỨC (pageId.png) ở đây nữa. Bài trợ lý
+            // chỉ nằm trong submission cho tới khi tác giả DUYỆT — lúc đó mới copy
+            // sang trang chính thức (xem PageController.approvePageDone). Tránh việc
+            // bản chưa duyệt đè lên bản tác giả đang giữ.
 
             result.put("status", "success");
             result.put("message", "Lưu bài nộp thành công!");

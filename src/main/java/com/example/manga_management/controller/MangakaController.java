@@ -1158,6 +1158,12 @@ public class MangakaController {
         }
         result.put("status", "success");
         result.put("page", page);
+        // Cho phép tác giả chọn nạp "bản tác giả giao" (assignedFilePath) hoặc
+        // "bản trợ lý nộp" (filePath) của vòng gần nhất khi mở trang vẽ để sửa.
+        submissionRepository.findTopByPageIdIdOrderByCreatedAtDesc(pid).ifPresent(sub -> {
+            result.put("assignedFilePath", sub.getAssignedFilePath());
+            result.put("submittedFilePath", sub.getFilePath());
+        });
         return result;
     }
 

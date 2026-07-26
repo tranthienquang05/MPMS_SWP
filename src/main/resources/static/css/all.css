@@ -3483,7 +3483,10 @@ body:has(.topnav:has(.btn-icon:focus-visible)) .page-shell {
   right: 0;
   bottom: 0;
   left: var(--app-sidebar-width, 0px);
-  z-index: 5000;
+  /* Hộp thoại xác nhận/thông báo phải nổi TRÊN mọi modal (page-action modal,
+     app-floating-modal... đều z-index 5000; các overlay khác tối đa ~10000).
+     Trước đây để 5000 nên confirm bị nhảy ra SAU popup "Tác vụ khác". */
+  z-index: 10050;
   display: none;
   align-items: center;
   justify-content: center;
@@ -7915,6 +7918,70 @@ body.proposal-workspace-active #tab-proposal.tab-pane[style*="block"] {
   font-size: 0.75rem;
   opacity: 0.6;
   padding: 0.5rem 0;
+}
+
+/* Bộ chọn bản nền khi "Giao lại việc". */
+.reassign-base-picker {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.35rem 0 0.6rem;
+}
+
+.reassign-base-option {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem;
+  border: 2px solid var(--app-border-strong, #444);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.reassign-base-option:has(input:checked) {
+  border-color: var(--app-brand, #4c8bf5);
+  background: color-mix(in srgb, var(--app-brand, #4c8bf5) 12%, transparent);
+}
+
+.reassign-base-option.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.reassign-base-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.reassign-base-thumb {
+  width: 100%;
+  max-width: 96px;
+  height: auto;
+  border-radius: 4px;
+  border: 1px solid var(--app-border-strong, #444);
+  background: #fff;
+}
+
+.task-compare-edit-btn {
+  display: inline-block;
+  margin-top: 0.3rem;
+  padding: 0.28rem 0.6rem;
+  border: 1px solid var(--app-brand, #4c8bf5);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--app-brand, #4c8bf5) 14%, transparent);
+  color: var(--app-text, #fff);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.task-compare-edit-btn:hover {
+  background: var(--app-brand, #4c8bf5);
+  color: var(--app-action-text, #fff);
 }
 
 /* Panel hội đồng hiển thị thẳng trong trang chủ (thay cho popup). */

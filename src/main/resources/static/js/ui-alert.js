@@ -318,8 +318,24 @@
     liftFloatingModals();
   }
 
-  const modalObserver = new MutationObserver(() => {
-    window.requestAnimationFrame(liftFloatingModals);
+  // Khu vực thay đổi liên tục khi VẼ (danh sách lịch sử, canvas, lưới trang) nhưng
+  // KHÔNG liên quan tới việc nâng modal. Bỏ qua để không chạy liftFloatingModals
+  // (querySelectorAll + getComputedStyle trên mọi modal) mỗi nét vẽ → tránh lag.
+  const DRAW_IGNORE_SELECTOR =
+    "#historyList, #drawCanvas, .canvas-stack, .canvas-viewport, .draw-page-grid";
+  let liftScheduled = false;
+  const modalObserver = new MutationObserver((records) => {
+    const affectsModals = records.some((record) => {
+      const node = record.target;
+      const el = node && node.nodeType === 1 ? node : node && node.parentElement;
+      return !el || !el.closest || !el.closest(DRAW_IGNORE_SELECTOR);
+    });
+    if (!affectsModals || liftScheduled) return;
+    liftScheduled = true;
+    window.requestAnimationFrame(() => {
+      liftScheduled = false;
+      liftFloatingModals();
+    });
   });
   modalObserver.observe(document.documentElement, {
     childList: true,

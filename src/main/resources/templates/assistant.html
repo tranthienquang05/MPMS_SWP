@@ -180,7 +180,9 @@
     <!-- Không gian vẽ: chứa canvas và các công cụ chỉnh sửa bản vẽ. -->
       <div id="tab-draw" class="tab-pane">
       <!-- Công cụ vẽ: điều khiển nét, màu, vùng chọn và layer. -->
-        <div class="draw-wrapper">
+      <!-- draw-wrapper--assistant: trang trợ lý không có panel "Trang" (pages) nên
+           dùng biến thể lưới riêng, KHÔNG ảnh hưởng trang vẽ tác giả. -->
+        <div class="draw-wrapper draw-wrapper--assistant">
         <!-- Thanh công cụ bên trái: chọn công cụ đang sử dụng. -->
           <div class="left-toolbar">
             <button
@@ -385,7 +387,7 @@
                 th:if="${submission != null}"
                 th:data-submission-id="${submission.id}"
                 th:data-who="assistant"
-                th:data-saved-path="${submission.filePath}"
+                th:data-saved-path="${submission.filePath != null ? submission.filePath : submission.assignedFilePath}"
                 type="button"
                 class="btn-ai-support-top approve"
               >
@@ -1428,11 +1430,13 @@
           fetch("/manga/assistant/submission/" + subId + "/edit/data")
             .then((r) => r.json())
             .then((data) => {
-              if (
-                data.status === "success" &&
+              // Ưu tiên bản trợ lý đang làm dở (filePath); nếu chưa có (mới được
+              // giao) thì load "bản tác giả giao" (assignedFilePath) để trợ lý vẽ
+              // đè lên — tránh mở lên thấy canvas trắng.
+              const loadPath =
                 data.submission &&
-                data.submission.filePath
-              ) {
+                (data.submission.filePath || data.submission.assignedFilePath);
+              if (data.status === "success" && loadPath) {
                 const img = new Image();
                 img.onload = () => {
                   if (layers && layers[1]) {
@@ -1441,7 +1445,7 @@
                     pushHistoryEntry("Load submission đã lưu");
                   }
                 };
-                img.src = data.submission.filePath + "?t=" + Date.now();
+                img.src = loadPath + "?t=" + Date.now();
               }
             })
             .catch((err) => console.error("Lỗi load submission:", err));

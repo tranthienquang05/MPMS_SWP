@@ -646,6 +646,24 @@
             <input type="hidden" id="reassignPageId" />
             <label>Trợ lý (giữ nguyên người đang làm task này):</label>
             <div id="reassignAssistantName" class="u-inline-style-072"></div>
+            <label>Giao lại bản nào cho trợ lý:</label>
+            <div id="reassignBasePicker" class="reassign-base-picker">
+              <label class="reassign-base-option" data-base="current">
+                <input type="radio" name="reassignBase" value="current" />
+                <span class="reassign-base-title">Trang tác giả vừa vẽ</span>
+                <img class="reassign-base-thumb" id="reassignThumbCurrent" alt="Trang tác giả vừa vẽ" />
+              </label>
+              <label class="reassign-base-option" data-base="assigned">
+                <input type="radio" name="reassignBase" value="assigned" />
+                <span class="reassign-base-title">Bản tác giả giao trước</span>
+                <img class="reassign-base-thumb" id="reassignThumbAssigned" alt="Bản tác giả giao trước" />
+              </label>
+              <label class="reassign-base-option" data-base="submitted">
+                <input type="radio" name="reassignBase" value="submitted" />
+                <span class="reassign-base-title">Bản trợ lý nộp</span>
+                <img class="reassign-base-thumb" id="reassignThumbSubmitted" alt="Bản trợ lý nộp" />
+              </label>
+            </div>
             <label>Yêu cầu / Ghi chú:</label>
             <textarea id="reassignComment" rows="4" placeholder="Nhập yêu cầu chỉnh sửa..."></textarea>
             <label class="deadline-lbl">Deadline:</label>
@@ -3150,10 +3168,58 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       submissionId,
       assistantId,
       assistantName,
+      basePaths,
     ) {
       closePageActionModal();
       document.getElementById("reassignPageId").value = pageId;
       document.getElementById("reassignSubmissionId").value = submissionId;
+
+      // Nạp thumbnail cho 3 bản nền; bản nào không có ảnh thì vô hiệu lựa chọn.
+      const paths = basePaths || {};
+      const baseMap = {
+        current: { img: "reassignThumbCurrent", path: paths.current },
+        assigned: { img: "reassignThumbAssigned", path: paths.assigned },
+        submitted: { img: "reassignThumbSubmitted", path: paths.submitted },
+      };
+      let firstAvailable = null;
+      Object.keys(baseMap).forEach((key) => {
+        const { img, path } = baseMap[key];
+        const option = document.querySelector(
+          `.reassign-base-option[data-base="${key}"]`,
+        );
+        const radio = option
+          ? option.querySelector('input[type="radio"]')
+          : null;
+        const imgEl = document.getElementById(img);
+        if (path) {
+          if (imgEl) {
+            imgEl.src = path + "?t=" + Date.now();
+            imgEl.style.display = "";
+          }
+          if (option) option.classList.remove("is-disabled");
+          if (radio) {
+            radio.disabled = false;
+            radio.checked = false;
+          }
+          if (!firstAvailable) firstAvailable = radio;
+        } else {
+          if (imgEl) imgEl.style.display = "none";
+          if (option) option.classList.add("is-disabled");
+          if (radio) {
+            radio.disabled = true;
+            radio.checked = false;
+          }
+        }
+      });
+      // Mặc định chọn "Bản trợ lý nộp" nếu có, không thì bản khả dụng đầu tiên.
+      const submittedRadio = document.querySelector(
+        '.reassign-base-option[data-base="submitted"] input[type="radio"]',
+      );
+      if (submittedRadio && !submittedRadio.disabled) {
+        submittedRadio.checked = true;
+      } else if (firstAvailable) {
+        firstAvailable.checked = true;
+      }
       document.getElementById("reassignAssistantName").dataset.assistantId =
         assistantId || "";
       document.getElementById("reassignAssistantName").textContent =
@@ -3213,6 +3279,14 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         alert("Thiếu dữ liệu!");
         return;
       }
+      const baseRadio = document.querySelector(
+        'input[name="reassignBase"]:checked',
+      );
+      const base = baseRadio ? baseRadio.value : null;
+      if (!base) {
+        alert("Vui lòng chọn bản nền để giao lại cho trợ lý!");
+        return;
+      }
       fetch(`/api/page/${pageId}/reassign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -3221,6 +3295,7 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           assistantId,
           comment,
           deadline,
+          base,
         }),
       })
         .then((r) => r.json())
@@ -3274,6 +3349,11 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
           reassignBtn.dataset.submissionId,
           reassignBtn.dataset.assistantId,
           reassignBtn.dataset.assistantName,
+          {
+            current: reassignBtn.dataset.currentPath || "",
+            assigned: reassignBtn.dataset.assignedPath || "",
+            submitted: reassignBtn.dataset.submittedPath || "",
+          },
         );
         return;
       }
@@ -3326,15 +3406,30 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                   actionBtn.style.display = "";
                 }
 
-                // THÊM: load ảnh đã lưu lên canvas
-                if (data.page.filePath) {
+                // Chọn ảnh nền theo ?base=assigned|submitted (tác giả bấm "Sửa
+                // bản này"). Mặc định (không tham số) nạp ảnh trang hiện tại.
+                const baseParam = new URLSearchParams(window.location.search).get("base");
+                let baseImage = data.page.filePath;
+                let baseLabel = "Load trang đã lưu";
+                if (baseParam === "assigned" && data.assignedFilePath) {
+                  baseImage = data.assignedFilePath;
+                  baseLabel = "Load bản tác giả giao";
+                } else if (baseParam === "submitted" && data.submittedFilePath) {
+                  baseImage = data.submittedFilePath;
+                  baseLabel = "Load bản trợ lý nộp";
+                }
+                if (baseImage) {
                   const img = new Image();
                   img.onload = () => {
                     layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
                     layers[1].ctx.drawImage(img, 0, 0);
-                    pushHistoryEntry("Load trang đã lưu");
+                    pushHistoryEntry(baseLabel);
+                    // Nạp nền xong coi như "sạch" — chỉ đánh dấu bẩn khi tác giả vẽ thêm.
+                    if (window.markDrawClean) window.markDrawClean();
                   };
-                  img.src = data.page.filePath + "?t=" + Date.now();
+                  img.src = baseImage + "?t=" + Date.now();
+                } else if (window.markDrawClean) {
+                  window.markDrawClean();
                 }
               }
             }
@@ -4272,7 +4367,10 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                               <button type="button" class="page-action-btn page-action-assign btn-reassign-page"
                                   data-page-id="${p.id}" data-submission-id="${sub.id}"
                                   data-assistant-id="${sub.assistant.id}"
-                                  data-assistant-name="${escapeProjectHtml(sub.assistant.user.fullname)}">Giao l\u1ea1i vi\u1ec7c cho tr\u1ee3 l\u00ed</button>`;
+                                  data-assistant-name="${escapeProjectHtml(sub.assistant.user.fullname)}"
+                                  data-current-path="${p.filePath || ''}"
+                                  data-assigned-path="${sub.assignedFilePath || ''}"
+                                  data-submitted-path="${sub.filePath || ''}">Giao l\u1ea1i vi\u1ec7c cho tr\u1ee3 l\u00ed</button>`;
               }
 
               // M\u1ee5c 8: hi\u1ec7n task \u0111\u00e3 giao & \u0111ang giao ngay trong m\u00e0n qu\u1ea3n l\u00fd chapter.
@@ -4287,6 +4385,17 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                 else if (sub.status === "done") taskStatusText = "Ch\u1edd b\u1ea1n duy\u1ec7t";
                 else if (sub.status === "finish") taskStatusText = "\u0110\u00e3 duy\u1ec7t";
 
+                // T\u00e1c gi\u1ea3 \u0111\u01b0\u1ee3c ch\u1ecdn 1 b\u1ea3n l\u00e0m n\u1ec1n \u0111\u1ec3 m\u1edf trang v\u1ebd s\u1eeda (khi chapter c\u00f2n
+                // s\u1eeda \u0111\u01b0\u1ee3c v\u00e0 trang ch\u01b0a ho\u00e0n th\u00e0nh). S\u1eeda xong L\u01b0u \u2192 Giao vi\u1ec7c ti\u1ebfp s\u1ebd
+                // ch\u1ed1t b\u1ea3n \u0111\u00e3 l\u01b0u th\u00e0nh "b\u1ea3n t\u00e1c gi\u1ea3 giao" m\u1edbi.
+                const canEditBase = chapter.status === "unfinish" && p.status !== "finish";
+                const editAssignedBtn = canEditBase && sub.assignedFilePath
+                  ? `<a href="/manga/mangaka/myseries/${sid}/${cid}/${p.id}/edit?base=assigned" class="task-compare-edit-btn">S\u1eeda b\u1ea3n n\u00e0y</a>`
+                  : "";
+                const editSubmittedBtn = canEditBase && sub.filePath
+                  ? `<a href="/manga/mangaka/myseries/${sid}/${cid}/${p.id}/edit?base=submitted" class="task-compare-edit-btn">S\u1eeda b\u1ea3n n\u00e0y</a>`
+                  : "";
+
                 let compareHtml = "";
                 if (sub.assignedFilePath || sub.filePath) {
                   compareHtml = `<div class="task-compare">
@@ -4295,12 +4404,14 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                         ${sub.assignedFilePath
                           ? `<a href="${sub.assignedFilePath}" target="_blank"><img src="${sub.assignedFilePath}?t=${Date.now()}" class="task-compare-img" alt="B\u1ea3n t\u00e1c gi\u1ea3 giao" /></a>`
                           : `<span class="task-compare-empty">\u2014</span>`}
+                        ${editAssignedBtn}
                       </div>
                       <div class="task-compare-col">
                         <span class="task-compare-label">B\u1ea3n tr\u1ee3 l\u00fd n\u1ed9p</span>
                         ${sub.filePath
                           ? `<a href="${sub.filePath}" target="_blank"><img src="${sub.filePath}?t=${Date.now()}" class="task-compare-img" alt="B\u1ea3n tr\u1ee3 l\u00fd n\u1ed9p" /></a>`
                           : `<span class="task-compare-empty">Ch\u01b0a n\u1ed9p</span>`}
+                        ${editSubmittedBtn}
                       </div>
                     </div>`;
                 }

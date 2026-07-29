@@ -276,7 +276,12 @@ public class RankingController {
             }
         } else if (vs.getVoteType().equals("defense")) {
             if (percent >= 60) {
-                series.setStatus("unfinish");
+                // Trả về đúng trạng thái đang hoạt động: "published" nếu series đã
+                // từng xuất bản chapter, ngược lại "unfinish". (Trước Nhóm A series
+                // chỉ có "unfinish" nên đặt cứng — nay có thêm "published".)
+                boolean hasPublished = !chapterRepository
+                        .findBySeries_IdAndStatus(series.getId(), "published").isEmpty();
+                series.setStatus(hasPublished ? "published" : "unfinish");
                 seriesRepository.save(series);
                 notifySeriesStakeholders(series,
                         "✅ Hồ sơ bảo vệ của series '" + series.getSeriesName()

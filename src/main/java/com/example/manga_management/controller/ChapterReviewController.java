@@ -230,9 +230,18 @@ public class ChapterReviewController {
                 result.put("message", "Vui lòng nhập nhận xét / yêu cầu chỉnh sửa khi từ chối chapter!");
                 return result;
             }
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
             chapter.setStatus("unfinish");
-            chapter.setReviewedAt(java.time.LocalDateTime.now());
+            chapter.setReviewedAt(now);
             chapter.setTantouComment(comment.trim());
+
+            // Từ chối = yêu cầu sửa lại. Nếu deadline đã quá hạn thì phải gia hạn
+            // (mặc định +7 ngày), nếu không job autoFinishOverdueChapters sẽ thấy
+            // chapter "unfinish" đang quá hạn và TỰ ĐỘNG NỘP LẠI ngay → chapter
+            // nhảy về "chờ duyệt" (vòng lặp). Chapter còn hạn thì giữ nguyên.
+            if (chapter.getDeadline() == null || chapter.getDeadline().isBefore(now)) {
+                chapter.setDeadline(now.plusDays(7).withHour(23).withMinute(59).withSecond(0).withNano(0));
+            }
 
             // Reset status tất cả page về unfinish
             List<MangaPage> pages = mangaPageRepository.findByChapterId(chapterId);

@@ -1901,12 +1901,15 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
   window.evSendOtp = async function() {
     const btn = document.getElementById('btnSendVerifyOtp');
     const errEl = document.getElementById('evStep1Error');
+    if (btn.disabled) return;
     btn.disabled = true;
     btn.textContent = 'Dang gui...';
     errEl.style.display = 'none';
+    let reachedServer = false;
     try {
       const res = await fetch('/api/account/verify-email', { method: 'POST' });
       const data = await res.json();
+      reachedServer = true;
       if (data.status === 'success') {
         document.getElementById('evStep1').style.display = 'none';
         document.getElementById('evStep2').style.display = 'block';
@@ -1918,8 +1921,25 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       errEl.textContent = 'Loi ket noi';
       errEl.style.display = 'block';
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Nhan ma OTP';
+      if (reachedServer) {
+        // Da thuc su goi API gui mail (thanh cong hay that bai deu tinh) ->
+        // khoa nut 60s de tranh bam lien tuc lam can quota gui mail hang ngay.
+        let remain = 60;
+        btn.textContent = 'Gui lai sau ' + remain + 's';
+        const timer = setInterval(() => {
+          remain--;
+          if (remain <= 0) {
+            clearInterval(timer);
+            btn.disabled = false;
+            btn.textContent = 'Nhan ma OTP';
+          } else {
+            btn.textContent = 'Gui lai sau ' + remain + 's';
+          }
+        }, 1000);
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Nhan ma OTP';
+      }
     }
   };
 

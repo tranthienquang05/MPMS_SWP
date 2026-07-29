@@ -338,7 +338,7 @@
                 Mở file
               </button>
 
-              <input type="file" id="inputLoadPage" accept="image/png" />
+              <input type="file" id="inputLoadPage" accept="image/png,image/jpeg,.png,.jpg,.jpeg" />
 
               <button type="button" class="btn-ai-support-top draw-hidden-action" id="btnDownload">
                 Download
@@ -1783,7 +1783,7 @@
   </div>
 
   <!-- Tập lệnh cuối trang: khởi tạo thư viện và kết nối chức năng với API. -->
-  <script src="/js/draw.js" defer></script>
+  <script src="/js/draw.js?v=20260729-upload2" defer></script>
   <script src="/js/draw-workspace.js?v=20260723-unified-toolbar" defer></script>
 
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -4855,12 +4855,15 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
   window.evSendOtp = async function() {
     const btn = document.getElementById('btnSendVerifyOtp');
     const errEl = document.getElementById('evStep1Error');
+    if (btn.disabled) return;
     btn.disabled = true;
     btn.textContent = 'Dang gui...';
     errEl.style.display = 'none';
+    let reachedServer = false;
     try {
       const res = await fetch('/api/account/verify-email', { method: 'POST' });
       const data = await res.json();
+      reachedServer = true;
       if (data.status === 'success') {
         document.getElementById('evStep1').style.display = 'none';
         document.getElementById('evStep2').style.display = 'block';
@@ -4872,8 +4875,25 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       errEl.textContent = 'Loi ket noi';
       errEl.style.display = 'block';
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Nhan ma OTP';
+      if (reachedServer) {
+        // Da thuc su goi API gui mail (thanh cong hay that bai deu tinh) ->
+        // khoa nut 60s de tranh bam lien tuc lam can quota gui mail hang ngay.
+        let remain = 60;
+        btn.textContent = 'Gui lai sau ' + remain + 's';
+        const timer = setInterval(() => {
+          remain--;
+          if (remain <= 0) {
+            clearInterval(timer);
+            btn.disabled = false;
+            btn.textContent = 'Nhan ma OTP';
+          } else {
+            btn.textContent = 'Gui lai sau ' + remain + 's';
+          }
+        }, 1000);
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Nhan ma OTP';
+      }
     }
   };
 

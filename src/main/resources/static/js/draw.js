@@ -3317,6 +3317,10 @@ function closeEditSubmissionModal() {
 }
 
 // Đọc tệp người dùng tải lên và đưa vào không gian vẽ.
+// Lưu ý: btnLoadPage chỉ tồn tại khi Thymeleaf render th:if="${page != null}",
+// nhưng inputLoadPage (và nút "Upload file" trong modal Tác vụ trang, xem
+// btnModalLoadPage ở IIFE phía trên) luôn cần listener "change" hoạt động dù
+// btnLoadPage có mặt hay không — nên KHÔNG được gộp điều kiện 2 nút lại.
 const btnLoadPage = document.getElementById("btnLoadPage");
 const inputLoadPage = document.getElementById("inputLoadPage");
 
@@ -3324,7 +3328,9 @@ if (btnLoadPage && inputLoadPage) {
   btnLoadPage.addEventListener("click", () => {
     inputLoadPage.click(); // Kích hoạt ô chọn tệp đang được ẩn khỏi giao diện.
   });
+}
 
+if (inputLoadPage) {
   inputLoadPage.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -3333,13 +3339,29 @@ if (btnLoadPage && inputLoadPage) {
     reader.onload = (ev) => {
       const img = new Image();
       img.onload = () => {
-// Xóa canvas cũ trên layer đích rồi vẽ tệp mới lên layer đó.
-        layers[1].ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-        layers[1].ctx.drawImage(img, 0, 0);
+        // Chọn layer đích: ưu tiên layer 1, nếu không có thì layer nền.
+        const target =
+          typeof layers !== "undefined" && layers && (layers[1] || layers[0]);
+        if (!target || !target.ctx) {
+          alert("Chưa mở trang vẽ nên không nạp được ảnh. Hãy mở trang vẽ trước.");
+          return;
+        }
+        // Xóa layer đích rồi vẽ ảnh co giãn vừa khung 400×600 (mọi kích thước
+        // đều hiển thị đúng, không bị lệch/cắt).
+        target.ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+        target.ctx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
         pushHistoryEntry("Load file thủ công");
+        drawDirty = true;
+        // Đóng modal "Tác vụ trang" (nếu đang mở) để thấy ảnh trên canvas.
+        if (typeof closeEditSubmissionModal === "function") {
+          try { closeEditSubmissionModal(); } catch (err) {}
+        }
       };
+      img.onerror = () =>
+        alert("Không đọc được ảnh. Vui lòng thử file PNG hoặc JPG khác.");
       img.src = ev.target.result;
     };
+    reader.onerror = () => alert("Không đọc được tệp đã chọn.");
     reader.readAsDataURL(file);
   });
 }

@@ -2258,12 +2258,15 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
   window.evSendOtp = async function() {
     const btn = document.getElementById('btnSendVerifyOtp');
     const errEl = document.getElementById('evStep1Error');
+    if (btn.disabled) return;
     btn.disabled = true;
     btn.textContent = 'Đang gửi...';
     errEl.style.display = 'none';
+    let reachedServer = false;
     try {
       const res = await fetch('/api/account/verify-email', { method: 'POST' });
       const data = await res.json();
+      reachedServer = true;
       if (data.status === 'success') {
         document.getElementById('evStep1').style.display = 'none';
         document.getElementById('evStep2').style.display = 'block';
@@ -2275,8 +2278,25 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       errEl.textContent = 'Lỗi kết nối';
       errEl.style.display = 'block';
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Nhận mã OTP';
+      if (reachedServer) {
+        // Đã thực sự gọi API gửi mail (thành công hay thất bại đều tính) ->
+        // khoá nút 60s để tránh bấm liên tục làm cạn quota gửi mail hàng ngày.
+        let remain = 60;
+        btn.textContent = 'Gửi lại sau ' + remain + 's';
+        const timer = setInterval(() => {
+          remain--;
+          if (remain <= 0) {
+            clearInterval(timer);
+            btn.disabled = false;
+            btn.textContent = 'Nhận mã OTP';
+          } else {
+            btn.textContent = 'Gửi lại sau ' + remain + 's';
+          }
+        }, 1000);
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Nhận mã OTP';
+      }
     }
   };
 

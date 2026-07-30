@@ -7881,6 +7881,36 @@ body.proposal-workspace-active #tab-proposal.tab-pane[style*="block"] {
   color: var(--app-action-text);
 }
 
+/* Toggle "Đang mở" / "Lịch sử (đã đóng)" của bảng phiên vote (Board). */
+.session-mode-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.session-mode-toggle {
+  display: flex;
+  gap: 0.4rem;
+}
+.session-mode-toggle--inline {
+  margin-bottom: 0.8rem;
+}
+.session-mode-btn {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary, inherit);
+  border-radius: 20px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.session-mode-btn.is-active {
+  border-color: var(--app-brand);
+  background: var(--app-brand);
+  color: var(--app-action-text);
+}
+
 /* So sánh "Bản tác giả giao" ↔ "Bản trợ lý nộp" trên card trang (mangaka). */
 .task-compare {
   display: flex;

@@ -122,8 +122,24 @@ public class BoardController {
 
         User user = (User) userObj;
         Board board = boardRepository.findByUser_Id(user.getId()).orElse(null);
-        List<Proposal> list = proposalRepository.findByStatus("board_check");
+        List<Proposal> pending = proposalRepository.findByStatus("board_check");
+        // Đề xuất đã có kết quả cuối cùng (passed/locked) — không bị xoá, chỉ
+        // không còn ở trạng thái "board_check" nữa. Dùng boardReviewedAt để
+        // nhận diện đúng những đề xuất hội đồng ĐÃ từng bỏ phiếu, kể cả khi
+        // sau đó chuyển tiếp trạng thái (vd. "started").
+        List<Proposal> history = proposalRepository.findByBoardReviewedAtIsNotNullOrderByBoardReviewedAtDesc();
 
+        result.put("status", "success");
+        result.put("userId", user.getId());
+        result.put("boardId", board != null ? board.getId() : null);
+        result.put("totalBoards", boardRepository.count());
+        result.put("proposals", buildProposalPayload(pending, board));
+        result.put("proposalsHistory", buildProposalPayload(history, board));
+        result.put("total", pending.size());
+        return result;
+    }
+
+    private List<Map<String, Object>> buildProposalPayload(List<Proposal> list, Board board) {
         List<Map<String, Object>> proposalPayload = new ArrayList<>();
         for (Proposal proposal : list) {
             Map<String, Object> proposalData = new HashMap<>();
@@ -131,11 +147,13 @@ public class BoardController {
             proposalData.put("seriesName", proposal.getSeriesName());
             proposalData.put("filePath", proposal.getFilePath());
             proposalData.put("fileOfTantou", proposal.getFileOfTantou());
+            proposalData.put("status", proposal.getStatus());
             proposalData.put("voteCount", boardProposalCommentRepository.countByProposal_Id(proposal.getId()));
             proposalData.put("submittedAt",
                     proposal.getSubmittedAt() != null ? proposal.getSubmittedAt() : proposal.getCreatedAt());
             proposalData.put("reviewedAt", proposal.getReviewedAt());
             proposalData.put("boardSubmittedAt", proposal.getBoardSubmittedAt());
+            proposalData.put("boardReviewedAt", proposal.getBoardReviewedAt());
 
             // Mục 6: nếu board hiện tại đã bỏ phiếu cho đề xuất này thì trả lại phiếu
             // của họ để FE hiển thị (thay vì hiện lại nút vote).
@@ -159,14 +177,7 @@ public class BoardController {
 
             proposalPayload.add(proposalData);
         }
-
-        result.put("status", "success");
-        result.put("userId", user.getId());
-        result.put("boardId", board != null ? board.getId() : null);
-        result.put("totalBoards", boardRepository.count());
-        result.put("total", proposalPayload.size());
-        result.put("proposals", proposalPayload);
-        return result;
+        return proposalPayload;
     }
 
     @Operation(summary = "Bỏ phiếu + comment cho đề xuất")

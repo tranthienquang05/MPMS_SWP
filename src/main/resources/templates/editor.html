@@ -13,8 +13,8 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <link
       rel="stylesheet"
-      href="../static/css/all.css?v=20260721-profile-labels"
-      th:href="@{/css/all.css(v='20260721-profile-labels')}" />
+      href="../static/css/all.css?v=20260730-vote-history"
+      th:href="@{/css/all.css(v='20260730-vote-history')}" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -129,9 +129,17 @@
         th:classappend="${message == null} ? 'active' : ''">
         <h2>Trang chủ</h2>
 
-        <!-- Phiên biểu quyết đang mở: hội đồng xem và gửi phiếu. -->
-        <h3 class="u-inline-style-046">Phiên Vote đang mở</h3>
+        <!-- Phiên biểu quyết: hội đồng xem/gửi phiếu (đang mở), hoặc xem lại các
+             phiên đã đủ vote và đóng (lịch sử) — dữ liệu không bao giờ bị xoá,
+             chỉ đổi bộ lọc hiển thị. -->
+        <h3 id="activeSessionsTitle" class="u-inline-style-046">Phiên Vote đang mở</h3>
         <div id="activeSessionsSection">
+          <div class="session-mode-toggle session-mode-toggle--inline">
+            <button type="button" id="btnSessionsModeActive" class="session-mode-btn is-active"
+              onclick="setSessionsMode('active')">Đang mở</button>
+            <button type="button" id="btnSessionsModeClosed" class="session-mode-btn"
+              onclick="setSessionsMode('closed')">Lịch sử (đã đóng)</button>
+          </div>
           <table id="activeSessionsTable" class="data-table u-inline-style-002">
             <thead>
               <tr>
@@ -162,7 +170,15 @@
           id="voteMessage"
           class="notification success u-inline-style-002"></div>
         <div id="voteError" class="notification error u-inline-style-002"></div>
-        <h3 class="text-warning">Danh sách dự án đang chờ bỏ phiếu</h3>
+        <div class="session-mode-header">
+          <h3 id="proposalVoteTitle" class="text-warning">Danh sách dự án đang chờ bỏ phiếu</h3>
+          <div class="session-mode-toggle">
+            <button type="button" id="btnProposalsModePending" class="session-mode-btn is-active"
+              onclick="setProposalsMode('pending')">Đang chờ</button>
+            <button type="button" id="btnProposalsModeHistory" class="session-mode-btn"
+              onclick="setProposalsMode('history')">Lịch sử (đã xử lý)</button>
+          </div>
+        </div>
         <table class="data-table">
           <thead>
             <tr>
@@ -611,6 +627,22 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
         return div.innerHTML;
       }
 
+      // Cũng như phiên vote: đề xuất đã có kết quả KHÔNG bị xoá ở backend, chỉ
+      // đổi status khỏi "board_check" nên biến mất khỏi danh sách "đang chờ".
+      // Toggle dưới đây đổi nguồn dữ liệu giữa "đang chờ" và "lịch sử".
+      var proposalsPendingCache = [];
+      var proposalsHistoryCache = [];
+      var proposalsMode = "pending";
+
+      function setProposalsMode(mode) {
+        proposalsMode = mode;
+        document.getElementById("btnProposalsModePending").classList.toggle("is-active", mode === "pending");
+        document.getElementById("btnProposalsModeHistory").classList.toggle("is-active", mode === "history");
+        document.getElementById("proposalVoteTitle").textContent =
+          mode === "pending" ? "Danh sách dự án đang chờ bỏ phiếu" : "Lịch sử dự án đã có kết quả";
+        renderVoteProposals();
+      }
+
       function loadVoteProposals() {
         fetch("/manga/editor/data")
           .then((res) => res.json())
@@ -623,17 +655,35 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
               return;
             }
             if (data.boardId) boardId = data.boardId;
-            const totalBoards = data.totalBoards || 0;
+            proposalsTotalBoards = data.totalBoards || 0;
+            proposalsPendingCache = data.proposals || [];
+            proposalsHistoryCache = data.proposalsHistory || [];
+            renderVoteProposals();
+          })
+          .catch(() => {
+            document.getElementById("proposalVoteBody").innerHTML =
+              '<tr><td colspan="7" class="u-inline-style-049">Lỗi tải dữ liệu</td></tr>';
+          });
+      }
+
+      var proposalsTotalBoards = 0;
+
+      function renderVoteProposals() {
+            const totalBoards = proposalsTotalBoards;
+            const list = proposalsMode === "pending" ? proposalsPendingCache : proposalsHistoryCache;
 
             const tbody = document.getElementById("proposalVoteBody");
-            if (!data.proposals || data.proposals.length === 0) {
+            if (!list || list.length === 0) {
               tbody.innerHTML =
                 '<tr><td colspan="7" class="u-inline-style-050">' +
-                "Hiện không có dự án nào chờ bình chọn.</td></tr>";
+                (proposalsMode === "pending"
+                  ? "Hiện không có dự án nào chờ bình chọn."
+                  : "Chưa có dự án nào đã xử lý xong.") +
+                "</td></tr>";
               return;
             }
 
-            tbody.innerHTML = data.proposals
+            tbody.innerHTML = list
               .map((p) => {
                 const voteCount = Number(p.voteCount || 0);
                 const voteProgress =
@@ -641,7 +691,13 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                     ? `${voteCount}/${totalBoards} đã vote`
                     : `${voteCount} người đã vote`;
 
-                const actionCell = p.myVote
+                const resultBadge = p.status === "passed"
+                  ? `<span class="badge badge-status-passed">Hội đồng đã Thông Qua</span>`
+                  : p.status === "locked"
+                    ? `<span class="badge badge-status-rejected">Hội đồng đã Từ Chối</span>`
+                    : "";
+
+                const myVoteBlock = p.myVote
                   ? `<div class="board-already-voted">
                         <span class="badge ${p.myVote === "pass" ? "badge-status-passed" : "badge-status-rejected"}">
                           Bạn đã ${p.myVote === "pass" ? "Chấp Thuận" : "Bác Bỏ"}
@@ -649,7 +705,13 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                         <div class="board-my-vote-comment">${p.myVoteContent ? escapeHtmlBoard(p.myVoteContent) : "(không có nhận xét)"}</div>
                         <small class="date-value">${formatAppDateTime(p.myVoteAt)}</small>
                      </div>`
-                  : `<textarea id="vote-comment-${p.id}" placeholder="Nhận xét của bạn..." class="u-inline-style-051"></textarea>
+                  : "";
+
+                const actionCell = proposalsMode === "history"
+                  ? `${resultBadge}${myVoteBlock}`
+                  : p.myVote
+                    ? myVoteBlock
+                    : `<textarea id="vote-comment-${p.id}" placeholder="Nhận xét của bạn..." class="u-inline-style-051"></textarea>
                      <div class="u-inline-style-052">
                         <button type="button" onclick="castVote('${p.id}', 'pass')" class="btn btn-sm btn-success">Chấp Thuận</button>
                         <button type="button" onclick="castVote('${p.id}', 'reject')" class="btn btn-sm btn-danger">Bác Bỏ</button>
@@ -669,11 +731,6 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                         </tr>`;
               })
               .join("");
-          })
-          .catch(() => {
-            document.getElementById("proposalVoteBody").innerHTML =
-              '<tr><td colspan="7" class="u-inline-style-049">Lỗi tải dữ liệu</td></tr>';
-          });
       }
 
       function castVote(proposalId, action) {
@@ -705,15 +762,35 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
       }
 
       // ===== Phiên vote (Board chỉ cast vote, không tạo phiên) =====
+      // Dữ liệu phiên vote KHÔNG BAO GIỜ bị xoá ở backend (xem RankingController)
+      // — phiên đủ vote chỉ chuyển sessionStatus sang "closed". Ở đây chỉ đổi
+      // bộ lọc hiển thị giữa "đang mở" và "lịch sử đã đóng", vẫn cùng 1 nguồn dữ liệu.
+      var sessionsRawDataCache = [];
+      var sessionsMode = "active";
+
+      function setSessionsMode(mode) {
+        sessionsMode = mode;
+        document.getElementById("btnSessionsModeActive").classList.toggle("is-active", mode === "active");
+        document.getElementById("btnSessionsModeClosed").classList.toggle("is-active", mode === "closed");
+        document.getElementById("activeSessionsTitle").textContent =
+          mode === "active" ? "Phiên Vote đang mở" : "Lịch sử phiên Vote đã đóng";
+        document.getElementById("activeSessionsEmpty").textContent =
+          mode === "active" ? "Chưa có phiên vote nào đang mở." : "Chưa có phiên vote nào đã đóng.";
+        renderActiveSessions(sessionsRawDataCache);
+      }
 
       function loadActiveSessions() {
         fetch("/manga/ranking/active-sessions")
           .then((res) => res.json())
           .then((rawData) => {
-            // Chỉ hiện phiên đang mở (chưa đủ vote) — phiên đã đóng/đã vote xong
-            // không cần hiện lại trong bảng này nữa.
+            sessionsRawDataCache = rawData || [];
+            renderActiveSessions(sessionsRawDataCache);
+          });
+      }
+
+      function renderActiveSessions(rawData) {
             var data = (rawData || []).filter(
-              (s) => s.sessionStatus === "active",
+              (s) => s.sessionStatus === sessionsMode,
             );
             var tbody = document.getElementById("activeSessionsBody");
             var table = document.getElementById("activeSessionsTable");
@@ -842,7 +919,6 @@ function formatStatusVi(status, fallback = "Chưa xác định") {
                 "</td>" +
                 "</tr>";
             });
-          });
       }
 
       const chapterStatLabels = {

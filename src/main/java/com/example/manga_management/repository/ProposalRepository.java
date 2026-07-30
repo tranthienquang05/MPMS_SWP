@@ -33,4 +33,9 @@ public interface ProposalRepository extends JpaRepository<Proposal, String> {
 
     // Kiểm tra trùng tên series/bản thảo (không phân biệt hoa thường).
     List<Proposal> findBySeriesNameIgnoreCase(String seriesName);
+
+    // Lịch sử đề xuất hội đồng đã ra quyết định cuối cùng (passed/locked), dù
+    // sau đó proposal có chuyển tiếp trạng thái nào (vd. "started") thì vẫn còn
+    // trong danh sách này — dùng cho tab "Lịch sử" của Board.
+    List<Proposal> findByBoardReviewedAtIsNotNullOrderByBoardReviewedAtDesc();
 }
